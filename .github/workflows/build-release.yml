@@ -2,10 +2,10 @@ name: Build and Release 2PNY OS Alpha
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, ui-modular-0.1.4 ]
     paths:
-      - 'ci/prepare-0.1.2.sh'
-      - 'ci/prepare-0.1.3.sh'
+      - 'ci/**'
+      - 'docs/MODULES.md'
       - '.github/workflows/build-release.yml'
   workflow_dispatch:
 
@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 90
     env:
-      VERSION: 0.1.3-alpha
-      TAG: v0.1.3-alpha
+      VERSION: 0.1.4-alpha
+      TAG: v0.1.4-alpha
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout 2PNY repository
@@ -31,11 +31,12 @@ jobs:
           ref: 2pny-os-build
           path: legacy-source
 
-      - name: Restore and patch 2PNY source
+      - name: Restore modular 2PNY source
         run: |
           bash legacy-source/2pny-os/bootstrap.sh
           bash ci/prepare-0.1.2.sh legacy-source/2pny-os
           bash ci/prepare-0.1.3.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.4-ui.sh legacy-source/2pny-os
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -68,7 +69,7 @@ jobs:
           test "$EXPECTED" = "$ACTUAL"
           echo "SHA-256 OK: $ACTUAL"
 
-      - name: Validate Pi 4 boot and first-access recovery
+      - name: Validate Pi 4, first access and UI
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
@@ -96,53 +97,42 @@ jobs:
           test -s /mnt/2pny-root/boot/firmware/start4.elf
           test -s /mnt/2pny-root/boot/firmware/bcm2711-rpi-4-b.dtb
           grep -q 'arm_64bit=1' /mnt/2pny-root/boot/firmware/config.txt
-          grep -q 'root=PARTUUID=' /mnt/2pny-root/boot/firmware/cmdline.txt
           grep -qw 'network-config=disabled' /mnt/2pny-root/boot/firmware/cmdline.txt
           grep -qw 'cfg80211.ieee80211_regdom=BR' /mnt/2pny-root/boot/firmware/cmdline.txt
 
           test -x /mnt/2pny-root/usr/local/bin/2pnyd
           test -x /mnt/2pny-root/usr/local/sbin/2pny-firstboot
-          grep -q 'do_wifi_country BR' /mnt/2pny-root/usr/local/sbin/2pny-firstboot
-          grep -q 'device wifi hotspot' /mnt/2pny-root/usr/local/sbin/2pny-firstboot
           grep -q 'Restart=on-failure' /mnt/2pny-root/etc/systemd/system/2pny-firstboot.service
-
-          test -f /mnt/2pny-root/etc/cloud/cloud.cfg.d/99-2pny-appliance.cfg
-          grep -q 'config: disabled' /mnt/2pny-root/etc/cloud/cloud.cfg.d/99-2pny-appliance.cfg
-          grep -q 'disable_network_activation: true' /mnt/2pny-root/etc/cloud/cloud.cfg.d/99-2pny-appliance.cfg
-
-          test -f /mnt/2pny-root/var/lib/NetworkManager/NetworkManager.state
-          grep -q 'WirelessEnabled=true' /mnt/2pny-root/var/lib/NetworkManager/NetworkManager.state
-
-          test -f /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection
-          test -f /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-setup.nmconnection
-          grep -q 'link-local=4' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection
+          grep -q '169.254.2.1/16' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection
           grep -q 'address1=10.42.0.1/24' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-setup.nmconnection
-          test "$(sudo stat -c '%a' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-setup.nmconnection)" = "600"
-          test "$(sudo stat -c '%a' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection)" = "600"
+          grep -q '0.1.4-alpha' /mnt/2pny-root/etc/2pny/version
+          strings /mnt/2pny-root/usr/local/bin/2pnyd | grep -q 'pny-theme-toggle'
+          strings /mnt/2pny-root/usr/local/bin/2pnyd | grep -q 'Abrindo o painel automaticamente'
 
-          echo 'Pi 4 boot, Trixie cloud-init isolation, rfkill recovery, Wi-Fi AP and Ethernet fallback: OK'
+          echo 'Pi 4, network handoff, dark-first UI and automatic setup transition: OK'
           cleanup
           trap - EXIT
           sudo rm -f "$RAW"
 
       - name: Publish complete GitHub prerelease
+        if: github.ref == 'refs/heads/main'
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
           IMAGE="dist/2PNY-OS-${VERSION}-arm64.img.xz"
           cat > RELEASE-NOTES.md <<'EOF'
-          2PNY OS 0.1.3 Alpha — Raspberry Pi ARM64.
+          2PNY OS 0.1.4 Alpha — Raspberry Pi ARM64.
 
-          Correção focada no primeiro boot do Raspberry Pi OS Trixie:
-          - impede o cloud-init de substituir a rede gerenciada pelo 2PNY;
-          - fixa domínio regulatório BR e limpa bloqueios persistentes de Wi-Fi/rfkill;
-          - tenta o hotspot 2PNY-SETUP repetidamente e o recria pelo próprio NetworkManager se necessário;
-          - Ethernet usa DHCP no roteador e IPv4 link-local como fallback para cabo direto Pi <-> notebook;
-          - o painel sobe sem depender de network-online.target.
+          Evolução modular da interface e do primeiro acesso:
+          - tema escuro como padrão;
+          - alternância claro/escuro persistente no navegador;
+          - contraste, foco e responsividade melhorados;
+          - estado de conexão do primeiro acesso em tempo real;
+          - avanço automático após o Wi-Fi conectar;
+          - Ethernet com DHCP e fallback direto 169.254.2.1;
+          - base organizada em módulos para Hardware/MMDVM, RF, protocolos, Display/Nextion, diagnóstico e updates.
 
-          Primeiro acesso: SSID 2PNY-SETUP, senha 2pnysetup, http://2pny.local, fallback Wi-Fi http://10.42.0.1.
-
-          Esta ainda é uma Alpha de boot/rede/painel. A camada RF MMDVM ainda não é operacional nesta versão.
+          Esta Alpha ainda valida Core, Provisioning, Network e UI. A camada RF/MMDVM operacional entra na próxima etapa.
           EOF
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
@@ -151,6 +141,6 @@ jobs:
             "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title '2PNY OS 0.1.3 Alpha' \
+            --title '2PNY OS 0.1.4 Alpha' \
             --notes-file RELEASE-NOTES.md \
             --prerelease
