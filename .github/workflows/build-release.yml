@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           IMAGE="dist/2PNY-OS-${VERSION}-arm64.img.xz"
           RAW="${IMAGE%.xz}"
-          xz -dk "$IMAGE"
+          sudo xz -dk "$IMAGE"
           sudo sfdisk -d "$RAW"
           LOOP=$(sudo losetup --find --partscan --show "$RAW")
           cleanup() {
@@ -102,7 +102,7 @@ jobs:
           echo 'Pi 4 boot files, FAT, EXT4 and 2PNY first access: OK'
           cleanup
           trap - EXIT
-          rm -f "$RAW"
+          sudo rm -f "$RAW"
 
       - name: Publish complete GitHub prerelease
         working-directory: legacy-source/2pny-os
