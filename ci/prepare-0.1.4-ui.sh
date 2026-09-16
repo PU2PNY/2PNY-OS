@@ -7,9 +7,8 @@ python3 - <<'PY'
 from pathlib import Path
 root=Path('.')
 
-# Version bump for the next physical test image.
 p=root/'builder/build-image.sh'
-s=p.read_text().replace('VERSION="${VERSION:-0.1.3-alpha}"','VERSION="${VERSION:-0.1.4-alpha}"')
+s=p.read_text().replace('0.1.3-alpha','0.1.4-alpha')
 p.write_text(s)
 (root/'rootfs-overlay/etc/2pny/version').write_text('0.1.4-alpha\n')
 
@@ -18,9 +17,7 @@ s=p.read_text().replace('0.1.3-alpha','0.1.4-alpha')
 p.write_text(s)
 
 p=root/'src/2pnyd/main.go'
-s=p.read_text()
-s=s.replace('appVersion      = "0.1.3-alpha"','appVersion      = "0.1.4-alpha"')
-s=s.replace('Alpha 0.1.3','Alpha 0.1.4')
+s=p.read_text().replace('0.1.3-alpha','0.1.4-alpha').replace('Alpha 0.1.3','Alpha 0.1.4')
 
 marker='2pny-theme-bootstrap'
 if marker not in s:
