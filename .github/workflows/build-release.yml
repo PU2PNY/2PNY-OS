@@ -2,10 +2,10 @@ name: Build and Release 2PNY OS Alpha
 
 on:
   push:
-    branches: [ main, ui-modular-0.1.4 ]
+    branches: [ main, ui-modular-0.1.4, mmdvm-hardware-0.1.5 ]
     paths:
       - 'ci/**'
-      - 'docs/MODULES.md'
+      - 'docs/**'
       - '.github/workflows/build-release.yml'
   workflow_dispatch:
 
@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 90
     env:
-      VERSION: 0.1.4-alpha
-      TAG: v0.1.4-alpha
+      VERSION: 0.1.5-alpha
+      TAG: v0.1.5-alpha
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout 2PNY repository
@@ -37,6 +37,7 @@ jobs:
           bash ci/prepare-0.1.2.sh legacy-source/2pny-os
           bash ci/prepare-0.1.3.sh legacy-source/2pny-os
           bash ci/prepare-0.1.4-ui.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.5-hardware.sh legacy-source/2pny-os
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -69,7 +70,7 @@ jobs:
           test "$EXPECTED" = "$ACTUAL"
           echo "SHA-256 OK: $ACTUAL"
 
-      - name: Validate Pi 4, first access and UI
+      - name: Validate Pi 4, network, UART, MMDVM probe and wizard
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
@@ -97,19 +98,26 @@ jobs:
           test -s /mnt/2pny-root/boot/firmware/start4.elf
           test -s /mnt/2pny-root/boot/firmware/bcm2711-rpi-4-b.dtb
           grep -q 'arm_64bit=1' /mnt/2pny-root/boot/firmware/config.txt
+          grep -qxF 'enable_uart=1' /mnt/2pny-root/boot/firmware/config.txt
+          grep -qxF 'dtoverlay=disable-bt' /mnt/2pny-root/boot/firmware/config.txt
+          grep -qxF 'dtparam=i2c_arm=on' /mnt/2pny-root/boot/firmware/config.txt
+          ! grep -Eq 'console=(serial0|ttyAMA0|ttyS0),' /mnt/2pny-root/boot/firmware/cmdline.txt
           grep -qw 'network-config=disabled' /mnt/2pny-root/boot/firmware/cmdline.txt
           grep -qw 'cfg80211.ieee80211_regdom=BR' /mnt/2pny-root/boot/firmware/cmdline.txt
 
           test -x /mnt/2pny-root/usr/local/bin/2pnyd
           test -x /mnt/2pny-root/usr/local/sbin/2pny-firstboot
-          grep -q 'Restart=on-failure' /mnt/2pny-root/etc/systemd/system/2pny-firstboot.service
+          test -x /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
           grep -q '169.254.2.1/16' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection
           grep -q 'address1=10.42.0.1/24' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-setup.nmconnection
-          grep -q '0.1.4-alpha' /mnt/2pny-root/etc/2pny/version
-          strings /mnt/2pny-root/usr/local/bin/2pnyd | grep -q 'pny-theme-toggle'
-          strings /mnt/2pny-root/usr/local/bin/2pnyd | grep -q 'Abrindo o painel automaticamente'
+          grep -q '0.1.5-alpha' /mnt/2pny-root/etc/2pny/version
+          grep -q '0xE0, 0x03, 0x00' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
+          grep -q "connect\\\\xff\\\\xff\\\\xff" /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
+          strings /mnt/2pny-root/usr/local/bin/2pnyd | grep -q '2PNY_HARDWARE_WIZARD_V1'
+          strings /mnt/2pny-root/usr/local/bin/2pnyd | grep -q '/api/hardware/scan'
+          strings /mnt/2pny-root/usr/local/bin/2pnyd | grep -q 'Detectando hardware'
 
-          echo 'Pi 4, network handoff, dark-first UI and automatic setup transition: OK'
+          echo 'Pi 4, network, PL011 UART, active MMDVM identification and dark-first hardware wizard: OK'
           cleanup
           trap - EXIT
           sudo rm -f "$RAW"
@@ -121,18 +129,19 @@ jobs:
           set -euo pipefail
           IMAGE="dist/2PNY-OS-${VERSION}-arm64.img.xz"
           cat > RELEASE-NOTES.md <<'EOF'
-          2PNY OS 0.1.4 Alpha — Raspberry Pi ARM64.
+          2PNY OS 0.1.5 Alpha — Raspberry Pi ARM64.
 
-          Evolução modular da interface e do primeiro acesso:
-          - tema escuro como padrão;
-          - alternância claro/escuro persistente no navegador;
-          - contraste, foco e responsividade melhorados;
-          - estado de conexão do primeiro acesso em tempo real;
-          - avanço automático após o Wi-Fi conectar;
-          - Ethernet com DHCP e fallback direto 169.254.2.1;
-          - base organizada em módulos para Hardware/MMDVM, RF, protocolos, Display/Nextion, diagnóstico e updates.
+          Primeira camada física MMDVM/Display do assistente modular:
+          - painel profissional dark-first com opção claro/escuro;
+          - avanço do primeiro acesso direto para o wizard de hardware;
+          - GPIO UART preparado para MMDVM HAT (console serial removido, UART habilitado, PL011 liberado do Bluetooth);
+          - identificação MMDVM pelo comando oficial GET_VERSION, sem alterar RF;
+          - exibe firmware/descrição, versão do protocolo, CPU e capacidades D-Star/DMR/YSF/P25/NXDN/FM/POCSAG quando anunciadas pelo modem;
+          - HAT EEPROM, portas seriais e I2C visíveis;
+          - detecção inicial de Nextion serial direta e estado explícito quando a tela estiver atrás da MMDVM;
+          - etapa RF já aparece no wizard, mas a aplicação de frequência/offset/BER aguarda o módulo MMDVMHost/MMDVMCal com rollback.
 
-          Esta Alpha ainda valida Core, Provisioning, Network e UI. A camada RF/MMDVM operacional entra na próxima etapa.
+          Primeiro acesso: 2PNY-SETUP / 2pnysetup / http://10.42.0.1.
           EOF
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
@@ -141,6 +150,6 @@ jobs:
             "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title '2PNY OS 0.1.4 Alpha' \
+            --title '2PNY OS 0.1.5 Alpha' \
             --notes-file RELEASE-NOTES.md \
             --prerelease
