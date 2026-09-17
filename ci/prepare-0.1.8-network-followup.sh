@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Build trigger after workflow registration; no runtime behavior change.
 ROOT="${1:-.}"
 cd "$ROOT"
 python3 - <<'PY'
