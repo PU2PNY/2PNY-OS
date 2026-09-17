@@ -2,7 +2,7 @@
 set -euo pipefail
 IMAGE="${1:?image required}"
 VERSION="${2:-0.1.7-hotfix2}"
-RAW="${IMAGE%.xz}.validate"
+RAW="/tmp/2PNY-OS-${VERSION}-arm64-validate.img"
 ROOT=/mnt/2pny-h2
 PID=''
 LOOP=''
@@ -19,6 +19,7 @@ cleanup(){
 }
 trap cleanup EXIT
 
+rm -f "$RAW"
 xz -t "$IMAGE"
 EXPECTED=$(awk '{print $1}' "${IMAGE}.sha256")
 ACTUAL=$(sha256sum "$IMAGE" | awk '{print $1}')
