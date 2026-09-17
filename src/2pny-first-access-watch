@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -u
+
+STATE_DIR="${STATE_DIR:-/var/lib/2pny}"
+SYS_CLASS_NET="${SYS_CLASS_NET:-/sys/class/net}"
+POLL_SECONDS="${POLL_SECONDS:-2}"
+NMCLI="${NMCLI:-nmcli}"
+LOCK_FILE="${LOCK_FILE:-/run/2pny-first-access.lock}"
+LOG_TAG="2pny-first-access"
+
+mkdir -p "$STATE_DIR"
+
+log(){ logger -t "$LOG_TAG" -- "$*" 2>/dev/null || true; }
+nm(){ "$NMCLI" "$@"; }
+eth_if(){ nm -t -f DEVICE,TYPE device status 2>/dev/null | awk -F: '$2=="ethernet" && $1!="" {print $1; exit}'; }
+wifi_if(){ nm -t -f DEVICE,TYPE device status 2>/dev/null | awk -F: '$2=="wifi" && $1!="" {print $1; exit}'; }
+carrier(){ local dev="$1" v=0; [[ -n "$dev" && -r "$SYS_CLASS_NET/$dev/carrier" ]] || { echo 0; return; }; read -r v <"$SYS_CLASS_NET/$dev/carrier" 2>/dev/null || v=0; [[ "$v" == 1 ]] && echo 1 || echo 0; }
+active(){ local name="$1"; nm -t -f NAME connection show --active 2>/dev/null | grep -Fxq "$name"; }
+
+wifi_setup(){
+  local dev="$1"
+  [[ -n "$dev" ]] || return 1
+  if active 2PNY-SETUP; then return 0; fi
+  nm connection down 2PNY-Ethernet-Setup >/dev/null 2>&1 || true
+  nm connection down 2PNY-Ethernet >/dev/null 2>&1 || true
+  ip link set "$dev" up >/dev/null 2>&1 || true
+  if nm --wait 8 connection up 2PNY-SETUP ifname "$dev" >/dev/null 2>&1; then log "setup transport=wifi ip=10.42.0.1"; return 0; fi
+  nm connection delete 2PNY-SETUP >/dev/null 2>&1 || true
+  if nm --wait 8 device wifi hotspot ifname "$dev" con-name 2PNY-SETUP ssid 2PNY-SETUP band bg channel 6 password 2pnysetup >/dev/null 2>&1; then
+    nm connection modify 2PNY-SETUP ipv4.method shared ipv4.addresses 10.42.0.1/24 ipv6.method disabled connection.autoconnect no connection.mdns yes >/dev/null 2>&1 || true
+    log "setup transport=wifi-recovered ip=10.42.0.1"
+    return 0
+  fi
+  return 1
+}
+
+ethernet_setup(){
+  local dev="$1"
+  [[ -n "$dev" ]] || return 1
+  if active 2PNY-Ethernet-Setup; then return 0; fi
+  nm connection down 2PNY-SETUP >/dev/null 2>&1 || true
+  nm connection down 2PNY-Ethernet >/dev/null 2>&1 || true
+  nm connection down 2PNY-Ethernet-Setup >/dev/null 2>&1 || true
+  if nm --wait 8 connection up 2PNY-Ethernet-Setup ifname "$dev" >/dev/null 2>&1; then
+    log "setup transport=ethernet device=$dev ip=10.42.0.1"
+    return 0
+  fi
+  log "ethernet setup activation failed device=$dev"
+  return 1
+}
+
+finish_provisioned(){
+  nm connection down 2PNY-SETUP >/dev/null 2>&1 || true
+  nm connection down 2PNY-Ethernet-Setup >/dev/null 2>&1 || true
+  nm connection modify 2PNY-Ethernet connection.autoconnect yes >/dev/null 2>&1 || true
+  log "provisioned: setup watcher exiting"
+}
+
+exec 9>"$LOCK_FILE"
+last=""
+while [[ ! -f "$STATE_DIR/provisioned" ]]; do
+  e="$(eth_if)"; w="$(wifi_if)"; c="$(carrier "$e")"; state="eth:${e:-none}:$c:wifi:${w:-none}"
+  if [[ "$state" != "$last" ]]; then
+    flock 9
+    if [[ "$c" == 1 ]]; then ethernet_setup "$e" || wifi_setup "$w" || true; else wifi_setup "$w" || true; fi
+    flock -u 9
+    last="$state"
+  elif [[ "$c" == 1 ]] && ! active 2PNY-Ethernet-Setup; then
+    flock 9; ethernet_setup "$e" || wifi_setup "$w" || true; flock -u 9
+  elif [[ "$c" != 1 ]] && ! active 2PNY-SETUP; then
+    flock 9; wifi_setup "$w" || true; flock -u 9
+  fi
+  sleep "$POLL_SECONDS"
+done
+flock 9; finish_provisioned; flock -u 9
