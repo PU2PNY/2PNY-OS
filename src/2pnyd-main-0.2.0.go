@@ -29,50 +29,50 @@ const (
 )
 
 type Config struct {
-	Callsign   string \`json:"callsign"\`
-	DMRID      string \`json:"dmr_id"\`
-	WiFiSSID   string \`json:"wifi_ssid,omitempty"\`
-	UseMode    string \`json:"use_mode"\`
-	RXHz       int64  \`json:"rx_hz"\`
-	TXHz       int64  \`json:"tx_hz"\`
-	Protocol   string \`json:"protocol"\`
-	Operation  string \`json:"operation"\`
-	CreatedAt  string \`json:"created_at"\`
+	Callsign   string `json:"callsign"`
+	DMRID      string `json:"dmr_id"`
+	WiFiSSID   string `json:"wifi_ssid,omitempty"`
+	UseMode    string `json:"use_mode"`
+	RXHz       int64  `json:"rx_hz"`
+	TXHz       int64  `json:"tx_hz"`
+	Protocol   string `json:"protocol"`
+	Operation  string `json:"operation"`
+	CreatedAt  string `json:"created_at"`
 }
 
 type Status struct {
-	Name        string   \`json:"name"\`
-	Version     string   \`json:"version"\`
-	Provisioned bool     \`json:"provisioned"\`
-	Ethernet    bool     \`json:"ethernet"\`
-	WiFi        bool     \`json:"wifi"\`
-	IPv4        []string \`json:"ipv4"\`
+	Name        string   `json:"name"`
+	Version     string   `json:"version"`
+	Provisioned bool     `json:"provisioned"`
+	Ethernet    bool     `json:"ethernet"`
+	WiFi        bool     `json:"wifi"`
+	IPv4        []string `json:"ipv4"`
 }
 
 type ConnectivityStatus struct {
-	Internet         bool     \`json:"internet"\`
-	DefaultInterface string   \`json:"default_interface,omitempty"\`
-	Ethernet         bool     \`json:"ethernet"\`
-	EthernetInterface string  \`json:"ethernet_interface,omitempty"\`
-	WiFi             bool     \`json:"wifi"\`
-	WiFiInterfaces   []string \`json:"wifi_interfaces"\`
-	WiFiCount        int      \`json:"wifi_count"\`
-	ClientInterface  string   \`json:"client_interface,omitempty"\`
-	APActive         bool     \`json:"ap_active"\`
-	APInterface      string   \`json:"ap_interface,omitempty"\`
-	APSSID           string   \`json:"ap_ssid"\`
-	IPv4             []string \`json:"ipv4"\`
+	Internet         bool     `json:"internet"`
+	DefaultInterface string   `json:"default_interface,omitempty"`
+	Ethernet         bool     `json:"ethernet"`
+	EthernetInterface string  `json:"ethernet_interface,omitempty"`
+	WiFi             bool     `json:"wifi"`
+	WiFiInterfaces   []string `json:"wifi_interfaces"`
+	WiFiCount        int      `json:"wifi_count"`
+	ClientInterface  string   `json:"client_interface,omitempty"`
+	APActive         bool     `json:"ap_active"`
+	APInterface      string   `json:"ap_interface,omitempty"`
+	APSSID           string   `json:"ap_ssid"`
+	IPv4             []string `json:"ipv4"`
 }
 
 type RFApplyState struct {
-	State   string \`json:"state"\`
-	Message string \`json:"message"\`
-	Updated string \`json:"updated"\`
+	State   string `json:"state"`
+	Message string `json:"message"`
+	Updated string `json:"updated"`
 }
 
 var (
-	callsignRx = regexp.MustCompile(\`^[A-Z0-9/-]{3,16}$\`)
-	dmrRx      = regexp.MustCompile(\`^[0-9]{6,9}$\`)
+	callsignRx = regexp.MustCompile(`^[A-Z0-9/-]{3,16}$`)
+	dmrRx      = regexp.MustCompile(`^[0-9]{6,9}$`)
 	applyMu    sync.Mutex
 )
 
@@ -243,9 +243,9 @@ func wifiScanHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	type AP struct {
-		SSID string \`json:"ssid"\`
-		Signal string \`json:"signal"\`
-		Security string \`json:"security"\`
+		SSID string `json:"ssid"`
+		Signal string `json:"signal"`
+		Security string `json:"security"`
 	}
 	seen := map[string]bool{}
 	var aps []AP
@@ -270,9 +270,9 @@ func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		SSID string \`json:"ssid"\`
-		Password string \`json:"password"\`
-		KeepAP bool \`json:"keep_ap"\`
+		SSID string `json:"ssid"`
+		Password string `json:"password"`
+		KeepAP bool `json:"keep_ap"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&in); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"dados de rede inválidos"})
@@ -396,9 +396,9 @@ func detectedModemPort() (string, error) {
 	}
 	var h struct {
 		MMDVM struct {
-			Detected bool \`json:"detected"\`
-			Port string \`json:"port"\`
-		} \`json:"mmdvm"\`
+			Detected bool `json:"detected"`
+			Port string `json:"port"`
+		} `json:"mmdvm"`
 	}
 	if json.Unmarshal(b, &h) != nil || !h.MMDVM.Detected || strings.TrimSpace(h.MMDVM.Port) == "" {
 		return "", fmt.Errorf("MMDVM não confirmada; volte à etapa Hardware e detecte novamente")
@@ -438,13 +438,13 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Callsign string \`json:"callsign"\`
-		DMRID string \`json:"dmr_id"\`
-		UseMode string \`json:"use_mode"\`
-		RX string \`json:"rx"\`
-		TX string \`json:"tx"\`
-		Protocol string \`json:"protocol"\`
-		Operation string \`json:"operation"\`
+		Callsign string `json:"callsign"`
+		DMRID string `json:"dmr_id"`
+		UseMode string `json:"use_mode"`
+		RX string `json:"rx"`
+		TX string `json:"tx"`
+		Protocol string `json:"protocol"`
+		Operation string `json:"operation"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 32<<10)).Decode(&in); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"configuração inválida"})
