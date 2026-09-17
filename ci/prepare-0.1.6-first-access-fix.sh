@@ -6,21 +6,17 @@ python3 - <<'PY'
 from pathlib import Path
 root=Path('.')
 
-# Cloud-init cannot rewrite appliance networking.
 cloud=root/'rootfs-overlay/etc/cloud'; cloud.mkdir(parents=True,exist_ok=True)
 (cloud/'cloud-init.disabled').write_text('2PNY owns provisioning and networking.\n')
 
-# Before provisioning, 10.42.0.1 is the only official setup address.
 conn=root/'rootfs-overlay/etc/NetworkManager/system-connections'; conn.mkdir(parents=True,exist_ok=True)
 (conn/'2pny-setup.nmconnection').write_text('''[connection]\nid=2PNY-SETUP\nuuid=5d9da2d9-3b48-4936-8201-2a4f00000002\ntype=wifi\nautoconnect=false\nmdns=2\n\n[wifi]\nmode=ap\nband=bg\nchannel=6\nssid=2PNY-SETUP\n\n[wifi-security]\nkey-mgmt=wpa-psk\npsk=2pnysetup\n\n[ipv4]\nmethod=shared\naddress1=10.42.0.1/24\n\n[ipv6]\nmethod=disabled\n\n[proxy]\n''')
 (conn/'2pny-ethernet-setup.nmconnection').write_text('''[connection]\nid=2PNY-Ethernet-Setup\nuuid=7ec42a49-a77d-49f7-a181-2a4f00000003\ntype=ethernet\nautoconnect=false\nmdns=2\n\n[ethernet]\n\n[ipv4]\nmethod=shared\naddress1=10.42.0.1/24\n\n[ipv6]\nmethod=disabled\n\n[proxy]\n''')
 (conn/'2pny-ethernet.nmconnection').write_text('''[connection]\nid=2PNY-Ethernet\nuuid=7ec42a49-a77d-49f7-a181-2a4f00000001\ntype=ethernet\nautoconnect=false\nmdns=2\n\n[ethernet]\n\n[ipv4]\nmethod=auto\ndhcp-timeout=10\nmay-fail=true\n\n[ipv6]\nmethod=auto\naddr-gen-mode=default\n\n[proxy]\n''')
 
-# RAM journal: low SD writes.
 jd=root/'rootfs-overlay/etc/systemd/journald.conf.d'; jd.mkdir(parents=True,exist_ok=True)
 (jd/'2pny.conf').write_text('[Journal]\nStorage=volatile\nRuntimeMaxUse=16M\nRuntimeMaxFileSize=4M\n')
 
-# Core panel must start before provisioning and never wait for network-online.
 svc=root/'rootfs-overlay/etc/systemd/system'; svc.mkdir(parents=True,exist_ok=True)
 (svc/'2pnyd.service').write_text('''[Unit]\nDescription=2PNY Core and local panel\nAfter=local-fs.target NetworkManager.service\nWants=NetworkManager.service\nBefore=2pny-firstboot.service\nStartLimitIntervalSec=0\n\n[Service]\nType=simple\nExecStart=/usr/local/bin/2pnyd\nRestart=always\nRestartSec=1\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectHome=yes\nProtectSystem=strict\nReadWritePaths=/var/lib/2pny /run\nMemoryMax=64M\nTasksMax=64\n\n[Install]\nWantedBy=multi-user.target\n''')
 (svc/'2pny-firstboot.service').write_text('''[Unit]\nDescription=2PNY deterministic first access\nAfter=NetworkManager.service 2pnyd.service\nWants=NetworkManager.service 2pnyd.service\nConditionPathExists=!/var/lib/2pny/provisioned\nStartLimitIntervalSec=0\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/2pny-firstboot\nRemainAfterExit=yes\nRestart=on-failure\nRestartSec=2\nTimeoutStartSec=45\n\n[Install]\nWantedBy=multi-user.target\n''')
@@ -37,7 +33,6 @@ symlink(w/'NetworkManager.service','/usr/lib/systemd/system/NetworkManager.servi
 symlink(w/'avahi-daemon.service','/usr/lib/systemd/system/avahi-daemon.service')
 symlink(svc/'NetworkManager-wait-online.service','/dev/null')
 
-# Fast setup state machine. Cable gets 10.42.0.1 if present; otherwise Wi-Fi AP.
 fb=root/'rootfs-overlay/usr/local/sbin/2pny-firstboot'
 fb.write_text(r'''#!/bin/bash
 set -u
@@ -79,7 +74,6 @@ fi
 status_write error-no-setup; exit 1
 ''')
 
-# No polling daemon. NetworkManager event restores setup only while unprovisioned.
 disp=root/'rootfs-overlay/etc/NetworkManager/dispatcher.d/90-2pny-connectivity'
 disp.write_text(r'''#!/bin/bash
 [[ -f /var/lib/2pny/provisioned ]] && exit 0
@@ -87,7 +81,6 @@ case "${2:-unknown}" in down|connectivity-change) systemctl restart 2pny-firstbo
 exit 0
 ''')
 
-# No absolute mDNS redirect: keep current host and use relative /wizard.
 p=root/'src/2pnyd/main.go'; s=p.read_text()
 s=s.replace('127.0.0.1:80',':80').replace('localhost:80',':80')
 for old in ['http://2pny.local/wizard','http://2pny.local/','http://2pny.local']:
@@ -101,14 +94,13 @@ s=s.replace("setTimeout(()=>window.location.href='/wizard',1200)","")
 s=s.replace('href="http://2pny.local/wizard"','href="/wizard"')
 p.write_text(s)
 
-# Update inherited validators to the strict 0.1.6 contract.
 v=root/'builder/validate-source.sh'; vs=v.read_text()
 for oldver in ('0.1.3-alpha','0.1.4-alpha','0.1.5-alpha'):
     vs=vs.replace("grep -q '%s' src/2pnyd/main.go\n" % oldver, '')
 vs=vs.replace("grep -q '169.254.2.1/16' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection\n",'')
+vs=vs.replace("grep -q 'Abrindo o painel automaticamente' src/2pnyd/main.go\n", "grep -q 'Rede configurada. Reconecte' src/2pnyd/main.go\n")
 if '# 2PNY_FIRST_ACCESS_STRICT_0_1_6' not in vs:
     vs += r'''\n# 2PNY_FIRST_ACCESS_STRICT_0_1_6\necho "[2PNY] Validate strict first access"\ngrep -q '0.1.6-alpha' src/2pnyd/main.go\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection\ngrep -q 'autoconnect=false' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection\n! grep -q 'http://2pny.local/wizard' src/2pnyd/main.go\ngrep -q 'href="/wizard"' src/2pnyd/main.go\ngrep -q 'Storage=volatile' rootfs-overlay/etc/systemd/journald.conf.d/2pny.conf\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pnyd.service\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-firstboot.service\n'''
-# Trace exact failing validator command in CI; this does not affect the image.
 if 'set -x' not in vs:
     vs=vs.replace('set -euo pipefail','set -euo pipefail\nset -x',1)
 v.write_text(vs)
