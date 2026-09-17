@@ -6,6 +6,7 @@ on:
     paths:
       - 'ci/prepare-0.1.8-anchor-compat.sh'
       - 'ci/prepare-0.1.8-network-core.sh'
+      - 'ci/prepare-0.1.8-builder-service-fix.sh'
       - 'ci/validate-0.1.8-image.sh'
       - '.github/workflows/0.1.8-build-release.yml'
   workflow_dispatch:
@@ -55,7 +56,8 @@ jobs:
             ci/prepare-0.1.7-hotfix5-base-fix.sh \
             ci/prepare-0.1.7-hotfix5-validator-compat.sh \
             ci/prepare-0.1.8-anchor-compat.sh \
-            ci/prepare-0.1.8-network-core.sh; do
+            ci/prepare-0.1.8-network-core.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh; do
               bash "$f" legacy-source/2pny-os
           done
 
@@ -83,6 +85,8 @@ jobs:
           ! grep -Fq 'raspios-trixie-arm64-lite.img.xz' builder/build-image.sh
           grep -q 'hostapd' builder/build-image.sh
           grep -q 'dnsmasq' builder/build-image.sh
+          grep -q '2pny-network-core.service' builder/build-image.sh
+          ! grep -E 'systemctl.*enable.*(2pny-firstboot|2pny-setup-watch|hostapd|dnsmasq)\.service' builder/build-image.sh
           grep -q '0.1.8-alpha' src/2pnyd/main.go
           grep -q '2PNY_NETWORK_CORE_HANDOFF_V1' src/2pnyd/main.go
           grep -q '^wpa=0$' rootfs-overlay/usr/share/2pny/network/hostapd.template
