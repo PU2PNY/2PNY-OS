@@ -1,8 +1,9 @@
 name: Build and Release 2PNY OS Alpha
 
+# Legacy versioned builder. Main is owned by the current hotfix2 pipeline.
 on:
   push:
-    branches: [ main, ui-modular-0.1.4, mmdvm-hardware-0.1.5, rf-mmdvmhost-0.1.6, modules-safe-0.1.7 ]
+    branches: [ ui-modular-0.1.4, mmdvm-hardware-0.1.5, rf-mmdvmhost-0.1.6, modules-safe-0.1.7 ]
     paths:
       - 'ci/**'
       - 'src/**'
