@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 90
     env:
-      VERSION: 0.1.7-alpha
-      TAG: v0.1.7-alpha
+      VERSION: 0.1.7-hotfix1
+      TAG: v0.1.7-hotfix1
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout 2PNY repository
@@ -43,6 +43,7 @@ jobs:
           bash ci/prepare-0.1.6-rf.sh legacy-source/2pny-os
           bash ci/prepare-0.1.6-build-fix.sh legacy-source/2pny-os
           bash ci/prepare-0.1.7-modules.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.7-hotfix1-ethernet.sh legacy-source/2pny-os
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -61,6 +62,7 @@ jobs:
         run: |
           bash -x ./builder/validate-source.sh
           bash -n rootfs-overlay/usr/local/sbin/2pny-rf-apply
+          bash -n rootfs-overlay/usr/local/sbin/2pny-setup-watch
           sh -n rootfs-overlay/usr/local/sbin/2pny-perf-snapshot
           python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-module-status
           python3 -m json.tool rootfs-overlay/usr/share/2pny/modules.json >/dev/null
@@ -80,7 +82,7 @@ jobs:
           test "$EXPECTED" = "$ACTUAL"
           echo "SHA-256 OK: $ACTUAL"
 
-      - name: Validate Pi 4, MMDVMHost, module layer and lean runtime
+      - name: Validate Pi 4, MMDVMHost, Ethernet hotfix and lean runtime
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
@@ -98,7 +100,7 @@ jobs:
           trap cleanup EXIT
           for i in {1..20}; do test -b "${LOOP}p2" && break; sleep .25; done
 
-          echo '[1/12] Filesystems'
+          echo '[1/13] Filesystems'
           sudo fsck.vfat -n "${LOOP}p1"
           sudo e2fsck -fn "${LOOP}p2"
           sudo mkdir -p /mnt/2pny-root
@@ -106,27 +108,35 @@ jobs:
           sudo mkdir -p /mnt/2pny-root/boot/firmware
           sudo mount -o ro "${LOOP}p1" /mnt/2pny-root/boot/firmware
 
-          echo '[2/12] Raspberry Pi 4 ARM64 boot files'
+          echo '[2/13] Raspberry Pi 4 ARM64 boot files'
           test -s /mnt/2pny-root/boot/firmware/kernel8.img
           test -s /mnt/2pny-root/boot/firmware/start4.elf
           test -s /mnt/2pny-root/boot/firmware/bcm2711-rpi-4-b.dtb
           grep -q 'arm_64bit=1' /mnt/2pny-root/boot/firmware/config.txt
 
-          echo '[3/12] GPIO UART reserved for MMDVM'
+          echo '[3/13] GPIO UART reserved for MMDVM'
           grep -qxF '[all]' /mnt/2pny-root/boot/firmware/config.txt
           grep -qxF '# 2PNY MMDVM UART' /mnt/2pny-root/boot/firmware/config.txt
           grep -qxF 'enable_uart=1' /mnt/2pny-root/boot/firmware/config.txt
           grep -qxF 'dtoverlay=disable-bt' /mnt/2pny-root/boot/firmware/config.txt
           ! grep -Eq 'console=(serial0|ttyAMA0|ttyS0),' /mnt/2pny-root/boot/firmware/cmdline.txt
 
-          echo '[4/12] Strict first-access network'
+          echo '[4/13] Strict first-access network'
           grep -qw 'network-config=disabled' /mnt/2pny-root/boot/firmware/cmdline.txt
           grep -q 'address1=10.42.0.1/24' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-setup.nmconnection
           grep -q 'address1=10.42.0.1/24' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection
           grep -q 'autoconnect=false' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection
           test -e /mnt/2pny-root/etc/cloud/cloud-init.disabled
 
-          echo '[5/12] Service enablement and fast boot contract'
+          echo '[5/13] Ethernet carrier watcher'
+          test -x /mnt/2pny-root/usr/local/sbin/2pny-setup-watch
+          bash -n /mnt/2pny-root/usr/local/sbin/2pny-setup-watch
+          test -s /mnt/2pny-root/etc/systemd/system/2pny-setup-watch.service
+          test -L /mnt/2pny-root/etc/systemd/system/multi-user.target.wants/2pny-setup-watch.service
+          grep -q "2PNY-Ethernet-Setup" /mnt/2pny-root/usr/local/sbin/2pny-setup-watch
+          grep -q 'MemoryMax=24M' /mnt/2pny-root/etc/systemd/system/2pny-setup-watch.service
+
+          echo '[6/13] Service enablement and fast boot contract'
           test -L /mnt/2pny-root/etc/systemd/system/multi-user.target.wants/2pnyd.service
           test -L /mnt/2pny-root/etc/systemd/system/multi-user.target.wants/2pny-firstboot.service
           test -L /mnt/2pny-root/etc/systemd/system/NetworkManager-wait-online.service
@@ -135,8 +145,8 @@ jobs:
           grep -q 'MemoryMax=64M' /mnt/2pny-root/etc/systemd/system/2pnyd.service
           grep -q 'Storage=volatile' /mnt/2pny-root/etc/systemd/journald.conf.d/2pny.conf
 
-          echo '[6/12] 0.1.7 services and helpers'
-          grep -q '0.1.7-alpha' /mnt/2pny-root/etc/2pny/version
+          echo '[7/13] 0.1.7 hotfix1 services and helpers'
+          grep -q '0.1.7-hotfix1' /mnt/2pny-root/etc/2pny/version
           test -x /mnt/2pny-root/usr/local/bin/2pnyd
           test -x /mnt/2pny-root/usr/local/bin/MMDVM-Host
           test -x /mnt/2pny-root/usr/local/sbin/2pny-rf-apply
@@ -145,38 +155,38 @@ jobs:
           test -s /mnt/2pny-root/usr/share/2pny/modules.json
           test -s /mnt/2pny-root/etc/systemd/system/2pny-mmdvmhost.service
 
-          echo '[7/12] Pinned upstream MMDVMHost'
+          echo '[8/13] Pinned upstream MMDVMHost'
           test "$(cat /mnt/2pny-root/usr/share/2pny/upstream/MMDVMHost.commit)" = '590c531391dfd3146073afbc3956f70d42c62a46'
           file /mnt/2pny-root/usr/local/bin/MMDVM-Host | grep -q 'ARM aarch64'
           grep -q 'libmosquitto1' /mnt/2pny-root/var/lib/dpkg/status
 
-          echo '[8/12] Lean final image: build toolchain removed'
+          echo '[9/13] Lean final image: build toolchain removed'
           test ! -e /mnt/2pny-root/usr/bin/g++
           test ! -e /mnt/2pny-root/usr/bin/git
           test ! -d /mnt/2pny-root/tmp/MMDVM-Host
 
-          echo '[9/12] RF atomic apply/rollback contract'
+          echo '[10/13] RF atomic apply/rollback contract'
           bash -n /mnt/2pny-root/usr/local/sbin/2pny-rf-apply
           grep -q 'rolling back RF configuration' /mnt/2pny-root/usr/local/sbin/2pny-rf-apply
           grep -q 'ConditionPathExists=/var/lib/2pny/rf-configured' /mnt/2pny-root/etc/systemd/system/2pny-mmdvmhost.service
           grep -q 'MemoryMax=96M' /mnt/2pny-root/etc/systemd/system/2pny-mmdvmhost.service
 
-          echo '[10/12] Hardware wizard and probe retained'
+          echo '[11/13] Hardware wizard and probe retained'
           python3 -c 'p="/mnt/2pny-root/usr/local/sbin/2pny-hardware-probe"; compile(open(p, encoding="utf-8").read(), p, "exec")'
           grep -Fq 'bytes((0xE0, 0x03, 0x00))' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
           grep -aFq '2PNY_HARDWARE_WIZARD_V1' /mnt/2pny-root/usr/local/bin/2pnyd
 
-          echo '[11/12] Browser setup and module API contract'
+          echo '[12/13] Browser setup and module API contract'
           ! grep -aFq 'http://2pny.local/wizard' /mnt/2pny-root/usr/local/bin/2pnyd
           grep -aFq '/wizard' /mnt/2pny-root/usr/local/bin/2pnyd
           grep -aFq '/api/modules' /mnt/2pny-root/usr/local/bin/2pnyd
           python3 -m json.tool /mnt/2pny-root/usr/share/2pny/modules.json >/dev/null
 
-          echo '[12/12] No third-party feature auto-start in inventory release'
+          echo '[13/13] No third-party feature auto-start'
           test ! -e /mnt/2pny-root/etc/systemd/system/multi-user.target.wants/2pny-direwolf.service
           test ! -e /mnt/2pny-root/etc/systemd/system/multi-user.target.wants/2pny-dmrgateway.service
           test ! -e /mnt/2pny-root/etc/systemd/system/multi-user.target.wants/2pny-m17gateway.service
-          echo 'Pi 4 ARM64, deterministic setup, MMDVMHost, RF rollback and safe module inventory: OK'
+          echo 'Pi 4 ARM64, Ethernet watcher, deterministic setup, MMDVMHost and rollback: OK'
           cleanup
           trap - EXIT
           sudo rm -f "$RAW"
@@ -188,18 +198,17 @@ jobs:
           set -euo pipefail
           IMAGE="dist/2PNY-OS-${VERSION}-arm64.img.xz"
           cat > RELEASE-NOTES.md <<'EOF'
-          2PNY OS 0.1.7 Alpha — Raspberry Pi ARM64.
+          2PNY OS 0.1.7 hotfix1 — Raspberry Pi ARM64.
 
-          Safe module foundation:
-          - 2PNY remains a standalone project, not a fork;
-          - local read-only /api/modules inventory added;
-          - third-party components remain separate modules/services;
-          - MMDVMHost remains pinned to the verified upstream commit;
-          - Dire Wolf, DMRGateway, M17Gateway and OpenWebRX are not auto-enabled in this release;
-          - projects without an explicit compatible license are not copied into the 2PNY Core;
-          - RF apply/rollback, first-access network and lean runtime protections remain active.
+          Direct-Ethernet first-access correction:
+          - fixes the carrier timing race that could leave Windows with a 169.254.x.x address;
+          - adds a lightweight persistent setup watcher before provisioning;
+          - Ethernet automatically takes priority when a cable is connected;
+          - Wi-Fi setup automatically returns when Ethernet is removed;
+          - only one setup transport owns 10.42.0.1 at a time;
+          - MMDVMHost, RF rollback, module inventory and lean-runtime protections remain unchanged.
 
-          ARM64 track: Zero 2 W / Pi 3 / Pi 4 / Pi 5. Original Pi Zero/Zero W require the separate planned 32-bit track.
+          Expected direct-cable result: Windows receives a 10.42.0.x address and the panel is available at http://10.42.0.1.
           EOF
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
@@ -208,6 +217,6 @@ jobs:
             "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title '2PNY OS 0.1.7 Alpha' \
+            --title '2PNY OS 0.1.7 hotfix1' \
             --notes-file RELEASE-NOTES.md \
             --prerelease
