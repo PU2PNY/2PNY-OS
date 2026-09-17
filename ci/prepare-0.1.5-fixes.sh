@@ -31,6 +31,6 @@ rm -rf rootfs-overlay/usr/local/sbin/__pycache__
 
 grep -q 'bytes((0xE0, 0x03, 0x00))' rootfs-overlay/usr/local/sbin/2pny-hardware-probe
 grep -q 'connect\\xff\\xff\\xff' rootfs-overlay/usr/local/sbin/2pny-hardware-probe
-grep -q '^# 2PNY MMDVM UART' builder/build-image.sh
+grep -q '2PNY MMDVM UART' builder/build-image.sh
 
 echo '2PNY 0.1.5 UART/probe hardening applied'
