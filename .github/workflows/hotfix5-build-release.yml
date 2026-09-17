@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'ci/prepare-0.1.7-hotfix5-bookworm-network.sh'
+      - 'ci/prepare-0.1.7-hotfix5-base-fix.sh'
       - 'ci/prepare-0.1.7-hotfix5-validator-compat.sh'
       - 'ci/validate-0.1.7-hotfix5-image.sh'
       - '.github/workflows/hotfix5-build-release.yml'
@@ -52,6 +53,7 @@ jobs:
             ci/prepare-0.1.7-hotfix4-dual-network.sh \
             ci/prepare-0.1.7-hotfix4-validator-fix.sh \
             ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-base-fix.sh \
             ci/prepare-0.1.7-hotfix5-validator-compat.sh; do
               bash "$f" legacy-source/2pny-os
           done
@@ -72,6 +74,8 @@ jobs:
           set -euo pipefail
           bash ./builder/validate-source.sh
           grep -Fq 'raspios_oldstable_lite_arm64' builder/build-image.sh
+          grep -Fq 'raspios-bookworm-arm64-lite.img.xz' builder/build-image.sh
+          ! grep -Fq 'raspios-trixie-arm64-lite.img.xz' builder/build-image.sh
           grep -Fq 'no-auto-default=*' rootfs-overlay/etc/NetworkManager/conf.d/20-2pny-appliance.conf
           ! grep -q '\[wifi-security\]' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection
           grep -Fq 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection
