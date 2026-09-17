@@ -6,6 +6,7 @@ on:
     paths:
       - 'ci/prepare-0.1.8-network-core-v2.sh'
       - 'ci/prepare-0.1.8-network-core.sh'
+      - 'ci/prepare-0.1.8-builder-service-fix.sh'
       - 'ci/prepare-0.1.8-network-core-validator.sh'
       - 'ci/validate-0.1.8-network-core-image.sh'
       - '.github/workflows/0.1.8-network-core.yml'
@@ -56,6 +57,7 @@ jobs:
             ci/prepare-0.1.7-hotfix5-validator-compat.sh \
             ci/prepare-0.1.8-network-core.sh \
             ci/prepare-0.1.8-network-core-v2.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh \
             ci/prepare-0.1.8-network-core-validator.sh; do
               bash "$f" legacy-source/2pny-os
           done
