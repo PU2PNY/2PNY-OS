@@ -5,6 +5,7 @@ on:
     branches: [ network-ap-rebuild-0.1.8 ]
     paths:
       - 'ci/prepare-0.1.8-network-ap.sh'
+      - 'ci/prepare-0.1.8-network-ap-fix1.sh'
       - 'ci/validate-0.1.8-autoap-image.sh'
       - '.github/workflows/0.1.8-autoap-build.yml'
   workflow_dispatch:
@@ -52,10 +53,11 @@ jobs:
             ci/prepare-0.1.7-hotfix4-validator-fix.sh \
             ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
             ci/prepare-0.1.7-hotfix5-validator-compat.sh \
-            ci/prepare-0.1.7-hotfix5-base-pin.sh \
-            ci/prepare-0.1.8-network-ap.sh; do
+            ci/prepare-0.1.7-hotfix5-base-pin.sh; do
               if [ -f "$f" ]; then bash "$f" legacy-source/2pny-os; fi
           done
+          bash ci/prepare-0.1.8-network-ap-fix1.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.8-network-ap.sh legacy-source/2pny-os
 
       - uses: actions/setup-go@v5
         with:
