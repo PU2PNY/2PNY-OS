@@ -23,40 +23,7 @@ for rel in ['builder/build-image.sh', 'rootfs-overlay/usr/local/sbin/2pny-firstb
 
 # Native MMDVMHost service. It remains dormant until RF is atomically applied.
 svc = root / 'rootfs-overlay/etc/systemd/system/2pny-mmdvmhost.service'
-svc.write_text('''[Unit]
-Description=2PNY MMDVMHost radio engine
-After=systemd-udev-settle.service
-ConditionPathExists=/var/lib/2pny/rf-configured
-StartLimitIntervalSec=30
-StartLimitBurst=5
-
-[Service]
-Type=simple
-User=mmdvm
-Group=mmdvm
-SupplementaryGroups=dialout
-ExecStart=/usr/local/bin/MMDVM-Host /etc/2pny/mmdvm/MMDVM-Host.ini
-Restart=on-failure
-RestartSec=2
-TimeoutStartSec=12
-TimeoutStopSec=5
-KillSignal=SIGTERM
-NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectHome=yes
-ProtectSystem=strict
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectControlGroups=yes
-RestrictSUIDSGID=yes
-LockPersonality=yes
-MemoryMax=96M
-TasksMax=64
-OOMScoreAdjust=-250
-
-[Install]
-WantedBy=multi-user.target
-''')
+svc.write_text('''[Unit]\nDescription=2PNY MMDVMHost radio engine\nAfter=systemd-udev-settle.service\nConditionPathExists=/var/lib/2pny/rf-configured\nStartLimitIntervalSec=30\nStartLimitBurst=5\n\n[Service]\nType=simple\nUser=mmdvm\nGroup=mmdvm\nSupplementaryGroups=dialout\nExecStart=/usr/local/bin/MMDVM-Host /etc/2pny/mmdvm/MMDVM-Host.ini\nRestart=on-failure\nRestartSec=2\nTimeoutStartSec=12\nTimeoutStopSec=5\nKillSignal=SIGTERM\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectHome=yes\nProtectSystem=strict\nProtectKernelTunables=yes\nProtectKernelModules=yes\nProtectControlGroups=yes\nRestrictSUIDSGID=yes\nLockPersonality=yes\nMemoryMax=96M\nTasksMax=64\nOOMScoreAdjust=-250\n\n[Install]\nWantedBy=multi-user.target\n''')
 
 (root / 'rootfs-overlay/etc/2pny/mmdvm').mkdir(parents=True, exist_ok=True)
 (root / 'rootfs-overlay/var/lib/2pny/backups/rf').mkdir(parents=True, exist_ok=True)
@@ -73,7 +40,7 @@ if probe_marker not in ps:
     anchor = next((a for a in anchors if a in ps), None)
     if anchor is None:
         raise SystemExit('hardware probe ownership anchor not found')
-    guard = anchor + '''\n# 2PNY_RF_OWNERSHIP_GUARD\n# Once MMDVMHost owns the modem, do not open the same UART merely to refresh the dashboard.\ndef radio_service_active():\n    try:\n        import subprocess\n        return subprocess.run([\"systemctl\", \"is-active\", \"--quiet\", \"2pny-mmdvmhost.service\"], timeout=1).returncode == 0\n    except Exception:\n        return False\n\n'''
+    guard = anchor + '''\n# 2PNY_RF_OWNERSHIP_GUARD\n# Once MMDVMHost owns the modem, do not open the same UART merely to refresh the dashboard.\ndef radio_service_active():\n    try:\n        import subprocess\n        return subprocess.run(["systemctl", "is-active", "--quiet", "2pny-mmdvmhost.service"], timeout=1).returncode == 0\n    except Exception:\n        return False\n\n'''
     ps = ps.replace(anchor, guard, 1)
 probe.write_text(ps)
 
@@ -144,4 +111,16 @@ chmod 0755 \
 bash "$SELF_DIR/prepare-0.1.6-ui.sh" .
 bash "$SELF_DIR/prepare-0.1.6-first-access-fix.sh" .
 
-echo '2PNY 0.1.6 RF/MMDVMHost, performance, async wizard and first-access fixes applied'
+# The 0.1.3 validator expected the old 169.254 recovery address. 0.1.6 uses a
+# dedicated direct-Ethernet setup profile at 10.42.0.1 instead.
+python3 - <<'PY'
+from pathlib import Path
+p=Path('builder/validate-source.sh')
+s=p.read_text().replace(
+    "grep -q '169.254.2.1/16' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection",
+    "grep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection"
+)
+p.write_text(s)
+PY
+
+echo '2PNY 0.1.6 RF/MMDVMHost, performance, async wizard and hardened first-access fixes applied'
