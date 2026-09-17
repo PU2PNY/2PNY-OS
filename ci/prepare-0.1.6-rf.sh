@@ -77,7 +77,8 @@ probe.write_text(ps)
 # Build MMDVMHost inside the target Debian rootfs, pinned to a verified upstream commit.
 p = root / 'builder/build-image.sh'
 s = p.read_text()
-s = s.replace('wpasupplicant rfkill wireless-regdb', 'wpasupplicant rfkill wireless-regdb libmosquitto1')
+if 'libmosquitto1' not in s:
+    s = s.replace('wpasupplicant rfkill wireless-regdb', 'wpasupplicant rfkill wireless-regdb libmosquitto1')
 marker = '# 2PNY_MMDVMHOST_NATIVE_0_1_6'
 if marker not in s:
     m = re.search(r'(?m)^echo "\[5/9\] Aplicando overlay 2PNY\.\.\."\s*$', s)
@@ -136,4 +137,7 @@ chmod 0755 \
   rootfs-overlay/usr/local/sbin/2pny-perf-snapshot \
   builder/build-image.sh builder/validate-source.sh
 
-echo '2PNY 0.1.6 RF/MMDVMHost and performance layer applied'
+# Complete the browser/API RF stage without blocking the first-save request.
+bash "$SELF_DIR/prepare-0.1.6-ui.sh" .
+
+echo '2PNY 0.1.6 RF/MMDVMHost, performance and async wizard layer applied'
