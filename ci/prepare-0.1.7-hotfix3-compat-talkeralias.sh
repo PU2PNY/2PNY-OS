@@ -8,15 +8,23 @@ from pathlib import Path
 
 v=Path('builder/validate-source.sh')
 s=v.read_text()
-obsolete=[
-    "grep -q \"active '2PNY-Ethernet-Setup'\" rootfs-overlay/usr/local/sbin/2pny-setup-watch\n",
-    "grep -q 'nmcli --wait 10 connection up 2PNY-Ethernet-Setup' rootfs-overlay/usr/local/sbin/2pny-setup-watch\n",
-    "grep -q 'for _ in {1..20}' rootfs-overlay/usr/local/sbin/2pny-firstboot\n",
-    "! grep -q '\\\\[wifi-security\\\\]' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection\n",
-    "grep -q 'mask --now 2pny-setup-watch.service' rootfs-overlay/usr/local/sbin/2pny-ap-control\n",
-]
-for line in obsolete:
-    s=s.replace(line,'')
+
+# Hotfix3 replaces the old first-access implementation. Remove only inherited
+# assertions that describe implementation details intentionally superseded by
+# the single-owner state machine. New equivalent contracts are appended below.
+obsolete_tokens = (
+    "active '2PNY-Ethernet-Setup'",
+    'nmcli --wait 10 connection up 2PNY-Ethernet-Setup',
+    'for _ in {1..20}',
+    "! grep -q '\\[wifi-security\\]'",
+    'mask --now 2pny-setup-watch.service',
+)
+lines=[]
+for line in s.splitlines(True):
+    if any(token in line for token in obsolete_tokens):
+        continue
+    lines.append(line)
+s=''.join(lines)
 
 marker='# 2PNY_HOTFIX3_COMPAT_TALKERALIAS'
 if marker not in s:
