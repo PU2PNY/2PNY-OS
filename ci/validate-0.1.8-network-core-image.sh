@@ -21,22 +21,21 @@ grep -q 'VERSION_CODENAME=bookworm' "$ROOT/etc/os-release"
 [[ "$(cat "$ROOT/etc/2pny/version")" == "$VERSION" ]]
 
 printf '[2/7] Explicit network runtime packages\n'
-for bin in usr/sbin/hostapd usr/sbin/dnsmasq usr/sbin/iw usr/sbin/rfkill usr/local/sbin/2pny-network-core usr/local/bin/2pnyd; do
+for bin in usr/sbin/hostapd usr/sbin/dnsmasq usr/sbin/iw usr/sbin/rfkill usr/local/sbin/2pny-network-core usr/local/sbin/2pny-network-switch usr/local/bin/2pnyd; do
   test -x "$ROOT/$bin"
 done
 
 printf '[3/7] First-access contracts\n'
-grep -q '^ssid=2PNY-SETUP$' "$ROOT/etc/2pny/hostapd-setup.conf"
-grep -q '^wpa=0$' "$ROOT/etc/2pny/hostapd-setup.conf"
-grep -q '^interface=wlan0$' "$ROOT/etc/2pny/dnsmasq-wifi.conf"
-grep -q 'dhcp-range=10.42.0.20,10.42.0.150' "$ROOT/etc/2pny/dnsmasq-wifi.conf"
-grep -q '^address=/#/10.42.0.1$' "$ROOT/etc/2pny/dnsmasq-wifi.conf"
-grep -q '^interface=eth0$' "$ROOT/etc/2pny/dnsmasq-ethernet.conf"
-grep -q 'dhcp-range=10.43.0.20,10.43.0.150' "$ROOT/etc/2pny/dnsmasq-ethernet.conf"
+grep -q '^ssid=2PNY-SETUP$' "$ROOT/usr/share/2pny/network/hostapd.template"
+grep -q '^wpa=0$' "$ROOT/usr/share/2pny/network/hostapd.template"
+grep -q '^interface=@IFACE@$' "$ROOT/usr/share/2pny/network/hostapd.template"
+grep -q 'dhcp-range=10.42.0.20,10.42.0.200' "$ROOT/usr/share/2pny/network/dnsmasq-ap.template"
+grep -q '^address=/#/10.42.0.1$' "$ROOT/usr/share/2pny/network/dnsmasq-ap.template"
+grep -q '^interface=@IFACE@$' "$ROOT/usr/share/2pny/network/dnsmasq-eth.template"
+grep -q 'dhcp-range=10.43.0.20,10.43.0.200' "$ROOT/usr/share/2pny/network/dnsmasq-eth.template"
 grep -q 'ip addr add 10.42.0.1/24' "$ROOT/usr/local/sbin/2pny-network-core"
 grep -q 'ip addr add 10.43.0.1/24' "$ROOT/usr/local/sbin/2pny-network-core"
-! test -e "$ROOT/etc/NetworkManager/system-connections/2pny-setup.nmconnection"
-! test -e "$ROOT/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection"
+grep -q 'systemctl stop 2pny-network-core.service' "$ROOT/usr/local/sbin/2pny-network-switch"
 
 printf '[4/7] Service ownership and clean image\n'
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-network-core.service"
@@ -46,7 +45,7 @@ grep -q '0.0.0.0:80' "$ROOT/usr/local/bin/2pnyd" 2>/dev/null || true
 grep -q '^DumpTAData=1$' "$ROOT/usr/local/sbin/2pny-rf-apply"
 
 printf '[5/7] Script syntax\n'
-for f in usr/local/sbin/2pny-network-core usr/local/sbin/2pny-ap-control usr/local/sbin/2pny-firstboot; do
+for f in usr/local/sbin/2pny-network-core usr/local/sbin/2pny-network-switch usr/local/sbin/2pny-ap-control; do
   sudo chroot "$ROOT" /bin/bash -n "/$f"
 done
 
@@ -71,8 +70,7 @@ sudo kill "$PANEL_PID" 2>/dev/null || true
 wait "$PANEL_PID" 2>/dev/null || true
 for p in dev sys proc; do sudo umount "$ROOT/$p"; done
 
-printf '[7/7] DHCP daemon config parser\n'
-sudo chroot "$ROOT" /usr/sbin/dnsmasq --test --conf-file=/etc/2pny/dnsmasq-wifi.conf >/dev/null
-sudo chroot "$ROOT" /usr/sbin/dnsmasq --test --conf-file=/etc/2pny/dnsmasq-ethernet.conf >/dev/null
+printf '[7/7] Network core self-test\n'
+sudo chroot "$ROOT" /usr/local/sbin/2pny-network-core --self-test >/dev/null
 
 echo 'OK: 2PNY 0.1.8 final image network core validated'
