@@ -9,6 +9,7 @@ on:
       - 'ci/prepare-0.1.7-hotfix2-captive-responsive.sh'
       - 'ci/prepare-0.1.7-hotfix2-route-dedupe.sh'
       - 'ci/validate-0.1.7-hotfix2-image.sh'
+      - '.github/workflows/build-release.yml'
       - '.github/workflows/hotfix2-build-release-v2.yml'
   workflow_dispatch:
 
@@ -35,6 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           test ! -e .github/workflows/hotfix2-build-release.yml
+          ! grep -Fq 'branches: [ main,' .github/workflows/build-release.yml
           bash legacy-source/2pny-os/bootstrap.sh
           for f in ci/prepare-0.1.2.sh ci/prepare-0.1.3.sh ci/prepare-0.1.4-ui.sh ci/prepare-0.1.5-hardware.sh ci/prepare-0.1.5-fixes.sh ci/prepare-0.1.6-rf.sh ci/prepare-0.1.6-build-fix.sh ci/prepare-0.1.7-modules.sh ci/prepare-0.1.7-hotfix1-ethernet.sh ci/prepare-0.1.7-hotfix2-listener-prep.sh ci/prepare-0.1.7-hotfix2-captive-responsive.sh ci/prepare-0.1.7-hotfix2-route-dedupe.sh; do
             bash "$f" legacy-source/2pny-os
