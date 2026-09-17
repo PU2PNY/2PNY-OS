@@ -1,0 +1,118 @@
+name: Build 2PNY 0.1.8 Network Core
+
+on:
+  push:
+    branches: [ network-core-0.1.8 ]
+    paths:
+      - 'ci/prepare-0.1.8-network-core-v2.sh'
+      - 'ci/validate-0.1.8-network-core-image.sh'
+      - '.github/workflows/0.1.8-network-core.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-network-core:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    env:
+      VERSION: 0.1.8-alpha
+      TAG: v0.1.8-alpha-network1
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+
+      - name: Restore and patch source
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-network-core-v2.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2
+
+      - name: Validate source
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          bash ./builder/validate-source.sh
+          grep -q '0.1.8-alpha' src/2pnyd/main.go
+          grep -q 'hostapd dnsmasq-base iw rfkill avahi-daemon' builder/build-image.sh
+          ! grep -q 'ipv4.method shared' rootfs-overlay/usr/local/sbin/2pny-network-core
+          grep -q '^wpa=0$' rootfs-overlay/etc/2pny/hostapd-setup.conf
+          grep -q '10.42.0.20,10.42.0.150' rootfs-overlay/etc/2pny/dnsmasq-wifi.conf
+          grep -q '10.43.0.20,10.43.0.150' rootfs-overlay/etc/2pny/dnsmasq-ethernet.conf
+
+      - name: Build image
+        working-directory: legacy-source/2pny-os
+        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
+
+      - name: Validate final image
+        working-directory: legacy-source/2pny-os
+        run: bash "$GITHUB_WORKSPACE/ci/validate-0.1.8-network-core-image.sh" "dist/2PNY-OS-${VERSION}-arm64.img.xz" "$VERSION"
+
+      - name: Publish prerelease
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          IMAGE="dist/2PNY-OS-${VERSION}-arm64.img.xz"
+          cat > RELEASE-NOTES.md <<'EOF'
+          2PNY OS 0.1.8 Alpha Network Core — Raspberry Pi ARM64.
+
+          First-access networking rebuilt after Pi-Star/WPSD architecture research:
+          - Raspberry Pi OS Legacy / Debian Bookworm base;
+          - explicit hostapd open AP named 2PNY-SETUP;
+          - explicit dnsmasq DHCP/DNS on Wi-Fi setup network;
+          - explicit independent dnsmasq DHCP on direct Ethernet;
+          - Wi-Fi setup address 10.42.0.1/24;
+          - direct Ethernet address 10.43.0.1/24;
+          - Ethernet and setup AP run independently at the same time;
+          - NetworkManager shared mode is not used for first access;
+          - network-core self-heals missing IPs and daemons;
+          - AP can be enabled/disabled from the panel helper;
+          - captive DNS redirects setup-browser probes to 10.42.0.1;
+          - panel remains on 0.0.0.0:80;
+          - MMDVMHost, RF rollback and DMR Talker Alias remain preserved.
+
+          Wi-Fi: connect to 2PNY-SETUP and open http://10.42.0.1
+          Direct Ethernet: open http://10.43.0.1
+          EOF
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title '2PNY OS 0.1.8 Alpha Network Core' --notes-file RELEASE-NOTES.md --prerelease
