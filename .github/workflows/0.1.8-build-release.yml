@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
+      - 'ci/prepare-0.1.8-anchor-compat.sh'
       - 'ci/prepare-0.1.8-network-core.sh'
       - 'ci/validate-0.1.8-image.sh'
       - '.github/workflows/0.1.8-build-release.yml'
@@ -53,6 +54,7 @@ jobs:
             ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
             ci/prepare-0.1.7-hotfix5-base-fix.sh \
             ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-anchor-compat.sh \
             ci/prepare-0.1.8-network-core.sh; do
               bash "$f" legacy-source/2pny-os
           done
