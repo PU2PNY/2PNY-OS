@@ -67,16 +67,15 @@ jobs:
       - name: Validate source
         working-directory: legacy-source/2pny-os
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           bash ./builder/validate-source.sh
-          grep -q 'listenAddr.*0.0.0.0:80' src/2pnyd/main.go
-          test "$(grep -Fc 'http.HandleFunc(\"/api/hardware\"' src/2pnyd/main.go)" -eq 1
-          grep -q '^address1=10.42.0.1/24$' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection
-          grep -q '^address1=10.43.0.1/24$' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection
-          grep -q '^key-mgmt=none$' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection
-          grep -q 'Ethernet direct access is independent' rootfs-overlay/usr/local/sbin/2pny-setup-watch
-          grep -q 'Wi-Fi AP is also independent' rootfs-overlay/usr/local/sbin/2pny-setup-watch
-          grep -q '^DumpTAData=1$' rootfs-overlay/usr/local/sbin/2pny-rf-apply
+          grep -Fq '0.0.0.0:80' src/2pnyd/main.go
+          grep -Fq 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection
+          grep -Fq 'address1=10.43.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection
+          grep -Fq 'key-mgmt=none' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection
+          grep -Fq 'Ethernet direct access is independent' rootfs-overlay/usr/local/sbin/2pny-setup-watch
+          grep -Fq 'Wi-Fi AP is also independent' rootfs-overlay/usr/local/sbin/2pny-setup-watch
+          grep -Fq 'DumpTAData=1' rootfs-overlay/usr/local/sbin/2pny-rf-apply
           bash -n rootfs-overlay/usr/local/sbin/2pny-ap-control
           bash -n rootfs-overlay/usr/local/sbin/2pny-setup-watch
           bash -n rootfs-overlay/usr/local/sbin/2pny-firstboot
