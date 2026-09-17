@@ -12,10 +12,14 @@ root = Path('.')
 # of racing the daemon for the UART.
 p = root/'rootfs-overlay/usr/local/sbin/2pny-hardware-probe'
 s = p.read_text()
-old = '''save(state)\n\nmmdvm_real = None\nfor item in state['serial_ports']:'''
-new = '''if radio_service_active() and OUT.exists():\n    try:\n        previous = json.loads(OUT.read_text())\n        previous['state'] = 'complete'\n        previous['radio_engine'] = 'active'\n        save(previous)\n        print(json.dumps(previous, ensure_ascii=False))\n        raise SystemExit(0)\n    except (ValueError, OSError):\n        pass\n\nsave(state)\n\nmmdvm_real = None\nfor item in state['serial_ports']:'''
-if old not in s:
+old_candidates = [
+    '''save(state)\n\nmmdvm_real = None\nfor item in state["serial_ports"]:''',
+    '''save(state)\n\nmmdvm_real = None\nfor item in state['serial_ports']:''',
+]
+old = next((candidate for candidate in old_candidates if candidate in s), None)
+if old is None:
     raise SystemExit('hardware ownership use anchor not found')
+new = '''if radio_service_active() and OUT.exists():\n    try:\n        previous = json.loads(OUT.read_text())\n        previous["state"] = "complete"\n        previous["radio_engine"] = "active"\n        save(previous)\n        print(json.dumps(previous, ensure_ascii=False))\n        raise SystemExit(0)\n    except (ValueError, OSError):\n        pass\n\nsave(state)\n\nmmdvm_real = None\nfor item in state["serial_ports"]:'''
 s = s.replace(old, new, 1)
 p.write_text(s)
 
@@ -134,8 +138,5 @@ if 'async function applyRF()' not in s:
 
 p.write_text(s)
 PY
-
-gofmt_target="$ROOT/src/2pnyd/main.go"
-# gofmt is performed by validate-source; keep this patch usable before Go setup too.
 
 echo '2PNY 0.1.6 asynchronous RF wizard applied'
