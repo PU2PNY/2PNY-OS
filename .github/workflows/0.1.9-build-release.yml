@@ -121,12 +121,13 @@ jobs:
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
-          OLD="$(find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
+          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
           test -n "$OLD"
           IMAGE="dist/PU2PNY-OS-${VERSION}-arm64.img.xz"
-          if [[ "$OLD" != "$IMAGE" ]]; then mv "$OLD" "$IMAGE"; fi
-          rm -f dist/*.img.xz.sha256
-          sha256sum "$IMAGE" > "${IMAGE}.sha256"
+          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
+          sudo rm -f dist/*.img.xz.sha256
+          sudo sha256sum "$IMAGE" | sudo tee "${IMAGE}.sha256" >/dev/null
+          sudo chown "$USER:$USER" "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt
           test -s "$IMAGE"
           test -s "${IMAGE}.sha256"
 
