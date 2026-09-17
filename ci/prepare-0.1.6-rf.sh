@@ -126,9 +126,10 @@ MMDVM_BUILD
     s = s[:m.start()] + block + s[m.start():]
 p.write_text(s)
 
-# Extend source validation with the RF/performance layer.
+# Extend source validation with the RF/performance layer and update the inherited
+# 0.1.5 version assertion instead of weakening it.
 p = root / 'builder/validate-source.sh'
-vs = p.read_text()
+vs = p.read_text().replace("grep -q '0.1.5-alpha' src/2pnyd/main.go", "grep -q '0.1.6-alpha' src/2pnyd/main.go")
 check_marker = '# 2PNY_0_1_6_SOURCE_CHECK'
 if check_marker not in vs:
     vs += '''\n# 2PNY_0_1_6_SOURCE_CHECK\nfor f in \\\n  rootfs-overlay/usr/local/sbin/2pny-rf-apply \\\n  rootfs-overlay/usr/local/sbin/2pny-perf-snapshot \\\n  rootfs-overlay/etc/systemd/system/2pny-mmdvmhost.service; do\n  test -s "$f" || { echo "missing 0.1.6 file: $f" >&2; exit 1; }\ndone\ngrep -q '590c531391dfd3146073afbc3956f70d42c62a46' builder/build-image.sh\ngrep -q 'MemoryMax=96M' rootfs-overlay/etc/systemd/system/2pny-mmdvmhost.service\n'''
@@ -141,5 +142,6 @@ chmod 0755 \
   builder/build-image.sh builder/validate-source.sh
 
 bash "$SELF_DIR/prepare-0.1.6-ui.sh" .
+bash "$SELF_DIR/prepare-0.1.6-first-access-fix.sh" .
 
-echo '2PNY 0.1.6 RF/MMDVMHost, performance and async wizard layer applied'
+echo '2PNY 0.1.6 RF/MMDVMHost, performance, async wizard and first-access fixes applied'
