@@ -1,0 +1,40 @@
+name: Rebuild and publish PU2PNY OS 0.1.9 Hotfix1
+
+on:
+  push:
+    branches: [ pu2pny-os-0.1.9-hotfix1 ]
+    paths:
+      - 'ci/rebuild-publish-0.1.9-hotfix1.sh'
+      - '.github/workflows/0.1.9-hotfix1-resilient-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild-publish:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 70
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install build and validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2
+
+      - name: Rebuild, validate and publish with resilient upload
+        run: bash ci/rebuild-publish-0.1.9-hotfix1.sh
