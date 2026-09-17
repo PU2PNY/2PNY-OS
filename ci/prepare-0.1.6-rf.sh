@@ -58,7 +58,6 @@ OOMScoreAdjust=-250
 WantedBy=multi-user.target
 ''')
 
-# Directories exist even before RF configuration, but no valid radio config is shipped.
 (root / 'rootfs-overlay/etc/2pny/mmdvm').mkdir(parents=True, exist_ok=True)
 (root / 'rootfs-overlay/var/lib/2pny/backups/rf').mkdir(parents=True, exist_ok=True)
 
@@ -67,8 +66,12 @@ probe = root / 'rootfs-overlay/usr/local/sbin/2pny-hardware-probe'
 ps = probe.read_text()
 probe_marker = '# 2PNY_RF_OWNERSHIP_GUARD'
 if probe_marker not in ps:
-    anchor = "OUT = Path('/var/lib/2pny/hardware-probe.json')\nOUT.parent.mkdir(parents=True, exist_ok=True)\n"
-    if anchor not in ps:
+    anchors = [
+        'OUT = Path("/var/lib/2pny/hardware-probe.json")\nOUT.parent.mkdir(parents=True, exist_ok=True)\n',
+        "OUT = Path('/var/lib/2pny/hardware-probe.json')\nOUT.parent.mkdir(parents=True, exist_ok=True)\n",
+    ]
+    anchor = next((a for a in anchors if a in ps), None)
+    if anchor is None:
         raise SystemExit('hardware probe ownership anchor not found')
     guard = anchor + '''\n# 2PNY_RF_OWNERSHIP_GUARD\n# Once MMDVMHost owns the modem, do not open the same UART merely to refresh the dashboard.\ndef radio_service_active():\n    try:\n        import subprocess\n        return subprocess.run([\"systemctl\", \"is-active\", \"--quiet\", \"2pny-mmdvmhost.service\"], timeout=1).returncode == 0\n    except Exception:\n        return False\n\n'''
     ps = ps.replace(anchor, guard, 1)
@@ -137,7 +140,6 @@ chmod 0755 \
   rootfs-overlay/usr/local/sbin/2pny-perf-snapshot \
   builder/build-image.sh builder/validate-source.sh
 
-# Complete the browser/API RF stage without blocking the first-save request.
 bash "$SELF_DIR/prepare-0.1.6-ui.sh" .
 
 echo '2PNY 0.1.6 RF/MMDVMHost, performance and async wizard layer applied'
