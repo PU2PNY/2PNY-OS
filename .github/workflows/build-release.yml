@@ -41,6 +41,7 @@ jobs:
           bash ci/prepare-0.1.5-hardware.sh legacy-source/2pny-os
           bash ci/prepare-0.1.5-fixes.sh legacy-source/2pny-os
           bash ci/prepare-0.1.6-rf.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.6-build-fix.sh legacy-source/2pny-os
 
       - name: Setup Go
         uses: actions/setup-go@v5
