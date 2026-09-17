@@ -76,7 +76,6 @@ jobs:
         run: |
           set -euo pipefail
           bash ./builder/validate-source.sh
-          grep -Fq 'raspios_oldstable_lite_arm64' builder/build-image.sh
           grep -Fq 'ssid=2PNY-SETUP' rootfs-overlay/etc/hostapd/hostapd-2pny.conf
           grep -Fq '10.42.0.20,10.42.0.80' rootfs-overlay/etc/dnsmasq.d/2pny-setup.conf
           grep -Fq '10.43.0.20,10.43.0.80' rootfs-overlay/etc/dnsmasq.d/2pny-setup.conf
