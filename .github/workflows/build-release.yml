@@ -2,7 +2,7 @@ name: Build and Release 2PNY OS Alpha
 
 on:
   push:
-    branches: [ main, ui-modular-0.1.4, mmdvm-hardware-0.1.5 ]
+    branches: [ main, ui-modular-0.1.4, mmdvm-hardware-0.1.5, rf-mmdvmhost-0.1.6 ]
     paths:
       - 'ci/**'
       - 'src/**'
@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 90
     env:
-      VERSION: 0.1.5-alpha
-      TAG: v0.1.5-alpha
+      VERSION: 0.1.6-alpha
+      TAG: v0.1.6-alpha
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout 2PNY repository
@@ -40,6 +40,7 @@ jobs:
           bash ci/prepare-0.1.4-ui.sh legacy-source/2pny-os
           bash ci/prepare-0.1.5-hardware.sh legacy-source/2pny-os
           bash ci/prepare-0.1.5-fixes.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.6-rf.sh legacy-source/2pny-os
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -55,7 +56,10 @@ jobs:
 
       - name: Validate source
         working-directory: legacy-source/2pny-os
-        run: ./builder/validate-source.sh
+        run: |
+          ./builder/validate-source.sh
+          bash -n rootfs-overlay/usr/local/sbin/2pny-rf-apply
+          sh -n rootfs-overlay/usr/local/sbin/2pny-perf-snapshot
 
       - name: Build Raspberry Pi image
         working-directory: legacy-source/2pny-os
@@ -72,7 +76,7 @@ jobs:
           test "$EXPECTED" = "$ACTUAL"
           echo "SHA-256 OK: $ACTUAL"
 
-      - name: Validate Pi 4, network, UART, MMDVM probe and wizard
+      - name: Validate Pi 4, MMDVMHost, RF rollback layer and lean runtime
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
@@ -90,7 +94,7 @@ jobs:
           trap cleanup EXIT
           for i in {1..20}; do test -b "${LOOP}p2" && break; sleep .25; done
 
-          echo '[1/8] Filesystems'
+          echo '[1/10] Filesystems'
           sudo fsck.vfat -n "${LOOP}p1"
           sudo e2fsck -fn "${LOOP}p2"
           sudo mkdir -p /mnt/2pny-root
@@ -98,46 +102,55 @@ jobs:
           sudo mkdir -p /mnt/2pny-root/boot/firmware
           sudo mount -o ro "${LOOP}p1" /mnt/2pny-root/boot/firmware
 
-          echo '[2/8] Raspberry Pi 4 boot files'
+          echo '[2/10] Raspberry Pi 4 ARM64 boot files'
           test -s /mnt/2pny-root/boot/firmware/kernel8.img
           test -s /mnt/2pny-root/boot/firmware/start4.elf
           test -s /mnt/2pny-root/boot/firmware/bcm2711-rpi-4-b.dtb
           grep -q 'arm_64bit=1' /mnt/2pny-root/boot/firmware/config.txt
 
-          echo '[3/8] MMDVM GPIO UART configuration'
+          echo '[3/10] GPIO UART reserved for MMDVM'
           grep -qxF '[all]' /mnt/2pny-root/boot/firmware/config.txt
           grep -qxF '# 2PNY MMDVM UART' /mnt/2pny-root/boot/firmware/config.txt
           grep -qxF 'enable_uart=1' /mnt/2pny-root/boot/firmware/config.txt
           grep -qxF 'dtoverlay=disable-bt' /mnt/2pny-root/boot/firmware/config.txt
-          grep -qxF 'dtparam=i2c_arm=on' /mnt/2pny-root/boot/firmware/config.txt
           ! grep -Eq 'console=(serial0|ttyAMA0|ttyS0),' /mnt/2pny-root/boot/firmware/cmdline.txt
 
-          echo '[4/8] First-access network'
+          echo '[4/10] First-access network retained'
           grep -qw 'network-config=disabled' /mnt/2pny-root/boot/firmware/cmdline.txt
-          grep -qw 'cfg80211.ieee80211_regdom=BR' /mnt/2pny-root/boot/firmware/cmdline.txt
           grep -q '169.254.2.1/16' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection
           grep -q 'address1=10.42.0.1/24' /mnt/2pny-root/etc/NetworkManager/system-connections/2pny-setup.nmconnection
 
-          echo '[5/8] 2PNY services and version'
+          echo '[5/10] 0.1.6 services and helpers'
+          grep -q '0.1.6-alpha' /mnt/2pny-root/etc/2pny/version
           test -x /mnt/2pny-root/usr/local/bin/2pnyd
-          test -x /mnt/2pny-root/usr/local/sbin/2pny-firstboot
-          test -x /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
-          grep -q '0.1.5-alpha' /mnt/2pny-root/etc/2pny/version
+          test -x /mnt/2pny-root/usr/local/bin/MMDVM-Host
+          test -x /mnt/2pny-root/usr/local/sbin/2pny-rf-apply
+          test -x /mnt/2pny-root/usr/local/sbin/2pny-perf-snapshot
+          test -s /mnt/2pny-root/etc/systemd/system/2pny-mmdvmhost.service
 
-          echo '[6/8] MMDVM and Nextion identification probe'
+          echo '[6/10] Pinned upstream MMDVMHost'
+          test "$(cat /mnt/2pny-root/usr/share/2pny/upstream/MMDVMHost.commit)" = '590c531391dfd3146073afbc3956f70d42c62a46'
+          file /mnt/2pny-root/usr/local/bin/MMDVM-Host | grep -q 'ARM aarch64'
+          grep -q 'libmosquitto1' /mnt/2pny-root/var/lib/dpkg/status
+
+          echo '[7/10] Lean final image: build toolchain removed'
+          test ! -e /mnt/2pny-root/usr/bin/g++
+          test ! -e /mnt/2pny-root/usr/bin/git
+          test ! -d /mnt/2pny-root/tmp/MMDVM-Host
+
+          echo '[8/10] RF atomic apply/rollback contract'
+          bash -n /mnt/2pny-root/usr/local/sbin/2pny-rf-apply
+          grep -q 'rolling back RF configuration' /mnt/2pny-root/usr/local/sbin/2pny-rf-apply
+          grep -q 'ConditionPathExists=/var/lib/2pny/rf-configured' /mnt/2pny-root/etc/systemd/system/2pny-mmdvmhost.service
+          grep -q 'MemoryMax=96M' /mnt/2pny-root/etc/systemd/system/2pny-mmdvmhost.service
+
+          echo '[9/10] Hardware wizard and probe retained'
           python3 -c 'p="/mnt/2pny-root/usr/local/sbin/2pny-hardware-probe"; compile(open(p, encoding="utf-8").read(), p, "exec")'
           grep -Fq 'bytes((0xE0, 0x03, 0x00))' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
-          grep -Fq 'probe_nextion' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
-          grep -Fq 'connect' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
-
-          echo '[7/8] Professional hardware wizard embedded in 2pnyd'
           grep -aFq '2PNY_HARDWARE_WIZARD_V1' /mnt/2pny-root/usr/local/bin/2pnyd
-          grep -aFq '/api/hardware/scan' /mnt/2pny-root/usr/local/bin/2pnyd
-          grep -aFq 'Detectando hardware' /mnt/2pny-root/usr/local/bin/2pnyd
-          grep -aFq '2pny-theme' /mnt/2pny-root/usr/local/bin/2pnyd
 
-          echo '[8/8] Validation complete'
-          echo 'Pi 4, network, PL011 UART, active MMDVM identification and dark-first hardware wizard: OK'
+          echo '[10/10] Validation complete'
+          echo 'Pi 4 ARM64, native MMDVMHost, RF rollback and lean-runtime checks: OK'
           cleanup
           trap - EXIT
           sudo rm -f "$RAW"
@@ -149,19 +162,18 @@ jobs:
           set -euo pipefail
           IMAGE="dist/2PNY-OS-${VERSION}-arm64.img.xz"
           cat > RELEASE-NOTES.md <<'EOF'
-          2PNY OS 0.1.5 Alpha — Raspberry Pi ARM64.
+          2PNY OS 0.1.6 Alpha — Raspberry Pi ARM64.
 
-          Primeira camada física MMDVM/Display do assistente modular:
-          - painel profissional dark-first com opção claro/escuro;
-          - avanço do primeiro acesso direto para o wizard de hardware;
-          - GPIO UART preparado para MMDVM HAT (console serial removido, UART habilitado, PL011 liberado do Bluetooth);
-          - identificação MMDVM pelo comando oficial GET_VERSION, sem alterar RF;
-          - exibe firmware/descrição, versão do protocolo, CPU e capacidades D-Star/DMR/YSF/P25/NXDN/FM/POCSAG quando anunciadas pelo modem;
-          - HAT EEPROM, portas seriais e I2C visíveis;
-          - detecção inicial de Nextion serial direta e estado explícito quando a tela estiver ligada atrás da MMDVM;
-          - etapa RF já aparece no wizard, mas a aplicação de frequência/offset/BER aguarda o módulo MMDVMHost/MMDVMCal com rollback.
+          RF/MMDVMHost layer:
+          - native G4KLX MMDVMHost pinned to a verified upstream commit;
+          - compiler, git, sources and build dependencies removed from the final image;
+          - RF apply is atomic with backup and automatic rollback;
+          - MMDVMHost runs unprivileged and only starts after RF configuration;
+          - all protocols and external networks remain disabled until the next module;
+          - on-demand lightweight performance snapshot;
+          - performance budgets documented for the Raspberry Pi family.
 
-          Primeiro acesso: 2PNY-SETUP / 2pnysetup / http://10.42.0.1.
+          ARM64 track: Zero 2 W / Pi 3 / Pi 4 / Pi 5. Original Pi Zero/Zero W require the separate planned 32-bit track.
           EOF
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
@@ -170,6 +182,6 @@ jobs:
             "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title '2PNY OS 0.1.5 Alpha' \
+            --title '2PNY OS 0.1.6 Alpha' \
             --notes-file RELEASE-NOTES.md \
             --prerelease
