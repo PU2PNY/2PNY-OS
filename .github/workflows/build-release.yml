@@ -125,7 +125,7 @@ jobs:
           grep -q '0.1.5-alpha' /mnt/2pny-root/etc/2pny/version
 
           echo '[6/8] MMDVM and Nextion identification probe'
-          python3 -m py_compile /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
+          python3 -c 'p="/mnt/2pny-root/usr/local/sbin/2pny-hardware-probe"; compile(open(p, encoding="utf-8").read(), p, "exec")'
           grep -Fq 'bytes((0xE0, 0x03, 0x00))' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
           grep -Fq 'probe_nextion' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
           grep -Fq 'connect' /mnt/2pny-root/usr/local/sbin/2pny-hardware-probe
