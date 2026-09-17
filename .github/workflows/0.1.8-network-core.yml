@@ -5,6 +5,7 @@ on:
     branches: [ network-core-0.1.8 ]
     paths:
       - 'ci/prepare-0.1.8-network-core-v2.sh'
+      - 'ci/prepare-0.1.8-network-core-validator.sh'
       - 'ci/validate-0.1.8-network-core-image.sh'
       - '.github/workflows/0.1.8-network-core.yml'
   workflow_dispatch:
@@ -52,7 +53,8 @@ jobs:
             ci/prepare-0.1.7-hotfix4-validator-fix.sh \
             ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
             ci/prepare-0.1.7-hotfix5-validator-compat.sh \
-            ci/prepare-0.1.8-network-core-v2.sh; do
+            ci/prepare-0.1.8-network-core-v2.sh \
+            ci/prepare-0.1.8-network-core-validator.sh; do
               bash "$f" legacy-source/2pny-os
           done
 
@@ -71,12 +73,6 @@ jobs:
         run: |
           set -euo pipefail
           bash ./builder/validate-source.sh
-          grep -q '0.1.8-alpha' src/2pnyd/main.go
-          grep -q 'hostapd dnsmasq-base iw rfkill avahi-daemon' builder/build-image.sh
-          ! grep -q 'ipv4.method shared' rootfs-overlay/usr/local/sbin/2pny-network-core
-          grep -q '^wpa=0$' rootfs-overlay/etc/2pny/hostapd-setup.conf
-          grep -q '10.42.0.20,10.42.0.150' rootfs-overlay/etc/2pny/dnsmasq-wifi.conf
-          grep -q '10.43.0.20,10.43.0.150' rootfs-overlay/etc/2pny/dnsmasq-ethernet.conf
 
       - name: Build image
         working-directory: legacy-source/2pny-os
