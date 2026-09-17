@@ -98,7 +98,7 @@ jobs:
           done
           python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-hardware-probe
           rm -rf rootfs-overlay/usr/local/sbin/__pycache__
-          grep -Fq 'appVersion      = "0.2.0-alpha"' src/2pnyd/main.go
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.2\.0-alpha"' src/2pnyd/main.go
           grep -Fq 'http.HandleFunc("/api/connectivity"' src/2pnyd/main.go
           grep -Fq 'http.HandleFunc("/api/network/connect"' src/2pnyd/main.go
           grep -Fq 'http.HandleFunc("/api/basic/apply"' src/2pnyd/main.go
