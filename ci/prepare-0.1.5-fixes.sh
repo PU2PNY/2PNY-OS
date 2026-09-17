@@ -24,6 +24,18 @@ if old not in s:
     raise SystemExit('global UART config anchor not found')
 s = s.replace(old, new, 1)
 p.write_text(s)
+
+# Keep the wizard build marker inside the served HTML so it survives Go stripping
+# and can be verified in the final ARM64 binary image.
+p = Path('src/2pnyd/main.go')
+s = p.read_text()
+needle = '<title>2PNY OS — Configuração</title>'
+replacement = '<title>2PNY OS — Configuração</title><!-- 2PNY_HARDWARE_WIZARD_V1 -->'
+if replacement not in s:
+    if needle not in s:
+        raise SystemExit('wizard title anchor not found')
+    s = s.replace(needle, replacement, 1)
+p.write_text(s)
 PY
 
 python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-hardware-probe
@@ -32,5 +44,6 @@ rm -rf rootfs-overlay/usr/local/sbin/__pycache__
 grep -q 'bytes((0xE0, 0x03, 0x00))' rootfs-overlay/usr/local/sbin/2pny-hardware-probe
 grep -q 'connect\\xff\\xff\\xff' rootfs-overlay/usr/local/sbin/2pny-hardware-probe
 grep -q '2PNY MMDVM UART' builder/build-image.sh
+grep -q '2PNY_HARDWARE_WIZARD_V1' src/2pnyd/main.go
 
-echo '2PNY 0.1.5 UART/probe hardening applied'
+echo '2PNY 0.1.5 UART/probe/wizard hardening applied'
