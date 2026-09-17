@@ -56,7 +56,7 @@ jobs:
           set -euo pipefail
           bash -x ./builder/validate-source.sh
           grep -q 'listenAddr.*0.0.0.0:80' src/2pnyd/main.go
-          test "$(grep -Fc 'http.HandleFunc(\"/api/hardware\"' src/2pnyd/main.go)" -eq 1
+          test "$(grep -Fc 'http.HandleFunc("/api/hardware"' src/2pnyd/main.go)" -eq 1
           bash -n rootfs-overlay/usr/local/sbin/2pny-ap-control
           python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-hardware-probe
 
