@@ -107,6 +107,9 @@ Module=C
 [DMR]
 Enable=0
 ColorCode=1
+# Keep Talker Alias decoding available as soon as DMR is enabled by the DMR module.
+# MMDVMHost receives/assembles the embedded TA blocks and logs the decoded alias.
+DumpTAData=1
 
 [System Fusion]
 Enable=0
