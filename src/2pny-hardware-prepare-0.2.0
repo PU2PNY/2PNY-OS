@@ -1,0 +1,48 @@
+#!/bin/bash
+set -u
+
+STATE=/var/lib/2pny
+LOG=/var/log/2pny-hardware-prepare.log
+STAMP="$STATE/driver-update.stamp"
+mkdir -p "$STATE" "$(dirname "$LOG")"
+
+log(){ printf '[%s] %s\n' "$(date -Is)" "$*" >>"$LOG"; }
+
+if test -x /usr/local/sbin/2pny-hardware-drivers; then
+  /usr/local/sbin/2pny-hardware-drivers >>"$LOG" 2>&1 || true
+fi
+
+if ip -4 route get 1.1.1.1 >/dev/null 2>&1; then
+  NEED_UPDATE=1
+  if test -f "$STAMP" && find "$STAMP" -mmin -1440 -print -quit 2>/dev/null | grep -q .; then
+    NEED_UPDATE=0
+  fi
+
+  if test "$NEED_UPDATE" = 1; then
+    log "updating package metadata"
+    timeout 60s apt-get update -qq -o Acquire::Retries=2 -o Acquire::http::Timeout=12 >>"$LOG" 2>&1 || log "apt update warning"
+  fi
+
+  for pkg in firmware-brcm80211 firmware-realtek firmware-atheros firmware-misc-nonfree; do
+    if dpkg-query -W "$pkg" >/dev/null 2>&1; then
+      continue
+    fi
+    if apt-cache show "$pkg" >/dev/null 2>&1; then
+      log "installing $pkg"
+      timeout 90s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$pkg" >>"$LOG" 2>&1 || log "package $pkg unavailable or installation failed"
+    fi
+  done
+
+  touch "$STAMP"
+fi
+
+udevadm trigger --subsystem-match=tty >/dev/null 2>&1 || true
+udevadm trigger --subsystem-match=usb >/dev/null 2>&1 || true
+udevadm settle --timeout=5 >/dev/null 2>&1 || true
+
+if test -x /usr/local/sbin/2pny-hardware-drivers; then
+  /usr/local/sbin/2pny-hardware-drivers >>"$LOG" 2>&1 || true
+fi
+
+log "hardware preparation completed"
+echo 'hardware preparation completed'
