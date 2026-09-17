@@ -6,6 +6,7 @@ on:
     paths:
       - 'ci/prepare-0.1.9-pu2pny-hardware-ui.sh'
       - 'ci/prepare-0.1.9-network-pid-fix.sh'
+      - 'ci/prepare-0.1.9-build-metadata-fix.sh'
       - 'ci/validate-0.1.9-image.sh'
       - '.github/workflows/0.1.9-build-release.yml'
   workflow_dispatch:
@@ -59,7 +60,8 @@ jobs:
             ci/prepare-0.1.8-network-core.sh \
             ci/prepare-0.1.8-builder-service-fix.sh \
             ci/prepare-0.1.9-pu2pny-hardware-ui.sh \
-            ci/prepare-0.1.9-network-pid-fix.sh; do
+            ci/prepare-0.1.9-network-pid-fix.sh \
+            ci/prepare-0.1.9-build-metadata-fix.sh; do
               bash "$f" legacy-source/2pny-os
           done
 
@@ -93,6 +95,10 @@ jobs:
           grep -q '2pny-mdns-alias.service' builder/build-image.sh
           grep -q 'avahi-utils' builder/build-image.sh
           grep -q 'kmod' builder/build-image.sh
+          grep -q 'PU2PNY OS ${VERSION}' builder/build-image.sh
+          grep -q 'Debian 12 Bookworm' builder/build-image.sh
+          ! grep -q 'Debian 13 Trixie' builder/build-image.sh
+          grep -q 'Setup AP security: open / no password' builder/build-image.sh
           grep -q '0.1.9-alpha' src/2pnyd/main.go
           grep -q 'PU2PNY OS' src/2pnyd/main.go
           grep -q 'pu2pny-responsive-019' src/2pnyd/main.go
@@ -115,12 +121,14 @@ jobs:
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
-          OLD="dist/2PNY-OS-${VERSION}-arm64.img.xz"
+          OLD="$(find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
+          test -n "$OLD"
           IMAGE="dist/PU2PNY-OS-${VERSION}-arm64.img.xz"
-          test -f "$OLD"
-          mv "$OLD" "$IMAGE"
-          rm -f "${OLD}.sha256"
+          if [[ "$OLD" != "$IMAGE" ]]; then mv "$OLD" "$IMAGE"; fi
+          rm -f dist/*.img.xz.sha256
           sha256sum "$IMAGE" > "${IMAGE}.sha256"
+          test -s "$IMAGE"
+          test -s "${IMAGE}.sha256"
 
       - name: Validate final image and execute panel
         working-directory: legacy-source/2pny-os
