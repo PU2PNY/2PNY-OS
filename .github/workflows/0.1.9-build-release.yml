@@ -1,0 +1,163 @@
+name: Build PU2PNY OS 0.1.9
+
+on:
+  push:
+    branches: [ pu2pny-os-0.1.9 ]
+    paths:
+      - 'ci/prepare-0.1.9-pu2pny-hardware-ui.sh'
+      - 'ci/prepare-0.1.9-network-pid-fix.sh'
+      - 'ci/validate-0.1.9-image.sh'
+      - '.github/workflows/0.1.9-build-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-019:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    env:
+      VERSION: 0.1.9-alpha
+      TAG: v0.1.9-alpha
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+
+      - name: Restore and patch source
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-base-fix.sh \
+            ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-anchor-compat.sh \
+            ci/prepare-0.1.8-network-core.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh \
+            ci/prepare-0.1.9-pu2pny-hardware-ui.sh \
+            ci/prepare-0.1.9-network-pid-fix.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2
+
+      - name: Validate 0.1.9 source
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          gofmt -w src/2pnyd/main.go
+          go test ./...
+          bash -n rootfs-overlay/usr/local/sbin/2pny-network-core
+          bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch
+          bash -n rootfs-overlay/usr/local/sbin/2pny-ap-control
+          bash -n rootfs-overlay/usr/local/sbin/2pny-hardware-drivers
+          bash -n rootfs-overlay/usr/local/sbin/2pny-mdns-alias
+          python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-hardware-probe
+          rm -rf rootfs-overlay/usr/local/sbin/__pycache__
+          grep -Fq 'raspios_oldstable_lite_arm64' builder/build-image.sh
+          grep -Fq 'raspios-bookworm-arm64-lite.img.xz' builder/build-image.sh
+          ! grep -Fq 'raspios-trixie-arm64-lite.img.xz' builder/build-image.sh
+          grep -q "printf 'pu2pny" builder/build-image.sh
+          grep -q '2pny-mdns-alias.service' builder/build-image.sh
+          grep -q 'avahi-utils' builder/build-image.sh
+          grep -q 'kmod' builder/build-image.sh
+          grep -q '0.1.9-alpha' src/2pnyd/main.go
+          grep -q 'PU2PNY OS' src/2pnyd/main.go
+          grep -q 'pu2pny-responsive-019' src/2pnyd/main.go
+          grep -q 'Continuar para RF' src/2pnyd/main.go
+          ! grep -q 'id="continue" disabled' src/2pnyd/main.go
+          grep -q 'http://10.43.0.1' src/2pnyd/main.go
+          grep -q 'for baud in (115200, 460800)' rootfs-overlay/usr/local/sbin/2pny-hardware-probe
+          grep -q 'cdc_acm ch341 cp210x ftdi_sio i2c_dev' rootfs-overlay/usr/local/sbin/2pny-hardware-drivers
+          grep -Fq 'echo "$HOSTAPD_PID" >"$RUN/hostapd.pid"' rootfs-overlay/usr/local/sbin/2pny-network-core
+          grep -q '^wpa=0$' rootfs-overlay/usr/share/2pny/network/hostapd.template
+          grep -q 'address=/pu2pny.local/10.42.0.1' rootfs-overlay/usr/share/2pny/network/dnsmasq-ap.template
+          grep -q 'address=/2pny.local/10.42.0.1' rootfs-overlay/usr/share/2pny/network/dnsmasq-ap.template
+          grep -q '^DumpTAData=1$' rootfs-overlay/usr/local/sbin/2pny-rf-apply
+
+      - name: Build ARM64 image
+        working-directory: legacy-source/2pny-os
+        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
+
+      - name: Rename release image and regenerate checksum
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          OLD="dist/2PNY-OS-${VERSION}-arm64.img.xz"
+          IMAGE="dist/PU2PNY-OS-${VERSION}-arm64.img.xz"
+          test -f "$OLD"
+          mv "$OLD" "$IMAGE"
+          rm -f "${OLD}.sha256"
+          sha256sum "$IMAGE" > "${IMAGE}.sha256"
+
+      - name: Validate final image and execute panel
+        working-directory: legacy-source/2pny-os
+        run: bash "$GITHUB_WORKSPACE/ci/validate-0.1.9-image.sh" "dist/PU2PNY-OS-${VERSION}-arm64.img.xz" "$VERSION"
+
+      - name: Publish prerelease
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          IMAGE="dist/PU2PNY-OS-${VERSION}-arm64.img.xz"
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY OS 0.1.9 Alpha — Raspberry Pi 4 ARM64.
+
+          Changes validated in the final image:
+          - public product name changed to PU2PNY OS;
+          - system hostname is pu2pny and primary local name is http://pu2pny.local;
+          - legacy http://2pny.local remains published for compatibility;
+          - setup AP remains 2PNY-SETUP, open/no password, at http://10.42.0.1;
+          - direct Ethernet remains independent at http://10.43.0.1;
+          - AP status/control now reads the hostapd runtime used by the network core;
+          - deterministic pid files prevent false AP state;
+          - common USB serial/I2C kernel drivers are prepared locally before scanning, without runtime driver downloads;
+          - MMDVM discovery checks 115200 and 460800 baud and reports serial driver metadata;
+          - USB device metadata and connected kernel display outputs are discovered;
+          - direct Nextion, I2C/HAT and framebuffer/display detection remain available;
+          - hardware scan is bounded and never traps the setup flow: RF can be continued manually;
+          - RF serial port can be entered manually if auto-detection cannot identify new hardware;
+          - panel layout is hardened for phones, tablets and desktop screens;
+          - duplicate square 2PNY logo was removed; one clean PU2PNY OS wordmark remains;
+          - MMDVMHost, RF rollback and DMR Talker Alias are preserved.
+
+          First access:
+          Wi-Fi: connect to 2PNY-SETUP and open http://10.42.0.1
+          Direct Ethernet: open http://10.43.0.1
+          Normal LAN after setup: http://pu2pny.local
+          EOF
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title 'PU2PNY OS 0.1.9 Alpha' --notes-file RELEASE-NOTES.md --prerelease
