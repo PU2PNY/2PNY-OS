@@ -98,7 +98,7 @@ rm -rf rootfs-overlay/usr/local/sbin/__pycache__
 
 gofmt -w src/2pnyd/main.go
 
-grep -Fq 'appVersion      = "0.2.0-alpha"' src/2pnyd/main.go
+grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.2\.0-alpha"' src/2pnyd/main.go
 grep -Fq '/api/connectivity' src/2pnyd/main.go
 grep -Fq '/api/network/connect' src/2pnyd/main.go
 grep -Fq '/api/basic/apply' src/2pnyd/main.go
