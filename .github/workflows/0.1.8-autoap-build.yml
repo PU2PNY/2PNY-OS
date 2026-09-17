@@ -7,6 +7,7 @@ on:
       - 'ci/prepare-0.1.8-network-ap.sh'
       - 'ci/prepare-0.1.8-network-ap-fix1.sh'
       - 'ci/prepare-0.1.8-bookworm-pin.sh'
+      - 'ci/prepare-0.1.8-builder-fix.sh'
       - 'ci/prepare-0.1.8-validator-cleanup.sh'
       - 'ci/validate-0.1.8-autoap-image.sh'
       - '.github/workflows/0.1.8-autoap-build.yml'
@@ -60,6 +61,7 @@ jobs:
           bash ci/prepare-0.1.8-network-ap-fix1.sh legacy-source/2pny-os
           bash ci/prepare-0.1.8-network-ap.sh legacy-source/2pny-os
           bash ci/prepare-0.1.8-bookworm-pin.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.8-builder-fix.sh legacy-source/2pny-os
           bash ci/prepare-0.1.8-validator-cleanup.sh legacy-source/2pny-os
 
       - uses: actions/setup-go@v5
@@ -79,6 +81,7 @@ jobs:
           bash ./builder/validate-source.sh
           grep -Fq '2026-09-15-raspios-bookworm-arm64-lite.img.xz' builder/build-image.sh
           grep -Fq 'bcaefdf9c40dbed31dcaeb3b8494e498b4f1e3078c2604b0d9f5f595f8f6fd91' builder/build-image.sh
+          ! grep -q 'MNT_ROOT/etc/NetworkManager/system-connections' builder/build-image.sh
           grep -Fq 'ssid=2PNY-SETUP' rootfs-overlay/etc/hostapd/hostapd-2pny.conf
           grep -Fq '10.42.0.20,10.42.0.80' rootfs-overlay/etc/dnsmasq.d/2pny-setup.conf
           grep -Fq '10.43.0.20,10.43.0.80' rootfs-overlay/etc/dnsmasq.d/2pny-setup.conf
