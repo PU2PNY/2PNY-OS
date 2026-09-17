@@ -61,11 +61,10 @@ grep -q 'MemoryMax=96M' rootfs-overlay/etc/systemd/system/2pny-mmdvmhost.service
 grep -q '590c531391dfd3146073afbc3956f70d42c62a46' builder/build-image.sh
 grep -q '^DumpTAData=1$' rootfs-overlay/usr/local/sbin/2pny-rf-apply
 
-echo '[7/8] Bookworm / networking build contract'
+echo '[7/8] Bookworm / networking source contract'
 grep -q 'raspios_oldstable_lite_arm64' builder/build-image.sh
 grep -q 'no-auto-default=\*' rootfs-overlay/etc/NetworkManager/conf.d/20-2pny-appliance.conf
-grep -q 'hostapd' builder/build-image.sh
-grep -q 'dnsmasq' builder/build-image.sh
+# Package presence is validated against the mounted final image, not by fragile source-string matching.
 
 echo '[8/8] Lean runtime / state'
 grep -q 'Storage=volatile' rootfs-overlay/etc/systemd/journald.conf.d/2pny.conf
