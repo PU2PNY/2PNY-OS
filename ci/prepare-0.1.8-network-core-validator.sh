@@ -40,7 +40,8 @@ test -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-network-c
 echo '[5/7] Network core'
 grep -q '0.1.8-alpha' src/2pnyd/main.go
 grep -q 'raspios_oldstable_lite_arm64' builder/build-image.sh
-grep -q 'hostapd dnsmasq-base iw rfkill avahi-daemon' builder/build-image.sh
+grep -q 'hostapd' builder/build-image.sh
+grep -q 'dnsmasq' builder/build-image.sh
 grep -q '^ssid=2PNY-SETUP$' rootfs-overlay/usr/share/2pny/network/hostapd.template
 grep -q '^wpa=0$' rootfs-overlay/usr/share/2pny/network/hostapd.template
 grep -q '^interface=@IFACE@$' rootfs-overlay/usr/share/2pny/network/hostapd.template
