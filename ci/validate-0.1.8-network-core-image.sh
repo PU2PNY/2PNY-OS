@@ -12,11 +12,11 @@ trap cleanup EXIT
 xz -dc "$IMAGE_XZ" > "$IMG"
 LOOP="$(sudo losetup --find --show --partscan "$IMG")"
 mkdir -p "$ROOT" "$BOOT"
-sudo mount "${LOOP}p2" "$ROOT"
-sudo mount "${LOOP}p1" "$BOOT"
 
 printf '[1/7] Filesystem and base OS\n'
 sudo e2fsck -fn "${LOOP}p2" >/dev/null || rc=$?; rc=${rc:-0}; [[ "$rc" -lt 4 ]]
+sudo mount "${LOOP}p2" "$ROOT"
+sudo mount "${LOOP}p1" "$BOOT"
 grep -q 'VERSION_CODENAME=bookworm' "$ROOT/etc/os-release"
 [[ "$(cat "$ROOT/etc/2pny/version")" == "$VERSION" ]]
 
