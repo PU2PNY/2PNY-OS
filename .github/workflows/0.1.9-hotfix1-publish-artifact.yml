@@ -1,0 +1,95 @@
+name: Publish validated PU2PNY OS 0.1.9 Hotfix1 artifact
+
+on:
+  push:
+    branches: [ pu2pny-os-0.1.9-hotfix1 ]
+    paths:
+      - '.github/workflows/0.1.9-hotfix1-publish-artifact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      VERSION: 0.1.9-hotfix1-alpha
+      TAG: v0.1.9-hotfix1-alpha
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN_ID: '35278757489'
+    steps:
+      - name: Download already validated ARM64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.1.9-hotfix1-arm64
+          path: release
+          repository: PU2PNY/2PNY-OS
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: Verify transferred image by content hash
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-${VERSION}-arm64.img.xz"
+          CHECKSUM="${IMAGE}.sha256"
+          test -s "$IMAGE"
+          test -s "$CHECKSUM"
+          xz -t "$IMAGE"
+          EXPECTED="$(awk '{print $1}' "$CHECKSUM")"
+          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          test -n "$EXPECTED"
+          test "$EXPECTED" = "$ACTUAL"
+          echo "image transfer verified sha256=$ACTUAL"
+
+      - name: Publish GitHub prerelease
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-${VERSION}-arm64.img.xz"
+          CHECKSUM="${IMAGE}.sha256"
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY OS 0.1.9 Hotfix1 Alpha — Raspberry Pi 4 ARM64.
+
+          Hardware detection hotfix validated in the final image:
+          - wizard uses /api/hardware/status for the new hardware state machine;
+          - legacy /api/hardware remains available for compatibility;
+          - Raspberry model, serial ports, HAT and I2C are exposed independently of MMDVM serial probing;
+          - /dev/serial0 is treated as a candidate, never as a false-positive MMDVM;
+          - responsive UI, open setup AP, direct Ethernet, RF rollback, MMDVMHost and DMR Talker Alias are preserved.
+
+          First access:
+          Wi-Fi: 2PNY-SETUP -> http://10.42.0.1
+          Direct Ethernet: http://10.43.0.1
+          Normal LAN: http://pu2pny.local
+          EOF
+
+          for rid in $(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq ".[] | select(.tag_name == \"$TAG\") | .id" 2>/dev/null || true); do
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$rid" >/dev/null || true
+          done
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG" >/dev/null 2>&1 || true
+
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title 'PU2PNY OS 0.1.9 Hotfix1 Alpha' --notes-file RELEASE-NOTES.md --prerelease
+
+          ok=0
+          for attempt in 1 2 3; do
+            echo "large asset upload attempt $attempt"
+            if timeout 600s gh release upload "$TAG" "$IMAGE" --repo "$GITHUB_REPOSITORY" --clobber; then ok=1; break; fi
+            sleep 8
+          done
+          if [[ "$ok" != 1 ]]; then
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+            exit 1
+          fi
+
+          gh release upload "$TAG" "$CHECKSUM" release/BUILD-INFO.txt --repo "$GITHUB_REPOSITORY" --clobber
+
+          LOCAL_SIZE="$(stat -c%s "$IMAGE")"
+          LOCAL_SHA="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          REMOTE_SIZE="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq ".assets[] | select(.name == \"$(basename "$IMAGE")\") | .size")"
+          REMOTE_DIGEST="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq ".assets[] | select(.name == \"$(basename "$IMAGE")\") | .digest")"
+          test "$REMOTE_SIZE" = "$LOCAL_SIZE"
+          if [[ -n "$REMOTE_DIGEST" && "$REMOTE_DIGEST" != "null" ]]; then test "$REMOTE_DIGEST" = "sha256:$LOCAL_SHA"; fi
+          echo "release asset verified size=$REMOTE_SIZE sha256=$LOCAL_SHA"
