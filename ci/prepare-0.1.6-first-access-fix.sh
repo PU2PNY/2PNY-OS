@@ -103,10 +103,14 @@ p.write_text(s)
 
 # Update inherited validators to the strict 0.1.6 contract.
 v=root/'builder/validate-source.sh'; vs=v.read_text()
-vs=vs.replace("grep -q '0.1.5-alpha' src/2pnyd/main.go","grep -q '0.1.6-alpha' src/2pnyd/main.go")
-vs=vs.replace("grep -q '169.254.2.1/16' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection","grep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection")
+for oldver in ('0.1.3-alpha','0.1.4-alpha','0.1.5-alpha'):
+    vs=vs.replace("grep -q '%s' src/2pnyd/main.go\n" % oldver, '')
+vs=vs.replace("grep -q '169.254.2.1/16' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection\n",'')
 if '# 2PNY_FIRST_ACCESS_STRICT_0_1_6' not in vs:
-    vs += r'''\n# 2PNY_FIRST_ACCESS_STRICT_0_1_6\necho "[2PNY] Validate strict first access"\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection\ngrep -q 'autoconnect=false' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection\n! grep -q 'http://2pny.local/wizard' src/2pnyd/main.go\ngrep -q 'href="/wizard"' src/2pnyd/main.go\ngrep -q 'Storage=volatile' rootfs-overlay/etc/systemd/journald.conf.d/2pny.conf\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pnyd.service\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-firstboot.service\n'''
+    vs += r'''\n# 2PNY_FIRST_ACCESS_STRICT_0_1_6\necho "[2PNY] Validate strict first access"\ngrep -q '0.1.6-alpha' src/2pnyd/main.go\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection\ngrep -q 'autoconnect=false' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection\n! grep -q 'http://2pny.local/wizard' src/2pnyd/main.go\ngrep -q 'href="/wizard"' src/2pnyd/main.go\ngrep -q 'Storage=volatile' rootfs-overlay/etc/systemd/journald.conf.d/2pny.conf\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pnyd.service\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-firstboot.service\n'''
+# Trace exact failing validator command in CI; this does not affect the image.
+if 'set -x' not in vs:
+    vs=vs.replace('set -euo pipefail','set -euo pipefail\nset -x',1)
 v.write_text(vs)
 PY
 
