@@ -22,6 +22,14 @@ for rel in ['builder/build-image.sh','rootfs-overlay/usr/local/sbin/2pny-firstbo
 # separation used by dedicated hotspot systems. Do not rely on NM shared mode.
 b=root/'builder/build-image.sh'
 s=b.read_text()
+# Pin the final Bookworm ARM64 image by its official filename, URL and SHA-256.
+# Earlier patches tried to replace one fully-expanded URL, while the builder
+# stores the URL in shell variables, so the substitution never happened.
+s=re.sub(r'^BASE_DATE=.*$', 'BASE_DATE="2026-09-15"', s, count=1, flags=re.M)
+s=re.sub(r'^BASE_NAME=.*$', 'BASE_NAME="2026-09-15-raspios-bookworm-arm64-lite.img.xz"', s, count=1, flags=re.M)
+s=re.sub(r'^BASE_URL=.*$', 'BASE_URL="https://downloads.raspberrypi.com/raspios_oldstable_lite_arm64/images/raspios_oldstable_lite_arm64-2026-09-15/${BASE_NAME}"', s, count=1, flags=re.M)
+s=re.sub(r'^BASE_SHA256=.*$', 'BASE_SHA256="bcaefdf9c40dbed31dcaeb3b8494e498b4f1e3078c2604b0d9f5f595f8f6fd91"', s, count=1, flags=re.M)
+s=s.replace('Debian 13 Trixie', 'Debian 12 Bookworm')
 needle='wpasupplicant rfkill wireless-regdb'
 if ' hostapd ' not in s and needle in s:
     s=s.replace(needle, needle+' hostapd dnsmasq iw', 1)
