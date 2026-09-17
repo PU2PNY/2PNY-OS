@@ -1,0 +1,271 @@
+#!/bin/bash
+set -u
+
+RUN=/run/2pny
+STATE=/var/lib/2pny
+mkdir -p "$RUN" "$STATE"
+
+log(){
+  logger -t 2pny-network-core -- "$*" 2>/dev/null || true
+  printf '[%s] %s\n' "$(date -Is)" "$*" >>"$RUN/network.log"
+}
+
+alive(){ test -n "$1" && kill -0 "$1" 2>/dev/null; }
+readpid(){ test -r "$1" && cat "$1" 2>/dev/null || true; }
+
+find_eth(){
+  for p in /sys/class/net/eth* /sys/class/net/en*; do
+    test -e "$p" || continue
+    n="$(basename "$p")"
+    test "$n" = lo && continue
+    echo "$n"
+    return
+  done
+}
+
+wifi_list(){
+  for p in /sys/class/net/*; do
+    test -d "$p/wireless" || continue
+    basename "$p"
+  done
+}
+
+active_wifi(){
+  nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null | awk -F: '$2=="wifi" && $3=="connected"{print $1;exit}'
+}
+
+default_iface(){
+  ip -4 route show default 2>/dev/null | awk '/default/{for(i=1;i<=NF;i++)if($i=="dev"){print $(i+1);exit}}'
+}
+
+route_online(){
+  ip -4 route get 1.1.1.1 >/dev/null 2>&1
+}
+
+ETH="$(find_eth)"
+CLIENT_WIFI="$(active_wifi)"
+AP_WIFI=""
+UPLINK_WIFI=""
+
+for w in $(wifi_list); do
+  if test -n "$CLIENT_WIFI" && test "$w" = "$CLIENT_WIFI"; then
+    continue
+  fi
+  if test -z "$AP_WIFI"; then
+    AP_WIFI="$w"
+  elif test -z "$UPLINK_WIFI"; then
+    UPLINK_WIFI="$w"
+  fi
+done
+
+if test -z "$CLIENT_WIFI"; then
+  if test -n "$UPLINK_WIFI"; then
+    :
+  elif test -n "$AP_WIFI"; then
+    for w in $(wifi_list); do
+      test "$w" = "$AP_WIFI" && continue
+      UPLINK_WIFI="$w"
+      break
+    done
+  fi
+else
+  UPLINK_WIFI="$CLIENT_WIFI"
+fi
+
+printf '%s\n' "$ETH" >"$RUN/eth-iface"
+printf '%s\n' "$AP_WIFI" >"$RUN/ap-iface"
+printf '%s\n' "$UPLINK_WIFI" >"$RUN/uplink-iface"
+
+HOSTAPD_PID=""
+DNS_AP_PID=""
+DNS_ETH_PID=""
+ETH_MODE="none"
+AP_ONLINE="-1"
+
+stop_pidfile(){
+  f="$1"
+  p="$(readpid "$f")"
+  test -n "$p" && kill "$p" 2>/dev/null || true
+  rm -f "$f"
+}
+
+stop_ap_dns(){
+  stop_pidfile "$RUN/dnsmasq-ap.pid"
+  DNS_AP_PID=""
+}
+
+stop_ap(){
+  stop_ap_dns
+  stop_pidfile "$RUN/hostapd.pid"
+  HOSTAPD_PID=""
+  if test -n "$AP_WIFI"; then
+    ip addr del 10.42.0.1/24 dev "$AP_WIFI" 2>/dev/null || true
+    nmcli device set "$AP_WIFI" managed yes >/dev/null 2>&1 || true
+  fi
+}
+
+stop_eth_fallback(){
+  stop_pidfile "$RUN/dnsmasq-eth.pid"
+  DNS_ETH_PID=""
+  if test -n "$ETH"; then
+    ip addr del 10.43.0.1/24 dev "$ETH" 2>/dev/null || true
+    nmcli device set "$ETH" managed yes >/dev/null 2>&1 || true
+  fi
+}
+
+start_eth_fallback(){
+  test -n "$ETH" || return 1
+  nmcli device disconnect "$ETH" >/dev/null 2>&1 || true
+  nmcli device set "$ETH" managed no >/dev/null 2>&1 || true
+  ip link set "$ETH" up >/dev/null 2>&1 || true
+  ip addr flush dev "$ETH" >/dev/null 2>&1 || true
+  ip addr add 10.43.0.1/24 dev "$ETH" >/dev/null 2>&1 || ip addr replace 10.43.0.1/24 dev "$ETH" >/dev/null 2>&1 || return 1
+  sed "s/@IFACE@/$ETH/g" /usr/share/2pny/network/dnsmasq-eth.template >"$RUN/dnsmasq-eth.conf"
+  dnsmasq --keep-in-foreground --conf-file="$RUN/dnsmasq-eth.conf" --pid-file="$RUN/dnsmasq-eth.pid" >>"$RUN/dnsmasq-eth.log" 2>&1 &
+  DNS_ETH_PID=$!
+  sleep .4
+  alive "$DNS_ETH_PID" || return 1
+  ETH_MODE="direct"
+  log "Ethernet direct fallback active on $ETH / 10.43.0.1 without gateway or DNS advertisement"
+}
+
+start_eth(){
+  test -n "$ETH" || return 0
+  carrier="$(cat "/sys/class/net/$ETH/carrier" 2>/dev/null || echo 0)"
+  test "$carrier" = 1 || { ETH_MODE="disconnected"; return 0; }
+
+  stop_eth_fallback
+  nmcli device set "$ETH" managed yes >/dev/null 2>&1 || true
+  nmcli --wait 12 device connect "$ETH" >/dev/null 2>&1 || true
+  sleep .5
+
+  if ip -4 -o addr show dev "$ETH" scope global 2>/dev/null | grep -q 'inet '; then
+    ETH_MODE="dhcp"
+    log "Ethernet DHCP active on $ETH"
+    return 0
+  fi
+
+  start_eth_fallback || log "Ethernet fallback failed"
+}
+
+generate_ap_dns(){
+  sed "s/@IFACE@/$AP_WIFI/g" /usr/share/2pny/network/dnsmasq-ap.template >"$RUN/dnsmasq-ap.conf"
+  if route_online; then
+    {
+      echo 'server=1.1.1.1'
+      echo 'server=8.8.8.8'
+    } >>"$RUN/dnsmasq-ap.conf"
+    AP_ONLINE=1
+  else
+    {
+      echo 'address=/#/10.42.0.1'
+      echo 'no-resolv'
+      echo 'no-hosts'
+    } >>"$RUN/dnsmasq-ap.conf"
+    AP_ONLINE=0
+  fi
+}
+
+start_ap_dns(){
+  test -n "$AP_WIFI" || return 1
+  stop_ap_dns
+  generate_ap_dns
+  dnsmasq --keep-in-foreground --conf-file="$RUN/dnsmasq-ap.conf" --pid-file="$RUN/dnsmasq-ap.pid" >>"$RUN/dnsmasq-ap.log" 2>&1 &
+  DNS_AP_PID=$!
+  sleep .4
+  alive "$DNS_AP_PID"
+}
+
+start_ap(){
+  test -n "$AP_WIFI" || return 1
+  rfkill unblock wifi >/dev/null 2>&1 || true
+  iw reg set BR >/dev/null 2>&1 || true
+  nmcli device disconnect "$AP_WIFI" >/dev/null 2>&1 || true
+  nmcli device set "$AP_WIFI" managed no >/dev/null 2>&1 || true
+  ip link set "$AP_WIFI" down >/dev/null 2>&1 || true
+  ip addr flush dev "$AP_WIFI" >/dev/null 2>&1 || true
+  sleep .3
+  ip link set "$AP_WIFI" up >/dev/null 2>&1 || true
+  ip addr add 10.42.0.1/24 dev "$AP_WIFI" >/dev/null 2>&1 || ip addr replace 10.42.0.1/24 dev "$AP_WIFI" >/dev/null 2>&1 || return 1
+  sed "s/@IFACE@/$AP_WIFI/g" /usr/share/2pny/network/hostapd.template >"$RUN/hostapd.conf"
+  hostapd -P "$RUN/hostapd.pid" "$RUN/hostapd.conf" >>"$RUN/hostapd.log" 2>&1 &
+  HOSTAPD_PID=$!
+  sleep .8
+  alive "$HOSTAPD_PID" || return 1
+  start_ap_dns || { stop_ap; return 1; }
+  log "Wi-Fi AP 2PNY-SETUP active on $AP_WIFI / 10.42.0.1"
+}
+
+enable_ap_forwarding(){
+  route_online || return 0
+  outif="$(default_iface)"
+  test -n "$outif" || return 0
+  test "$outif" = "$AP_WIFI" && return 0
+  sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1 || true
+  command -v iptables >/dev/null 2>&1 || return 0
+  iptables -t nat -C POSTROUTING -s 10.42.0.0/24 -o "$outif" -j MASQUERADE >/dev/null 2>&1 ||
+    iptables -t nat -A POSTROUTING -s 10.42.0.0/24 -o "$outif" -j MASQUERADE >/dev/null 2>&1 || true
+  iptables -C FORWARD -i "$AP_WIFI" -o "$outif" -j ACCEPT >/dev/null 2>&1 ||
+    iptables -A FORWARD -i "$AP_WIFI" -o "$outif" -j ACCEPT >/dev/null 2>&1 || true
+  iptables -C FORWARD -i "$outif" -o "$AP_WIFI" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT >/dev/null 2>&1 ||
+    iptables -A FORWARD -i "$outif" -o "$AP_WIFI" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT >/dev/null 2>&1 || true
+}
+
+write_status(){
+  {
+    echo 'PU2PNY OS 0.2.0-alpha'
+    echo "time=$(date -Is)"
+    echo "ethernet_if=$ETH"
+    echo "ethernet_mode=$ETH_MODE"
+    echo "ap_if=$AP_WIFI"
+    echo "uplink_if=$UPLINK_WIFI"
+    echo 'wifi_setup_ip=10.42.0.1'
+    echo 'ethernet_setup_ip=10.43.0.1'
+    echo "default_if=$(default_iface)"
+    if alive "$HOSTAPD_PID"; then echo 'hostapd=active'; else echo 'hostapd=inactive'; fi
+    if alive "$DNS_AP_PID"; then echo 'dnsmasq_ap=active'; else echo 'dnsmasq_ap=inactive'; fi
+    if alive "$DNS_ETH_PID"; then echo 'dnsmasq_eth=active'; else echo 'dnsmasq_eth=inactive'; fi
+  } >"$RUN/network-status.txt"
+}
+
+cleanup(){
+  stop_ap
+  stop_eth_fallback
+  write_status
+}
+trap cleanup EXIT TERM INT
+
+systemctl start NetworkManager.service >/dev/null 2>&1 || true
+systemctl start avahi-daemon.service >/dev/null 2>&1 || true
+
+start_eth
+
+if test ! -f "$STATE/ap-disabled" && test -n "$AP_WIFI"; then
+  start_ap || log "AP startup failed"
+fi
+
+write_status
+
+while true; do
+  if test -f "$STATE/ap-disabled"; then
+    alive "$HOSTAPD_PID" && stop_ap
+  elif test -n "$AP_WIFI"; then
+    if ! alive "$HOSTAPD_PID"; then
+      start_ap || true
+    elif ! alive "$DNS_AP_PID"; then
+      start_ap_dns || true
+    fi
+  fi
+
+  if alive "$HOSTAPD_PID"; then
+    now=0
+    route_online && now=1
+    if test "$now" != "$AP_ONLINE"; then
+      start_ap_dns || true
+    fi
+    enable_ap_forwarding
+  fi
+
+  write_status
+  sleep 4
+done
