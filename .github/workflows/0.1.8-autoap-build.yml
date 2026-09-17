@@ -6,6 +6,7 @@ on:
     paths:
       - 'ci/prepare-0.1.8-network-ap.sh'
       - 'ci/prepare-0.1.8-network-ap-fix1.sh'
+      - 'ci/prepare-0.1.8-validator-cleanup.sh'
       - 'ci/validate-0.1.8-autoap-image.sh'
       - '.github/workflows/0.1.8-autoap-build.yml'
   workflow_dispatch:
@@ -58,6 +59,7 @@ jobs:
           done
           bash ci/prepare-0.1.8-network-ap-fix1.sh legacy-source/2pny-os
           bash ci/prepare-0.1.8-network-ap.sh legacy-source/2pny-os
+          bash ci/prepare-0.1.8-validator-cleanup.sh legacy-source/2pny-os
 
       - uses: actions/setup-go@v5
         with:
