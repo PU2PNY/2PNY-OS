@@ -20,13 +20,13 @@ sudo mount "${LOOP}p2" "$ROOT"
 sudo mkdir -p "$ROOT/boot/firmware"
 sudo mount "${LOOP}p1" "$ROOT/boot/firmware"
 
-echo '[1/10] Base, version and identity'
+echo '[1/11] Base, version and identity'
 grep -q '^VERSION_CODENAME=bookworm$' "$ROOT/etc/os-release"
 grep -Fxq "$VERSION" "$ROOT/etc/2pny/version"
 grep -Fxq 'pu2pny' "$ROOT/etc/hostname"
 grep -Eq '^127\.0\.1\.1[[:space:]]+pu2pny([[:space:]]|$)' "$ROOT/etc/hosts"
 
-echo '[2/10] Runtime and local driver tools'
+echo '[2/11] Runtime and local driver tools'
 for f in /usr/bin/nmcli /usr/sbin/NetworkManager /usr/sbin/hostapd /usr/sbin/dnsmasq /usr/sbin/iw /usr/bin/avahi-publish /usr/sbin/modprobe; do
   test -x "$ROOT$f" || { echo "missing $f"; exit 1; }
 done
@@ -35,7 +35,7 @@ test -x "$ROOT/usr/local/sbin/2pny-hardware-drivers"
 test -x "$ROOT/usr/local/sbin/2pny-hardware-probe"
 test -x "$ROOT/usr/local/sbin/2pny-mdns-alias"
 
-echo '[3/10] Network core and AP runtime contract'
+echo '[3/11] Network core and AP runtime contract'
 test -x "$ROOT/usr/local/sbin/2pny-network-core"
 test -x "$ROOT/usr/local/sbin/2pny-network-switch"
 test -x "$ROOT/usr/local/sbin/2pny-ap-control"
@@ -50,7 +50,7 @@ bash -n "$ROOT/usr/local/sbin/2pny-ap-control"
 grep -Fq 'echo "$HOSTAPD_PID" >"$RUN/hostapd.pid"' "$ROOT/usr/local/sbin/2pny-network-core"
 grep -Fq 'kill -0 "$(cat /run/2pny/hostapd.pid 2>/dev/null)"' "$ROOT/usr/local/sbin/2pny-ap-control"
 
-echo '[4/10] Open captive first access and aliases'
+echo '[4/11] Open captive first access and aliases'
 grep -q '^ssid=2PNY-SETUP$' "$ROOT/usr/share/2pny/network/hostapd.template"
 grep -q '^wpa=0$' "$ROOT/usr/share/2pny/network/hostapd.template"
 ! grep -q 'wpa_passphrase' "$ROOT/usr/share/2pny/network/hostapd.template"
@@ -61,13 +61,13 @@ grep -q 'address=/2pny.local/10.42.0.1' "$ROOT/usr/share/2pny/network/dnsmasq-ap
 grep -q 'address=/pu2pny.local/10.43.0.1' "$ROOT/usr/share/2pny/network/dnsmasq-eth.template"
 grep -q 'address=/2pny.local/10.43.0.1' "$ROOT/usr/share/2pny/network/dnsmasq-eth.template"
 
-echo '[5/10] mDNS alias service'
+echo '[5/11] mDNS alias service'
 test -f "$ROOT/etc/systemd/system/2pny-mdns-alias.service"
 grep -q 'avahi-publish -a -f 2pny.local' "$ROOT/usr/local/sbin/2pny-mdns-alias"
 grep -q 'MemoryMax=16M' "$ROOT/etc/systemd/system/2pny-mdns-alias.service"
 bash -n "$ROOT/usr/local/sbin/2pny-mdns-alias"
 
-echo '[6/10] Hardware discovery source/runtime'
+echo '[6/11] Hardware discovery source/runtime'
 bash -n "$ROOT/usr/local/sbin/2pny-hardware-drivers"
 grep -q 'cdc_acm ch341 cp210x ftdi_sio i2c_dev' "$ROOT/usr/local/sbin/2pny-hardware-drivers"
 grep -q 'for baud in (115200, 460800)' "$ROOT/usr/local/sbin/2pny-hardware-probe"
@@ -76,17 +76,17 @@ grep -q 'def display_outputs' "$ROOT/usr/local/sbin/2pny-hardware-probe"
 python3 -m py_compile "$ROOT/usr/local/sbin/2pny-hardware-probe"
 sudo rm -rf "$ROOT/usr/local/sbin/__pycache__"
 
-echo '[7/10] No stale provisioned state'
+echo '[7/11] No stale provisioned state'
 test ! -e "$ROOT/var/lib/2pny/provisioned"
 
-echo '[8/10] Chroot network self-test'
+echo '[8/11] Chroot network self-test'
 sudo mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
 sudo mount -t proc proc "$ROOT/proc"
 sudo mount --bind /dev "$ROOT/dev"
 sudo mount --bind /sys "$ROOT/sys"
 sudo chroot "$ROOT" /usr/local/sbin/2pny-network-core --self-test
 
-echo '[9/10] Panel runtime, mobile UI and manual progression'
+echo '[9/11] Panel runtime, mobile UI and manual progression'
 sudo chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-019.log 2>&1 & PID=$!
 OK=0
 for _ in {1..40}; do curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q '2PNY OK' && { OK=1; break; }; sleep .2; done
@@ -98,14 +98,21 @@ grep -q 'pu2pny-responsive-019' "$WIZ"
 grep -q 'Continuar para RF' "$WIZ"
 ! grep -q 'id="continue" disabled' "$WIZ"
 grep -q 'Ex.: /dev/serial0' "$WIZ"
-grep -q '0.1.9-alpha' "$WIZ"
+grep -Fq "$VERSION" "$WIZ"
+grep -Fq "fetch('/api/hardware/status'" "$WIZ"
 curl -fsS http://127.0.0.1/ | grep -q 'PU2PNY OS'
 sudo ss -ltn | grep -E '(0\.0\.0\.0|\*|\[::\]):80\b'
 rm -f "$WIZ"
 
-echo '[10/10] RF and Talker Alias preserved'
+echo '[10/11] New hardware endpoint and legacy endpoint coexist'
+NEW=$(curl -fsS http://127.0.0.1/api/hardware/status)
+echo "$NEW" | grep -Eq '"state"[[:space:]]*:[[:space:]]*"(not_scanned|scanning|complete|error)"'
+LEGACY=$(curl -fsS http://127.0.0.1/api/hardware)
+echo "$LEGACY" | grep -q 'raspberry_model'
+
+echo '[11/11] RF and Talker Alias preserved'
 test -x "$ROOT/usr/local/bin/MMDVM-Host"
 grep -q '^DumpTAData=1$' "$ROOT/usr/local/sbin/2pny-rf-apply"
 grep -q 'MemoryMax=96M' "$ROOT/etc/systemd/system/2pny-mmdvmhost.service"
 
-echo 'PU2PNY OS 0.1.9 final ARM64 image: OK'
+echo "PU2PNY OS ${VERSION} final ARM64 image: OK"
