@@ -1,0 +1,98 @@
+#!/bin/bash
+set -euo pipefail
+
+RUN=/run/2pny
+STATE=/var/lib/2pny
+mkdir -p "$RUN" "$STATE"
+
+wifi_list(){
+  for p in /sys/class/net/*; do
+    test -d "$p/wireless" || continue
+    basename "$p"
+  done
+}
+
+pick_client(){
+  ap=""
+  test -r "$RUN/ap-iface" && ap="$(cat "$RUN/ap-iface" 2>/dev/null || true)"
+  preferred=""
+  test -r "$RUN/uplink-iface" && preferred="$(cat "$RUN/uplink-iface" 2>/dev/null || true)"
+  if test -n "$preferred" && test "$preferred" != "$ap" && test -d "/sys/class/net/$preferred"; then
+    echo "$preferred"
+    return
+  fi
+  for w in $(wifi_list); do
+    test "$w" = "$ap" && continue
+    echo "$w"
+    return
+  done
+  echo "$ap"
+}
+
+case "$1" in
+  scan)
+    IFACE="$(pick_client)"
+    test -n "$IFACE" || { echo 'interface Wi-Fi não encontrada' >&2; exit 3; }
+    nmcli device set "$IFACE" managed yes >/dev/null 2>&1 || true
+    nmcli -t --escape no -f SSID,SIGNAL,SECURITY dev wifi list ifname "$IFACE" --rescan yes
+    ;;
+
+  connect)
+    SSID="$2"
+    PASS="$3"
+    KEEP_AP="$4"
+    test -n "$SSID" || { echo 'SSID vazio' >&2; exit 2; }
+
+    AP_IF=""
+    test -r "$RUN/ap-iface" && AP_IF="$(cat "$RUN/ap-iface" 2>/dev/null || true)"
+    IFACE="$(pick_client)"
+    test -n "$IFACE" || { echo 'interface Wi-Fi para internet não encontrada' >&2; exit 3; }
+
+    SINGLE=0
+    if test "$IFACE" = "$AP_IF"; then
+      SINGLE=1
+      systemctl stop 2pny-network-core.service >/dev/null 2>&1 || true
+      sleep .7
+    fi
+
+    rfkill unblock wifi >/dev/null 2>&1 || true
+    nmcli radio wifi on >/dev/null 2>&1 || true
+    nmcli device set "$IFACE" managed yes >/dev/null 2>&1 || true
+    ip addr del 10.42.0.1/24 dev "$IFACE" >/dev/null 2>&1 || true
+    nmcli connection delete PU2PNY-WIFI >/dev/null 2>&1 || true
+    nmcli device wifi rescan ifname "$IFACE" >/dev/null 2>&1 || true
+
+    if test -n "$PASS"; then
+      OUT="$(nmcli --wait 35 device wifi connect "$SSID" password "$PASS" ifname "$IFACE" name PU2PNY-WIFI 2>&1)" || {
+        echo "$OUT" >&2
+        systemctl restart 2pny-network-core.service >/dev/null 2>&1 || true
+        exit 4
+      }
+    else
+      OUT="$(nmcli --wait 35 device wifi connect "$SSID" ifname "$IFACE" name PU2PNY-WIFI 2>&1)" || {
+        echo "$OUT" >&2
+        systemctl restart 2pny-network-core.service >/dev/null 2>&1 || true
+        exit 4
+      }
+    fi
+
+    nmcli connection modify PU2PNY-WIFI connection.autoconnect yes connection.autoconnect-priority 80 connection.mdns yes >/dev/null 2>&1 || true
+    printf '%s\n' "$SSID" >"$STATE/uplink-ssid"
+    printf '%s\n' "$IFACE" >"$RUN/uplink-iface"
+
+    if test "$KEEP_AP" = 0; then
+      touch "$STATE/ap-disabled"
+      systemctl restart 2pny-network-core.service >/dev/null 2>&1 || true
+    elif test "$SINGLE" = 1; then
+      rm -f "$STATE/ap-disabled"
+      systemctl restart 2pny-network-core.service >/dev/null 2>&1 || true
+    fi
+
+    echo "Wi-Fi conectado em $IFACE"
+    ;;
+
+  *)
+    echo 'uso: 2pny-network-switch scan | connect SSID SENHA KEEP_AP' >&2
+    exit 2
+    ;;
+esac
