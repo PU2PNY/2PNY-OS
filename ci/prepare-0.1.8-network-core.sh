@@ -5,6 +5,7 @@ cd "$ROOT"
 
 python3 - <<'PY'
 from pathlib import Path
+import re
 root=Path('.')
 
 # Version
@@ -21,6 +22,14 @@ for rel in ['builder/build-image.sh','rootfs-overlay/usr/local/sbin/2pny-firstbo
 # separation used by dedicated hotspot systems. Do not rely on NM shared mode.
 b=root/'builder/build-image.sh'
 s=b.read_text()
+# Pin the final Bookworm ARM64 image by its official filename, URL and SHA-256.
+# Earlier patches tried to replace one fully-expanded URL, while the builder
+# stores the URL in shell variables, so the substitution never happened.
+s=re.sub(r'^BASE_DATE=.*$', 'BASE_DATE="2026-09-15"', s, count=1, flags=re.M)
+s=re.sub(r'^BASE_NAME=.*$', 'BASE_NAME="2026-09-15-raspios-bookworm-arm64-lite.img.xz"', s, count=1, flags=re.M)
+s=re.sub(r'^BASE_URL=.*$', 'BASE_URL="https://downloads.raspberrypi.com/raspios_oldstable_lite_arm64/images/raspios_oldstable_lite_arm64-2026-09-15/${BASE_NAME}"', s, count=1, flags=re.M)
+s=re.sub(r'^BASE_SHA256=.*$', 'BASE_SHA256="bcaefdf9c40dbed31dcaeb3b8494e498b4f1e3078c2604b0d9f5f595f8f6fd91"', s, count=1, flags=re.M)
+s=s.replace('Debian 13 Trixie', 'Debian 12 Bookworm')
 needle='wpasupplicant rfkill wireless-regdb'
 if ' hostapd ' not in s and needle in s:
     s=s.replace(needle, needle+' hostapd dnsmasq iw', 1)
@@ -233,12 +242,13 @@ p.symlink_to('/etc/systemd/system/2pny-network-core.service')
 # NetworkManager to fight a running AP.
 go=root/'src/2pnyd/main.go'
 gs=go.read_text()
-anchor='func connectConfiguredWiFi(ssid,password string) error {\n'
 marker='2PNY_NETWORK_CORE_HANDOFF_V1'
 if marker not in gs:
-    if anchor not in gs: raise SystemExit('connectConfiguredWiFi anchor not found')
-    inject=anchor+'\t// 2PNY_NETWORK_CORE_HANDOFF_V1\n\tif fileExists("/usr/local/sbin/2pny-network-switch") {\n\t\tb,err:=exec.Command("/usr/local/sbin/2pny-network-switch",ssid,password).CombinedOutput()\n\t\tif err!=nil { msg:=strings.TrimSpace(string(b)); if msg=="" { msg=err.Error() }; return fmt.Errorf("Wi-Fi não conectou: %s",msg) }\n\t\treturn nil\n\t}\n'
-    gs=gs.replace(anchor,inject,1)
+    signature=re.compile(r'func connectConfiguredWiFi\(ssid\s*,\s*password string\) error \{\n')
+    match=signature.search(gs)
+    if not match: raise SystemExit('connectConfiguredWiFi signature not found')
+    inject=match.group(0)+'\t// 2PNY_NETWORK_CORE_HANDOFF_V1\n\tif fileExists("/usr/local/sbin/2pny-network-switch") {\n\t\tb,err:=exec.Command("/usr/local/sbin/2pny-network-switch",ssid,password).CombinedOutput()\n\t\tif err!=nil { msg:=strings.TrimSpace(string(b)); if msg=="" { msg=err.Error() }; return fmt.Errorf("Wi-Fi não conectou: %s",msg) }\n\t\treturn nil\n\t}\n'
+    gs=gs[:match.start()]+inject+gs[match.end():]
 go.write_text(gs)
 PY
 
