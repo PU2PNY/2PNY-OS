@@ -5,6 +5,7 @@ cd "$ROOT"
 
 python3 - <<'PY'
 from pathlib import Path
+import re
 root=Path('.')
 
 # Version
@@ -233,12 +234,13 @@ p.symlink_to('/etc/systemd/system/2pny-network-core.service')
 # NetworkManager to fight a running AP.
 go=root/'src/2pnyd/main.go'
 gs=go.read_text()
-anchor='func connectConfiguredWiFi(ssid,password string) error {\n'
 marker='2PNY_NETWORK_CORE_HANDOFF_V1'
 if marker not in gs:
-    if anchor not in gs: raise SystemExit('connectConfiguredWiFi anchor not found')
-    inject=anchor+'\t// 2PNY_NETWORK_CORE_HANDOFF_V1\n\tif fileExists("/usr/local/sbin/2pny-network-switch") {\n\t\tb,err:=exec.Command("/usr/local/sbin/2pny-network-switch",ssid,password).CombinedOutput()\n\t\tif err!=nil { msg:=strings.TrimSpace(string(b)); if msg=="" { msg=err.Error() }; return fmt.Errorf("Wi-Fi não conectou: %s",msg) }\n\t\treturn nil\n\t}\n'
-    gs=gs.replace(anchor,inject,1)
+    signature=re.compile(r'func connectConfiguredWiFi\(ssid\s*,\s*password string\) error \{\n')
+    match=signature.search(gs)
+    if not match: raise SystemExit('connectConfiguredWiFi signature not found')
+    inject=match.group(0)+'\t// 2PNY_NETWORK_CORE_HANDOFF_V1\n\tif fileExists("/usr/local/sbin/2pny-network-switch") {\n\t\tb,err:=exec.Command("/usr/local/sbin/2pny-network-switch",ssid,password).CombinedOutput()\n\t\tif err!=nil { msg:=strings.TrimSpace(string(b)); if msg=="" { msg=err.Error() }; return fmt.Errorf("Wi-Fi não conectou: %s",msg) }\n\t\treturn nil\n\t}\n'
+    gs=gs[:match.start()]+inject+gs[match.end():]
 go.write_text(gs)
 PY
 
