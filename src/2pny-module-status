@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+"""Report 2PNY module availability without changing system state.
+
+This helper is intentionally read-only. It never starts services, opens radio
+ports or contacts external networks. The local control daemon can expose its
+JSON output to the web UI.
+"""
+
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
+HARDWARE_STATE = Path("/var/lib/2pny/hardware-probe.json")
+
+
+def service_state(name: str) -> str:
+    try:
+        proc = subprocess.run(
+            ["systemctl", "is-active", name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=1.5,
+            check=False,
+        )
+        value = proc.stdout.strip().lower()
+        if proc.returncode == 0 and value == "active":
+            return "ready"
+        if value in {"activating", "reloading"}:
+            return "detecting"
+        if value == "failed":
+            return "error"
+        if value in {"inactive", "deactivating"}:
+            return "stopped"
+        return "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
+def find_binary(*names: str):
+    for name in names:
+        path = shutil.which(name)
+        if path:
+            return path
+    return None
+
+
+def nextion_detected() -> bool:
+    try:
+        data = json.loads(HARDWARE_STATE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    # The hardware schema is allowed to evolve. Search values rather than
+    # binding this read-only probe to one revision of the detector.
+    return "nextion" in json.dumps(data, ensure_ascii=False).lower()
+
+
+def external_module(module_id, label, service, binaries, license_id, note):
+    binary = find_binary(*binaries)
+    state = service_state(service) if binary else "not-installed"
+    return {
+        "id": module_id,
+        "label": label,
+        "kind": "external-service",
+        "installed": bool(binary),
+        "state": state,
+        "service": service,
+        "binary": binary,
+        "license": license_id,
+        "note": note,
+    }
+
+
+def main():
+    mmdvm = find_binary("MMDVM-Host")
+    modules = [
+        {
+            "id": "core",
+            "label": "2PNY Core",
+            "kind": "native",
+            "installed": True,
+            "state": service_state("2pnyd.service"),
+            "service": "2pnyd.service",
+            "license": "2PNY project terms",
+            "note": "Núcleo local do 2PNY.",
+        },
+        {
+            "id": "mmdvmhost",
+            "label": "MMDVMHost",
+            "kind": "external-service",
+            "installed": bool(mmdvm),
+            "state": service_state("2pny-mmdvmhost.service") if mmdvm else "not-installed",
+            "service": "2pny-mmdvmhost.service",
+            "binary": mmdvm,
+            "license": "GPL-2.0",
+            "note": "Motor RF externo, mantido separado do Core.",
+        },
+        {
+            "id": "nextion",
+            "label": "Nextion",
+            "kind": "native-integration",
+            "installed": nextion_detected(),
+            "state": "ready" if nextion_detected() else "unknown",
+            "service": None,
+            "binary": None,
+            "license": "2PNY implementation",
+            "note": "Integração própria; ideias externas não são copiadas sem licença compatível.",
+        },
+        external_module(
+            "direwolf",
+            "Dire Wolf / APRS",
+            "2pny-direwolf.service",
+            ("direwolf",),
+            "GPL-2.0",
+            "APRS/AX.25 como processo separado e opcional.",
+        ),
+        external_module(
+            "dmrgateway",
+            "DMRGateway",
+            "2pny-dmrgateway.service",
+            ("DMRGateway",),
+            "GPL-2.0",
+            "Gateway DMR multi-rede separado do Core.",
+        ),
+        external_module(
+            "m17gateway",
+            "M17Gateway",
+            "2pny-m17gateway.service",
+            ("M17Gateway",),
+            "GPL-2.0",
+            "Gateway M17 opcional.",
+        ),
+        external_module(
+            "openwebrx",
+            "OpenWebRX",
+            "openwebrx.service",
+            ("openwebrx", "openwebrx.py"),
+            "AGPL-3.0",
+            "WebSDR opcional; manter como aplicação separada.",
+        ),
+    ]
+
+    print(json.dumps({"schema": 1, "modules": modules}, ensure_ascii=False, separators=(",", ":")))
+
+
+if __name__ == "__main__":
+    main()
