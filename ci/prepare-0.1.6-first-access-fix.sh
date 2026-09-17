@@ -10,16 +10,116 @@ cloud=root/'rootfs-overlay/etc/cloud'; cloud.mkdir(parents=True,exist_ok=True)
 (cloud/'cloud-init.disabled').write_text('2PNY owns provisioning and networking.\n')
 
 conn=root/'rootfs-overlay/etc/NetworkManager/system-connections'; conn.mkdir(parents=True,exist_ok=True)
-(conn/'2pny-setup.nmconnection').write_text('''[connection]\nid=2PNY-SETUP\nuuid=5d9da2d9-3b48-4936-8201-2a4f00000002\ntype=wifi\nautoconnect=false\nmdns=2\n\n[wifi]\nmode=ap\nband=bg\nchannel=6\nssid=2PNY-SETUP\n\n[wifi-security]\nkey-mgmt=wpa-psk\npsk=2pnysetup\n\n[ipv4]\nmethod=shared\naddress1=10.42.0.1/24\n\n[ipv6]\nmethod=disabled\n\n[proxy]\n''')
-(conn/'2pny-ethernet-setup.nmconnection').write_text('''[connection]\nid=2PNY-Ethernet-Setup\nuuid=7ec42a49-a77d-49f7-a181-2a4f00000003\ntype=ethernet\nautoconnect=false\nmdns=2\n\n[ethernet]\n\n[ipv4]\nmethod=shared\naddress1=10.42.0.1/24\n\n[ipv6]\nmethod=disabled\n\n[proxy]\n''')
-(conn/'2pny-ethernet.nmconnection').write_text('''[connection]\nid=2PNY-Ethernet\nuuid=7ec42a49-a77d-49f7-a181-2a4f00000001\ntype=ethernet\nautoconnect=false\nmdns=2\n\n[ethernet]\n\n[ipv4]\nmethod=auto\ndhcp-timeout=10\nmay-fail=true\n\n[ipv6]\nmethod=auto\naddr-gen-mode=default\n\n[proxy]\n''')
+(conn/'2pny-setup.nmconnection').write_text('''[connection]
+id=2PNY-SETUP
+uuid=5d9da2d9-3b48-4936-8201-2a4f00000002
+type=wifi
+autoconnect=false
+mdns=2
+
+[wifi]
+mode=ap
+band=bg
+channel=6
+ssid=2PNY-SETUP
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk=2pnysetup
+
+[ipv4]
+method=shared
+address1=10.42.0.1/24
+
+[ipv6]
+method=disabled
+
+[proxy]
+''')
+(conn/'2pny-ethernet-setup.nmconnection').write_text('''[connection]
+id=2PNY-Ethernet-Setup
+uuid=7ec42a49-a77d-49f7-a181-2a4f00000003
+type=ethernet
+autoconnect=false
+mdns=2
+
+[ethernet]
+
+[ipv4]
+method=shared
+address1=10.42.0.1/24
+
+[ipv6]
+method=disabled
+
+[proxy]
+''')
+(conn/'2pny-ethernet.nmconnection').write_text('''[connection]
+id=2PNY-Ethernet
+uuid=7ec42a49-a77d-49f7-a181-2a4f00000001
+type=ethernet
+autoconnect=false
+mdns=2
+
+[ethernet]
+
+[ipv4]
+method=auto
+dhcp-timeout=10
+may-fail=true
+
+[ipv6]
+method=auto
+addr-gen-mode=default
+
+[proxy]
+''')
 
 jd=root/'rootfs-overlay/etc/systemd/journald.conf.d'; jd.mkdir(parents=True,exist_ok=True)
 (jd/'2pny.conf').write_text('[Journal]\nStorage=volatile\nRuntimeMaxUse=16M\nRuntimeMaxFileSize=4M\n')
 
 svc=root/'rootfs-overlay/etc/systemd/system'; svc.mkdir(parents=True,exist_ok=True)
-(svc/'2pnyd.service').write_text('''[Unit]\nDescription=2PNY Core and local panel\nAfter=local-fs.target NetworkManager.service\nWants=NetworkManager.service\nBefore=2pny-firstboot.service\nStartLimitIntervalSec=0\n\n[Service]\nType=simple\nExecStart=/usr/local/bin/2pnyd\nRestart=always\nRestartSec=1\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectHome=yes\nProtectSystem=strict\nReadWritePaths=/var/lib/2pny /run\nMemoryMax=64M\nTasksMax=64\n\n[Install]\nWantedBy=multi-user.target\n''')
-(svc/'2pny-firstboot.service').write_text('''[Unit]\nDescription=2PNY deterministic first access\nAfter=NetworkManager.service 2pnyd.service\nWants=NetworkManager.service 2pnyd.service\nConditionPathExists=!/var/lib/2pny/provisioned\nStartLimitIntervalSec=0\n\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/2pny-firstboot\nRemainAfterExit=yes\nRestart=on-failure\nRestartSec=2\nTimeoutStartSec=45\n\n[Install]\nWantedBy=multi-user.target\n''')
+(svc/'2pnyd.service').write_text('''[Unit]
+Description=2PNY Core and local panel
+After=local-fs.target NetworkManager.service
+Wants=NetworkManager.service
+Before=2pny-firstboot.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/2pnyd
+Restart=always
+RestartSec=1
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/2pny /run
+MemoryMax=64M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target
+''')
+(svc/'2pny-firstboot.service').write_text('''[Unit]
+Description=2PNY deterministic first access
+After=NetworkManager.service 2pnyd.service
+Wants=NetworkManager.service 2pnyd.service
+ConditionPathExists=!/var/lib/2pny/provisioned
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-firstboot
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=45
+
+[Install]
+WantedBy=multi-user.target
+''')
 
 def symlink(path,target):
     path.parent.mkdir(parents=True,exist_ok=True)
@@ -100,7 +200,19 @@ for oldver in ('0.1.3-alpha','0.1.4-alpha','0.1.5-alpha'):
 vs=vs.replace("grep -q '169.254.2.1/16' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection\n",'')
 vs=vs.replace("grep -q 'Abrindo o painel automaticamente' src/2pnyd/main.go\n", "grep -q 'Rede configurada. Reconecte' src/2pnyd/main.go\n")
 if '# 2PNY_FIRST_ACCESS_STRICT_0_1_6' not in vs:
-    vs += r'''\n# 2PNY_FIRST_ACCESS_STRICT_0_1_6\necho "[2PNY] Validate strict first access"\ngrep -q '0.1.6-alpha' src/2pnyd/main.go\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection\ngrep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection\ngrep -q 'autoconnect=false' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection\n! grep -q 'http://2pny.local/wizard' src/2pnyd/main.go\ngrep -q 'href="/wizard"' src/2pnyd/main.go\ngrep -q 'Storage=volatile' rootfs-overlay/etc/systemd/journald.conf.d/2pny.conf\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pnyd.service\ntest -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-firstboot.service\n'''
+    vs += '''
+# 2PNY_FIRST_ACCESS_STRICT_0_1_6
+echo "[2PNY] Validate strict first access"
+grep -q '0.1.6-alpha' src/2pnyd/main.go
+grep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-setup.nmconnection
+grep -q 'address1=10.42.0.1/24' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet-setup.nmconnection
+grep -q 'autoconnect=false' rootfs-overlay/etc/NetworkManager/system-connections/2pny-ethernet.nmconnection
+! grep -q 'http://2pny.local/wizard' src/2pnyd/main.go
+grep -q 'href="/wizard"' src/2pnyd/main.go
+grep -q 'Storage=volatile' rootfs-overlay/etc/systemd/journald.conf.d/2pny.conf
+test -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pnyd.service
+test -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-firstboot.service
+'''
 if 'set -x' not in vs:
     vs=vs.replace('set -euo pipefail','set -euo pipefail\nset -x',1)
 v.write_text(vs)
