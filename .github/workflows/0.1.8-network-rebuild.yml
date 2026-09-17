@@ -1,0 +1,119 @@
+name: Build 2PNY 0.1.8 Network Rebuild
+
+on:
+  push:
+    branches: [ network-rebuild-0.1.8 ]
+    paths:
+      - 'ci/prepare-0.1.8-network-rebuild.sh'
+      - 'ci/prepare-0.1.8-network-followup.sh'
+      - 'ci/validate-0.1.8-network-image.sh'
+      - '.github/workflows/0.1.8-network-rebuild.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-network-rebuild:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    env:
+      VERSION: 0.1.8-alpha
+      TAG: v0.1.8-alpha-network
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+
+      - name: Restore and patch source
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.8-network-rebuild.sh \
+            ci/prepare-0.1.8-network-followup.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2
+
+      - name: Validate source
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euxo pipefail
+          bash ./builder/validate-source.sh
+          grep -Fq '2PNY_NATIVE_NETWORK_PROFILES_V1' builder/build-image.sh
+          grep -Fq '802-11-wireless-security.pmf disable' builder/build-image.sh
+          grep -Fq 'connection.autoconnect-retries 0' builder/build-image.sh
+          grep -Fq 'cloud-init.disabled' builder/build-image.sh
+          grep -Fq 'PNY2_WATCH_ONCE' rootfs-overlay/usr/local/sbin/2pny-setup-watch
+
+      - name: Build ARM64 image
+        working-directory: legacy-source/2pny-os
+        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
+
+      - name: Validate final image and execute panel
+        working-directory: legacy-source/2pny-os
+        run: bash "$GITHUB_WORKSPACE/ci/validate-0.1.8-network-image.sh" "dist/2PNY-OS-${VERSION}-arm64.img.xz" "$VERSION"
+
+      - name: Publish network rebuild prerelease
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          IMAGE="dist/2PNY-OS-${VERSION}-arm64.img.xz"
+          cat > RELEASE-NOTES.md <<'EOF'
+          2PNY OS 0.1.8 Alpha — reconstrução da rede de primeiro acesso para Raspberry Pi OS Trixie.
+
+          Rede refeita:
+          - NetworkManager é a autoridade de boot; o watcher não é mais requisito para haver rede;
+          - perfis gerados pelo nmcli --offline da própria imagem Trixie;
+          - Wi-Fi AP aberto 2PNY-SETUP em 10.42.0.1/24;
+          - PMF desativado para corrigir a falha de hotspot/802.1X observada no Trixie;
+          - Ethernet direta simultânea em 10.43.0.1/24;
+          - autoconnect nativo nos dois perfis e tentativas ilimitadas;
+          - nftables + dnsmasq-base disponíveis para NetworkManager shared mode;
+          - domínio regulatório BR aplicado antes do NetworkManager;
+          - cloud-init impedido de reescrever a rede do appliance;
+          - botão de AP afeta somente o AP, nunca a Ethernet;
+          - diagnóstico 2PNY-NETWORK.txt é escrito na partição boot;
+          - painel continua em 0.0.0.0:80, captive portal e layout responsivo preservados;
+          - MMDVMHost, RF rollback e DMR Talker Alias preservados.
+
+          Wi-Fi: conecte em 2PNY-SETUP e abra http://10.42.0.1.
+          Cabo direto: abra http://10.43.0.1.
+          EOF
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" "$IMAGE" "${IMAGE}.sha256" dist/BUILD-INFO.txt \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title '2PNY OS 0.1.8 Alpha - Network Rebuild' \
+            --notes-file RELEASE-NOTES.md --prerelease
