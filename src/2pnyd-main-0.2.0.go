@@ -1,0 +1,670 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+)
+
+const (
+	dataDir         = "/var/lib/2pny"
+	configFile      = "/var/lib/2pny/config.json"
+	provisionedFile = "/var/lib/2pny/provisioned"
+	listenAddr      = "0.0.0.0:80"
+	appVersion      = "0.2.0-alpha"
+	hardwareFile    = "/var/lib/2pny/hardware.json"
+	hardwareProbeFile = "/var/lib/2pny/hardware-probe.json"
+	rfApplyStateFile  = "/var/lib/2pny/rf-apply-state.json"
+	wizardFile        = "/usr/share/2pny/wizard.html"
+)
+
+type Config struct {
+	Callsign   string \`json:"callsign"\`
+	DMRID      string \`json:"dmr_id"\`
+	WiFiSSID   string \`json:"wifi_ssid,omitempty"\`
+	UseMode    string \`json:"use_mode"\`
+	RXHz       int64  \`json:"rx_hz"\`
+	TXHz       int64  \`json:"tx_hz"\`
+	Protocol   string \`json:"protocol"\`
+	Operation  string \`json:"operation"\`
+	CreatedAt  string \`json:"created_at"\`
+}
+
+type Status struct {
+	Name        string   \`json:"name"\`
+	Version     string   \`json:"version"\`
+	Provisioned bool     \`json:"provisioned"\`
+	Ethernet    bool     \`json:"ethernet"\`
+	WiFi        bool     \`json:"wifi"\`
+	IPv4        []string \`json:"ipv4"\`
+}
+
+type ConnectivityStatus struct {
+	Internet         bool     \`json:"internet"\`
+	DefaultInterface string   \`json:"default_interface,omitempty"\`
+	Ethernet         bool     \`json:"ethernet"\`
+	EthernetInterface string  \`json:"ethernet_interface,omitempty"\`
+	WiFi             bool     \`json:"wifi"\`
+	WiFiInterfaces   []string \`json:"wifi_interfaces"\`
+	WiFiCount        int      \`json:"wifi_count"\`
+	ClientInterface  string   \`json:"client_interface,omitempty"\`
+	APActive         bool     \`json:"ap_active"\`
+	APInterface      string   \`json:"ap_interface,omitempty"\`
+	APSSID           string   \`json:"ap_ssid"\`
+	IPv4             []string \`json:"ipv4"\`
+}
+
+type RFApplyState struct {
+	State   string \`json:"state"\`
+	Message string \`json:"message"\`
+	Updated string \`json:"updated"\`
+}
+
+var (
+	callsignRx = regexp.MustCompile(\`^[A-Z0-9/-]{3,16}$\`)
+	dmrRx      = regexp.MustCompile(\`^[0-9]{6,9}$\`)
+	applyMu    sync.Mutex
+)
+
+func fileExists(p string) bool { _, e := os.Stat(p); return e == nil }
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(v)
+}
+
+func interfaceUp(name string) bool {
+	b, err := os.ReadFile(filepath.Join("/sys/class/net", name, "operstate"))
+	return err == nil && strings.TrimSpace(string(b)) == "up"
+}
+
+func ipv4Addresses() []string {
+	var out []string
+	ifaces, _ := net.Interfaces()
+	for _, i := range ifaces {
+		addrs, _ := i.Addrs()
+		for _, a := range addrs {
+			if ipnet, ok := a.(*net.IPNet); ok && ipnet.IP.To4() != nil && !ipnet.IP.IsLoopback() {
+				out = append(out, ipnet.IP.String())
+			}
+		}
+	}
+	return out
+}
+
+func wifiInterfaces() []string {
+	entries, _ := os.ReadDir("/sys/class/net")
+	var out []string
+	for _, e := range entries {
+		name := e.Name()
+		if fileExists(filepath.Join("/sys/class/net", name, "wireless")) {
+			out = append(out, name)
+		}
+	}
+	return out
+}
+
+func ethernetInterface() string {
+	entries, _ := os.ReadDir("/sys/class/net")
+	for _, e := range entries {
+		n := e.Name()
+		if n == "lo" {
+			continue
+		}
+		if strings.HasPrefix(n, "eth") || strings.HasPrefix(n, "en") {
+			return n
+		}
+	}
+	return ""
+}
+
+func readRunFile(name string) string {
+	b, err := os.ReadFile(filepath.Join("/run/2pny", name))
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(b))
+}
+
+func defaultRouteInterface() string {
+	b, err := exec.Command("ip", "-4", "route", "show", "default").Output()
+	if err != nil {
+		return ""
+	}
+	fields := strings.Fields(string(b))
+	for i := 0; i+1 < len(fields); i++ {
+		if fields[i] == "dev" {
+			return fields[i+1]
+		}
+	}
+	return ""
+}
+
+func internetReachable() bool {
+	for _, addr := range []string{"1.1.1.1:443", "8.8.8.8:53"} {
+		c, err := net.DialTimeout("tcp", addr, 1200*time.Millisecond)
+		if err == nil {
+			_ = c.Close()
+			return true
+		}
+	}
+	return false
+}
+
+func apActive() bool {
+	out, err := exec.Command("/usr/local/sbin/2pny-ap-control", "status").Output()
+	return err == nil && strings.TrimSpace(string(out)) == "active"
+}
+
+func connectivitySnapshot() ConnectivityStatus {
+	wifis := wifiInterfaces()
+	eth := ethernetInterface()
+	client := readRunFile("uplink-iface")
+	apif := readRunFile("ap-iface")
+	wifiUp := false
+	for _, w := range wifis {
+		if interfaceUp(w) {
+			wifiUp = true
+			break
+		}
+	}
+	return ConnectivityStatus{
+		Internet: internetReachable(),
+		DefaultInterface: defaultRouteInterface(),
+		Ethernet: eth != "" && interfaceUp(eth),
+		EthernetInterface: eth,
+		WiFi: wifiUp,
+		WiFiInterfaces: wifis,
+		WiFiCount: len(wifis),
+		ClientInterface: client,
+		APActive: apActive(),
+		APInterface: apif,
+		APSSID: "2PNY-SETUP",
+		IPv4: ipv4Addresses(),
+	}
+}
+
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	c := connectivitySnapshot()
+	writeJSON(w, http.StatusOK, Status{
+		Name: "PU2PNY OS",
+		Version: appVersion,
+		Provisioned: fileExists(provisionedFile),
+		Ethernet: c.Ethernet,
+		WiFi: c.WiFi,
+		IPv4: c.IPv4,
+	})
+}
+
+func connectivityHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET required", http.StatusMethodNotAllowed)
+		return
+	}
+	writeJSON(w, http.StatusOK, connectivitySnapshot())
+}
+
+func preferredClientWiFi() string {
+	iface := readRunFile("uplink-iface")
+	if iface != "" && fileExists(filepath.Join("/sys/class/net", iface)) {
+		return iface
+	}
+	apif := readRunFile("ap-iface")
+	for _, w := range wifiInterfaces() {
+		if w != apif {
+			return w
+		}
+	}
+	return ""
+}
+
+func wifiScanHandler(w http.ResponseWriter, r *http.Request) {
+	iface := preferredClientWiFi()
+	if iface == "" {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+	cmd := exec.Command("nmcli", "-t", "--escape", "no", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "ifname", iface, "--rescan", "yes")
+	b, err := cmd.Output()
+	if err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "não foi possível procurar redes Wi-Fi nesta interface"})
+		return
+	}
+	type AP struct {
+		SSID string \`json:"ssid"\`
+		Signal string \`json:"signal"\`
+		Security string \`json:"security"\`
+	}
+	seen := map[string]bool{}
+	var aps []AP
+	for _, line := range strings.Split(string(b), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		p := strings.SplitN(line, ":", 3)
+		if len(p) != 3 || p[0] == "" || seen[p[0]] {
+			continue
+		}
+		seen[p[0]] = true
+		aps = append(aps, AP{SSID:p[0], Signal:p[1], Security:p[2]})
+	}
+	writeJSON(w, http.StatusOK, aps)
+}
+
+func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	var in struct {
+		SSID string \`json:"ssid"\`
+		Password string \`json:"password"\`
+		KeepAP bool \`json:"keep_ap"\`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&in); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"dados de rede inválidos"})
+		return
+	}
+	in.SSID = strings.TrimSpace(in.SSID)
+	if in.SSID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"informe o nome da rede Wi-Fi"})
+		return
+	}
+	keep := "0"
+	if in.KeepAP { keep = "1" }
+	out, err := exec.Command("/usr/local/sbin/2pny-network-switch", "connect", in.SSID, in.Password, keep).CombinedOutput()
+	msg := strings.TrimSpace(string(out))
+	if err != nil {
+		if msg == "" { msg = err.Error() }
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok":false, "error":msg, "connectivity":connectivitySnapshot()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok":true, "message":msg, "connectivity":connectivitySnapshot()})
+}
+
+func networkRefreshHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	_ = exec.Command("systemctl", "restart", "2pny-network-core.service").Run()
+	time.Sleep(1500 * time.Millisecond)
+	writeJSON(w, http.StatusOK, map[string]any{"ok":true, "connectivity":connectivitySnapshot()})
+}
+
+func hardwareHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := os.ReadFile(hardwareFile)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"raspberry_model":"detectando...", "serial_ports":[]string{}, "i2c_buses":[]string{}, "mmdvm":map[string]any{"detected":false}})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(b)
+}
+
+func hardwareStatusHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := os.ReadFile(hardwareProbeFile)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"state":"not_scanned"})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(b)
+}
+
+func writeHardwareState(state, stage, message string) {
+	b, _ := json.Marshal(map[string]any{"state":state, "stage":stage, "message":message, "updated":time.Now().UTC().Format(time.RFC3339)})
+	_ = os.WriteFile(hardwareProbeFile, b, 0600)
+}
+
+func hardwareScanHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	writeHardwareState("preparing", "drivers", "Preparando drivers e firmware...")
+	go func() {
+		prep := exec.Command("/usr/local/sbin/2pny-hardware-prepare")
+		if b, err := prep.CombinedOutput(); err != nil {
+			log.Printf("hardware prepare warning: %v: %s", err, strings.TrimSpace(string(b)))
+		}
+		writeHardwareState("scanning", "hardware", "Detectando MMDVM e display...")
+		cmd := exec.Command("/usr/local/sbin/2pny-hardware-probe")
+		if b, err := cmd.CombinedOutput(); err != nil {
+			msg := strings.TrimSpace(string(b))
+			if msg == "" { msg = err.Error() }
+			writeHardwareState("error", "hardware", msg)
+			log.Printf("hardware probe failed: %v: %s", err, msg)
+		}
+	}()
+	writeJSON(w, http.StatusAccepted, map[string]any{"ok":true, "state":"preparing", "stage":"drivers"})
+}
+
+func publicConfigHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := os.ReadFile(configFile)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{})
+		return
+	}
+	var c Config
+	if json.Unmarshal(b, &c) != nil {
+		writeJSON(w, http.StatusOK, map[string]any{})
+		return
+	}
+	writeJSON(w, http.StatusOK, c)
+}
+
+func writeRFApplyState(state, message string) {
+	st := RFApplyState{State:state, Message:message, Updated:time.Now().UTC().Format(time.RFC3339)}
+	b, _ := json.Marshal(st)
+	_ = os.WriteFile(rfApplyStateFile, b, 0600)
+}
+
+func rfStatusHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := os.ReadFile(rfApplyStateFile)
+	if err != nil {
+		writeJSON(w, http.StatusOK, RFApplyState{State:"ready", Message:"Aguardando configuração.", Updated:time.Now().UTC().Format(time.RFC3339)})
+		return
+	}
+	var st RFApplyState
+	if json.Unmarshal(b, &st) != nil {
+		writeJSON(w, http.StatusOK, RFApplyState{State:"ready", Message:"Aguardando configuração.", Updated:time.Now().UTC().Format(time.RFC3339)})
+		return
+	}
+	writeJSON(w, http.StatusOK, st)
+}
+
+func detectedModemPort() (string, error) {
+	b, err := os.ReadFile(hardwareProbeFile)
+	if err != nil {
+		return "", fmt.Errorf("hardware ainda não foi detectado")
+	}
+	var h struct {
+		MMDVM struct {
+			Detected bool \`json:"detected"\`
+			Port string \`json:"port"\`
+		} \`json:"mmdvm"\`
+	}
+	if json.Unmarshal(b, &h) != nil || !h.MMDVM.Detected || strings.TrimSpace(h.MMDVM.Port) == "" {
+		return "", fmt.Errorf("MMDVM não confirmada; volte à etapa Hardware e detecte novamente")
+	}
+	return strings.TrimSpace(h.MMDVM.Port), nil
+}
+
+func normalizeFrequency(v string) (string, int64, error) {
+	s := strings.ReplaceAll(strings.TrimSpace(v), ",", ".")
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil || f <= 0 {
+		return "", 0, fmt.Errorf("frequência inválida")
+	}
+	if f < 1000 {
+		f *= 1000000
+	} else if f < 1000000 {
+		f *= 1000
+	}
+	hz := int64(f + 0.5)
+	if hz < 100000000 || hz > 1000000000 {
+		return "", 0, fmt.Errorf("frequência fora do intervalo de segurança 100 MHz..1 GHz")
+	}
+	return strconv.FormatInt(hz, 10), hz, nil
+}
+
+func saveConfig(c Config) error {
+	if err := os.MkdirAll(dataDir, 0750); err != nil { return err }
+	raw, _ := json.MarshalIndent(c, "", "  ")
+	tmp := configFile + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0600); err != nil { return err }
+	return os.Rename(tmp, configFile)
+}
+
+func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	var in struct {
+		Callsign string \`json:"callsign"\`
+		DMRID string \`json:"dmr_id"\`
+		UseMode string \`json:"use_mode"\`
+		RX string \`json:"rx"\`
+		TX string \`json:"tx"\`
+		Protocol string \`json:"protocol"\`
+		Operation string \`json:"operation"\`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 32<<10)).Decode(&in); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"configuração inválida"})
+		return
+	}
+	in.Callsign = strings.ToUpper(strings.TrimSpace(in.Callsign))
+	in.DMRID = strings.TrimSpace(in.DMRID)
+	in.UseMode = strings.ToLower(strings.TrimSpace(in.UseMode))
+	in.Protocol = strings.ToUpper(strings.TrimSpace(in.Protocol))
+	in.Operation = strings.ToLower(strings.TrimSpace(in.Operation))
+	if !callsignRx.MatchString(in.Callsign) {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"indicativo inválido"})
+		return
+	}
+	if !dmrRx.MatchString(in.DMRID) {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"DMR ID inválido"})
+		return
+	}
+	if in.UseMode != "hotspot" && in.UseMode != "repeater" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione Hotspot ou Repetidora"})
+		return
+	}
+	validProtocol := map[string]bool{"DSTAR":true, "DMR":true, "YSF":true, "P25":true, "NXDN":true}
+	if !validProtocol[in.Protocol] {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"protocolo inválido"})
+		return
+	}
+	if in.Operation != "normal" && in.Operation != "crossmode" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione Normal ou Crossmode"})
+		return
+	}
+	rxArg, rxHz, err := normalizeFrequency(in.RX)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"RX: "+err.Error()})
+		return
+	}
+	txArg, txHz, err := normalizeFrequency(in.TX)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"TX: "+err.Error()})
+		return
+	}
+	port, err := detectedModemPort()
+	if err != nil {
+		writeJSON(w, http.StatusConflict, map[string]any{"ok":false, "error":err.Error()})
+		return
+	}
+	duplex := "0"
+	if in.UseMode == "repeater" { duplex = "1" }
+	writeRFApplyState("applying", "Validando modem, frequência e configuração básica...")
+	go func() {
+		applyMu.Lock()
+		defer applyMu.Unlock()
+		cmd := exec.Command("/usr/local/sbin/2pny-rf-apply", rxArg, txArg, "0", "0", duplex, port, in.Callsign, in.DMRID)
+		out, err := cmd.CombinedOutput()
+		msg := strings.TrimSpace(string(out))
+		if err != nil {
+			if msg == "" { msg = err.Error() }
+			writeRFApplyState("error", msg)
+			log.Printf("basic RF apply failed: %v: %s", err, msg)
+			return
+		}
+		modeOut, modeErr := exec.Command("/usr/local/sbin/2pny-mode-apply", in.Protocol, in.Operation, in.UseMode).CombinedOutput()
+		if modeErr != nil {
+			m := strings.TrimSpace(string(modeOut)); if m == "" { m = modeErr.Error() }
+			writeRFApplyState("error", "RF validada, mas o protocolo não pôde ser aplicado: "+m)
+			log.Printf("mode apply failed: %v: %s", modeErr, m)
+			return
+		}
+		wifiSSID := ""
+		if b, e := os.ReadFile(filepath.Join(dataDir, "uplink-ssid")); e == nil { wifiSSID = strings.TrimSpace(string(b)) }
+		cfg := Config{Callsign:in.Callsign, DMRID:in.DMRID, WiFiSSID:wifiSSID, UseMode:in.UseMode, RXHz:rxHz, TXHz:txHz, Protocol:in.Protocol, Operation:in.Operation, CreatedAt:time.Now().UTC().Format(time.RFC3339)}
+		if err := saveConfig(cfg); err != nil {
+			writeRFApplyState("error", "RF aplicada, mas não foi possível salvar a configuração.")
+			return
+		}
+		if err := os.WriteFile(provisionedFile, []byte(time.Now().UTC().Format(time.RFC3339)+"\n"), 0600); err != nil {
+			writeRFApplyState("error", "Configuração aplicada, mas não foi possível finalizar o assistente.")
+			return
+		}
+		_ = exec.Command("systemctl", "restart", "avahi-daemon.service").Run()
+		done := "Configuração básica concluída e MMDVMHost ativo."
+		if in.Operation == "crossmode" {
+			done = "Configuração básica concluída. Perfil Crossmode registrado; os módulos de ponte podem ser ajustados posteriormente."
+		}
+		writeRFApplyState("applied", done)
+	}( )
+	writeJSON(w, http.StatusAccepted, map[string]any{"ok":true, "state":"applying"})
+}
+
+func rfApplyHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"formulário RF inválido"})
+		return
+	}
+	keys := []string{"rx","tx","rx_offset","tx_offset","duplex","port","callsign","dmr_id"}
+	args := make([]string, 0, len(keys))
+	for _, k := range keys {
+		v := strings.TrimSpace(r.FormValue(k))
+		if v == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"campo obrigatório: "+k})
+			return
+		}
+		args = append(args, v)
+	}
+	writeRFApplyState("applying", "Validando RF e iniciando MMDVMHost...")
+	go func(values []string) {
+		out, err := exec.Command("/usr/local/sbin/2pny-rf-apply", values...).CombinedOutput()
+		msg := strings.TrimSpace(string(out))
+		if err != nil {
+			if msg == "" { msg = err.Error() }
+			writeRFApplyState("error", msg)
+			return
+		}
+		if msg == "" { msg = "RF aplicada e MMDVMHost ativo." }
+		writeRFApplyState("applied", msg)
+	}(append([]string(nil), args...))
+	writeJSON(w, http.StatusAccepted, map[string]any{"ok":true, "state":"applying"})
+}
+
+func moduleStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "GET required", http.StatusMethodNotAllowed)
+		return
+	}
+	out, err := exec.Command("/usr/local/sbin/2pny-module-status").Output()
+	if err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"schema":1, "error":"module status unavailable"})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(out)
+}
+
+func apControlHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		writeJSON(w, http.StatusOK, map[string]any{"active":apActive(), "ssid":"2PNY-SETUP", "open":true, "interface":readRunFile("ap-iface")})
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "GET or POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"pedido inválido"})
+		return
+	}
+	action := strings.TrimSpace(r.FormValue("action"))
+	if action != "on" && action != "off" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"action deve ser on ou off"})
+		return
+	}
+	out, err := exec.Command("/usr/local/sbin/2pny-ap-control", action).CombinedOutput()
+	msg := strings.TrimSpace(string(out))
+	if err != nil {
+		if msg == "" { msg = err.Error() }
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok":false, "error":msg, "active":apActive()})
+		return
+	}
+	time.Sleep(700*time.Millisecond)
+	writeJSON(w, http.StatusOK, map[string]any{"ok":true, "message":msg, "active":apActive(), "ssid":"2PNY-SETUP", "open":true})
+}
+
+func healthzHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("PU2PNY OK\n"))
+}
+
+func wizardHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := os.ReadFile(wizardFile)
+	if err != nil {
+		http.Error(w, "assistente indisponível", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(b)
+}
+
+func captivePortalHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+	http.Redirect(w, r, "/wizard", http.StatusFound)
+}
+
+func main() {
+	if err := os.MkdirAll(dataDir, 0750); err != nil {
+		log.Fatal(err)
+	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.Redirect(w, r, "/wizard", http.StatusFound)
+	})
+	http.HandleFunc("/wizard", wizardHandler)
+	http.HandleFunc("/api/status", statusHandler)
+	http.HandleFunc("/api/connectivity", connectivityHandler)
+	http.HandleFunc("/api/wifi/scan", wifiScanHandler)
+	http.HandleFunc("/api/network/connect", networkConnectHandler)
+	http.HandleFunc("/api/network/refresh", networkRefreshHandler)
+	http.HandleFunc("/api/hardware", hardwareHandler)
+	http.HandleFunc("/api/hardware/status", hardwareStatusHandler)
+	http.HandleFunc("/api/hardware/scan", hardwareScanHandler)
+	http.HandleFunc("/api/config", publicConfigHandler)
+	http.HandleFunc("/api/basic/apply", basicApplyHandler)
+	http.HandleFunc("/api/rf", rfStatusHandler)
+	http.HandleFunc("/api/rf/apply", rfApplyHandler)
+	http.HandleFunc("/api/modules", moduleStatusHandler)
+	http.HandleFunc("/api/ap", apControlHandler)
+	http.HandleFunc("/healthz", healthzHandler)
+	for _, p := range []string{"/generate_204","/gen_204","/hotspot-detect.html","/library/test/success.html","/connecttest.txt","/ncsi.txt","/redirect"} {
+		http.HandleFunc(p, captivePortalHandler)
+	}
+	log.Printf("PU2PNY OS %s listening on %s", appVersion, listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
+}
