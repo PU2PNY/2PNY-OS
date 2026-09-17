@@ -1,0 +1,53 @@
+#!/bin/sh
+set -eu
+
+read_kb() {
+  awk -v k="$1" '$1==k":" {print $2; exit}' /proc/meminfo
+}
+
+sum_rss_kb() {
+  name="$1"
+  total=0
+  for pid in $(pgrep -x "$name" 2>/dev/null || true); do
+    f="/proc/$pid/status"
+    [ -r "$f" ] || continue
+    v=$(awk '$1=="VmRSS:" {print $2; exit}' "$f" 2>/dev/null || echo 0)
+    total=$((total + ${v:-0}))
+  done
+  echo "$total"
+}
+
+model="unknown"
+if [ -r /proc/device-tree/model ]; then
+  model=$(tr -d '\000' </proc/device-tree/model 2>/dev/null || echo unknown)
+fi
+
+temp_milli="unknown"
+for f in /sys/class/thermal/thermal_zone*/temp; do
+  if [ -r "$f" ]; then
+    temp_milli=$(cat "$f" 2>/dev/null || echo unknown)
+    break
+  fi
+done
+
+mem_total=$(read_kb MemTotal)
+mem_available=$(read_kb MemAvailable)
+mem_used=$((mem_total - mem_available))
+loadavg=$(cut -d' ' -f1-3 /proc/loadavg)
+uptime_s=$(cut -d. -f1 /proc/uptime)
+
+printf 'timestamp=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+printf 'model=%s\n' "$model"
+printf 'uptime_s=%s\n' "$uptime_s"
+printf 'loadavg=%s\n' "$loadavg"
+printf 'mem_total_kb=%s\n' "$mem_total"
+printf 'mem_used_kb=%s\n' "$mem_used"
+printf 'mem_available_kb=%s\n' "$mem_available"
+printf 'soc_temp_milli_c=%s\n' "$temp_milli"
+printf '2pnyd_rss_kb=%s\n' "$(sum_rss_kb 2pnyd)"
+printf 'mmdvmhost_rss_kb=%s\n' "$(sum_rss_kb MMDVM-Host)"
+
+if command -v systemctl >/dev/null 2>&1; then
+  printf '2pnyd_state=%s\n' "$(systemctl is-active 2pnyd.service 2>/dev/null || true)"
+  printf 'mmdvmhost_state=%s\n' "$(systemctl is-active 2pny-mmdvmhost.service 2>/dev/null || true)"
+fi
