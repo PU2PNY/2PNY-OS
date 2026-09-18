@@ -757,11 +757,7 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 
 func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if !fileExists(provisionedFile) {
-		if fileExists(provisionedFile) {
-			http.Redirect(w, r, "/dashboard", http.StatusFound)
-		} else {
-			http.Redirect(w, r, "/wizard", http.StatusFound)
-		}
+		http.Redirect(w, r, "/wizard", http.StatusFound)
 		return
 	}
 	b, err := os.ReadFile(dashboardFile)
@@ -840,7 +836,11 @@ func main() {
 			http.NotFound(w, r)
 			return
 		}
-		http.Redirect(w, r, "/wizard", http.StatusFound)
+		if fileExists(provisionedFile) {
+			http.Redirect(w, r, "/dashboard", http.StatusFound)
+		} else {
+			http.Redirect(w, r, "/wizard", http.StatusFound)
+		}
 	})
 	http.HandleFunc("/wizard", wizardHandler)
 	http.HandleFunc("/dashboard", dashboardHandler)
