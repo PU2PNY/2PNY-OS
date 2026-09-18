@@ -52,6 +52,7 @@ for rel in (
     "rootfs-overlay/var/lib/2pny/network-connect.json",
     "rootfs-overlay/var/lib/2pny/rf-apply-state.json",
     "rootfs-overlay/var/lib/2pny/network-radio.json",
+    "rootfs-overlay/var/lib/2pny/display-override.json",
     "rootfs-overlay/var/lib/2pny/hostfiles-status.json",
     "rootfs-overlay/var/lib/2pny/maintenance.json",
     "rootfs-overlay/var/lib/2pny/auto-maintenance.last",
@@ -87,6 +88,7 @@ core=(root/"rootfs-overlay/usr/local/sbin/2pny-network-core").read_text()
 assert re.search(r'appVersion\s*=\s*"0\.2\.5-alpha"',main)
 assert 'http.HandleFunc("/api/servers"' in main
 assert 'http.HandleFunc("/api/live"' in main
+assert 'http.HandleFunc("/api/display/override"' in main
 assert 'selecione um servidor/master DMR válido' in main
 assert '2pny-protocol-network-apply' in main
 assert 'systemctl stop 2pny-network-core.service' not in switch
@@ -95,6 +97,7 @@ assert 'PU2PNY-WIFI-CANDIDATE' in switch
 assert '"DMR Network"' in network and '"Enable":"1"' in network
 assert 'Servidor DMR' in wizard and '/api/servers' in wizard
 assert 'singleWifiNote' in wizard
+assert 'confirmNextion' in wizard and '/api/display/override' in wizard
 assert 'Ao vivo' in dash and '/api/live' in dash
 assert (hosts/"DMR_Hosts.txt").exists()
 print("PU2PNY 0.2.5 protocol/network/live patch applied")
