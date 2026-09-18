@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+case "${1:-}" in
+ ssh-disable) systemctl disable --now ssh.service; exit;;
+ ssh-enable) ;;
+ *) exit 2;;
+esac
+KEY=$(head -c 4096)
+[[ "$KEY" != *$'\n'* && "$KEY" =~ ^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp256)[[:space:]] ]] || { echo 'Chave pública SSH inválida.'; exit 2; }
+TMP=$(mktemp);trap 'rm -f "$TMP"' EXIT
+printf '%s\n' "$KEY" >"$TMP"
+ssh-keygen -lf "$TMP" >/dev/null || { echo 'Chave pública SSH inválida.'; exit 2; }
+id radioexpert >/dev/null 2>&1 || useradd -m -s /bin/bash -G adm,systemd-journal radioexpert
+# An unusable password permits key authentication while blocking password access.
+usermod -p '*' radioexpert
+install -d -m 0700 -o radioexpert -g radioexpert /home/radioexpert/.ssh
+install -m 0600 -o radioexpert -g radioexpert "$TMP" /home/radioexpert/.ssh/authorized_keys
+mkdir -p /etc/ssh/sshd_config.d
+cat >/etc/ssh/sshd_config.d/20-pu2pny-expert.conf <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AllowUsers radioexpert
+EOF
+/usr/sbin/sshd -t
+systemctl enable --now ssh.service
+systemctl reload ssh.service

@@ -1,0 +1,18 @@
+[Unit]
+Description=PU2PNY local activity, cached identities and display telemetry
+After=2pny-network-core.service mosquitto.service
+[Service]
+RuntimeDirectory=2pny
+RuntimeDirectoryPreserve=yes
+ExecStart=/usr/local/sbin/2pny-station-worker
+Restart=on-failure
+RestartSec=5
+Nice=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/2pny /run/2pny /var/cache/2pny
+MemoryMax=96M
+TasksMax=24
+[Install]
+WantedBy=multi-user.target

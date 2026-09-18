@@ -1,0 +1,31 @@
+[Unit]
+Description=PU2PNY-OS MMDVM display driver
+After=mosquitto.service 2pny-mmdvmhost.service
+Requires=mosquitto.service
+Wants=2pny-mmdvmhost.service
+ConditionPathExists=/var/lib/2pny/display/MMDVM-Display.ini
+
+[Service]
+Type=simple
+User=mmdvm
+Group=mmdvm
+SupplementaryGroups=dialout
+ExecStart=/usr/local/bin/MMDVM-Display /var/lib/2pny/display/MMDVM-Display.ini
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=12
+TimeoutStopSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+MemoryMax=64M
+TasksMax=48
+
+[Install]
+WantedBy=multi-user.target
+

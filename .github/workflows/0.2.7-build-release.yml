@@ -1,0 +1,309 @@
+name: Build and release PU2PNY-OS 0.2.7 Alpha
+
+on:
+  push:
+    branches: [ pu2pny-os-0.2.7-alpha ]
+    paths:
+      - 'src/*0.2.7*'
+      - 'src/2pny-network-switch-0.2.7'
+      - 'src/2pny-rf-apply-0.2.7'
+      - 'src/2pny-protocol-network-apply-0.2.7.py'
+      - 'src/2pny-server-catalog-0.2.7.py'
+      - 'src/2pny-live-status-0.2.7.py'
+      - 'src/2pny-display-apply-0.2.7.py'
+      - 'src/2pny-display-status-0.2.7.py'
+      - 'src/2pny-mmdvmhost-0.2.7.service'
+      - 'src/2pny-dmrgateway-0.2.7.service'
+      - 'src/2pny-display-0.2.7.service'
+      - 'src/mosquitto-pu2pny-0.2.7.conf'
+      - 'src/wizard-0.2.7.html'
+      - 'src/dashboard-0.2.7.html'
+      - 'ci/prepare-0.2.7-radio-live.py'
+      - 'ci/validate-0.2.7-image.sh'
+      - 'ci/test-0.2.7-regressions.py'
+      - 'ci/test-0.2.7-ui.cjs'
+      - '.github/workflows/0.2.7-build-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  ui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test rendered UI with synthetic radio data
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node ci/test-0.2.7-ui.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pu2pny-0.2.7-ui
+          path: /tmp/pu2pny-ui/
+  build-arm64:
+    needs: ui
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 95
+    env:
+      VERSION: 0.2.7-alpha
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2
+
+      - name: Restore baseline and apply PU2PNY patches
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-base-fix.sh \
+            ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-anchor-compat.sh \
+            ci/prepare-0.1.8-network-core.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh \
+            ci/prepare-0.1.9-pu2pny-hardware-ui.sh \
+            ci/prepare-0.1.9-network-pid-fix.sh \
+            ci/prepare-0.1.9-build-metadata-fix.sh \
+            ci/prepare-0.1.9-hotfix1-hardware-status.sh \
+            ci/prepare-0.2.0-onboarding.sh \
+            ci/prepare-0.2.1-network-ux.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+          python3 ci/prepare-0.2.2-stability.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.3-dashboard.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.4-network-display.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.5-protocol-network.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.7-radio-live.py legacy-source/2pny-os
+
+      - name: Validate 0.2.7 source
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          bash -n "$GITHUB_WORKSPACE/ci/validate-0.2.7-image.sh"
+          test "$(grep -c '\[20/20\] Final result' "$GITHUB_WORKSPACE/ci/validate-0.2.7-image.sh")" = 1
+          gofmt -w src/2pnyd/main.go
+          go test ./...
+          python3 "$GITHUB_WORKSPACE/ci/test-0.2.7-regressions.py"
+          python3 -m py_compile "$GITHUB_WORKSPACE/src/2pny-station-worker-0.2.7.py"
+          bash -n "$GITHUB_WORKSPACE/src/2pny-expert-ssh-0.2.7"
+          for f in \
+            rootfs-overlay/usr/local/sbin/2pny-rf-apply \
+            rootfs-overlay/usr/local/sbin/2pny-network-core \
+            rootfs-overlay/usr/local/sbin/2pny-network-switch \
+            rootfs-overlay/usr/local/sbin/2pny-hostfiles-update \
+            rootfs-overlay/usr/local/sbin/2pny-auto-maintenance \
+            rootfs-overlay/usr/local/sbin/2pny-mode-apply; do
+              bash -n "$f"
+          done
+          python3 -m py_compile \
+            rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply \
+            rootfs-overlay/usr/local/sbin/2pny-server-catalog \
+            rootfs-overlay/usr/local/sbin/2pny-live-status \
+            rootfs-overlay/usr/local/sbin/2pny-display-apply \
+            rootfs-overlay/usr/local/sbin/2pny-display-status \
+            rootfs-overlay/usr/local/sbin/2pny-hardware-probe
+          rm -rf rootfs-overlay/usr/local/sbin/__pycache__
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.2\.7-alpha"' src/2pnyd/main.go
+          grep -Fq 'DMRSlot' src/2pnyd/main.go
+          grep -Fq 'BMAPIConfigured' src/2pnyd/main.go
+          grep -Fq 'dmrgateway_active' src/2pnyd/main.go
+          grep -Fq 'UARTSpeed=$MODEM_BAUD' rootfs-overlay/usr/local/sbin/2pny-rf-apply
+          ! grep -Fq 'UARTSpeed=115200' rootfs-overlay/usr/local/sbin/2pny-rf-apply
+          grep -Fq 'DMRGateway.ini' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'GatewayAddress' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'MMDVM-Display.ini' rootfs-overlay/usr/local/sbin/2pny-display-apply
+          grep -Fxq 'listener 1883 127.0.0.1' rootfs-overlay/etc/mosquitto/conf.d/pu2pny-local.conf
+          grep -Fq 'Hotspot Security' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq 'BrandMeister API Key' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq 'Módulo XLX' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq 'TX · Seu rádio → Internet' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'RX · Internet → seu rádio' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'MTR / qualidade' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq '2a3306de313cf4c094c2031c9ced5a6858bbbfcc' builder/build-image.sh
+          grep -Fq '96a0705d818c4234960a61dd2837e32f9450f811' builder/build-image.sh
+          test -s rootfs-overlay/var/lib/2pny/hosts/DMR_Hosts.txt
+
+      - name: Build ARM64 image
+        working-directory: legacy-source/2pny-os
+        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
+
+      - name: Normalize image and checksum
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
+          IMAGE="dist/PU2PNY-OS-$VERSION-arm64.img.xz"
+          test -n "$OLD"
+          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
+          sudo rm -f dist/*.img.xz.sha256
+          HASH="$(sudo sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" | sudo tee "$IMAGE.sha256" >/dev/null
+          sudo chown "$USER:$USER" "$IMAGE" "$IMAGE.sha256" dist/BUILD-INFO.txt
+          xz -t "$IMAGE"
+          test "$(sha256sum "$IMAGE" | awk '{print $1}')" = "$HASH"
+
+      - name: Validate final 0.2.7 image
+        working-directory: legacy-source/2pny-os
+        run: bash "$GITHUB_WORKSPACE/ci/validate-0.2.7-image.sh" "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$VERSION"
+
+      - name: Stage validated artifact
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/release-artifact"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
+          cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.2.7-arm64
+          path: release-artifact/*
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+  publish-x64:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      VERSION: 0.2.7-alpha
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.2.7-arm64
+          path: release
+
+      - name: Verify transferred image
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          CHECKSUM="$IMAGE.sha256"
+          xz -t "$IMAGE"
+          EXPECTED="$(awk '{print $1}' "$CHECKSUM")"
+          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          test "$EXPECTED" = "$ACTUAL"
+
+      - name: Write release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.2.7 Alpha — Raspberry Pi ARM64.
+
+          Atualização baseada no teste físico positivo de DMR da 0.2.6:
+          - DMR e baud preservados; backup da versão aprovada mantido;
+          - limites na busca Wi-Fi, recuperação de AP e anúncio local pu2pny;
+          - detecção de hardware não bloqueia a resposta inicial do painel;
+          - TX vermelho / RX verde na perspectiva do operador;
+          - histórico local de 24h (até 1000 chamadas, 200 exibidas) e cache RadioID;
+          - menus superiores, filtros por família de rede, visualização básica/expert;
+          - navegação PT/EN/ES, diagnóstico técnico mantém mensagens de origem;
+          - telemetria CPU/IP via MQTT oficial do MMDVM-Display, conforme suporte do HMI;
+          - SSH opcional por chave, sem login root; QRZ opcional por API autenticada;
+          - offsets de RF não são alterados automaticamente; BER não é nível de áudio.
+
+          Base preservada:
+          - Wi-Fi agora preserva BSSID da busca, tenta associação duas vezes, espera IPv4 e restaura o AP em falha;
+          - o painel diferencia Wi-Fi cliente do AP pu2pny, evitando falso estado "Wi-Fi conectado";
+          - o baud real detectado no MMDVM (115200 ou 460800) é aplicado ao MMDVMHost;
+          - DMR usa DMRGateway local corretamente, em vez de tratar XLX/BM/TGIF como conexão direta do MMDVMHost;
+          - XLX possui módulo e slot; XLX026 inicia com módulo C e TG 6;
+          - BrandMeister pede Hotspot Security e oferece API Key opcional separada para gerenciamento;
+          - TGIF suporta chave de hotspot e ESSID;
+          - ESSID, Color Code e Time Slot ficam explícitos;
+          - estado de rede diferencia configuração aplicada de autenticação real no master;
+          - Nextion via MMDVM passa ao MMDVM-Display oficial após a configuração RF;
+          - HMI/TFT da Nextion não é sobrescrito;
+          - painel principal redesenhado e responsivo;
+          - Ao Vivo possui boxes separados RX e TX, atividade animada, slot, duração, BER, RSSI e indicador MTR/qualidade;
+          - Internet mostra latência e classificação Ótimo/Bom/Ruim/Offline;
+          - diagnóstico mostra MMDVMHost, DMRGateway, MMDVM-Display e MQTT local;
+          - broker MQTT interno fica restrito a 127.0.0.1.
+
+          Escopo desta Alpha:
+          - DMR é o primeiro protocolo com gateway de rede completo neste fluxo.
+          - D-Star/YSF/P25/NXDN continuam identificados como módulos ainda em integração de gateway.
+          - Crossmode permanece desativado.
+          - QRZ utiliza API XML autenticada, com cache local; sem credenciais ou permissão, mostra fallback.
+
+          Validação automatizada: compilação ARM64, configuração XLX/BM/TGIF, rollback, leitura Wi-Fi, atividade RX/TX, integridade da imagem e API em chroot.
+          Validação física pendente: associação Wi-Fi, áudio DMR RX/TX e Nextion na Raspberry Pi do usuário.
+          BER/RSSI dependem dos dados emitidos pelo modem; não representam volume de áudio.
+
+          Acessos:
+          AP pu2pny / cabo direto: http://10.43.0.1/
+          Rede normal: http://pu2pny.local/
+          Painel: http://pu2pny.local/dashboard
+          Assistente: http://pu2pny.local/wizard
+          EOF
+
+      - name: Align alpha tag with the validated commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = 'tags/v0.2.7-alpha';
+            const repo = {owner: context.repo.owner, repo: context.repo.repo};
+            let current;
+            try { current = (await github.rest.git.getRef({...repo, ref})).data; }
+            catch (e) { if (e.status === 404) return; throw e; }
+            if (current.object.sha === context.sha) return;
+            const release = (await github.rest.repos.getReleaseByTag({...repo, tag: 'v0.2.7-alpha'})).data;
+            if (!release.prerelease) throw new Error('Refusing to change a stable release tag');
+            const comparison = (await github.rest.repos.compareCommitsWithBasehead({...repo, basehead: current.object.sha + '...' + context.sha})).data;
+            if (comparison.status !== 'ahead') throw new Error('Alpha tag must only advance to a validated descendant');
+            await github.rest.git.updateRef({...repo, ref, sha: context.sha, force: false});
+
+      - name: Publish verified prerelease and assets
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.2.7-alpha
+          target_commitish: ${{ github.sha }}
+          name: PU2PNY-OS 0.2.7 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.2.7-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.2.7-alpha-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
+
