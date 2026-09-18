@@ -661,3 +661,44 @@ Ao iniciar qualquer nova correção ou versão do PU2PNY:
 5. registrar no changelog o que foi preservado;
 6. atualizar este plano somente quando uma decisão do projeto mudar de verdade.
 
+
+
+---
+
+## 21. Achados físicos da v0.2.3 e requisitos aceitos para v0.2.4
+
+Teste físico em Raspberry Pi 4 + MMDVM confirmou que o dashboard principal da v0.2.3 é uma boa baseline visual e funcional e deve ser preservado.
+
+Achados reais da v0.2.3:
+
+- o script de rede foi publicado com o dispatcher Bash escapado como `case "\${1:-}"`, impedindo `scan-json` e `connect` de funcionarem corretamente;
+- a tela de Wi-Fi podia permanecer em "Buscando redes..." sem devolver SSIDs;
+- a troca de rede precisava de retorno explícito para senha incorreta e restauração segura do AP;
+- o navegador/captive portal não abriu automaticamente em todos os clientes;
+- a Nextion era inferida apenas pela disponibilidade da porta de display da MMDVM, mas a tela física permaneceu sem conteúdo;
+- o dashboard principal, frequência simplex única e atalhos de configuração foram aprovados e não devem regredir.
+
+Requisitos da v0.2.4:
+
+- corrigir definitivamente o dispatcher `scan-json/connect`;
+- busca Wi-Fi por NetworkManager, com fallback por `iw` e restauração automática do AP;
+- validar nova senha em perfil candidato antes de substituir a última rede funcional;
+- em senha errada, avisar claramente, preservar configuração anterior e restaurar o AP quando necessário;
+- informar ao usuário que a camada de rede será reiniciada ao confirmar a nova rede;
+- preservar autoconnect da rede validada nos próximos boots;
+- captive portal deve cobrir checks comuns de Android, Apple, Windows, Firefox/GNOME e Ubuntu, mas o sistema não pode depender da abertura automática do navegador;
+- oferecer preparação automática opcional quando a Internet aparecer;
+- preparação automática deve usar baixa prioridade, instalar somente componentes oficiais ausentes e nunca executar upgrade completo do Debian automaticamente;
+- Nextion via MMDVM só pode ser marcada como confirmada após resposta real do protocolo `connect/comok` pelo canal serial da MMDVM;
+- quando a Nextion for confirmada, mostrar durante configuração uma interface mínima: PU2PNY, etapa atual, barra/progresso e estado final;
+- não sobrescrever automaticamente firmware/HMI/TFT da Nextion;
+- preservar integralmente o dashboard v0.2.3 aprovado no teste físico.
+
+Critério de aceite da v0.2.4:
+
+1. scan Wi-Fi precisa executar o comando real no validador e no hardware físico;
+2. senha inválida não pode destruir a última rede funcional;
+3. Internet por Ethernet deve permitir preparar firmware/drivers oficiais em background com consumo reduzido;
+4. o dashboard deve continuar abrindo após provisionamento;
+5. Nextion não pode mais aparecer como "confirmada" apenas por inferência da MMDVM;
+6. progressos em display são opcionais e nunca podem impedir rede, RF ou boot.
