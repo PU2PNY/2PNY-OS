@@ -196,11 +196,14 @@ connect_wifi(){
 
   restore_on_error(){
     nmcli connection delete PU2PNY-WIFI-CANDIDATE >/dev/null 2>&1 || true
+    local restored=0
     if test -n "$OLD_UUID" && test "$OLD_UUID" != --; then
-      nmcli --wait 20 connection up uuid "$OLD_UUID" ifname "$IFACE" >/dev/null 2>&1 || true
+      if nmcli --wait 20 connection up uuid "$OLD_UUID" ifname "$IFACE" >/dev/null 2>&1; then restored=1; fi
     fi
     if test "$SAME" = 1; then
-      rm -f "$STATE/ap-disabled"
+      if test "$restored" = 1; then touch "$STATE/ap-disabled"
+      else rm -f "$STATE/ap-disabled"
+      fi
       resume_setup_ap
     fi
   }
@@ -227,7 +230,7 @@ connect_wifi(){
   if test "$RC" -ne 0; then
     restore_on_error
     trap - ERR INT TERM
-    echo "Não foi possível entrar na rede. $LASTERR O acesso anterior foi preservado e o AP pu2pny foi restaurado." >&2
+    echo "Não foi possível entrar na rede. $LASTERR O perfil anterior foi preservado; a conexão anterior ou o AP pu2pny foi restaurado." >&2
     exit 4
   fi
 
@@ -243,7 +246,7 @@ connect_wifi(){
     nmcli connection down PU2PNY-WIFI-CANDIDATE >/dev/null 2>&1 || true
     restore_on_error
     trap - ERR INT TERM
-    echo 'A autenticação foi aceita, mas a rede não entregou endereço IP. A configuração anterior foi preservada e o AP pu2pny foi restaurado.' >&2
+    echo 'A autenticação foi aceita, mas a rede não entregou endereço IP. A configuração anterior foi preservada; a conexão anterior ou o AP pu2pny foi restaurado.' >&2
     exit 5
   fi
 
