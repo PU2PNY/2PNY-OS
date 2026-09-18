@@ -78,7 +78,7 @@ jobs:
           ! grep -Fq 'systemctl stop 2pny-network-core.service' rootfs-overlay/usr/local/sbin/2pny-network-switch
           grep -Fq 'PU2PNY-WIFI-CANDIDATE' rootfs-overlay/usr/local/sbin/2pny-network-switch
           grep -Fq 'ap-scan-hold' rootfs-overlay/usr/local/sbin/2pny-network-core
-          grep -Fq '[DMR Network]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq '"DMR Network"' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq '"Enable":"1"' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'Servidor DMR' rootfs-overlay/usr/share/2pny/wizard.html
           grep -Fq '/api/servers' rootfs-overlay/usr/share/2pny/wizard.html
