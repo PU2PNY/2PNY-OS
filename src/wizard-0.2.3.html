@@ -148,7 +148,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
   <section id="step4" class="hidden">
     <div class="panel successbox">
       <div class="successicon">✓</div>
-      <h2>PU2PNY pronto para usar</h2>
+      <h2>Configuração básica concluída</h2>
       <p id="doneMessage">Configuração básica concluída.</p>
       <div class="summary" style="max-width:650px;margin:20px auto;text-align:left">
         <div><span>Indicativo</span><b id="doneCall">—</b></div>
@@ -177,7 +177,7 @@ const titles={
 1:['Primeiro acesso — Internet','Vamos conectar o PU2PNY à internet antes de preparar drivers e hardware.'],
 2:['Preparando hardware','Drivers, MMDVM e display serão preparados automaticamente.'],
 3:['Configuração básica','Defina indicativo, ID, modo de uso, frequência, protocolo e operação.'],
-4:['Conclusão','Configuração inicial concluída.']
+4:['Conclusão','Configuração básica concluída. Abra o painel principal para operar e ajustar o sistema.']
 };
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('pu2pny-theme',t);q('theme').textContent=t==='dark'?'☀ Claro':'☾ Escuro'}
