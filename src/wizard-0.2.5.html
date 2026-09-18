@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<title>PU2PNY — Assistente</title>
+<title>PU2PNY-OS — Assistente</title>
 <script>(function(){var t=localStorage.getItem('pu2pny-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 <style>
 :root{color-scheme:dark;--bg:#070d14;--side:#0d1723;--card:#101b28;--card2:#142233;--line:#263b52;--text:#f4f8fc;--muted:#94abc4;--blue:#39adfa;--blue2:#168bd7;--green:#35d58d;--yellow:#f3c65d;--red:#ff6c7b;--shadow:0 18px 55px rgba(0,0,0,.28)}
@@ -15,7 +15,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
 <body>
 <div class="shell">
 <aside class="sidebar">
-  <div class="brand"><strong>PU2PNY</strong><small>Digital Radio Operating System</small></div>
+  <div class="brand"><strong>PU2PNY-OS</strong><small>Digital Radio Operating System</small></div>
   <nav class="steps">
     <div class="step active" id="nav1"><span class="num">1</span><div><b>Internet</b><small>Conecte à internet</small></div></div>
     <div class="step" id="nav2"><span class="num">2</span><div><b>Hardware</b><small>Detectar e preparar</small></div></div>
@@ -27,11 +27,11 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
 
 <main class="main">
   <div class="top">
-    <div><h1 id="title">Primeiro acesso — Internet</h1><p id="subtitle">Vamos conectar o PU2PNY à internet antes de preparar drivers e hardware.</p></div>
+    <div><h1 id="title">Primeiro acesso — Internet</h1><p id="subtitle">A internet é opcional para a configuração local do PU2PNY-OS. Conecte agora se quiser atualizar diretórios e componentes.</p></div>
     <button class="theme" id="theme">☀ Claro</button>
   </div>
   <div class="badges">
-    <span class="badge"><i class="dot"></i>PU2PNY online</span>
+    <span class="badge"><i class="dot"></i>PU2PNY-OS online</span>
     <span class="badge" id="netbadge">Internet: verificando...</span>
     <span class="badge">0.2.5-alpha</span>
   </div>
@@ -79,13 +79,13 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
         </label>
         <small id="maintenanceHint" class="hint">Verificando...</small>
       </div>
-      <div class="btnrow"><button class="btn primary" id="toHardware" disabled>Continuar para preparar hardware →</button></div>
+      <div class="btnrow"><button class="btn primary" id="toHardware">Continuar sem internet →</button></div>
     </div>
   </section>
 
   <section id="step2" class="hidden">
     <div class="panel">
-      <div class="intro"><div class="icon">⚙</div><div><h2>Buscando drivers e detectando hardware</h2><p>O PU2PNY prepara firmware oficial e verifica Raspberry Pi, MMDVM e display sem expor detalhes técnicos desnecessários.</p></div></div>
+      <div class="intro"><div class="icon">⚙</div><div><h2>Buscando drivers e detectando hardware</h2><p>O PU2PNY-OS prepara firmware oficial e verifica Raspberry Pi, MMDVM e display sem expor detalhes técnicos desnecessários.</p></div></div>
       <div class="progressline"><div class="progress"><i id="bar"></i></div><b id="percent">8%</b></div>
       <div class="grid2">
         <div class="option-card">
@@ -138,9 +138,9 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
       <div class="choice-grid">
         <div class="choice"><input type="radio" name="protocol" id="pdstar" value="DSTAR"><label for="pdstar"><b>D‑STAR</b></label></div>
         <div class="choice"><input type="radio" name="protocol" id="pdmr" value="DMR" checked><label for="pdmr"><b>DMR</b></label></div>
-        <div class="choice"><input type="radio" name="protocol" id="pysf" value="YSF"><label for="pysf"><b>YSF</b></label></div>
-        <div class="choice"><input type="radio" name="protocol" id="pp25" value="P25"><label for="pp25"><b>P25</b></label></div>
-        <div class="choice"><input type="radio" name="protocol" id="pnxdn" value="NXDN"><label for="pnxdn"><b>NXDN</b></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pysf" value="YSF"><label for="pysf"><b>YSF</b><small>RF local; gateway externo em desenvolvimento</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pp25" value="P25"><label for="pp25"><b>P25</b><small>RF local; gateway externo em desenvolvimento</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pnxdn" value="NXDN"><label for="pnxdn"><b>NXDN</b><small>RF local; gateway externo em desenvolvimento</small></label></div>
       </div>
 
       <div class="section-title">Rede / servidor</div>
@@ -181,7 +181,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
       <div class="section-title">Operação</div>
       <div class="choice-grid">
         <div class="choice"><input type="radio" name="operation" id="normal" value="normal" checked><label for="normal"><b>Normal</b><small>Opera no protocolo selecionado</small></label></div>
-        <div class="choice"><input type="radio" name="operation" id="crossmode" value="crossmode"><label for="crossmode"><b>Crossmode</b><small>Registra o perfil para ponte entre protocolos</small></label></div>
+        <div class="choice"><input type="radio" name="operation" id="crossmode" value="crossmode" disabled><label for="crossmode"><b>Crossmode</b><small>Planejado — ainda não habilitado nesta Alpha</small></label></div>
       </div>
 
       <div class="info" style="margin-top:16px">Ajustes avançados, redes, salas e parâmetros finos ficam fora do primeiro acesso e podem ser configurados depois.</div>
@@ -252,7 +252,8 @@ function showConnectivity(c){
   q('ethcard').className='mini '+(c.ethernet?'ok':'');
   q('ethcard').innerHTML='<b>Cabo de rede</b><small>'+(c.ethernet?(c.ethernet_interface||'detectado'):'Não detectado')+'</small>';
   if(c.wifi&&c.wifi_ssid)q('scanHint').textContent='Wi‑Fi atual: '+c.wifi_ssid+'. Você pode buscar e trocar a rede abaixo.';
-  q('toHardware').disabled=!c.internet;
+  q('toHardware').disabled=false;
+  q('toHardware').textContent=c.internet?'Continuar para preparar hardware →':'Continuar sem internet →';
   let multi=(c.wifi_count||0)>=2;
   q('keepap').disabled=false;
   q('keepap').checked=multi;
@@ -454,7 +455,14 @@ q('confirmNextion').onclick=async function(){
 };
 
 async function startHardware(){
-  q('toBasic').disabled=true;q('hardwareResult').className='result hidden';
+  q('toBasic').disabled=true;
+  if(lastConnectivity&&lastConnectivity.internet){
+    taskState('taskInternet','done','Concluído');
+    q('taskInternet').querySelector('small').textContent='Conexão confirmada.';
+  }else{
+    taskState('taskInternet','','Opcional');
+    q('taskInternet').querySelector('small').textContent='Sem internet. A detecção local continua normalmente.';
+  }q('hardwareResult').className='result hidden';
   q('bar').style.width='12%';q('percent').textContent='12%';
   taskState('taskDrivers','active','Preparando');taskState('taskMmdvm','','Aguardando');taskState('taskDisplay','','Aguardando');taskState('taskReady','','Aguardando');
   try{await getj('/api/hardware/scan',{method:'POST'})}catch(e){
