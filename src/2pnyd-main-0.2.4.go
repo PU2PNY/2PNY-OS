@@ -877,6 +877,12 @@ func captivePortalHandler(w http.ResponseWriter, r *http.Request) {
 	case "/hotspot-detect.html", "/library/test/success.html":
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		_, _ = w.Write([]byte("<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>"))
+	case "/canonical.html", "/success.txt":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("success\n"))
+	case "/check_network_status.txt", "/connectivity-check.html":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("NetworkManager is online\n"))
 	default:
 		http.Redirect(w, r, "/wizard", http.StatusFound)
 	}
@@ -919,7 +925,7 @@ func main() {
 	http.HandleFunc("/api/ap", apControlHandler)
 	http.HandleFunc("/healthz", healthzHandler)
 	http.HandleFunc("/captive-api", captiveAPIHandler)
-	for _, p := range []string{"/generate_204","/gen_204","/hotspot-detect.html","/library/test/success.html","/connecttest.txt","/ncsi.txt","/redirect"} {
+	for _, p := range []string{"/generate_204","/gen_204","/hotspot-detect.html","/library/test/success.html","/connecttest.txt","/ncsi.txt","/canonical.html","/success.txt","/check_network_status.txt","/connectivity-check.html","/redirect"} {
 		http.HandleFunc(p, captivePortalHandler)
 	}
 	log.Printf("PU2PNY %s listening on %s", appVersion, listenAddr)
