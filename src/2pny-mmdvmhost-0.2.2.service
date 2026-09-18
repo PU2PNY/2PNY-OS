@@ -1,0 +1,33 @@
+[Unit]
+Description=PU2PNY MMDVMHost radio engine
+After=systemd-udev-settle.service
+ConditionPathExists=/var/lib/2pny/rf-configured
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=mmdvm
+Group=mmdvm
+SupplementaryGroups=dialout
+ExecStart=/usr/local/bin/MMDVM-Host /var/lib/2pny/mmdvm/MMDVM-Host.ini
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=12
+TimeoutStopSec=5
+KillSignal=SIGTERM
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryMax=96M
+TasksMax=64
+OOMScoreAdjust=-250
+
+[Install]
+WantedBy=multi-user.target
