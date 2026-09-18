@@ -49,6 +49,37 @@ exec 9>"$LOCK"
 flock -x 9
 
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+DISPLAY_LINE=""
+NEXTION_SECTION=""
+if [[ -r "$STATE/hardware-probe.json" ]]; then
+  DISPLAY_INFO="$(python3 - "$STATE/hardware-probe.json" <<'PYDISPLAY'
+import json, sys
+try:
+    data=json.load(open(sys.argv[1]))
+except Exception:
+    data={}
+d=data.get("display") or {}
+if d.get("detected") and d.get("class") in ("nextion","nextion_mmdvm"):
+    print("nextion|" + str(d.get("port") or "modem"))
+else:
+    print("none|")
+PYDISPLAY
+)"
+  DISPLAY_KIND="${DISPLAY_INFO%%|*}"
+  DISPLAY_PORT="${DISPLAY_INFO#*|}"
+  if [[ "$DISPLAY_KIND" == nextion ]]; then
+    [[ -n "$DISPLAY_PORT" ]] || DISPLAY_PORT=modem
+    DISPLAY_LINE="Display=Nextion"
+    NEXTION_SECTION="[Nextion]
+Port=$DISPLAY_PORT
+Brightness=50
+DisplayClock=1
+UTC=0
+IdleBrightness=20
+ScreenLayout=0"
+  fi
+fi
+
 OLD=""
 WAS_ACTIVE=0
 if systemctl is-active --quiet "$SERVICE"; then WAS_ACTIVE=1; fi
@@ -70,6 +101,7 @@ Duplex=$DUPLEX
 RFModeHang=10
 NetModeHang=3
 Daemon=0
+$DISPLAY_LINE
 
 [Log]
 MQTTLevel=0
@@ -147,6 +179,8 @@ Enable=0
 [FM Network]
 Enable=0
 
+$NEXTION_SECTION
+
 [Remote Control]
 Enable=0
 EOF
@@ -154,7 +188,8 @@ EOF
 chmod 0640 "$TMP"
 chown root:mmdvm "$TMP" 2>/dev/null || true
 sync -f "$TMP" 2>/dev/null || true
-mv -f "$TMP" "$CONFIG"
+install -m 0640 -o root -g mmdvm "$TMP" "$CONFIG" 2>/dev/null || install -m 0640 "$TMP" "$CONFIG"
+rm -f "$TMP"
 trap - EXIT
 
 mkdir -p "$STATE"
