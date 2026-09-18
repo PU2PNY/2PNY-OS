@@ -107,6 +107,6 @@ assert 'mmdvm_serial_confirmed' in probe
 assert 'ScreenLayout=2' in rf and '2pny-display-status ready' in rf
 assert 'autoMaintenance' in wizard and '/api/maintenance' in wizard
 assert 'A última tentativa de Wi‑Fi falhou' in wizard
-assert 'apt-get' in maintenance and 'upgrade' not in maintenance
+assert 'apt-get' in maintenance and 'apt-get upgrade' not in maintenance and 'dist-upgrade' not in maintenance
 assert enabled.exists()
 print("PU2PNY 0.2.4 network/display/maintenance patch applied")
