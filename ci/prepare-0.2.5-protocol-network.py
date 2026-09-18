@@ -92,7 +92,7 @@ assert '2pny-protocol-network-apply' in main
 assert 'systemctl stop 2pny-network-core.service' not in switch
 assert 'ap-scan-hold' in switch and 'ap-scan-hold' in core
 assert 'PU2PNY-WIFI-CANDIDATE' in switch
-assert '[DMR Network]' in network and '"Enable":"1"' in network
+assert '"DMR Network"' in network and '"Enable":"1"' in network
 assert 'Servidor DMR' in wizard and '/api/servers' in wizard
 assert 'singleWifiNote' in wizard
 assert 'Ao vivo' in dash and '/api/live' in dash
