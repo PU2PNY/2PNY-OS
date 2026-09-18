@@ -702,3 +702,47 @@ Critério de aceite da v0.2.4:
 4. o dashboard deve continuar abrindo após provisionamento;
 5. Nextion não pode mais aparecer como "confirmada" apenas por inferência da MMDVM;
 6. progressos em display são opcionais e nunca podem impedir rede, RF ou boot.
+
+
+---
+
+## 22. Achados físicos da v0.2.4 e escopo obrigatório da v0.2.5
+
+Teste físico da v0.2.4 em Raspberry Pi 4 + MMDVM confirmou melhorias de conexão Wi-Fi, mas expôs regressões e lacunas funcionais que a v0.2.5 deve fechar antes de avançar.
+
+Achados reais:
+
+- o primeiro scan Wi-Fi ainda pôde demorar e interromper o acesso pelo AP;
+- durante o scan com uma única interface Wi-Fi, o núcleo de rede inteiro era parado, levando junto a continuidade por Ethernet;
+- após reiniciar e entrar pelo IP LAN, a busca Wi-Fi funcionou e a associação à rede foi confirmada;
+- o checkbox de "manter AP" aparecia desabilitado e confuso quando havia só uma interface Wi-Fi;
+- a Nextion física continuou sem responder; a v0.2.4 corretamente deixou de marcá-la como confirmada por inferência;
+- MMDVM e RF foram configurados, mas uma transmissão DMR não gerou operação útil;
+- a causa do DMR foi identificada no código: o modo RF DMR era habilitado, porém a seção [DMR Network] continuava Enable=0 e não existia escolha de master/servidor;
+- o dashboard principal foi considerado uma boa base e deve ser preservado.
+
+Requisitos aceitos para v0.2.5:
+
+1. scan/associação Wi-Fi não pode parar o núcleo Ethernet;
+2. em interface Wi-Fi única, somente hostapd/dnsmasq do AP podem ser pausados durante o empréstimo do rádio;
+3. nova rede Wi-Fi só substitui o perfil anterior depois de associação e IPv4 válidos;
+4. se senha/associação falhar, restaurar o AP e preservar o perfil anterior;
+5. esconder a opção de manter AP quando ela não é aplicável e explicar o comportamento real;
+6. configuração DMR deve exigir master/servidor antes de marcar o sistema como concluído;
+7. oferecer catálogo público pesquisável com cache local e servidor personalizado;
+8. incluir presets úteis do projeto, com XLX026 e BrandMeister Brasil em destaque;
+9. aplicar [DMR Network] real ao MMDVMHost e fazer rollback se o serviço falhar;
+10. painel deve mostrar master, estado da rede digital e atividade DMR;
+11. ao vivo deve exibir TX/RX, origem, destino/TG, slot, duração, BER e RSSI quando esses dados forem fornecidos pelo MMDVMHost;
+12. polling deve ser adaptativo para evitar consumo desnecessário;
+13. D-Star, YSF, P25 e NXDN podem ter catálogo preparado, mas não devem ser anunciados como rede externa operacional antes dos respectivos gateways serem integrados e testados;
+14. Crossmode não deve ser apresentado como concluído enquanto os módulos de ponte não estiverem implementados e validados;
+15. Nextion sem resposta real continua como não confirmada; nunca gravar HMI automaticamente.
+
+Critério de aceite da v0.2.5:
+
+- imagem final deve executar um teste de aplicação DMR com master fictício e comprovar Enable=1, Address, Port e slots na configuração;
+- catálogo DMR deve funcionar offline com pelo menos XLX026, BrandMeister Brasil e TGIF;
+- API /api/servers e /api/live devem responder dentro da imagem final;
+- busca Wi-Fi deve continuar executável sem chamar `systemctl stop 2pny-network-core.service`;
+- dashboard e assistente anteriores devem continuar acessíveis e responsivos.
