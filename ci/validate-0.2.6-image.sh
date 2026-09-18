@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Image tests read root:mmdvm 0640 files; keep production permissions intact.
+if (( EUID != 0 )); then exec sudo bash "$0" "$@"; fi
 
 IMAGE="${1:?image required}"
 VERSION="${2:-0.2.6-alpha}"
@@ -141,6 +143,8 @@ write_base_ini
 sudo chroot "$ROOT" /usr/bin/env PATH=/tmp/testbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin   /usr/local/sbin/2pny-protocol-network-apply DMR XLX_026 82.152.175.30 62030 passw0rd hotspot 1 2 C '' XLX ''
 HOST="$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini"
 DG="$ROOT/var/lib/2pny/dmr/DMRGateway.ini"
+sudo chroot "$ROOT" runuser -u mmdvm -- test -r /var/lib/2pny/mmdvm/MMDVM-Host.ini
+sudo chroot "$ROOT" runuser -u mmdvm -- test -r /var/lib/2pny/dmr/DMRGateway.ini
 grep -A15 '^\[DMR Network\]$' "$HOST" | grep -Fxq 'GatewayAddress=127.0.0.1'
 ! grep -A15 '^\[DMR Network\]$' "$HOST" | grep -Fq '82.152.175.30'
 grep -A20 '^\[XLX Network\]$' "$DG" | grep -Fxq 'Enabled=1'
