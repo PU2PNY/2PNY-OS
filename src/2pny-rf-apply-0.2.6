@@ -53,6 +53,7 @@ PY
 )" || { echo "MMDVM detection validation failed" >&2; exit 3; }
 
 mkdir -p /run/2pny "$STATE" "$BACKUPS" "$(dirname "$CONFIG")"
+install -d -m 0750 -o root -g mmdvm "$STATE" "$(dirname "$CONFIG")"
 exec 9>"$LOCK"; flock -x 9
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 OLD=""; WAS_ACTIVE=0
@@ -195,3 +196,4 @@ if command -v 2pny-display-apply >/dev/null 2>&1; then
 fi
 
 printf 'RF_APPLY_OK rx=%s tx=%s rx_offset=%s tx_offset=%s duplex=%s port=%s baud=%s\n' "$RX" "$TX" "$RXOFF" "$TXOFF" "$DUPLEX" "$PORT" "$MODEM_BAUD"
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import configparser, datetime, json, os, re, shutil, subprocess, sys, tempfile, time
+import grp, configparser, datetime, json, os, re, shutil, subprocess, sys, tempfile, time
 from pathlib import Path
 
 CONFIG=Path("/var/lib/2pny/mmdvm/MMDVM-Host.ini")
@@ -90,6 +90,12 @@ if kind.lower()=="tgif" and not password:
 if kind.lower()=="xlx" and not password:
     password="passw0rd"
 
+# Service users need traversal through the private state directory.
+service_gid=grp.getgrnam("mmdvm").gr_gid
+for directory in (STATE, CONFIG.parent, GATEWAY_DIR):
+    directory.mkdir(parents=True,exist_ok=True)
+    os.chown(directory,0,service_gid)
+    os.chmod(directory,0o750)
 BACKUPS.mkdir(parents=True,exist_ok=True)
 GATEWAY_DIR.mkdir(parents=True,exist_ok=True)
 stamp=datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")

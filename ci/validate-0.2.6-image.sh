@@ -172,6 +172,7 @@ sudo tee "$ROOT/var/lib/2pny/display-override.json" >/dev/null <<'EOF'
 EOF
 sudo chroot "$ROOT" /usr/local/sbin/2pny-display-apply
 DISPCONF="$ROOT/var/lib/2pny/display/MMDVM-Display.ini"
+sudo chroot "$ROOT" runuser -u mmdvm -- test -r /var/lib/2pny/display/MMDVM-Display.ini
 grep -Fxq 'Display=Nextion' "$DISPCONF"
 grep -Fxq 'Port=modem' "$DISPCONF"
 grep -Fxq 'ScreenLayout=2' "$DISPCONF"

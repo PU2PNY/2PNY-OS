@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic regressions; no radio, network or real systemctl changes."""
-import contextlib,io,json,re,runpy,subprocess,sys,tempfile,time,unittest
+import os, types, contextlib,io,json,re,runpy,subprocess,sys,tempfile,time,unittest
 from pathlib import Path
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
@@ -60,7 +60,7 @@ class Regression(unittest.TestCase):
      rc=1 if fail and args[1:]==['restart','2pny-mmdvmhost.service'] else 0
      return subprocess.CompletedProcess(args,rc,'','')
     args=['apply','DMR','XLX_026' if kind=='XLX' else kind,'example.net','62030','test-password','hotspot','1','2','C',essid,kind,'']
-    with patch.object(sys,'argv',args),patch('os.geteuid',return_value=0),patch('subprocess.run',fake),patch('time.sleep'),contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):exec(compile(code,'apply','exec'),{})
+    with patch.object(sys,'argv',args),patch('os.geteuid',return_value=0),patch('grp.getgrnam',return_value=types.SimpleNamespace(gr_gid=os.getgid())),patch('subprocess.run',fake),patch('time.sleep'),contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):exec(compile(code,'apply','exec'),{})
    run('XLX');gw=state/'dmr/DMRGateway.ini';self.assertIn('TG=6',gw.read_text());self.assertIn('Module=C',gw.read_text());self.assertIn('GatewayAddress=127.0.0.1',cfg.read_text())
    run('BrandMeister','01');self.assertIn('Id=724146501',gw.read_text());self.assertIn('PassAllTG=2',gw.read_text())
    run('TGIF','02');self.assertIn('Name=TGIF_Network',gw.read_text());self.assertIn('Id=724146502',gw.read_text())

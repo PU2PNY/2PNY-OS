@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, os, subprocess, sys, time
+import grp, json, os, subprocess, sys, time
 from pathlib import Path
 
 STATE=Path("/var/lib/2pny")
@@ -67,7 +67,10 @@ if not enabled or not port:
     print("DISPLAY_NOT_CONFIGURED")
     raise SystemExit(0)
 
-DIR.mkdir(parents=True,exist_ok=True)
+for directory in (STATE, DIR):
+    directory.mkdir(parents=True,exist_ok=True)
+    os.chown(directory,0,grp.getgrnam("mmdvm").gr_gid)
+    os.chmod(directory,0o750)
 content=f"""[General]
 Display=Nextion
 TemperatureInF=0
