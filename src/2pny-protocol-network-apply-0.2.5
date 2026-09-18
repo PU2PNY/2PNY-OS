@@ -1,0 +1,154 @@
+#!/bin/bash
+set -euo pipefail
+
+CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini
+STATE=/var/lib/2pny
+SERVICE=2pny-mmdvmhost.service
+BACKUPS="$STATE/backups/network-radio"
+LOCK=/run/2pny-network-radio.lock
+
+usage(){
+  echo "usage: 2pny-protocol-network-apply PROTOCOL SERVER_NAME ADDRESS PORT PASSWORD USEMODE COLOR_CODE OPTIONS" >&2
+  exit 2
+}
+
+[[ $EUID -eq 0 ]] || { echo "root required" >&2; exit 1; }
+[[ $# -eq 8 ]] || usage
+
+PROTO="${1^^}"
+SERVER="$2"
+ADDRESS="$3"
+PORT="$4"
+PASSWORD="$5"
+USEMODE="${6,,}"
+COLOR="$7"
+OPTIONS="$8"
+
+[[ "$PROTO" == "DMR" ]] || { echo "network module for $PROTO is not enabled in 0.2.5 yet" >&2; exit 10; }
+[[ -n "$SERVER" && -n "$ADDRESS" ]] || { echo "server name/address required" >&2; exit 2; }
+[[ "$PORT" =~ ^[0-9]+$ ]] && (( PORT >= 1 && PORT <= 65535 )) || { echo "invalid server port" >&2; exit 2; }
+[[ "$USEMODE" == hotspot || "$USEMODE" == repeater ]] || { echo "invalid use mode" >&2; exit 2; }
+[[ "$COLOR" =~ ^[0-9]+$ ]] && (( COLOR >= 0 && COLOR <= 15 )) || { echo "invalid DMR color code" >&2; exit 2; }
+[[ "$ADDRESS" =~ ^[A-Za-z0-9._:-]+$ ]] || { echo "invalid server address" >&2; exit 2; }
+[[ -s "$CONFIG" ]] || { echo "MMDVMHost config missing" >&2; exit 3; }
+
+mkdir -p "$BACKUPS" /run/2pny
+exec 9>"$LOCK"
+flock -x 9
+
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$BACKUPS/MMDVM-Host.ini.$STAMP"
+cp -a "$CONFIG" "$BACKUP"
+
+SLOT1=0
+SLOT2=1
+if [[ "$USEMODE" == repeater ]]; then
+  SLOT1=1
+  SLOT2=1
+fi
+
+TMP="$(mktemp /run/2pny/.MMDVM-Host.network.XXXXXX)"
+cleanup(){ rm -f "$TMP"; }
+trap cleanup EXIT
+
+python3 - "$CONFIG" "$TMP" "$ADDRESS" "$PORT" "$PASSWORD" "$COLOR" "$SLOT1" "$SLOT2" "$OPTIONS" <<'PY'
+from pathlib import Path
+import sys
+
+src,dst,address,port,password,color,slot1,slot2,options=sys.argv[1:10]
+lines=Path(src).read_text().splitlines()
+
+wanted={
+    "DMR":{
+        "Enable":"1",
+        "ColorCode":color,
+        "DumpTAData":"1",
+    },
+    "DMR Network":{
+        "Enable":"1",
+        "Type":"Direct",
+        "Address":address,
+        "Port":port,
+        "Jitter":"360",
+        "Password":password or "passw0rd",
+        "RSSI":"1",
+        "Slot1":slot1,
+        "Slot2":slot2,
+        "Debug":"0",
+    },
+    "D-Star Network":{"Enable":"0"},
+    "System Fusion Network":{"Enable":"0"},
+    "P25 Network":{"Enable":"0"},
+    "NXDN Network":{"Enable":"0"},
+}
+if options.strip():
+    wanted["DMR Network"]["Options"]=options.strip()
+
+out=[]
+section=None
+seen_sections=set()
+seen_keys={k:set() for k in wanted}
+
+def flush_missing(sec):
+    if sec in wanted:
+        for key,val in wanted[sec].items():
+            if key not in seen_keys[sec]:
+                out.append(f"{key}={val}")
+                seen_keys[sec].add(key)
+
+for line in lines:
+    stripped=line.strip()
+    if stripped.startswith("[") and stripped.endswith("]"):
+        if section is not None:
+            flush_missing(section)
+        section=stripped[1:-1]
+        seen_sections.add(section)
+        out.append(line)
+        continue
+    if section in wanted and "=" in stripped and not stripped.startswith("#"):
+        key=stripped.split("=",1)[0].strip()
+        if key in wanted[section]:
+            out.append(f"{key}={wanted[section][key]}")
+            seen_keys[section].add(key)
+            continue
+    out.append(line)
+
+if section is not None:
+    flush_missing(section)
+
+for sec,items in wanted.items():
+    if sec in seen_sections:
+        continue
+    out.append("")
+    out.append(f"[{sec}]")
+    for key,val in items.items():
+        out.append(f"{key}={val}")
+
+Path(dst).write_text("\n".join(out)+"\n")
+PY
+
+install -m 0640 -o root -g mmdvm "$TMP" "$CONFIG" 2>/dev/null || install -m 0640 "$TMP" "$CONFIG"
+rm -f "$TMP"
+trap - EXIT
+
+cat >"$STATE/network-radio.json" <<EOF
+{"protocol":"DMR","server_name":"$(printf '%s' "$SERVER" | sed 's/["\\]/_/g')","address":"$ADDRESS","port":$PORT,"color_code":$COLOR,"slot1":$SLOT1,"slot2":$SLOT2,"use_mode":"$USEMODE","state":"configured","updated":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+EOF
+chmod 0600 "$STATE/network-radio.json"
+
+if ! systemctl restart "$SERVICE" >/dev/null 2>&1; then
+  cp -a "$BACKUP" "$CONFIG"
+  systemctl restart "$SERVICE" >/dev/null 2>&1 || true
+  echo "MMDVMHost restart failed; DMR network rolled back" >&2
+  exit 4
+fi
+
+sleep 2
+if ! systemctl is-active --quiet "$SERVICE"; then
+  cp -a "$BACKUP" "$CONFIG"
+  systemctl restart "$SERVICE" >/dev/null 2>&1 || true
+  echo "MMDVMHost stopped after DMR network apply; rolled back" >&2
+  exit 5
+fi
+
+echo "NETWORK_APPLY_OK protocol=DMR server=$SERVER address=$ADDRESS port=$PORT"
