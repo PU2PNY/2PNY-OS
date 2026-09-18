@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>pu2pnu-os — Assistente</title>
+<script>(function(){var t=localStorage.getItem('pu2pny-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
+<style>
+:root{color-scheme:dark;--bg:#070d14;--side:#0d1723;--card:#101b28;--card2:#142233;--line:#263b52;--text:#f4f8fc;--muted:#94abc4;--blue:#39adfa;--blue2:#168bd7;--green:#35d58d;--yellow:#f3c65d;--red:#ff6c7b;--shadow:0 18px 55px rgba(0,0,0,.28)}
+html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;--card2:#edf4fa;--line:#d3dfeb;--text:#14202d;--muted:#5d7187;--blue:#087bc7;--blue2:#0568a8;--green:#087e57;--yellow:#986800;--red:#c83343;--shadow:0 15px 38px rgba(42,63,84,.1)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}.shell{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}.sidebar{background:var(--side);border-right:1px solid var(--line);padding:28px 18px;display:flex;flex-direction:column}.brand{padding:0 4px 26px}.brand strong{font-size:21px;letter-spacing:.2px}.brand small{display:block;color:var(--muted);margin-top:2px}.steps{display:grid;gap:10px}.step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:center;padding:12px;border-radius:13px;border:1px solid transparent;color:var(--muted)}.step .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--card2);font-weight:800}.step b{display:block;color:inherit}.step small{display:block;color:var(--muted)}.step.active{background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 16%,var(--card)),var(--card));border-color:color-mix(in srgb,var(--blue) 58%,var(--line));color:var(--text)}.step.active .num{background:var(--blue);color:#06131d}.step.done{color:var(--text)}.step.done .num{background:#113f31;color:#75edb8}.help{margin-top:auto;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px;color:var(--muted)}.help b{color:var(--text)}.main{width:min(1360px,100%);margin:auto;padding:30px 32px 54px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.top h1{font-size:30px;line-height:1.15;margin:0}.top p{margin:7px 0 0;color:var(--muted);font-size:16px}.theme{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:10px 13px;font-weight:750;cursor:pointer}.badges{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}.badge{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}.panel{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:24px;box-shadow:var(--shadow)}.panel+.panel{margin-top:16px}.intro{display:flex;gap:15px;align-items:center;margin-bottom:16px}.icon{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#113456;color:#5bc0ff;font-size:24px;flex:none}.intro h2{margin:0;font-size:22px}.intro p{margin:4px 0 0;color:var(--muted)}.info,.notice{border:1px solid color-mix(in srgb,var(--blue) 62%,var(--line));background:color-mix(in srgb,var(--blue) 8%,var(--card2));padding:13px 15px;border-radius:12px;color:#bfe5ff}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.option-card{border:1px solid var(--line);background:var(--card2);border-radius:16px;padding:19px}.option-card h3{margin:0 0 3px;font-size:18px}.option-card p{color:var(--muted);margin:0 0 14px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:750}.input,.field input,.field select{width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:11px;padding:12px 13px;outline:none}.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 20%,transparent)}.btn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:11px;padding:11px 15px;font-weight:780;cursor:pointer}.btn.primary{background:var(--blue);border-color:var(--blue);color:#06131d}.btn.danger{color:#ffc7ce}.btn:disabled{opacity:.4;cursor:not-allowed}.btnrow{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}.widebtn{width:100%;margin-top:10px}.switchrow{display:flex;align-items:center;gap:10px;margin-top:14px}.switchrow input{width:20px;height:20px}.wifi-picker{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.password-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.hint{display:block;color:var(--muted);margin-top:5px}.wifi-picker .btn,.password-row .btn{white-space:nowrap}.status-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.mini{border:1px solid var(--line);border-radius:13px;background:var(--card2);padding:13px}.mini b{display:block}.mini small{color:var(--muted)}.mini.ok{border-color:#1c664b}.mini.bad{border-color:#6d2d37}.progress{height:13px;border-radius:999px;background:var(--card2);border:1px solid var(--line);overflow:hidden}.progress i{display:block;width:8%;height:100%;background:linear-gradient(90deg,var(--blue2),var(--blue));transition:width .35s ease}.progressline{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;margin:18px 0}.progressline b{font-size:18px}.timeline{display:grid;gap:12px}.task{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);padding:10px 0}.task:last-child{border:0}.circle{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--muted)}.task.done .circle{background:var(--green);color:#062519;border-color:var(--green)}.task.active .circle{border-color:var(--blue);color:var(--blue)}.task small{display:block;color:var(--muted)}.task em{font-style:normal;color:var(--muted);font-size:12px}.summary{display:grid;gap:0;border:1px solid var(--line);border-radius:13px;overflow:hidden}.summary div{display:grid;grid-template-columns:145px 1fr;gap:10px;padding:12px;border-bottom:1px solid var(--line)}.summary div:last-child{border:0}.summary span{color:var(--muted)}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.choice{position:relative}.choice input{position:absolute;opacity:0;pointer-events:none}.choice label{display:block;border:1px solid var(--line);background:var(--card2);border-radius:12px;padding:13px;cursor:pointer}.choice label b{display:block}.choice label small{color:var(--muted)}.choice input:checked+label{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset;background:color-mix(in srgb,var(--blue) 9%,var(--card2))}.section-title{margin:18px 0 8px;font-weight:800}.freq{display:grid;grid-template-columns:1fr 1fr;gap:12px}.result{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:13px;background:var(--card2)}.result.error{border-color:var(--red);color:#ffd2d7}.result.success{border-color:var(--green);color:#baf2d7}.hidden{display:none!important}.successbox{text-align:center;padding:28px 20px}.successicon{width:72px;height:72px;margin:auto;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#062519;font-size:36px;font-weight:900}.successbox h2{font-size:26px;margin:14px 0 5px}.successbox p{color:var(--muted)}@media(max-width:900px){.shell{display:block}.sidebar{padding:14px;border-right:0;border-bottom:1px solid var(--line)}.brand{padding-bottom:10px}.steps{display:flex;overflow:auto;gap:7px}.step{min-width:max-content}.step small{display:none}.help{display:none}.main{padding:18px 13px 45px}.grid2,.formgrid{grid-template-columns:1fr}.top{align-items:center}.top h1{font-size:24px}}@media(max-width:560px){body{font-size:14px}.brand small{display:none}.top{flex-wrap:wrap}.theme{margin-left:auto}.panel{padding:15px;border-radius:14px}.status-cards,.freq{grid-template-columns:1fr}.summary div{grid-template-columns:1fr}.btnrow{display:grid;grid-template-columns:1fr}.btnrow .btn{width:100%}.choice-grid{grid-template-columns:1fr 1fr}.intro{align-items:flex-start}.icon{width:42px;height:42px}.top p{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand"><strong>pu2pnu-os</strong><small>Digital Radio Operating System</small></div>
+  <nav class="steps">
+    <div class="step active" id="nav1"><span class="num">1</span><div><b>Internet</b><small>Conecte à internet</small></div></div>
+    <div class="step" id="nav2"><span class="num">2</span><div><b>Hardware</b><small>Detectar e preparar</small></div></div>
+    <div class="step" id="nav3"><span class="num">3</span><div><b>Configuração</b><small>Ajustes essenciais</small></div></div>
+    <div class="step" id="nav4"><span class="num">4</span><div><b>Conclusão</b><small>Pronto para usar</small></div></div>
+  </nav>
+  <div class="help"><b>Precisa de ajuda?</b><br><span>O assistente mostra somente o necessário. Ajustes avançados ficam para depois.</span></div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div><h1 id="title">Primeiro acesso — Internet</h1><p id="subtitle">Vamos conectar o pu2pnu-os à internet antes de preparar drivers e hardware.</p></div>
+    <button class="theme" id="theme">☀ Claro</button>
+  </div>
+  <div class="badges">
+    <span class="badge"><i class="dot"></i>pu2pnu-os online</span>
+    <span class="badge" id="netbadge">Internet: verificando...</span>
+    <span class="badge">0.2.1-alpha</span>
+  </div>
+
+  <section id="step1">
+    <div class="panel">
+      <div class="intro"><div class="icon">◎</div><div><h2>Conectar à internet</h2><p>Use uma rede Wi‑Fi existente ou um cabo Ethernet. O acesso local continua disponível durante a configuração.</p></div></div>
+      <div class="info">A internet é usada somente para preparar pacotes oficiais, firmware e componentes necessários. Depois disso a detecção do MMDVM é automática.</div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="option-card">
+          <h3>Wi‑Fi</h3><p>Conecte a uma rede existente. Com duas interfaces Wi‑Fi, uma permanece no AP e a outra vira internet.</p>
+          <div class="field">
+            <label for="ssidSelect">Rede Wi‑Fi encontrada</label>
+            <div class="wifi-picker">
+              <select id="ssidSelect"><option value="">Buscando redes...</option></select>
+              <button class="btn" id="wifiScan" type="button">↻ Buscar redes</button>
+            </div>
+            <small id="scanHint" class="hint">A busca é feita automaticamente. Selecione a rede e informe somente a senha.</small>
+          </div>
+          <div class="field hidden" id="manualSsidWrap"><label for="ssidManual">Outra rede / rede oculta</label><input id="ssidManual" placeholder="Digite o nome da rede" autocomplete="off"></div>
+          <div class="field">
+            <label for="wpass">Senha</label>
+            <div class="password-row"><input id="wpass" type="password" placeholder="Senha da rede" autocomplete="new-password"><button class="btn" id="showPass" type="button">Mostrar</button></div>
+          </div>
+          <label class="switchrow"><input type="checkbox" id="keepap" checked><span id="keepapText">Manter AP ativo quando houver outra interface Wi‑Fi disponível</span></label>
+          <button class="btn primary widebtn" id="wifiConnect">Conectar Wi‑Fi</button>
+          <div class="result hidden" id="wifiResult"></div>
+        </div>
+        <div class="option-card">
+          <h3>Cabo de rede</h3><p>Primeiro tentamos DHCP. Isso funciona em roteadores e também com Compartilhamento de Internet do computador.</p>
+          <div class="notice"><b>Cabo direto ao computador:</b><br>o fallback 10.43.0.1 não anuncia gateway nem DNS. Assim o computador mantém a internet do próprio Wi‑Fi. Para dar internet ao pu2pnu-os pelo cabo, habilite o compartilhamento da conexão no computador e clique em reverificar.</div>
+          <button class="btn widebtn" id="refreshEthernet">Reverificar cabo e internet</button>
+        </div>
+      </div>
+      <div class="status-cards">
+        <div class="mini" id="apcard"><b>AP</b><small>verificando...</small></div>
+        <div class="mini" id="ethcard"><b>Cabo de rede</b><small>verificando...</small></div>
+        <div class="mini" id="internetcard"><b>Internet</b><small>verificando...</small></div>
+      </div>
+      <div class="btnrow"><button class="btn primary" id="toHardware" disabled>Continuar para preparar hardware →</button></div>
+    </div>
+  </section>
+
+  <section id="step2" class="hidden">
+    <div class="panel">
+      <div class="intro"><div class="icon">⚙</div><div><h2>Buscando drivers e detectando hardware</h2><p>O pu2pnu-os prepara firmware oficial e verifica Raspberry Pi, MMDVM e display sem expor detalhes técnicos desnecessários.</p></div></div>
+      <div class="progressline"><div class="progress"><i id="bar"></i></div><b id="percent">8%</b></div>
+      <div class="grid2">
+        <div class="option-card">
+          <div class="timeline">
+            <div class="task done" id="taskInternet"><span class="circle">✓</span><div><b>Internet conectada</b><small>Conexão confirmada.</small></div><em>Concluído</em></div>
+            <div class="task active" id="taskDrivers"><span class="circle">•</span><div><b>Drivers básicos</b><small>Preparando firmware e módulos oficiais.</small></div><em id="driversState">Aguardando</em></div>
+            <div class="task" id="taskMmdvm"><span class="circle">•</span><div><b>MMDVM</b><small>Identificação do modem pelo protocolo oficial.</small></div><em id="mmdvmState">Aguardando</em></div>
+            <div class="task" id="taskDisplay"><span class="circle">•</span><div><b>Display / Nextion</b><small>Verificação opcional.</small></div><em id="displayState">Aguardando</em></div>
+            <div class="task" id="taskReady"><span class="circle">•</span><div><b>Pronto para configuração</b><small>Hardware essencial validado.</small></div><em id="readyState">Aguardando</em></div>
+          </div>
+        </div>
+        <div class="option-card">
+          <h3>Resumo detectado</h3><p>Somente o que importa para continuar.</p>
+          <div class="summary">
+            <div><span>Plataforma</span><b id="sumPi">Detectando...</b></div>
+            <div><span>Modem</span><b id="sumModem">Detectando...</b></div>
+            <div><span>Display</span><b id="sumDisplay">Opcional</b></div>
+            <div><span>Status geral</span><b id="sumStatus">Preparando...</b></div>
+          </div>
+          <div class="result hidden" id="hardwareResult"></div>
+        </div>
+      </div>
+      <div class="btnrow"><button class="btn" id="backInternet">← Internet</button><button class="btn" id="retryHardware">Detectar novamente</button><button class="btn primary" id="toBasic" disabled>Ir para configuração básica →</button></div>
+    </div>
+  </section>
+
+  <section id="step3" class="hidden">
+    <div class="panel">
+      <div class="intro"><div class="icon">⚙</div><div><h2>Ajustes essenciais</h2><p>Somente os dados necessários para colocar o rádio em funcionamento. Porta MMDVM e offsets são tratados internamente.</p></div></div>
+      <div class="formgrid">
+        <div class="field"><label for="callsign">Indicativo</label><input id="callsign" placeholder="Ex.: PU2PNY" autocomplete="off" autocapitalize="characters"></div>
+        <div class="field"><label for="dmrid">DMR ID</label><input id="dmrid" inputmode="numeric" placeholder="Ex.: 7241465" autocomplete="off"></div>
+      </div>
+
+      <div class="section-title">Modo de uso</div>
+      <div class="choice-grid">
+        <div class="choice"><input type="radio" name="usemode" id="hotspot" value="hotspot" checked><label for="hotspot"><b>Hotspot</b><small>Uso pessoal</small></label></div>
+        <div class="choice"><input type="radio" name="usemode" id="repeater" value="repeater"><label for="repeater"><b>Repetidora</b><small>Operação duplex</small></label></div>
+      </div>
+
+      <div class="section-title">Frequência</div>
+      <div class="freq">
+        <div class="field"><label for="rx">Frequência RX (MHz)</label><input id="rx" inputmode="decimal" placeholder="439.125"></div>
+        <div class="field"><label for="tx">Frequência TX (MHz)</label><input id="tx" inputmode="decimal" placeholder="439.125"></div>
+      </div>
+
+      <div class="section-title">Protocolo principal</div>
+      <div class="choice-grid">
+        <div class="choice"><input type="radio" name="protocol" id="pdstar" value="DSTAR"><label for="pdstar"><b>D‑STAR</b></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pdmr" value="DMR" checked><label for="pdmr"><b>DMR</b></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pysf" value="YSF"><label for="pysf"><b>YSF</b></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pp25" value="P25"><label for="pp25"><b>P25</b></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pnxdn" value="NXDN"><label for="pnxdn"><b>NXDN</b></label></div>
+      </div>
+
+      <div class="section-title">Operação</div>
+      <div class="choice-grid">
+        <div class="choice"><input type="radio" name="operation" id="normal" value="normal" checked><label for="normal"><b>Normal</b><small>Opera no protocolo selecionado</small></label></div>
+        <div class="choice"><input type="radio" name="operation" id="crossmode" value="crossmode"><label for="crossmode"><b>Crossmode</b><small>Registra o perfil para ponte entre protocolos</small></label></div>
+      </div>
+
+      <div class="info" style="margin-top:16px">Ajustes avançados, redes, salas e parâmetros finos ficam fora do primeiro acesso e podem ser configurados depois.</div>
+      <div class="result hidden" id="basicResult"></div>
+      <div class="btnrow"><button class="btn" id="backHardware">← Hardware</button><button class="btn primary" id="saveBasic">Salvar e continuar →</button></div>
+    </div>
+  </section>
+
+  <section id="step4" class="hidden">
+    <div class="panel successbox">
+      <div class="successicon">✓</div>
+      <h2>PU2PNY pronto para usar</h2>
+      <p id="doneMessage">Configuração básica concluída.</p>
+      <div class="summary" style="max-width:650px;margin:20px auto;text-align:left">
+        <div><span>Indicativo</span><b id="doneCall">—</b></div>
+        <div><span>DMR ID</span><b id="doneDmr">—</b></div>
+        <div><span>Modo</span><b id="doneMode">—</b></div>
+        <div><span>Frequência</span><b id="doneFreq">—</b></div>
+        <div><span>Protocolo</span><b id="doneProto">—</b></div>
+        <div><span>Operação</span><b id="doneOp">—</b></div>
+      </div>
+      <div class="info">O painel local continua disponível em <b>http://pu2pny.local</b>. O AP pode permanecer ativo quando houver interface Wi‑Fi livre.</div>
+    </div>
+  </section>
+</main>
+</div>
+
+<script>
+const q=id=>document.getElementById(id);
+const titles={
+1:['Primeiro acesso — Internet','Vamos conectar o pu2pnu-os à internet antes de preparar drivers e hardware.'],
+2:['Preparando hardware','Drivers, MMDVM e display serão preparados automaticamente.'],
+3:['Configuração básica','Defina indicativo, ID, modo de uso, frequência, protocolo e operação.'],
+4:['Conclusão','Configuração inicial concluída.']
+};
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('pu2pny-theme',t);q('theme').textContent=t==='dark'?'☀ Claro':'☾ Escuro'}
+q('theme').onclick=function(){setTheme((document.documentElement.getAttribute('data-theme')||'dark')==='dark'?'light':'dark')};
+setTheme(localStorage.getItem('pu2pny-theme')||'dark');
+
+function step(n){
+  for(let i=1;i<=4;i++){
+    q('step'+i).classList.toggle('hidden',i!==n);
+    let nav=q('nav'+i);nav.classList.toggle('active',i===n);nav.classList.toggle('done',i<n);
+    q('nav'+i).querySelector('.num').textContent=i<n?'✓':String(i);
+  }
+  q('title').textContent=titles[n][0];q('subtitle').textContent=titles[n][1];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function getj(url,opt){let r=await fetch(url,Object.assign({cache:'no-store'},opt||{}));let j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Falha na operação');return j}
+
+let lastConnectivity=null;
+function showConnectivity(c){
+  lastConnectivity=c;
+  q('netbadge').textContent=c.internet?'Internet conectada':'Internet não conectada';
+  q('internetcard').className='mini '+(c.internet?'ok':'bad');
+  q('internetcard').innerHTML='<b>Internet</b><small>'+(c.internet?'Conectada':'Não conectada')+'</small>';
+  q('apcard').className='mini '+(c.ap_active?'ok':'');
+  q('apcard').innerHTML='<b>AP '+(c.ap_active?'ativo':'desligado')+'</b><small>'+(c.ap_active?(c.ap_ssid+(c.ap_interface?' • '+c.ap_interface:'')):'')+'</small>';
+  q('ethcard').className='mini '+(c.ethernet?'ok':'');
+  q('ethcard').innerHTML='<b>Cabo de rede</b><small>'+(c.ethernet?(c.ethernet_interface||'detectado'):'Não detectado')+'</small>';
+  q('toHardware').disabled=!c.internet;
+  let multi=(c.wifi_count||0)>=2;
+  q('keepap').disabled=!multi;
+  q('keepap').checked=multi;
+  q('keepapText').textContent=multi?'Manter AP pu2pny ativo durante a configuração':'Uma interface Wi‑Fi detectada: o AP será trocado pela rede escolhida';
+}
+async function pollConnectivity(){
+  try{showConnectivity(await getj('/api/connectivity'))}catch(e){}
+}
+function selectedSSID(){
+  let sel=q('ssidSelect');
+  if(sel.value==='__manual__')return q('ssidManual').value.trim();
+  return sel.value.trim();
+}
+function setManualSSID(){
+  let manual=q('ssidSelect').value==='__manual__';
+  q('manualSsidWrap').classList.toggle('hidden',!manual);
+}
+async function loadWifi(){
+  let btn=q('wifiScan'),sel=q('ssidSelect'),hint=q('scanHint');
+  btn.disabled=true;btn.textContent='Buscando...';hint.textContent='Procurando redes Wi‑Fi próximas...';
+  try{
+    let a=await getj('/api/wifi/scan');
+    sel.innerHTML='';
+    if(Array.isArray(a)&&a.length){
+      a.forEach(function(x){
+        let o=document.createElement('option');
+        o.value=x.ssid;
+        o.textContent=x.ssid+(x.signal?' · '+x.signal+'%':'')+(x.security?' · '+x.security:'');
+        sel.appendChild(o)
+      });
+      hint.textContent=a.length+' rede(s) encontrada(s). Selecione uma e digite a senha.';
+    }else{
+      hint.textContent='Nenhuma rede apareceu na busca automática. Você pode tentar novamente ou informar uma rede oculta.';
+    }
+    let manual=document.createElement('option');manual.value='__manual__';manual.textContent='Outra rede / rede oculta...';sel.appendChild(manual);
+    setManualSSID();
+  }catch(e){
+    sel.innerHTML='<option value="__manual__">Outra rede / rede oculta...</option>';
+    setManualSSID();
+    hint.textContent='A busca automática não respondeu. Tente Buscar redes novamente.';
+  }finally{
+    btn.disabled=false;btn.textContent='↻ Buscar redes';
+  }
+}
+q('ssidSelect').onchange=setManualSSID;
+q('wifiScan').onclick=loadWifi;
+q('showPass').onclick=function(){
+  let p=q('wpass'),show=p.type==='password';
+  p.type=show?'text':'password';
+  q('showPass').textContent=show?'Ocultar':'Mostrar';
+};
+async function watchWiFiConnection(ssid){
+  let box=q('wifiResult'),deadline=Date.now()+45000;
+  while(Date.now()<deadline){
+    try{
+      let st=await getj('/api/network/connect/status');
+      if(st.state==='connected'){
+        box.className='result success';box.textContent='Wi‑Fi conectado à '+ssid+'. Internet sendo confirmada...';
+        await pollConnectivity();
+        return
+      }
+      if(st.state==='error')throw new Error(st.message||'Não foi possível conectar à rede Wi‑Fi');
+      if(st.message)box.textContent=st.message
+    }catch(e){
+      if(String(e.message||'').includes('fetch'))return;
+      box.className='result error';box.textContent=e.message;return
+    }
+    await new Promise(r=>setTimeout(r,900))
+  }
+}
+q('wifiConnect').onclick=async function(){
+  let ssid=selectedSSID(),box=q('wifiResult');
+  if(!ssid){box.className='result error';box.textContent='Selecione uma rede Wi‑Fi.';return}
+  box.className='result';box.textContent='Enviando configuração...';
+  try{
+    let j=await getj('/api/network/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ssid:ssid,password:q('wpass').value,keep_ap:q('keepap').checked})});
+    box.className='result success';
+    if(j.will_disconnect){
+      box.innerHTML='<b>Configuração recebida.</b><br>O AP pu2pny vai trocar para a rede <b>'+esc(ssid)+'</b>. Aguarde cerca de 20 segundos, reconecte este computador à sua rede normal e abra <b>http://pu2pny.local</b>.';
+      return
+    }
+    box.textContent='Conectando à '+ssid+'...';
+    watchWiFiConnection(ssid)
+  }catch(e){box.className='result error';box.textContent=e.message}
+};
+q('refreshEthernet').onclick=async function(){
+  q('refreshEthernet').disabled=true;q('refreshEthernet').textContent='Reverificando...';
+  try{let j=await getj('/api/network/refresh',{method:'POST'});if(j.connectivity)showConnectivity(j.connectivity)}catch(e){}
+  q('refreshEthernet').disabled=false;q('refreshEthernet').textContent='Reverificar cabo e internet'
+};
+q('toHardware').onclick=function(){step(2);startHardware()};
+q('backInternet').onclick=function(){step(1)};
+q('retryHardware').onclick=function(){startHardware()};
+q('toBasic').onclick=function(){step(3)};
+q('backHardware').onclick=function(){step(2)};
+
+function taskState(id,state,text){
+  let e=q(id);e.classList.remove('done','active');
+  if(state)e.classList.add(state);
+  e.querySelector('em').textContent=text;
+  e.querySelector('.circle').textContent=state==='done'?'✓':'•';
+}
+function hardwareSummary(s){
+  let pi=s.raspberry&&s.raspberry.model?s.raspberry.model:'Raspberry Pi';
+  let m=s.mmdvm||{},d=s.display||{};
+  q('sumPi').textContent=pi;
+  q('sumModem').textContent=m.detected?'MMDVM identificado':'MMDVM não confirmado';
+  q('sumDisplay').textContent=d.detected?(d.model||'Display identificado'):'Opcional / não identificado';
+  if(m.detected){
+    q('sumStatus').textContent='Pronto para continuar';
+    taskState('taskMmdvm','done','Concluído');
+    taskState('taskDisplay','done',d.detected?'Concluído':'Opcional');
+    taskState('taskReady','done','Concluído');
+    q('toBasic').disabled=false
+  }else{
+    q('sumStatus').textContent='Revise o modem';
+    taskState('taskMmdvm','active','Não confirmado');
+    taskState('taskDisplay','',d.detected?'Detectado':'Opcional');
+    taskState('taskReady','','Aguardando');
+    q('toBasic').disabled=true
+  }
+}
+async function startHardware(){
+  q('toBasic').disabled=true;q('hardwareResult').className='result hidden';
+  q('bar').style.width='12%';q('percent').textContent='12%';
+  taskState('taskDrivers','active','Preparando');taskState('taskMmdvm','','Aguardando');taskState('taskDisplay','','Aguardando');taskState('taskReady','','Aguardando');
+  try{await getj('/api/hardware/scan',{method:'POST'})}catch(e){q('hardwareResult').className='result error';q('hardwareResult').textContent=e.message;return}
+  let deadline=Date.now()+90000;
+  while(Date.now()<deadline){
+    try{
+      let s=await getj('/api/hardware/status');
+      if(s.state==='preparing'){q('bar').style.width='35%';q('percent').textContent='35%';taskState('taskDrivers','active','Baixando / preparando')}
+      else if(s.state==='scanning'){q('bar').style.width='72%';q('percent').textContent='72%';taskState('taskDrivers','done','Concluído');taskState('taskMmdvm','active','Detectando')}
+      else if(s.state==='complete'){
+        q('bar').style.width='100%';q('percent').textContent='100%';taskState('taskDrivers','done','Concluído');hardwareSummary(s);return
+      }else if(s.state==='error'){
+        q('hardwareResult').className='result error';q('hardwareResult').textContent=s.message||'Falha na detecção.';return
+      }
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,700))
+  }
+  q('hardwareResult').className='result error';q('hardwareResult').textContent='A detecção demorou mais que o esperado. Use Detectar novamente.'
+}
+
+q('saveBasic').onclick=async function(){
+  let data={
+    callsign:q('callsign').value.trim().toUpperCase(),
+    dmr_id:q('dmrid').value.trim(),
+    use_mode:document.querySelector('input[name=usemode]:checked').value,
+    rx:q('rx').value.trim(),
+    tx:q('tx').value.trim(),
+    protocol:document.querySelector('input[name=protocol]:checked').value,
+    operation:document.querySelector('input[name=operation]:checked').value
+  };
+  let box=q('basicResult');box.className='result';box.textContent='Aplicando e validando MMDVMHost...';q('saveBasic').disabled=true;
+  try{
+    await getj('/api/basic/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    let deadline=Date.now()+45000;
+    while(Date.now()<deadline){
+      let s=await getj('/api/rf');
+      if(s.state==='applied'){
+        box.className='result success';box.textContent=s.message||'Configuração concluída.';
+        await loadConclusion();step(4);q('saveBasic').disabled=false;return
+      }
+      if(s.state==='error'){throw new Error(s.message||'Não foi possível aplicar')}
+      await new Promise(r=>setTimeout(r,600))
+    }
+    throw new Error('A validação demorou mais que o esperado.')
+  }catch(e){box.className='result error';box.textContent=e.message;q('saveBasic').disabled=false}
+};
+
+function mhz(hz){return hz?((Number(hz)/1000000).toFixed(3).replace(/\.?0+$/,''))+' MHz':'—'}
+async function loadConclusion(){
+  try{
+    let c=await getj('/api/config');
+    q('doneCall').textContent=c.callsign||'—';q('doneDmr').textContent=c.dmr_id||'—';
+    q('doneMode').textContent=c.use_mode==='repeater'?'Repetidora':'Hotspot';
+    q('doneFreq').textContent=mhz(c.rx_hz)+' / '+mhz(c.tx_hz);
+    q('doneProto').textContent=c.protocol||'—';q('doneOp').textContent=c.operation==='crossmode'?'Crossmode':'Normal';
+    q('doneMessage').textContent=c.operation==='crossmode'?'Base pronta e perfil Crossmode registrado.':'Configuração básica concluída e motor RF validado.'
+  }catch(e){}
+}
+async function boot(){
+  await pollConnectivity();
+  await loadWifi();
+  setInterval(pollConnectivity,3000);
+  try{let s=await getj('/api/status');if(s.provisioned){await loadConclusion();step(4)}}catch(e){}
+}
+boot();
+</script>
+</body></html>
