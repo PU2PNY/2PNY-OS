@@ -38,6 +38,8 @@ type Config struct {
 	UseMode       string `json:"use_mode"`
 	RXHz          int64  `json:"rx_hz"`
 	TXHz          int64  `json:"tx_hz"`
+	RXOffsetHz    int64  `json:"rx_offset_hz"`
+	TXOffsetHz    int64  `json:"tx_offset_hz"`
 	Protocol      string `json:"protocol"`
 	Operation     string `json:"operation"`
 	ServerName    string `json:"server_name,omitempty"`
@@ -86,6 +88,12 @@ var (
 	applyMu    sync.Mutex
 	wifiScanMu sync.Mutex
 	wifiScanning bool
+	connectivityCacheMu sync.Mutex
+	connectivityCache ConnectivityStatus
+	connectivityCacheAt time.Time
+	liveCacheMu sync.Mutex
+	liveCache []byte
+	liveCacheAt time.Time
 )
 
 func fileExists(p string) bool { _, e := os.Stat(p); return e == nil }
@@ -220,10 +228,21 @@ func connectivitySnapshot() ConnectivityStatus {
 	}
 }
 
+func cachedConnectivitySnapshot() ConnectivityStatus {
+	connectivityCacheMu.Lock()
+	defer connectivityCacheMu.Unlock()
+	if !connectivityCacheAt.IsZero() && time.Since(connectivityCacheAt) < 4*time.Second {
+		return connectivityCache
+	}
+	connectivityCache = connectivitySnapshot()
+	connectivityCacheAt = time.Now()
+	return connectivityCache
+}
+
 func statusHandler(w http.ResponseWriter, r *http.Request) {
-	c := connectivitySnapshot()
+	c := cachedConnectivitySnapshot()
 	writeJSON(w, http.StatusOK, Status{
-		Name: "PU2PNY",
+		Name: "PU2PNY-OS",
 		Version: appVersion,
 		Provisioned: fileExists(provisionedFile),
 		Ethernet: c.Ethernet,
@@ -237,7 +256,7 @@ func connectivityHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "GET required", http.StatusMethodNotAllowed)
 		return
 	}
-	writeJSON(w, http.StatusOK, connectivitySnapshot())
+	writeJSON(w, http.StatusOK, cachedConnectivitySnapshot())
 }
 
 func preferredClientWiFi() string {
@@ -638,6 +657,62 @@ func saveConfig(c Config) error {
 	return os.Rename(tmp, configFile)
 }
 
+
+type applyTransaction struct {
+	dir string
+	paths []string
+	existed map[string]bool
+}
+
+func beginApplyTransaction() (*applyTransaction, error) {
+	dir, err := os.MkdirTemp("/run/2pny", "apply-tx-")
+	if err != nil { return nil, err }
+	t := &applyTransaction{
+		dir:dir,
+		paths:[]string{
+			"/var/lib/2pny/mmdvm/MMDVM-Host.ini",
+			filepath.Join(dataDir, "basic-radio.json"),
+			filepath.Join(dataDir, "network-radio.json"),
+			configFile,
+			provisionedFile,
+			filepath.Join(dataDir, "rf-configured"),
+			filepath.Join(dataDir, "display-runtime.json"),
+		},
+		existed:map[string]bool{},
+	}
+	for i,p := range t.paths {
+		if !fileExists(p) { t.existed[p]=false; continue }
+		t.existed[p]=true
+		dst := filepath.Join(dir, strconv.Itoa(i))
+		if out, e := exec.Command("cp", "-a", "--", p, dst).CombinedOutput(); e != nil {
+			_ = os.RemoveAll(dir)
+			return nil, fmt.Errorf("backup transacional falhou: %s", strings.TrimSpace(string(out)))
+		}
+	}
+	return t,nil
+}
+
+func (t *applyTransaction) rollback() {
+	if t == nil { return }
+	for i,p := range t.paths {
+		if t.existed[p] {
+			_ = exec.Command("cp", "-a", "--", filepath.Join(t.dir, strconv.Itoa(i)), p).Run()
+		} else {
+			_ = os.Remove(p)
+		}
+	}
+	_ = exec.Command("systemctl", "restart", "2pny-mmdvmhost.service").Run()
+	_ = os.RemoveAll(t.dir)
+}
+
+func (t *applyTransaction) commit() {
+	if t != nil { _ = os.RemoveAll(t.dir) }
+}
+
+func hasUnsafeControl(s string) bool {
+	return strings.ContainsAny(s, "\r\n\x00")
+}
+
 func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "POST required", http.StatusMethodNotAllowed)
@@ -649,6 +724,8 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		UseMode string `json:"use_mode"`
 		RX string `json:"rx"`
 		TX string `json:"tx"`
+		RXOffset string `json:"rx_offset"`
+		TXOffset string `json:"tx_offset"`
 		Protocol string `json:"protocol"`
 		Operation string `json:"operation"`
 		ServerName string `json:"server_name"`
@@ -698,14 +775,34 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione Normal ou Crossmode"})
 		return
 	}
+	if in.Operation == "crossmode" {
+		writeJSON(w, http.StatusConflict, map[string]any{"ok":false, "error":"Crossmode ainda está em desenvolvimento nesta Alpha; use operação Normal"})
+		return
+	}
 	if in.Protocol == "DMR" {
 		if in.ServerName == "" || in.ServerAddress == "" || in.ServerPort < 1 || in.ServerPort > 65535 {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione um servidor/master DMR válido"})
 			return
 		}
-		if in.ColorCode == 0 {
-			in.ColorCode = 1
+		if len(in.ServerName)>128 || len(in.ServerAddress)>255 || len(in.ServerPassword)>128 || len(in.ServerOptions)>512 ||
+			hasUnsafeControl(in.ServerName) || hasUnsafeControl(in.ServerAddress) || hasUnsafeControl(in.ServerPassword) || hasUnsafeControl(in.ServerOptions) {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"campos do servidor DMR contêm tamanho ou caracteres inválidos"})
+			return
 		}
+	}
+	rxOffset := strings.TrimSpace(in.RXOffset)
+	txOffset := strings.TrimSpace(in.TXOffset)
+	if rxOffset == "" { rxOffset = "0" }
+	if txOffset == "" { txOffset = "0" }
+	rxOffsetHz, err := strconv.ParseInt(rxOffset, 10, 64)
+	if err != nil || rxOffsetHz < -10000000 || rxOffsetHz > 10000000 {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"RX Offset inválido; use Hz entre -10000000 e 10000000"})
+		return
+	}
+	txOffsetHz, err := strconv.ParseInt(txOffset, 10, 64)
+	if err != nil || txOffsetHz < -10000000 || txOffsetHz > 10000000 {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"TX Offset inválido; use Hz entre -10000000 e 10000000"})
+		return
 	}
 	rxArg, rxHz, err := normalizeFrequency(in.RX)
 	if err != nil {
@@ -735,7 +832,14 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		applyMu.Lock()
 		defer applyMu.Unlock()
-		cmd := exec.Command("/usr/local/sbin/2pny-rf-apply", rxArg, txArg, "0", "0", duplex, port, in.Callsign, in.DMRID)
+		tx, txErr := beginApplyTransaction()
+		if txErr != nil {
+			writeRFApplyState("error", "Não foi possível criar o rollback antes da configuração: "+txErr.Error())
+			return
+		}
+		committed := false
+		defer func(){ if committed { tx.commit() } else { tx.rollback() } }()
+		cmd := exec.Command("/usr/local/sbin/2pny-rf-apply", rxArg, txArg, rxOffset, txOffset, duplex, port, in.Callsign, in.DMRID)
 		out, err := cmd.CombinedOutput()
 		msg := strings.TrimSpace(string(out))
 		if err != nil {
@@ -770,7 +874,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		if b, e := os.ReadFile(filepath.Join(dataDir, "uplink-ssid")); e == nil { wifiSSID = strings.TrimSpace(string(b)) }
 		cfg := Config{
 			Callsign:in.Callsign, DMRID:in.DMRID, WiFiSSID:wifiSSID, UseMode:in.UseMode,
-			RXHz:rxHz, TXHz:txHz, Protocol:in.Protocol, Operation:in.Operation,
+			RXHz:rxHz, TXHz:txHz, RXOffsetHz:rxOffsetHz, TXOffsetHz:txOffsetHz, Protocol:in.Protocol, Operation:in.Operation,
 			ServerName:in.ServerName, ServerAddress:in.ServerAddress, ServerPort:in.ServerPort,
 			NetworkKind:in.NetworkKind, ColorCode:in.ColorCode, NetworkState:networkState,
 			CreatedAt:time.Now().UTC().Format(time.RFC3339),
@@ -788,9 +892,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		if in.Protocol == "DMR" {
 			done = "RF configurada e servidor DMR aplicado. Acompanhe o estado da rede no painel principal."
 		}
-		if in.Operation == "crossmode" {
-			done = "Configuração básica concluída. Perfil Crossmode registrado; os módulos de ponte podem ser ajustados posteriormente."
-		}
+		committed = true
 		writeRFApplyState("applied", done)
 	}( )
 	writeJSON(w, http.StatusAccepted, map[string]any{"ok":true, "state":"applying"})
@@ -817,6 +919,8 @@ func rfApplyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	writeRFApplyState("applying", "Validando RF e iniciando MMDVMHost...")
 	go func(values []string) {
+		applyMu.Lock()
+		defer applyMu.Unlock()
 		out, err := exec.Command("/usr/local/sbin/2pny-rf-apply", values...).CombinedOutput()
 		msg := strings.TrimSpace(string(out))
 		if err != nil {
@@ -862,10 +966,20 @@ func liveStatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "GET required", http.StatusMethodNotAllowed)
 		return
 	}
-	out, err := exec.Command("/usr/local/sbin/2pny-live-status").CombinedOutput()
-	if err != nil {
-		writeJSON(w, http.StatusOK, map[string]any{"network":map[string]any{"state":"unknown","message":"Estado ao vivo temporariamente indisponível."},"events":[]any{}})
-		return
+	liveCacheMu.Lock()
+	defer liveCacheMu.Unlock()
+	var out []byte
+	if len(liveCache)>0 && !liveCacheAt.IsZero() && time.Since(liveCacheAt)<2*time.Second {
+		out = append([]byte(nil), liveCache...)
+	} else {
+		fresh, err := exec.Command("/usr/local/sbin/2pny-live-status").CombinedOutput()
+		if err != nil {
+			writeJSON(w, http.StatusOK, map[string]any{"network":map[string]any{"state":"unknown","message":"Estado ao vivo temporariamente indisponível."},"events":[]any{}})
+			return
+		}
+		liveCache = append(liveCache[:0], fresh...)
+		liveCacheAt = time.Now()
+		out = append([]byte(nil), fresh...)
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
@@ -954,12 +1068,12 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 		_ = json.Unmarshal(b, &hardware)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"name":"PU2PNY",
+		"name":"PU2PNY-OS",
 		"version":appVersion,
 		"provisioned":fileExists(provisionedFile),
 		"radio_active":serviceActive("2pny-mmdvmhost.service"),
 		"config":cfg,
-		"connectivity":connectivitySnapshot(),
+		"connectivity":cachedConnectivitySnapshot(),
 		"hardware":hardware,
 		"activity":recentActivity(),
 	})
@@ -1086,6 +1200,6 @@ func main() {
 	for _, p := range []string{"/generate_204","/gen_204","/hotspot-detect.html","/library/test/success.html","/connecttest.txt","/ncsi.txt","/canonical.html","/success.txt","/check_network_status.txt","/connectivity-check.html","/redirect"} {
 		http.HandleFunc(p, captivePortalHandler)
 	}
-	log.Printf("PU2PNY %s listening on %s", appVersion, listenAddr)
+	log.Printf("PU2PNY-OS %s listening on %s", appVersion, listenAddr)
 	log.Fatal(http.ListenAndServe(listenAddr, nil))
 }
