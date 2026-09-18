@@ -723,6 +723,11 @@ func (t *applyTransaction) rollback() {
 			_ = os.Remove(p)
 		}
 	}
+	if fileExists(filepath.Join(dataDir,"dmr","DMRGateway.ini")) {
+		_ = exec.Command("systemctl", "restart", "2pny-dmrgateway.service").Run()
+	} else {
+		_ = exec.Command("systemctl", "stop", "2pny-dmrgateway.service").Run()
+	}
 	_ = exec.Command("systemctl", "restart", "2pny-mmdvmhost.service").Run()
 	_ = os.RemoveAll(t.dir)
 }
@@ -1134,14 +1139,22 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 	if b, err := os.ReadFile(hardwareProbeFile); err == nil {
 		_ = json.Unmarshal(b, &hardware)
 	}
+	networkRuntime := map[string]any{}
+	if b, err := os.ReadFile(filepath.Join(dataDir,"network-radio.json")); err == nil { _ = json.Unmarshal(b,&networkRuntime) }
+	baud := strings.TrimSpace(func() string { b,_:=os.ReadFile(filepath.Join(dataDir,"mmdvm-baud")); return string(b) }())
 	writeJSON(w, http.StatusOK, map[string]any{
 		"name":"PU2PNY-OS",
 		"version":appVersion,
 		"provisioned":fileExists(provisionedFile),
 		"radio_active":serviceActive("2pny-mmdvmhost.service"),
+		"dmrgateway_active":serviceActive("2pny-dmrgateway.service"),
+		"display_active":serviceActive("2pny-display.service"),
+		"mqtt_active":serviceActive("mosquitto.service"),
+		"mmdvm_baud":baud,
 		"config":cfg,
 		"connectivity":cachedConnectivitySnapshot(),
 		"hardware":hardware,
+		"network_runtime":networkRuntime,
 		"display_runtime":func() map[string]any { d:=map[string]any{}; if b,e:=os.ReadFile(filepath.Join(dataDir,"display-runtime.json")); e==nil { _=json.Unmarshal(b,&d) }; return d }(),
 		"activity":recentActivity(),
 	})
