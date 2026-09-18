@@ -681,7 +681,25 @@ func captiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 func captivePortalHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
-	http.Redirect(w, r, "/wizard", http.StatusFound)
+	if !fileExists(provisionedFile) {
+		http.Redirect(w, r, "/wizard", http.StatusFound)
+		return
+	}
+	switch r.URL.Path {
+	case "/generate_204", "/gen_204":
+		w.WriteHeader(http.StatusNoContent)
+	case "/connecttest.txt":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("Microsoft Connect Test"))
+	case "/ncsi.txt":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("Microsoft NCSI"))
+	case "/hotspot-detect.html", "/library/test/success.html":
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte("<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>"))
+	default:
+		http.Redirect(w, r, "/wizard", http.StatusFound)
+	}
 }
 
 func main() {
