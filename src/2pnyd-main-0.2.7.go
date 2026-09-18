@@ -93,7 +93,9 @@ var (
 	callsignRx = regexp.MustCompile(`^[A-Z0-9/-]{3,16}$`)
 	dmrRx      = regexp.MustCompile(`^[0-9]{6,9}$`)
 	applyMu    sync.Mutex
-	wifiScanMu sync.Mutex
+	hardwareScanMu sync.Mutex
+ hardwareScanning bool
+ wifiScanMu sync.Mutex
 	wifiScanning bool
 	connectivityCacheMu sync.Mutex
 	connectivityCache ConnectivityStatus
@@ -578,9 +580,13 @@ func hardwareScanHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "POST required", http.StatusMethodNotAllowed)
 		return
 	}
+ hardwareScanMu.Lock()
+ if hardwareScanning {hardwareScanMu.Unlock();writeJSON(w,http.StatusAccepted,map[string]any{"state":"preparing"});return}
+ hardwareScanning=true;hardwareScanMu.Unlock()
 	writeHardwareState("preparing", "drivers", "Preparando drivers e firmware...")
 	// Respond immediately; display/driver work must never block the POST.
 	go func() {
+  defer func(){hardwareScanMu.Lock();hardwareScanning=false;hardwareScanMu.Unlock()}()
 		_ = exec.Command("timeout", "5", "/usr/local/sbin/2pny-display-status", "hardware", "PU2PNY-OS: hardware").Run()
 		prep := exec.Command("timeout", "-k", "2", "25", "/usr/local/sbin/2pny-hardware-prepare")
 		if b, err := prep.CombinedOutput(); err != nil {

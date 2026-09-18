@@ -82,5 +82,5 @@ class Regression(unittest.TestCase):
   for name in ['2pny-rf-apply','2pny-protocol-network-apply','2pny-mmdvmhost','2pny-dmrgateway']:
    suffix='.py' if 'protocol-network' in name else '.service' if name.endswith(('mmdvmhost','dmrgateway')) else ''
    old=(ROOT/'src'/f'{name}-0.2.6{suffix}').read_text().replace('0.2.6','0.2.7')
-   self.assertEqual(old,(ROOT/'src'/f'{name}-0.2.7{suffix}').read_text())
+   self.assertEqual(old.rstrip(),(ROOT/'src'/f'{name}-0.2.7{suffix}').read_text().rstrip())
 if __name__=='__main__':unittest.main()

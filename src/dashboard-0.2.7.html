@@ -130,7 +130,7 @@ const q=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('pu2pny-theme',t);q('theme').textContent=t==='dark'?'☀ Claro':'☾ Escuro'}
 setTheme(localStorage.getItem('pu2pny-theme')||'dark');q('theme').onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
-async function getj(url,opt){let r=await fetch(url,Object.assign({cache:'no-store'},opt||{}));let j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Falha');return j}
+async function getj(url,opt){let ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);try{let r=await fetch(url,Object.assign({cache:'no-store',signal:ctl.signal},opt||{}));let j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Falha');return j}finally{clearTimeout(timer)}}
 function yn(v,a='Ativo',b='Parado'){return v?a:b}
 function qualityClass(label){return label==='Ótimo'||label==='Ativo'?'q-good':label==='Bom'?'q-ok':'q-bad'}
 function meter(id,score,label){let e=q(id);e.style.width=Math.max(0,Math.min(100,Number(score)||0))+'%';e.className=qualityClass(label||'')}
@@ -204,8 +204,8 @@ q('qrzSave').onclick=async()=>{await settings({action:'qrz',username:q('qrzUser'
 async function contacts(){try{let d=await getj('/api/contacts');q('contactsTable').innerHTML='<table><thead><tr><th>ID</th><th>Indicativo</th><th>Nome</th><th>Cidade</th><th>País</th><th>Atualizado</th></tr></thead><tbody>'+(d.contacts||[]).map(p=>'<tr>'+[p.id,p.callsign,p.name,p.city,p.country,p.updated?new Date(p.updated).toLocaleString():'—'].map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}catch(e){q('contactsTable').textContent='Cache temporariamente indisponível'}}
 q('contactsRefresh').onclick=contacts;contacts();setInterval(()=>{if(!document.hidden)contacts()},60000);
 refreshAll();
-setInterval(async()=>{if(document.hidden)return;try{renderLive(await getj('/api/live'))}catch(e){}},2000);
-setInterval(async()=>{if(document.hidden)return;try{renderDashboard(await getj('/api/dashboard'))}catch(e){}},7000);
+let liveBusy=false,dashboardBusy=false;setInterval(async()=>{if(document.hidden||liveBusy)return;liveBusy=true;try{renderLive(await getj('/api/live'))}catch(e){}finally{liveBusy=false}},2000);
+setInterval(async()=>{if(document.hidden||dashboardBusy)return;dashboardBusy=true;try{renderDashboard(await getj('/api/dashboard'))}catch(e){}finally{dashboardBusy=false}},7000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshAll()});
 </script>
 <script src="/ui-language.js"></script></body></html>
