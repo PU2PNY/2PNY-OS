@@ -300,7 +300,7 @@ func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
 	writeNetworkConnectState("queued", "Conexão recebida. Preparando troca de rede...", in.SSID)
 
 	ssid, password := in.SSID, in.Password
-	time.AfterFunc(900*time.Millisecond, func() {
+	time.AfterFunc(2500*time.Millisecond, func() {
 		writeNetworkConnectState("connecting", "Conectando à rede "+ssid+"...", ssid)
 		keepArg := "0"
 		if keep { keepArg = "1" }
