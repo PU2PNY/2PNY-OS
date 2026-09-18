@@ -104,7 +104,7 @@ jobs:
           python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-hardware-probe
           rm -rf rootfs-overlay/usr/local/sbin/__pycache__
           grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.2\.2-alpha"' src/2pnyd/main.go
-          grep -Fq 'Name: "PU2PNY"' src/2pnyd/main.go
+          grep -Eq 'Name:[[:space:]]*"PU2PNY"' src/2pnyd/main.go
           grep -Fq 'time.AfterFunc(2500*time.Millisecond' src/2pnyd/main.go
           grep -Fq 'SETUP_IP=10.43.0.1' rootfs-overlay/usr/local/sbin/2pny-network-core
           grep -Fq 'nmcli --wait 14 connection up PU2PNY-WIFI' rootfs-overlay/usr/local/sbin/2pny-network-core
