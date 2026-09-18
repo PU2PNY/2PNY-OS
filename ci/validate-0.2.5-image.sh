@@ -105,12 +105,513 @@ sudo chmod 0755 "$ROOT/tmp/testbin/systemctl"
 sudo chroot "$ROOT" /usr/bin/env PATH=/tmp/testbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
   /usr/local/sbin/2pny-protocol-network-apply DMR TEST_MASTER 192.0.2.10 62031 testpass hotspot 1 ''
 CONF="$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini"
-grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Enable=1$'
+sudo grep -A12 '^\[DMR Network\] | grep -q '^Enable=1$'
 grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Type=Direct$'
 grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Address=192.0.2.10$'
 grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Port=62031$'
 grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot1=0$'
 grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot2=1$'
+test -s "$ROOT/var/lib/2pny/network-radio.json"
+sudo rm -rf "$ROOT/tmp/testbin" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/backups/network-radio"
+
+echo '[7/15] Wizard includes mandatory server flow'
+WIZ="$ROOT/usr/share/2pny/wizard.html"
+grep -Fq '0.2.5-alpha' "$WIZ"
+grep -Fq 'Servidor DMR' "$WIZ"
+grep -Fq '/api/servers' "$WIZ"
+grep -Fq 'server_password' "$WIZ"
+grep -Fq 'Color Code' "$WIZ"
+grep -Fq 'singleWifiNote' "$WIZ"
+grep -Fq 'confirmNextion' "$WIZ"
+grep -Fq '/api/display/override' "$WIZ"
+grep -Fq 'não alterou o HMI/TFT' "$WIZ"
+grep -Fq 'O cabo Ethernet permanece funcionando' "$WIZ"
+grep -Fq 'RF, MMDVMHost e servidor DMR' "$WIZ"
+
+echo '[8/15] Dashboard live view preserved and extended'
+DASH="$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Painel principal' "$DASH"
+grep -Fq 'Servidor digital' "$DASH"
+grep -Fq 'Estado da rede digital' "$DASH"
+grep -Fq 'Ao vivo' "$DASH"
+grep -Fq '/api/live' "$DASH"
+grep -Fq 'liveBer' "$DASH"
+grep -Fq 'liveRssi' "$DASH"
+grep -Fq 'Atividade recente' "$DASH"
+
+echo '[9/15] Live parser returns valid light JSON'
+LIVE="$(sudo chroot "$ROOT" /usr/local/sbin/2pny-live-status)"
+echo "$LIVE" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d and "live" in d'
+
+echo '[10/15] Base RF safety preserved'
+RF="$ROOT/usr/local/sbin/2pny-rf-apply"
+grep -Fq 'CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini' "$RF"
+grep -Fq 'ScreenLayout=2' "$RF"
+grep -Fq 'DumpTAData=1' "$RF"
+grep -Fq 'RXOffset=$RXOFF' "$RF"
+grep -Fq 'TXOffset=$TXOFF' "$RF"
+
+echo '[11/15] Clean first boot'
+test ! -e "$ROOT/var/lib/2pny/provisioned"
+test ! -e "$ROOT/var/lib/2pny/network-radio.json"
+test ! -e "$ROOT/var/lib/2pny/display-override.json"
+test ! -e "$ROOT/var/lib/2pny/network-connect.json"
+test ! -e "$ROOT/var/lib/2pny/wifi-scan.json"
+test -s "$ROOT/var/lib/2pny/hosts/DMR_Hosts.txt"
+
+echo '[12/15] Run web panel inside final image'
+sudo mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
+sudo mount -t proc proc "$ROOT/proc"
+sudo mount --bind /dev "$ROOT/dev"
+sudo mount --bind /sys "$ROOT/sys"
+sudo chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-025.log 2>&1 & PID=$!
+OK=0
+for _ in {1..60}; do
+  if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
+  sleep .2
+done
+test "$OK" = 1 || { cat /tmp/pu2pnyd-025.log; exit 1; }
+STATUS="$(curl -fsS http://127.0.0.1/api/status)"
+echo "$STATUS" | grep -Fq '"version":"0.2.5-alpha"'
+curl -fsS 'http://127.0.0.1/api/servers?protocol=DMR' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(x.get("name")=="BM_7242_Brazil" for x in d["servers"])'
+curl -fsS 'http://127.0.0.1/api/live' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d'
+
+echo '[13/15] Routing before/after provisioning'
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /wizard
+sudo touch "$ROOT/var/lib/2pny/provisioned"
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /dashboard
+curl -fsS http://127.0.0.1/dashboard | grep -Fq 'Painel principal'
+sudo rm -f "$ROOT/var/lib/2pny/provisioned"
+
+echo '[14/15] No password is exposed in public config files'
+if sudo grep -Rqs 'testpass' "$ROOT/var/lib/2pny"; then echo 'test password leaked'; exit 1; fi
+! grep -Fq 'ServerPassword' "$ROOT/usr/share/2pny/dashboard.html"
+
+echo '[15/15] Final result'
+echo "PU2PNY $VERSION ARM64 image: OK"
+ "$CONF" | grep -q '^Enable=1$'
+sudo grep -A12 '^\[DMR Network\] | grep -q '^Type=Direct$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Address=192.0.2.10$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Port=62031$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot1=0$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot2=1$'
+test -s "$ROOT/var/lib/2pny/network-radio.json"
+sudo rm -rf "$ROOT/tmp/testbin" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/backups/network-radio"
+
+echo '[7/15] Wizard includes mandatory server flow'
+WIZ="$ROOT/usr/share/2pny/wizard.html"
+grep -Fq '0.2.5-alpha' "$WIZ"
+grep -Fq 'Servidor DMR' "$WIZ"
+grep -Fq '/api/servers' "$WIZ"
+grep -Fq 'server_password' "$WIZ"
+grep -Fq 'Color Code' "$WIZ"
+grep -Fq 'singleWifiNote' "$WIZ"
+grep -Fq 'confirmNextion' "$WIZ"
+grep -Fq '/api/display/override' "$WIZ"
+grep -Fq 'não alterou o HMI/TFT' "$WIZ"
+grep -Fq 'O cabo Ethernet permanece funcionando' "$WIZ"
+grep -Fq 'RF, MMDVMHost e servidor DMR' "$WIZ"
+
+echo '[8/15] Dashboard live view preserved and extended'
+DASH="$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Painel principal' "$DASH"
+grep -Fq 'Servidor digital' "$DASH"
+grep -Fq 'Estado da rede digital' "$DASH"
+grep -Fq 'Ao vivo' "$DASH"
+grep -Fq '/api/live' "$DASH"
+grep -Fq 'liveBer' "$DASH"
+grep -Fq 'liveRssi' "$DASH"
+grep -Fq 'Atividade recente' "$DASH"
+
+echo '[9/15] Live parser returns valid light JSON'
+LIVE="$(sudo chroot "$ROOT" /usr/local/sbin/2pny-live-status)"
+echo "$LIVE" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d and "live" in d'
+
+echo '[10/15] Base RF safety preserved'
+RF="$ROOT/usr/local/sbin/2pny-rf-apply"
+grep -Fq 'CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini' "$RF"
+grep -Fq 'ScreenLayout=2' "$RF"
+grep -Fq 'DumpTAData=1' "$RF"
+grep -Fq 'RXOffset=$RXOFF' "$RF"
+grep -Fq 'TXOffset=$TXOFF' "$RF"
+
+echo '[11/15] Clean first boot'
+test ! -e "$ROOT/var/lib/2pny/provisioned"
+test ! -e "$ROOT/var/lib/2pny/network-radio.json"
+test ! -e "$ROOT/var/lib/2pny/display-override.json"
+test ! -e "$ROOT/var/lib/2pny/network-connect.json"
+test ! -e "$ROOT/var/lib/2pny/wifi-scan.json"
+test -s "$ROOT/var/lib/2pny/hosts/DMR_Hosts.txt"
+
+echo '[12/15] Run web panel inside final image'
+sudo mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
+sudo mount -t proc proc "$ROOT/proc"
+sudo mount --bind /dev "$ROOT/dev"
+sudo mount --bind /sys "$ROOT/sys"
+sudo chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-025.log 2>&1 & PID=$!
+OK=0
+for _ in {1..60}; do
+  if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
+  sleep .2
+done
+test "$OK" = 1 || { cat /tmp/pu2pnyd-025.log; exit 1; }
+STATUS="$(curl -fsS http://127.0.0.1/api/status)"
+echo "$STATUS" | grep -Fq '"version":"0.2.5-alpha"'
+curl -fsS 'http://127.0.0.1/api/servers?protocol=DMR' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(x.get("name")=="BM_7242_Brazil" for x in d["servers"])'
+curl -fsS 'http://127.0.0.1/api/live' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d'
+
+echo '[13/15] Routing before/after provisioning'
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /wizard
+sudo touch "$ROOT/var/lib/2pny/provisioned"
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /dashboard
+curl -fsS http://127.0.0.1/dashboard | grep -Fq 'Painel principal'
+sudo rm -f "$ROOT/var/lib/2pny/provisioned"
+
+echo '[14/15] No password is exposed in public config files'
+! grep -Rqs 'testpass' "$ROOT/var/lib/2pny" || { echo 'test password leaked'; exit 1; }
+! grep -Fq 'ServerPassword' "$ROOT/usr/share/2pny/dashboard.html"
+
+echo '[15/15] Final result'
+echo "PU2PNY $VERSION ARM64 image: OK"
+ "$CONF" | grep -q '^Type=Direct$'
+sudo grep -A12 '^\[DMR Network\] | grep -q '^Address=192.0.2.10$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Port=62031$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot1=0$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot2=1$'
+test -s "$ROOT/var/lib/2pny/network-radio.json"
+sudo rm -rf "$ROOT/tmp/testbin" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/backups/network-radio"
+
+echo '[7/15] Wizard includes mandatory server flow'
+WIZ="$ROOT/usr/share/2pny/wizard.html"
+grep -Fq '0.2.5-alpha' "$WIZ"
+grep -Fq 'Servidor DMR' "$WIZ"
+grep -Fq '/api/servers' "$WIZ"
+grep -Fq 'server_password' "$WIZ"
+grep -Fq 'Color Code' "$WIZ"
+grep -Fq 'singleWifiNote' "$WIZ"
+grep -Fq 'confirmNextion' "$WIZ"
+grep -Fq '/api/display/override' "$WIZ"
+grep -Fq 'não alterou o HMI/TFT' "$WIZ"
+grep -Fq 'O cabo Ethernet permanece funcionando' "$WIZ"
+grep -Fq 'RF, MMDVMHost e servidor DMR' "$WIZ"
+
+echo '[8/15] Dashboard live view preserved and extended'
+DASH="$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Painel principal' "$DASH"
+grep -Fq 'Servidor digital' "$DASH"
+grep -Fq 'Estado da rede digital' "$DASH"
+grep -Fq 'Ao vivo' "$DASH"
+grep -Fq '/api/live' "$DASH"
+grep -Fq 'liveBer' "$DASH"
+grep -Fq 'liveRssi' "$DASH"
+grep -Fq 'Atividade recente' "$DASH"
+
+echo '[9/15] Live parser returns valid light JSON'
+LIVE="$(sudo chroot "$ROOT" /usr/local/sbin/2pny-live-status)"
+echo "$LIVE" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d and "live" in d'
+
+echo '[10/15] Base RF safety preserved'
+RF="$ROOT/usr/local/sbin/2pny-rf-apply"
+grep -Fq 'CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini' "$RF"
+grep -Fq 'ScreenLayout=2' "$RF"
+grep -Fq 'DumpTAData=1' "$RF"
+grep -Fq 'RXOffset=$RXOFF' "$RF"
+grep -Fq 'TXOffset=$TXOFF' "$RF"
+
+echo '[11/15] Clean first boot'
+test ! -e "$ROOT/var/lib/2pny/provisioned"
+test ! -e "$ROOT/var/lib/2pny/network-radio.json"
+test ! -e "$ROOT/var/lib/2pny/display-override.json"
+test ! -e "$ROOT/var/lib/2pny/network-connect.json"
+test ! -e "$ROOT/var/lib/2pny/wifi-scan.json"
+test -s "$ROOT/var/lib/2pny/hosts/DMR_Hosts.txt"
+
+echo '[12/15] Run web panel inside final image'
+sudo mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
+sudo mount -t proc proc "$ROOT/proc"
+sudo mount --bind /dev "$ROOT/dev"
+sudo mount --bind /sys "$ROOT/sys"
+sudo chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-025.log 2>&1 & PID=$!
+OK=0
+for _ in {1..60}; do
+  if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
+  sleep .2
+done
+test "$OK" = 1 || { cat /tmp/pu2pnyd-025.log; exit 1; }
+STATUS="$(curl -fsS http://127.0.0.1/api/status)"
+echo "$STATUS" | grep -Fq '"version":"0.2.5-alpha"'
+curl -fsS 'http://127.0.0.1/api/servers?protocol=DMR' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(x.get("name")=="BM_7242_Brazil" for x in d["servers"])'
+curl -fsS 'http://127.0.0.1/api/live' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d'
+
+echo '[13/15] Routing before/after provisioning'
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /wizard
+sudo touch "$ROOT/var/lib/2pny/provisioned"
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /dashboard
+curl -fsS http://127.0.0.1/dashboard | grep -Fq 'Painel principal'
+sudo rm -f "$ROOT/var/lib/2pny/provisioned"
+
+echo '[14/15] No password is exposed in public config files'
+! grep -Rqs 'testpass' "$ROOT/var/lib/2pny" || { echo 'test password leaked'; exit 1; }
+! grep -Fq 'ServerPassword' "$ROOT/usr/share/2pny/dashboard.html"
+
+echo '[15/15] Final result'
+echo "PU2PNY $VERSION ARM64 image: OK"
+ "$CONF" | grep -q '^Address=192.0.2.10$'
+sudo grep -A12 '^\[DMR Network\] | grep -q '^Port=62031$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot1=0$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot2=1$'
+test -s "$ROOT/var/lib/2pny/network-radio.json"
+sudo rm -rf "$ROOT/tmp/testbin" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/backups/network-radio"
+
+echo '[7/15] Wizard includes mandatory server flow'
+WIZ="$ROOT/usr/share/2pny/wizard.html"
+grep -Fq '0.2.5-alpha' "$WIZ"
+grep -Fq 'Servidor DMR' "$WIZ"
+grep -Fq '/api/servers' "$WIZ"
+grep -Fq 'server_password' "$WIZ"
+grep -Fq 'Color Code' "$WIZ"
+grep -Fq 'singleWifiNote' "$WIZ"
+grep -Fq 'confirmNextion' "$WIZ"
+grep -Fq '/api/display/override' "$WIZ"
+grep -Fq 'não alterou o HMI/TFT' "$WIZ"
+grep -Fq 'O cabo Ethernet permanece funcionando' "$WIZ"
+grep -Fq 'RF, MMDVMHost e servidor DMR' "$WIZ"
+
+echo '[8/15] Dashboard live view preserved and extended'
+DASH="$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Painel principal' "$DASH"
+grep -Fq 'Servidor digital' "$DASH"
+grep -Fq 'Estado da rede digital' "$DASH"
+grep -Fq 'Ao vivo' "$DASH"
+grep -Fq '/api/live' "$DASH"
+grep -Fq 'liveBer' "$DASH"
+grep -Fq 'liveRssi' "$DASH"
+grep -Fq 'Atividade recente' "$DASH"
+
+echo '[9/15] Live parser returns valid light JSON'
+LIVE="$(sudo chroot "$ROOT" /usr/local/sbin/2pny-live-status)"
+echo "$LIVE" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d and "live" in d'
+
+echo '[10/15] Base RF safety preserved'
+RF="$ROOT/usr/local/sbin/2pny-rf-apply"
+grep -Fq 'CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini' "$RF"
+grep -Fq 'ScreenLayout=2' "$RF"
+grep -Fq 'DumpTAData=1' "$RF"
+grep -Fq 'RXOffset=$RXOFF' "$RF"
+grep -Fq 'TXOffset=$TXOFF' "$RF"
+
+echo '[11/15] Clean first boot'
+test ! -e "$ROOT/var/lib/2pny/provisioned"
+test ! -e "$ROOT/var/lib/2pny/network-radio.json"
+test ! -e "$ROOT/var/lib/2pny/display-override.json"
+test ! -e "$ROOT/var/lib/2pny/network-connect.json"
+test ! -e "$ROOT/var/lib/2pny/wifi-scan.json"
+test -s "$ROOT/var/lib/2pny/hosts/DMR_Hosts.txt"
+
+echo '[12/15] Run web panel inside final image'
+sudo mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
+sudo mount -t proc proc "$ROOT/proc"
+sudo mount --bind /dev "$ROOT/dev"
+sudo mount --bind /sys "$ROOT/sys"
+sudo chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-025.log 2>&1 & PID=$!
+OK=0
+for _ in {1..60}; do
+  if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
+  sleep .2
+done
+test "$OK" = 1 || { cat /tmp/pu2pnyd-025.log; exit 1; }
+STATUS="$(curl -fsS http://127.0.0.1/api/status)"
+echo "$STATUS" | grep -Fq '"version":"0.2.5-alpha"'
+curl -fsS 'http://127.0.0.1/api/servers?protocol=DMR' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(x.get("name")=="BM_7242_Brazil" for x in d["servers"])'
+curl -fsS 'http://127.0.0.1/api/live' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d'
+
+echo '[13/15] Routing before/after provisioning'
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /wizard
+sudo touch "$ROOT/var/lib/2pny/provisioned"
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /dashboard
+curl -fsS http://127.0.0.1/dashboard | grep -Fq 'Painel principal'
+sudo rm -f "$ROOT/var/lib/2pny/provisioned"
+
+echo '[14/15] No password is exposed in public config files'
+! grep -Rqs 'testpass' "$ROOT/var/lib/2pny" || { echo 'test password leaked'; exit 1; }
+! grep -Fq 'ServerPassword' "$ROOT/usr/share/2pny/dashboard.html"
+
+echo '[15/15] Final result'
+echo "PU2PNY $VERSION ARM64 image: OK"
+ "$CONF" | grep -q '^Port=62031$'
+sudo grep -A12 '^\[DMR Network\] | grep -q '^Slot1=0$'
+grep -A12 '^\[DMR Network\]$' "$CONF" | grep -q '^Slot2=1$'
+test -s "$ROOT/var/lib/2pny/network-radio.json"
+sudo rm -rf "$ROOT/tmp/testbin" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/backups/network-radio"
+
+echo '[7/15] Wizard includes mandatory server flow'
+WIZ="$ROOT/usr/share/2pny/wizard.html"
+grep -Fq '0.2.5-alpha' "$WIZ"
+grep -Fq 'Servidor DMR' "$WIZ"
+grep -Fq '/api/servers' "$WIZ"
+grep -Fq 'server_password' "$WIZ"
+grep -Fq 'Color Code' "$WIZ"
+grep -Fq 'singleWifiNote' "$WIZ"
+grep -Fq 'confirmNextion' "$WIZ"
+grep -Fq '/api/display/override' "$WIZ"
+grep -Fq 'não alterou o HMI/TFT' "$WIZ"
+grep -Fq 'O cabo Ethernet permanece funcionando' "$WIZ"
+grep -Fq 'RF, MMDVMHost e servidor DMR' "$WIZ"
+
+echo '[8/15] Dashboard live view preserved and extended'
+DASH="$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Painel principal' "$DASH"
+grep -Fq 'Servidor digital' "$DASH"
+grep -Fq 'Estado da rede digital' "$DASH"
+grep -Fq 'Ao vivo' "$DASH"
+grep -Fq '/api/live' "$DASH"
+grep -Fq 'liveBer' "$DASH"
+grep -Fq 'liveRssi' "$DASH"
+grep -Fq 'Atividade recente' "$DASH"
+
+echo '[9/15] Live parser returns valid light JSON'
+LIVE="$(sudo chroot "$ROOT" /usr/local/sbin/2pny-live-status)"
+echo "$LIVE" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d and "live" in d'
+
+echo '[10/15] Base RF safety preserved'
+RF="$ROOT/usr/local/sbin/2pny-rf-apply"
+grep -Fq 'CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini' "$RF"
+grep -Fq 'ScreenLayout=2' "$RF"
+grep -Fq 'DumpTAData=1' "$RF"
+grep -Fq 'RXOffset=$RXOFF' "$RF"
+grep -Fq 'TXOffset=$TXOFF' "$RF"
+
+echo '[11/15] Clean first boot'
+test ! -e "$ROOT/var/lib/2pny/provisioned"
+test ! -e "$ROOT/var/lib/2pny/network-radio.json"
+test ! -e "$ROOT/var/lib/2pny/display-override.json"
+test ! -e "$ROOT/var/lib/2pny/network-connect.json"
+test ! -e "$ROOT/var/lib/2pny/wifi-scan.json"
+test -s "$ROOT/var/lib/2pny/hosts/DMR_Hosts.txt"
+
+echo '[12/15] Run web panel inside final image'
+sudo mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
+sudo mount -t proc proc "$ROOT/proc"
+sudo mount --bind /dev "$ROOT/dev"
+sudo mount --bind /sys "$ROOT/sys"
+sudo chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-025.log 2>&1 & PID=$!
+OK=0
+for _ in {1..60}; do
+  if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
+  sleep .2
+done
+test "$OK" = 1 || { cat /tmp/pu2pnyd-025.log; exit 1; }
+STATUS="$(curl -fsS http://127.0.0.1/api/status)"
+echo "$STATUS" | grep -Fq '"version":"0.2.5-alpha"'
+curl -fsS 'http://127.0.0.1/api/servers?protocol=DMR' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(x.get("name")=="BM_7242_Brazil" for x in d["servers"])'
+curl -fsS 'http://127.0.0.1/api/live' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d'
+
+echo '[13/15] Routing before/after provisioning'
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /wizard
+sudo touch "$ROOT/var/lib/2pny/provisioned"
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /dashboard
+curl -fsS http://127.0.0.1/dashboard | grep -Fq 'Painel principal'
+sudo rm -f "$ROOT/var/lib/2pny/provisioned"
+
+echo '[14/15] No password is exposed in public config files'
+! grep -Rqs 'testpass' "$ROOT/var/lib/2pny" || { echo 'test password leaked'; exit 1; }
+! grep -Fq 'ServerPassword' "$ROOT/usr/share/2pny/dashboard.html"
+
+echo '[15/15] Final result'
+echo "PU2PNY $VERSION ARM64 image: OK"
+ "$CONF" | grep -q '^Slot1=0$'
+sudo grep -A12 '^\[DMR Network\] | grep -q '^Slot2=1$'
+test -s "$ROOT/var/lib/2pny/network-radio.json"
+sudo rm -rf "$ROOT/tmp/testbin" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/backups/network-radio"
+
+echo '[7/15] Wizard includes mandatory server flow'
+WIZ="$ROOT/usr/share/2pny/wizard.html"
+grep -Fq '0.2.5-alpha' "$WIZ"
+grep -Fq 'Servidor DMR' "$WIZ"
+grep -Fq '/api/servers' "$WIZ"
+grep -Fq 'server_password' "$WIZ"
+grep -Fq 'Color Code' "$WIZ"
+grep -Fq 'singleWifiNote' "$WIZ"
+grep -Fq 'confirmNextion' "$WIZ"
+grep -Fq '/api/display/override' "$WIZ"
+grep -Fq 'não alterou o HMI/TFT' "$WIZ"
+grep -Fq 'O cabo Ethernet permanece funcionando' "$WIZ"
+grep -Fq 'RF, MMDVMHost e servidor DMR' "$WIZ"
+
+echo '[8/15] Dashboard live view preserved and extended'
+DASH="$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Painel principal' "$DASH"
+grep -Fq 'Servidor digital' "$DASH"
+grep -Fq 'Estado da rede digital' "$DASH"
+grep -Fq 'Ao vivo' "$DASH"
+grep -Fq '/api/live' "$DASH"
+grep -Fq 'liveBer' "$DASH"
+grep -Fq 'liveRssi' "$DASH"
+grep -Fq 'Atividade recente' "$DASH"
+
+echo '[9/15] Live parser returns valid light JSON'
+LIVE="$(sudo chroot "$ROOT" /usr/local/sbin/2pny-live-status)"
+echo "$LIVE" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d and "live" in d'
+
+echo '[10/15] Base RF safety preserved'
+RF="$ROOT/usr/local/sbin/2pny-rf-apply"
+grep -Fq 'CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini' "$RF"
+grep -Fq 'ScreenLayout=2' "$RF"
+grep -Fq 'DumpTAData=1' "$RF"
+grep -Fq 'RXOffset=$RXOFF' "$RF"
+grep -Fq 'TXOffset=$TXOFF' "$RF"
+
+echo '[11/15] Clean first boot'
+test ! -e "$ROOT/var/lib/2pny/provisioned"
+test ! -e "$ROOT/var/lib/2pny/network-radio.json"
+test ! -e "$ROOT/var/lib/2pny/display-override.json"
+test ! -e "$ROOT/var/lib/2pny/network-connect.json"
+test ! -e "$ROOT/var/lib/2pny/wifi-scan.json"
+test -s "$ROOT/var/lib/2pny/hosts/DMR_Hosts.txt"
+
+echo '[12/15] Run web panel inside final image'
+sudo mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
+sudo mount -t proc proc "$ROOT/proc"
+sudo mount --bind /dev "$ROOT/dev"
+sudo mount --bind /sys "$ROOT/sys"
+sudo chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-025.log 2>&1 & PID=$!
+OK=0
+for _ in {1..60}; do
+  if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
+  sleep .2
+done
+test "$OK" = 1 || { cat /tmp/pu2pnyd-025.log; exit 1; }
+STATUS="$(curl -fsS http://127.0.0.1/api/status)"
+echo "$STATUS" | grep -Fq '"version":"0.2.5-alpha"'
+curl -fsS 'http://127.0.0.1/api/servers?protocol=DMR' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(x.get("name")=="BM_7242_Brazil" for x in d["servers"])'
+curl -fsS 'http://127.0.0.1/api/live' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "network" in d and "events" in d'
+
+echo '[13/15] Routing before/after provisioning'
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /wizard
+sudo touch "$ROOT/var/lib/2pny/provisioned"
+LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
+test "$LOC" = /dashboard
+curl -fsS http://127.0.0.1/dashboard | grep -Fq 'Painel principal'
+sudo rm -f "$ROOT/var/lib/2pny/provisioned"
+
+echo '[14/15] No password is exposed in public config files'
+! grep -Rqs 'testpass' "$ROOT/var/lib/2pny" || { echo 'test password leaked'; exit 1; }
+! grep -Fq 'ServerPassword' "$ROOT/usr/share/2pny/dashboard.html"
+
+echo '[15/15] Final result'
+echo "PU2PNY $VERSION ARM64 image: OK"
+ "$CONF" | grep -q '^Slot2=1$'
 test -s "$ROOT/var/lib/2pny/network-radio.json"
 sudo rm -rf "$ROOT/tmp/testbin" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/backups/network-radio"
 
