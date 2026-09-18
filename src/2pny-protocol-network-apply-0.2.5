@@ -31,7 +31,10 @@ OPTIONS="$8"
 (( ${#PASSWORD} <= 128 )) || { echo "server password too long" >&2; exit 2; }
 (( ${#OPTIONS} <= 512 )) || { echo "server options too long" >&2; exit 2; }
 for value in "$SERVER" "$ADDRESS" "$PASSWORD" "$OPTIONS"; do
-  [[ "$value" != *
+  case "$value" in
+    *$'\\n'*|*$'\\r'*) echo "control characters are not allowed in DMR fields" >&2; exit 2 ;;
+  esac
+done
 [[ "$PORT" =~ ^[0-9]+$ ]] && (( PORT >= 1 && PORT <= 65535 )) || { echo "invalid server port" >&2; exit 2; }
 [[ "$USEMODE" == hotspot || "$USEMODE" == repeater ]] || { echo "invalid use mode" >&2; exit 2; }
 [[ "$COLOR" =~ ^[0-9]+$ ]] && (( COLOR >= 0 && COLOR <= 15 )) || { echo "invalid DMR color code" >&2; exit 2; }
