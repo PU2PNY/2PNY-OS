@@ -1,0 +1,261 @@
+#!/bin/bash
+set -euo pipefail
+
+CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini
+STATE=/var/lib/2pny
+BACKUPS="$STATE/backups/rf"
+LOCK=/run/2pny-rf-apply.lock
+SERVICE=2pny-mmdvmhost.service
+
+usage() {
+  echo "usage: 2pny-rf-apply RX_HZ TX_HZ RX_OFFSET_HZ TX_OFFSET_HZ DUPLEX MODEM_PORT CALLSIGN DMR_ID" >&2
+  exit 2
+}
+
+[[ $EUID -eq 0 ]] || { echo "root required" >&2; exit 1; }
+[[ $# -eq 8 ]] || usage
+
+RX="$1"; TX="$2"; RXOFF="$3"; TXOFF="$4"; DUPLEX="$5"; PORT="$6"; CALLSIGN="${7^^}"; DMRID="$8"
+
+is_uint() { [[ "$1" =~ ^[0-9]+$ ]]; }
+is_int() { [[ "$1" =~ ^-?[0-9]+$ ]]; }
+
+is_uint "$RX" && is_uint "$TX" && is_int "$RXOFF" && is_int "$TXOFF" && is_uint "$DMRID" || {
+  echo "invalid numeric RF value" >&2; exit 2;
+}
+
+(( RX >= 100000000 && RX <= 1000000000 )) || { echo "RX frequency outside 100 MHz..1 GHz hardware safety envelope" >&2; exit 2; }
+(( TX >= 100000000 && TX <= 1000000000 )) || { echo "TX frequency outside 100 MHz..1 GHz hardware safety envelope" >&2; exit 2; }
+(( RXOFF >= -10000000 && RXOFF <= 10000000 )) || { echo "RX offset outside +/-10 MHz" >&2; exit 2; }
+(( TXOFF >= -10000000 && TXOFF <= 10000000 )) || { echo "TX offset outside +/-10 MHz" >&2; exit 2; }
+[[ "$DUPLEX" == 0 || "$DUPLEX" == 1 ]] || { echo "duplex must be 0 or 1" >&2; exit 2; }
+[[ "$CALLSIGN" =~ ^[A-Z0-9/-]{3,16}$ ]] || { echo "invalid callsign" >&2; exit 2; }
+(( DMRID >= 1 && DMRID <= 999999999 )) || { echo "invalid DMR ID" >&2; exit 2; }
+
+case "$PORT" in
+  /dev/serial0|/dev/ttyAMA[0-9]*|/dev/ttyS[0-9]*|/dev/ttyACM[0-9]*|/dev/ttyUSB[0-9]*|/dev/serial/by-id/*) ;;
+  *) echo "unsupported modem port" >&2; exit 2 ;;
+esac
+[[ -e "$PORT" ]] || { echo "modem port does not exist: $PORT" >&2; exit 2; }
+
+# Fail closed: RF can only be applied after a fresh, explicit MMDVM detection
+# and the selected serial port must match the detected modem port.
+[[ -r "$STATE/hardware-probe.json" ]] || {
+  echo "MMDVM has not been identified; refusing RF apply" >&2
+  exit 3
+}
+python3 - "$STATE/hardware-probe.json" "$PORT" <<'PY'
+import json, os, sys, datetime
+path, requested = sys.argv[1:3]
+try:
+    data=json.load(open(path))
+except Exception:
+    print("invalid hardware detection state", file=sys.stderr); raise SystemExit(3)
+m=data.get("mmdvm") or {}
+if not m.get("detected"):
+    print("MMDVM has not been identified; refusing RF apply", file=sys.stderr); raise SystemExit(3)
+detected=str(m.get("port") or "").strip()
+if not detected:
+    print("MMDVM detected without a usable serial port", file=sys.stderr); raise SystemExit(3)
+try:
+    a=os.path.realpath(detected); b=os.path.realpath(requested)
+except Exception:
+    a=detected; b=requested
+if a != b:
+    print(f"requested modem port does not match detected MMDVM: {requested} != {detected}", file=sys.stderr)
+    raise SystemExit(3)
+PY
+
+mkdir -p /run/2pny "$STATE" "$BACKUPS" "$(dirname "$CONFIG")"
+exec 9>"$LOCK"
+flock -x 9
+
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+DISPLAY_LINE=""
+NEXTION_SECTION=""
+if [[ -r "$STATE/hardware-probe.json" ]]; then
+  DISPLAY_INFO="$(python3 - "$STATE/hardware-probe.json" <<'PYDISPLAY'
+import json, sys
+try:
+    data=json.load(open(sys.argv[1]))
+except Exception:
+    data={}
+d=data.get("display") or {}
+if d.get("detected") and d.get("class") in ("nextion","nextion_mmdvm"):
+    print("nextion|" + str(d.get("port") or "modem"))
+else:
+    print("none|")
+PYDISPLAY
+)"
+  DISPLAY_KIND="${DISPLAY_INFO%%|*}"
+  DISPLAY_PORT="${DISPLAY_INFO#*|}"
+  if [[ "$DISPLAY_KIND" == nextion ]]; then
+    [[ -n "$DISPLAY_PORT" ]] || DISPLAY_PORT=modem
+    DISPLAY_LINE="Display=Nextion"
+    NEXTION_SECTION="[Nextion]
+Port=$DISPLAY_PORT
+Speed=9600
+Brightness=80
+DisplayClock=1
+UTC=0
+IdleBrightness=30
+ScreenLayout=2"
+  fi
+fi
+
+OLD=""
+WAS_ACTIVE=0
+if systemctl is-active --quiet "$SERVICE"; then WAS_ACTIVE=1; fi
+if [[ -f "$CONFIG" ]]; then
+  OLD="$BACKUPS/MMDVM-Host.ini.$STAMP"
+  cp -a "$CONFIG" "$OLD"
+fi
+
+TMP=$(mktemp /run/2pny/.MMDVM-Host.ini.XXXXXX)
+cleanup() { rm -f "$TMP"; }
+trap cleanup EXIT
+
+cat >"$TMP" <<EOF
+[General]
+Callsign=$CALLSIGN
+Id=$DMRID
+Timeout=180
+Duplex=$DUPLEX
+RFModeHang=10
+NetModeHang=3
+Daemon=0
+$DISPLAY_LINE
+
+[Log]
+MQTTLevel=0
+DisplayLevel=0
+
+[CW Id]
+Enable=0
+
+[Modem]
+Protocol=uart
+UARTPort=$PORT
+UARTSpeed=115200
+RXFrequency=$RX
+TXFrequency=$TX
+TXInvert=0
+RXInvert=0
+PTTInvert=0
+TXDelay=100
+RXOffset=$RXOFF
+TXOffset=$TXOFF
+DMRDelay=0
+RXLevel=50
+TXLevel=50
+RXDCOffset=0
+TXDCOffset=0
+RFLevel=100
+UseCOSAsLockout=0
+Trace=0
+Debug=0
+
+[D-Star]
+Enable=0
+Module=C
+
+[DMR]
+Enable=0
+ColorCode=1
+DumpTAData=1
+
+[System Fusion]
+Enable=0
+
+[P25]
+Enable=0
+
+[NXDN]
+Enable=0
+
+[POCSAG]
+Enable=0
+
+[FM]
+Enable=0
+
+[D-Star Network]
+Enable=0
+
+[DMR Network]
+Enable=0
+
+[System Fusion Network]
+Enable=0
+
+[P25 Network]
+Enable=0
+
+[NXDN Network]
+Enable=0
+
+[POCSAG Network]
+Enable=0
+
+[FM Network]
+Enable=0
+
+$NEXTION_SECTION
+
+[Remote Control]
+Enable=0
+EOF
+
+chmod 0640 "$TMP"
+chown root:mmdvm "$TMP" 2>/dev/null || true
+sync -f "$TMP" 2>/dev/null || true
+install -m 0640 -o root -g mmdvm "$TMP" "$CONFIG" 2>/dev/null || install -m 0640 "$TMP" "$CONFIG"
+rm -f "$TMP"
+trap - EXIT
+
+mkdir -p "$STATE"
+printf '%s\n' "$STAMP" > "$STATE/rf-configured"
+
+command -v 2pny-display-status >/dev/null 2>&1 && 2pny-display-status ready "Configuracao concluida" >/dev/null 2>&1 || true
+
+rollback(){
+  rm -f "$STATE/rf-configured"
+  if [[ -n "$OLD" && -f "$OLD" ]]; then
+    cp -a "$OLD" "$CONFIG"
+    if (( WAS_ACTIVE )); then systemctl restart "$SERVICE" >/dev/null 2>&1 || true
+    else systemctl stop "$SERVICE" >/dev/null 2>&1 || true
+    fi
+  else
+    rm -f "$CONFIG"
+    systemctl disable --now "$SERVICE" >/dev/null 2>&1 || true
+  fi
+}
+
+# enable --now alone does not reload an already running service. Always restart
+# so the validation is against the configuration just written.
+if ! systemctl enable "$SERVICE" >/dev/null 2>&1; then
+  echo "MMDVMHost could not be enabled; rolling back RF configuration" >&2
+  rollback
+  exit 4
+fi
+if ! systemctl restart "$SERVICE" >/dev/null 2>&1; then
+  echo "MMDVMHost failed with the new RF configuration; rolling back" >&2
+  rollback
+  exit 4
+fi
+
+sleep 2
+if ! systemctl is-active --quiet "$SERVICE"; then
+  echo "MMDVMHost did not stay active with the new RF configuration; rolling back" >&2
+  rollback
+  exit 5
+fi
+
+if [[ "$DISPLAY_KIND" == nextion ]]; then
+  cat >"$STATE/display-runtime.json" <<EOF
+{"state":"configured","type":"Nextion","port":"$DISPLAY_PORT","layout":2,"brightness":80,"message":"Nextion configurada em modo compatibilidade; HMI/TFT não foi alterado"}
+EOF
+  chmod 0600 "$STATE/display-runtime.json"
+fi
+
+printf 'RF_APPLY_OK rx=%s tx=%s rx_offset=%s tx_offset=%s duplex=%s port=%s\n' "$RX" "$TX" "$RXOFF" "$TXOFF" "$DUPLEX" "$PORT"
