@@ -143,7 +143,7 @@ func wifiInterfaces() []string {
 }
 
 func currentWiFiSSID() string {
-	out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SSID", "dev", "wifi").Output()
+	out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SSID", "dev", "wifi", "--rescan", "no").Output()
 	if err != nil { return "" }
 	for _, line := range strings.Split(string(out), "\n") {
 		if strings.HasPrefix(line, "yes:") {
@@ -241,7 +241,7 @@ func connectivitySnapshot() ConnectivityStatus {
 func cachedConnectivitySnapshot() ConnectivityStatus {
 	connectivityCacheMu.Lock()
 	defer connectivityCacheMu.Unlock()
-	if !connectivityCacheAt.IsZero() && time.Since(connectivityCacheAt) < 4*time.Second {
+	if !connectivityCacheAt.IsZero() && time.Since(connectivityCacheAt) < 15*time.Second {
 		return connectivityCache
 	}
 	connectivityCache = connectivitySnapshot()
@@ -535,7 +535,8 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 			_ = os.WriteFile(displayOverrideFile, raw, 0600)
 			applyDisplayOverrideToProbe()
 		} else {
-			_ = os.Remove(displayOverrideFile)
+			raw, _ := json.Marshal(map[string]any{"enabled":false})
+			_ = os.WriteFile(displayOverrideFile, raw, 0600)
 		}
 		if fileExists(filepath.Join(dataDir,"rf-configured")) { _, _ = exec.Command("/usr/local/sbin/2pny-display-apply").CombinedOutput() }
 		writeJSON(w, http.StatusOK, map[string]any{"ok":true,"enabled":in.Enabled,"layout":in.Layout})
@@ -681,9 +682,12 @@ type applyTransaction struct {
 	dir string
 	paths []string
 	existed map[string]bool
+	active map[string]bool
+	enabled map[string]bool
 }
 
 func beginApplyTransaction() (*applyTransaction, error) {
+	if err := os.MkdirAll("/run/2pny", 0750); err != nil { return nil, err }
 	dir, err := os.MkdirTemp("/run/2pny", "apply-tx-")
 	if err != nil { return nil, err }
 	t := &applyTransaction{
@@ -696,11 +700,19 @@ func beginApplyTransaction() (*applyTransaction, error) {
 			provisionedFile,
 			filepath.Join(dataDir, "rf-configured"),
 			filepath.Join(dataDir, "display-runtime.json"),
+			filepath.Join(dataDir, "display", "MMDVM-Display.ini"),
+			filepath.Join(dataDir, "mmdvm-baud"),
 			filepath.Join(dataDir, "dmr", "DMRGateway.ini"),
 			filepath.Join(dataDir, "dmr", "XLXHosts.txt"),
 			filepath.Join(dataDir, "secrets", "brandmeister-api.key"),
 		},
 		existed:map[string]bool{},
+		active:map[string]bool{},
+		enabled:map[string]bool{},
+	}
+	for _, service := range []string{"2pny-mmdvmhost.service", "2pny-dmrgateway.service", "2pny-display.service"} {
+		t.active[service] = serviceActive(service)
+		t.enabled[service] = exec.Command("systemctl", "is-enabled", "--quiet", service).Run() == nil
 	}
 	for i,p := range t.paths {
 		if !fileExists(p) { t.existed[p]=false; continue }
@@ -723,12 +735,14 @@ func (t *applyTransaction) rollback() {
 			_ = os.Remove(p)
 		}
 	}
-	if fileExists(filepath.Join(dataDir,"dmr","DMRGateway.ini")) {
-		_ = exec.Command("systemctl", "restart", "2pny-dmrgateway.service").Run()
-	} else {
-		_ = exec.Command("systemctl", "stop", "2pny-dmrgateway.service").Run()
-	}
-	_ = exec.Command("systemctl", "restart", "2pny-mmdvmhost.service").Run()
+	for _, service := range []string{"2pny-dmrgateway.service", "2pny-mmdvmhost.service", "2pny-display.service"} {
+        enableAction := "disable"
+        if t.enabled[service] { enableAction = "enable" }
+        _ = exec.Command("systemctl", enableAction, service).Run()
+        action := "stop"
+        if t.active[service] { action = "restart" }
+        _ = exec.Command("systemctl", action, service).Run()
+    }
 	_ = os.RemoveAll(t.dir)
 }
 
@@ -1284,3 +1298,4 @@ func main() {
 	log.Printf("PU2PNY-OS %s listening on %s", appVersion, listenAddr)
 	log.Fatal(http.ListenAndServe(listenAddr, nil))
 }
+

@@ -18,6 +18,7 @@ cleanup(){
   sudo rm -f "$RAW" /tmp/pu2pnyd-026.log
 }
 trap cleanup EXIT
+trap 'echo "Validation failed at line $LINENO: $BASH_COMMAND" >&2' ERR
 
 echo '[1/20] Validator syntax'
 bash -n "$0"
@@ -98,7 +99,7 @@ grep -Fq '"XLX Network"' "$NET"
 grep -Fq '"GatewayAddress":"127.0.0.1"' "$NET"
 grep -Fq '"GatewayPort":"62031"' "$NET"
 grep -Fq 'BrandMeister requires the Hotspot Security password' "$NET"
-grep -Fq '"state":"connecting"' "$NET"
+grep -Fq '"state":"configured"' "$NET"
 
 echo '[11/20] Clean first boot before synthetic tests'
 for p in   "$ROOT/var/lib/2pny/provisioned"   "$ROOT/var/lib/2pny/rf-configured"   "$ROOT/var/lib/2pny/network-radio.json"   "$ROOT/var/lib/2pny/display-runtime.json"   "$ROOT/var/lib/2pny/display-override.json"   "$ROOT/var/lib/2pny/dmr/DMRGateway.ini"   "$ROOT/var/lib/2pny/display/MMDVM-Display.ini"   "$ROOT/var/lib/2pny/secrets/brandmeister-api.key"; do
@@ -213,8 +214,10 @@ test "$LOC" = /wizard
 sudo touch "$ROOT/var/lib/2pny/provisioned"
 LOC="$(curl -sSI http://127.0.0.1/ | awk 'BEGIN{IGNORECASE=1}/^Location:/{gsub("\r","");print $2}')"
 test "$LOC" = /dashboard
-curl -fsS http://127.0.0.1/dashboard | grep -Fq 'RX · Rádio → hotspot'
+DASH_HTML="$(curl -fsS http://127.0.0.1/dashboard)"
+grep -Fq 'RX · Rádio → hotspot' <<<"$DASH_HTML"
 sudo rm -f "$ROOT/var/lib/2pny/provisioned"
 
 echo '[20/20] Final result'
 echo "PU2PNY-OS $VERSION ARM64 image: OK"
+

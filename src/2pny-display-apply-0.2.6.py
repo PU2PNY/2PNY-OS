@@ -36,7 +36,9 @@ speed=9600
 layout=2
 confidence="none"
 
-if ov.get("enabled") and m.get("detected"):
+if ov.get("enabled") is False:
+    pass
+elif ov.get("enabled") and m.get("detected"):
     enabled=True; kind="nextion_mmdvm"; port="modem"; confidence="manual"
     try: layout=int(ov.get("layout",2))
     except Exception: layout=2
@@ -121,3 +123,4 @@ write_json(STATUS,{
     "updated":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())
 })
 print("DISPLAY_APPLY_OK" if active else "DISPLAY_CONFIGURED")
+

@@ -20,6 +20,7 @@ on:
       - 'src/dashboard-0.2.6.html'
       - 'ci/prepare-0.2.6-radio-live.py'
       - 'ci/validate-0.2.6-image.sh'
+      - 'ci/test-0.2.6-regressions.py'
       - '.github/workflows/0.2.6-build-release.yml'
   workflow_dispatch:
 
@@ -102,6 +103,7 @@ jobs:
           test "$(grep -c '\[20/20\] Final result' "$GITHUB_WORKSPACE/ci/validate-0.2.6-image.sh")" = 1
           gofmt -w src/2pnyd/main.go
           go test ./...
+          python3 "$GITHUB_WORKSPACE/ci/test-0.2.6-regressions.py"
           for f in \
             rootfs-overlay/usr/local/sbin/2pny-rf-apply \
             rootfs-overlay/usr/local/sbin/2pny-network-core \
@@ -230,6 +232,10 @@ jobs:
           - Crossmode permanece desativado.
           - QRZ não é raspado; foto pública será adicionada somente pela API oficial quando houver credenciais opcionais.
 
+          Validação automatizada: compilação ARM64, configuração XLX/BM/TGIF, rollback, leitura Wi-Fi, atividade RX/TX, integridade da imagem e API em chroot.
+          Validação física pendente: associação Wi-Fi, áudio DMR RX/TX e Nextion na Raspberry Pi do usuário.
+          BER/RSSI dependem dos dados emitidos pelo modem; não representam volume de áudio.
+
           Acessos:
           AP pu2pny / cabo direto: http://10.43.0.1/
           Rede normal: http://pu2pny.local/
@@ -241,7 +247,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v0.2.6-alpha
-          target_commitish: pu2pny-os-0.2.6-alpha
+          target_commitish: ${{ github.sha }}
           name: PU2PNY-OS 0.2.6 Alpha
           prerelease: true
           body_path: RELEASE-NOTES.md
@@ -250,3 +256,4 @@ jobs:
             release/PU2PNY-OS-0.2.6-alpha-arm64.img.xz
             release/PU2PNY-OS-0.2.6-alpha-arm64.img.xz.sha256
             release/BUILD-INFO.txt
+

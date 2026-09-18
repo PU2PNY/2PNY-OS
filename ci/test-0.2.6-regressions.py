@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Deterministic regressions; no radio, network or real systemctl changes."""
+import contextlib,io,json,re,runpy,subprocess,sys,tempfile,time,unittest
+from pathlib import Path
+from unittest.mock import patch
+ROOT=Path(__file__).resolve().parents[1]
+class Regression(unittest.TestCase):
+ def test_wifi_bssid_and_colon_ssid(self):
+  src=(ROOT/'src/2pny-network-switch-0.2.6').read_text()
+  code=src.split("python3 - \"$1\" <<'PY'",1)[1].split('\nPY',1)[0]
+  raw='Minha:rede:AA:BB:CC:DD:EE:FF:73:2437:WPA2\nMinha:rede:AA:BB:CC:DD:EE:00:20:2437:WPA2'
+  p=subprocess.run([sys.executable,'-c',code,raw],capture_output=True,text=True,check=True)
+  rows=json.loads(p.stdout)
+  self.assertEqual(len(rows),1);self.assertEqual(rows[0]['ssid'],'Minha:rede');self.assertEqual(rows[0]['bssid'],'AA:BB:CC:DD:EE:FF')
+ def live(self,messages,gateway=None):
+  now=time.time()
+  def fake(args,**kw):
+   gw='2pny-dmrgateway.service' in args
+   data=gateway if gw else messages
+   rows=[json.dumps({'MESSAGE':s,'__REALTIME_TIMESTAMP':str(int((now-age)*1e6)),'_SYSTEMD_UNIT':'2pny-dmrgateway.service' if gw else '2pny-mmdvmhost.service'}) for age,s in (data or [])]
+   return subprocess.CompletedProcess(args,0,'\n'.join(rows),'')
+  out=io.StringIO()
+  with patch('subprocess.run',fake),contextlib.redirect_stdout(out):runpy.run_path(str(ROOT/'src/2pny-live-status-0.2.6.py'))
+  return json.loads(out.getvalue())
+ def test_long_call_and_direction(self):
+  d=self.live([(40,'DMR Slot 2, received RF voice header from PU2PNY to TG 6')])
+  self.assertTrue(d['rx']['active']);self.assertFalse(d['tx']['active']);self.assertGreaterEqual(d['rx']['duration'],40)
+  self.assertEqual(d['rx']['quality']['score'],0)
+ def test_end_metrics_and_lost(self):
+  for ending in ['received RF end of voice transmission','RF voice transmission lost']:
+   d=self.live([(40,'DMR Slot 2, received RF voice header from PU2PNY to TG 6'),(2,f'DMR Slot 2, {ending} from PU2PNY to TG 6, 38.0 seconds, BER: 1.2%, RSSI: -110/-90/-100 dBm')])
+   self.assertFalse(d['rx']['active']);self.assertEqual(d['rx']['ber'],1.2)
+ def test_timeout(self):
+  d=self.live([(40,'DMR Slot 2, received network voice header from PU2PNY to TG 6'),(2,'DMR Slot 2, network user has timed out')])
+  self.assertFalse(d['tx']['active'])
+ def test_network_old_login_and_failure(self):
+  d=self.live([],[(3600,'BM, Logged into the master successfully')]);self.assertEqual(d['network']['state'],'connected')
+  d=self.live([],[(3600,'BM, Logged into the master successfully'),(2,'BM, Login to the master has failed, retrying login ...')]);self.assertEqual(d['network']['state'],'error')
+ def test_network_render_and_rollback(self):
+  original=(ROOT/'src/2pny-protocol-network-apply-0.2.6.py').read_text()
+  with tempfile.TemporaryDirectory() as tmp:
+   state=Path(tmp);cfg=state/'mmdvm/MMDVM-Host.ini';cfg.parent.mkdir()
+   base='[General]\nCallsign=PU2PNY\nId=7241465\nDuplex=0\n[Modem]\nRXFrequency=439125000\nTXFrequency=439125000\n[DMR]\nEnable=1\n'
+   cfg.write_text(base)
+   code=original.replace('/var/lib/2pny',tmp)
+   def run(kind,essid='',fail=False):
+    def fake(args,**kw):
+     rc=1 if fail and args[1:]==['restart','2pny-mmdvmhost.service'] else 0
+     return subprocess.CompletedProcess(args,rc,'','')
+    args=['apply','DMR','XLX_026' if kind=='XLX' else kind,'example.net','62030','test-password','hotspot','1','2','C',essid,kind,'']
+    with patch.object(sys,'argv',args),patch('os.geteuid',return_value=0),patch('subprocess.run',fake),patch('time.sleep'),contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):exec(compile(code,'apply','exec'),{})
+   run('XLX');gw=state/'dmr/DMRGateway.ini';self.assertIn('TG=6',gw.read_text());self.assertIn('Module=C',gw.read_text());self.assertIn('GatewayAddress=127.0.0.1',cfg.read_text())
+   run('BrandMeister','01');self.assertIn('Id=724146501',gw.read_text());self.assertIn('PassAllTG=2',gw.read_text())
+   run('TGIF','02');self.assertIn('Name=TGIF_Network',gw.read_text());self.assertIn('Id=724146502',gw.read_text())
+   before={p:p.read_bytes() for p in (cfg,gw,state/'network-radio.json')}
+   with self.assertRaises(SystemExit):run('BrandMeister','03',True)
+   for p,b in before.items():self.assertEqual(p.read_bytes(),b)
+   self.assertNotIn('test-password',(state/'network-radio.json').read_text())
+if __name__=='__main__':unittest.main()

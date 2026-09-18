@@ -2,15 +2,15 @@
 import datetime,json,re,subprocess,time
 
 NOW=time.time()
-WINDOW=150
-ACTIVE_TTL=12
+WINDOW=210
+ACTIVE_TTL=185
 
-def journal():
+def journal(gateway=False):
     try:
-        p=subprocess.run([
-            "journalctl","-u","2pny-mmdvmhost.service","-u","2pny-dmrgateway.service",
-            "--since",f"-{WINDOW} seconds","-n","500","--no-pager","-o","json"
-        ],text=True,capture_output=True,timeout=4)
+        args=["journalctl","-b","-u","2pny-dmrgateway.service" if gateway else "2pny-mmdvmhost.service",
+              "-n","50" if gateway else "500","--no-pager","-o","json"]
+        if not gateway: args += ["--since",f"-{WINDOW} seconds"]
+        p=subprocess.run(args,text=True,capture_output=True,timeout=4)
         out=[]
         for raw in p.stdout.splitlines():
             try:
@@ -50,13 +50,13 @@ def quality(ber=None,rssi=None):
 
 rows=journal()
 net={"state":"unknown","message":"Aguardando estado do DMRGateway.","updated":None}
-for row in reversed(rows):
+for row in reversed(journal(gateway=True)):
     if "dmrgateway" not in row["unit"].lower() and "dmr" not in row["message"].lower() and "xlx" not in row["message"].lower():
         continue
     low=row["message"].lower()
     if "logged into the master successfully" in low or "login successful" in low:
         net={"state":"connected","message":"DMRGateway autenticado no servidor.","updated":iso(row["ts"])}; break
-    if any(x in low for x in ("authentication failed","login failed","login rejected","incorrect password","connection to the master has timed out","timed out waiting","network is down")):
+    if any(x in low for x in ("authentication failed","login failed","login to the master has failed","login rejected","incorrect password","connection to the master has timed out","timed out waiting","network is down")):
         net={"state":"error","message":row["message"][-180:],"updated":iso(row["ts"])}; break
     if "connecting to xlx" in low or "sending authorisation" in low or "sending configuration" in low or "opening" in low:
         net={"state":"connecting","message":"DMRGateway conectando/autenticando no servidor.","updated":iso(row["ts"])}; break
@@ -64,7 +64,7 @@ for row in reversed(rows):
         net={"state":"disconnected","message":"Rede DMR desconectada.","updated":iso(row["ts"])}; break
 
 header_re=re.compile(r"DMR Slot (\d), received (RF|network) voice header from (.+?) to (TG )?([^,]+)",re.I)
-end_re=re.compile(r"DMR Slot (\d), received (RF|network) end of voice transmission.*?([0-9.]+) seconds(?:, ([0-9.]+)% packet loss)?(?:, BER: ([0-9.]+)%)?(?:, RSSI: ([^,]+? dBm))?$",re.I)
+end_re=re.compile(r"DMR Slot (\d), (?:received )?(RF|network) (?:end of voice transmission|voice transmission lost|watchdog has expired).*?([0-9.]+) seconds(?:, ([0-9.]+)% packet loss)?(?:, BER: ([0-9.]+)%)?(?:, RSSI: ([^,]+? dBm))?$",re.I)
 ta_re=re.compile(r"DMR Slot (\d).*?(?:talker alias|alias).*?[:=]\s*(.+)$",re.I)
 
 channels={"RF":{"active":False,"direction":"RF","label":"RX","path":"Rádio → hotspot"},
@@ -73,6 +73,10 @@ last_start={"RF":None,"NETWORK":None}; last_end={"RF":None,"NETWORK":None}; alia
 events=[]
 for row in rows:
     msg=row["message"]
+    terminal=re.search(r"DMR Slot (\d), (RF|network) (?:user has timed out|watchdog has expired)",msg,re.I)
+    if terminal:
+        direction=terminal.group(2).upper()
+        last_end[direction]={"ts":row["ts"],"timestamp":iso(row["ts"]),"quality":{"label":"Interrompido","score":0}}
     m=ta_re.search(msg)
     if m: aliases[int(m.group(1))]=m.group(2).strip()[:80]
     m=header_re.search(msg)
@@ -108,7 +112,8 @@ for direction,ch in channels.items():
     elif st and NOW-st["ts"]<=ACTIVE_TTL:
         ch["active"]=True
         ch["age_seconds"]=round(NOW-st["ts"],1)
-        ch["quality"]={"label":"Ativo","score":100}
+        ch["duration"]=ch["age_seconds"]
+        ch["quality"]={"label":"Aguardando BER/RSSI","score":0}
     elif st:
         ch["active"]=False
         ch["quality"]={"label":"Finalizado","score":0}
@@ -122,3 +127,4 @@ print(json.dumps({
     "events":events,
     "updated":datetime.datetime.now(datetime.timezone.utc).isoformat()
 },ensure_ascii=False))
+

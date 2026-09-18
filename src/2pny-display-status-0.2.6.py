@@ -145,7 +145,7 @@ def radio_or_display_active():
 def main():
     state = sys.argv[1] if len(sys.argv) > 1 else "boot"
     message = sys.argv[2] if len(sys.argv) > 2 else PROGRESS.get(state, (0, "PU2PNY"))[1]
-    if radio_or_display_active() and state != "error":
+    if radio_or_display_active():
         write_state(state, message, False, "radio-display-active")
         return 0
 
@@ -178,3 +178,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

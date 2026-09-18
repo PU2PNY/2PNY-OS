@@ -7,6 +7,9 @@ SETUP_CIDR=10.43.0.1/24
 LOG="$RUN/wifi.log"
 SCAN_HOLD="$RUN/ap-scan-hold"
 mkdir -p "$RUN" "$STATE"
+# Serialize scan/connect so cleanup cannot tear down another operation.
+exec 8>"$RUN/wifi-operation.lock"
+flock -w 150 8 || { echo "Wi-Fi ocupado; tente novamente." >&2; exit 6; }
 
 log(){ printf "[%s] %s\n" "$(date -Is)" "$*" >>"$LOG"; logger -t pu2pny-wifi -- "$*" 2>/dev/null || true; }
 wifi_list(){ for p in /sys/class/net/*; do test -d "$p/wireless" || continue; basename "$p"; done; }
@@ -38,14 +41,13 @@ resume_setup_ap(){ rm -f "$SCAN_HOLD"; }
 
 json_from_nmcli(){
   python3 - "$1" <<'PY'
-import json,sys
+import json,re,sys
 raw=sys.argv[1]
 best={}
 for line in raw.splitlines():
-    p=line.rsplit(":",4)
-    if len(p)!=5: continue
-    ssid,bssid,signal,freq,sec=p
-    ssid=ssid.strip()
+    match=re.fullmatch(r"(.*):([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5}):(\d+):(\d+):(.*)",line)
+    if not match: continue
+    ssid,bssid,signal,freq,sec=match.groups()
     if not ssid: continue
     try: sig=int(signal or 0)
     except Exception: sig=0
@@ -178,11 +180,13 @@ try_connect(){
 }
 
 connect_wifi(){
-  local SSID="$1" PASS="$2" KEEP_AP="$3" BSSID="${4:-}" AP_IF IFACE SAME AP_WAS_ACTIVE OUT RC LASTERR got_ip
+  local SSID="$1" PASS="$2" KEEP_AP="$3" BSSID="${4:-}" AP_IF IFACE SAME AP_WAS_ACTIVE OUT RC LASTERR got_ip OLD_UUID
+  [[ -z "$BSSID" || "$BSSID" =~ ^([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}$ ]] || { echo "BSSID inválido" >&2; exit 2; }
   test -n "$SSID" || { echo 'Selecione uma rede Wi-Fi' >&2; exit 2; }
   AP_IF="$(ap_iface)"; IFACE="$(pick_client)"
   test -n "$IFACE" || { echo 'Nenhuma interface Wi-Fi encontrada' >&2; exit 3; }
 
+  OLD_UUID="$(nmcli -g GENERAL.CON-UUID device show "$IFACE" 2>/dev/null || true)"
   SAME=0; AP_WAS_ACTIVE=0
   if /usr/local/sbin/2pny-ap-control status 2>/dev/null | grep -qx active; then AP_WAS_ACTIVE=1; fi
   if test "$IFACE" = "$AP_IF"; then
@@ -192,6 +196,9 @@ connect_wifi(){
 
   restore_on_error(){
     nmcli connection delete PU2PNY-WIFI-CANDIDATE >/dev/null 2>&1 || true
+    if test -n "$OLD_UUID" && test "$OLD_UUID" != --; then
+      nmcli --wait 20 connection up uuid "$OLD_UUID" ifname "$IFACE" >/dev/null 2>&1 || true
+    fi
     if test "$SAME" = 1; then
       rm -f "$STATE/ap-disabled"
       resume_setup_ap
@@ -271,3 +278,4 @@ case "${1:-}" in
     ;;
   *) echo 'uso: 2pny-network-switch scan-json | connect SSID SENHA KEEP_AP [BSSID]' >&2; exit 2 ;;
 esac
+

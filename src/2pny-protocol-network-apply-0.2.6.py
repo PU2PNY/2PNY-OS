@@ -93,8 +93,7 @@ if kind.lower()=="xlx" and not password:
 BACKUPS.mkdir(parents=True,exist_ok=True)
 GATEWAY_DIR.mkdir(parents=True,exist_ok=True)
 stamp=datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-backup_dir=BACKUPS/stamp
-backup_dir.mkdir(parents=True,exist_ok=True)
+backup_dir=Path(tempfile.mkdtemp(prefix=stamp+"-",dir=BACKUPS))
 old_host_active=service_active(HOST_SERVICE)
 old_gw_active=service_active(GW_SERVICE)
 for p in (CONFIG,GATEWAY,XLXHOSTS,STATEFILE):
@@ -279,3 +278,4 @@ state={
 atomic_json(STATEFILE,state)
 
 print(f"NETWORK_APPLY_OK protocol=DMR kind={kind} server={server} slot={slot} module={module or '-'}")
+
