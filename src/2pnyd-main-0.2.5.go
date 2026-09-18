@@ -28,6 +28,7 @@ const (
 	wizardFile        = "/usr/share/2pny/wizard.html"
 	dashboardFile     = "/usr/share/2pny/dashboard.html"
 	wifiScanStateFile = "/var/lib/2pny/wifi-scan.json"
+	displayOverrideFile = "/var/lib/2pny/display-override.json"
 )
 
 type Config struct {
@@ -449,6 +450,62 @@ func networkRefreshHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok":true, "connectivity":connectivitySnapshot()})
 }
 
+func applyDisplayOverrideToProbe() {
+	ob, err := os.ReadFile(displayOverrideFile)
+	if err != nil { return }
+	var ov map[string]any
+	if json.Unmarshal(ob, &ov) != nil || ov["enabled"] != true { return }
+	hb, err := os.ReadFile(hardwareProbeFile)
+	if err != nil { return }
+	var h map[string]any
+	if json.Unmarshal(hb, &h) != nil { return }
+	m, _ := h["mmdvm"].(map[string]any)
+	if m == nil || m["detected"] != true { return }
+	h["display"] = map[string]any{
+		"detected":true,
+		"class":"nextion_mmdvm",
+		"state":"manual_override",
+		"model":"Nextion via MMDVM",
+		"port":"modem",
+		"confidence":"manual",
+		"message":"Nextion habilitada manualmente na porta de display da MMDVM; nenhum HMI foi alterado.",
+	}
+	raw, _ := json.Marshal(h)
+	_ = os.WriteFile(hardwareProbeFile, raw, 0600)
+}
+
+func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		enabled := false
+		if b, err := os.ReadFile(displayOverrideFile); err == nil {
+			var ov map[string]any
+			if json.Unmarshal(b, &ov) == nil { enabled, _ = ov["enabled"].(bool) }
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"enabled":enabled,"type":"nextion_mmdvm"})
+	case http.MethodPost:
+		var in struct { Enabled bool `json:"enabled"` }
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&in); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false,"error":"opção de display inválida"})
+			return
+		}
+		if in.Enabled {
+			if _, err := detectedModemPort(); err != nil {
+				writeJSON(w, http.StatusConflict, map[string]any{"ok":false,"error":"MMDVM precisa estar detectada antes de habilitar a Nextion"})
+				return
+			}
+			raw, _ := json.Marshal(map[string]any{"enabled":true,"type":"nextion_mmdvm","speed":9600,"layout":2,"updated":time.Now().UTC().Format(time.RFC3339)})
+			_ = os.WriteFile(displayOverrideFile, raw, 0600)
+			applyDisplayOverrideToProbe()
+		} else {
+			_ = os.Remove(displayOverrideFile)
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ok":true,"enabled":in.Enabled})
+	default:
+		http.Error(w, "GET or POST required", http.StatusMethodNotAllowed)
+	}
+}
+
 func hardwareHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := os.ReadFile(hardwareFile)
 	if err != nil {
@@ -498,6 +555,7 @@ func hardwareScanHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("hardware probe failed: %v: %s", err, msg)
 			return
 		}
+		applyDisplayOverrideToProbe()
 		_ = exec.Command("/usr/local/sbin/2pny-display-status", "display", "Hardware detectado").Run()
 	}()
 	writeJSON(w, http.StatusAccepted, map[string]any{"ok":true, "state":"preparing", "stage":"drivers"})
@@ -1014,6 +1072,7 @@ func main() {
 	http.HandleFunc("/api/hardware", hardwareHandler)
 	http.HandleFunc("/api/hardware/status", hardwareStatusHandler)
 	http.HandleFunc("/api/hardware/scan", hardwareScanHandler)
+	http.HandleFunc("/api/display/override", displayOverrideHandler)
 	http.HandleFunc("/api/config", publicConfigHandler)
 	http.HandleFunc("/api/servers", serversHandler)
 	http.HandleFunc("/api/live", liveStatusHandler)
