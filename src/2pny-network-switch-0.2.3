@@ -1,0 +1,152 @@
+#!/bin/bash
+set -euo pipefail
+
+RUN=/run/2pny
+STATE=/var/lib/2pny
+SETUP_CIDR=10.43.0.1/24
+mkdir -p "$RUN" "$STATE"
+
+wifi_list(){
+  for p in /sys/class/net/*; do
+    test -d "$p/wireless" || continue
+    basename "$p"
+  done
+}
+ap_iface(){ test -r "$RUN/ap-iface" && cat "$RUN/ap-iface" 2>/dev/null || true; }
+pick_client(){
+  ap="$(ap_iface)"
+  preferred=""
+  test -r "$RUN/uplink-iface" && preferred="$(cat "$RUN/uplink-iface" 2>/dev/null || true)"
+  if test -n "$preferred" && test "$preferred" != "$ap" && test -d "/sys/class/net/$preferred"; then echo "$preferred"; return; fi
+  for w in $(wifi_list); do test "$w" = "$ap" && continue; echo "$w"; return; done
+  echo "$ap"
+}
+scan_iw(){
+  iface="$1"; tmp="$(mktemp)"
+  if ! iw dev "$iface" scan >"$tmp" 2>/dev/null; then rm -f "$tmp"; return 1; fi
+  python3 - "$tmp" <<'PY'
+import json,re,sys
+items=[]; cur={}
+for raw in open(sys.argv[1],errors="ignore"):
+    line=raw.strip()
+    if line.startswith("BSS "):
+        if cur.get("ssid"): items.append(cur)
+        cur={"signal":"","security":""}
+    elif line.startswith("SSID:"): cur["ssid"]=line.split(":",1)[1].strip()
+    elif line.startswith("signal:"):
+        m=re.search(r"(-?\d+(?:\.\d+)?)",line)
+        if m:
+            dbm=float(m.group(1)); cur["signal"]=str(max(1,min(100,int(2*(dbm+100)))))
+    elif line.startswith("RSN:") or line.startswith("WPA:"): cur["security"]="WPA/WPA2"
+if cur.get("ssid"): items.append(cur)
+best={}
+for x in items:
+    s=x["ssid"]
+    if s and (s not in best or int(x.get("signal") or 0)>int(best[s].get("signal") or 0)): best[s]=x
+print(json.dumps(sorted(best.values(),key=lambda x:int(x.get("signal") or 0),reverse=True),ensure_ascii=False))
+PY
+  rm -f "$tmp"
+}
+scan_json(){
+  iface="$(pick_client)"; test -n "$iface" || { echo '[]'; return 0; }
+  ap="$(ap_iface)"
+  if test "$iface" != "$ap"; then
+    nmcli device set "$iface" managed yes >/dev/null 2>&1 || true
+    raw="$(nmcli -t --escape no -f SSID,SIGNAL,SECURITY dev wifi list ifname "$iface" --rescan yes 2>/dev/null || true)"
+    python3 - <<'PY' "$raw"
+import json,sys
+best={}
+for line in sys.argv[1].splitlines():
+    p=line.split(":",2)
+    if len(p)!=3 or not p[0]: continue
+    ssid,signal,sec=p
+    x={"ssid":ssid,"signal":signal,"security":sec}
+    if ssid not in best or int(signal or 0)>int(best[ssid].get("signal") or 0): best[ssid]=x
+print(json.dumps(sorted(best.values(),key=lambda x:int(x.get("signal") or 0),reverse=True),ensure_ascii=False))
+PY
+    return 0
+  fi
+  if scan_iw "$iface"; then return 0; fi
+  phy="$(iw dev "$iface" info 2>/dev/null | awk '/wiphy/{print "phy"$2;exit}')"
+  tmpif="pny-scan0"
+  if test -n "$phy"; then
+    iw dev "$tmpif" del >/dev/null 2>&1 || true
+    if iw phy "$phy" interface add "$tmpif" type managed >/dev/null 2>&1; then
+      ip link set "$tmpif" up >/dev/null 2>&1 || true
+      if scan_iw "$tmpif"; then iw dev "$tmpif" del >/dev/null 2>&1 || true; return 0; fi
+      iw dev "$tmpif" del >/dev/null 2>&1 || true
+    fi
+  fi
+  echo '[]'
+}
+connect_wifi(){
+  SSID="$1"; PASS="$2"; KEEP_AP="$3"
+  test -n "$SSID" || { echo 'Selecione uma rede Wi-Fi' >&2; exit 2; }
+  AP_IF="$(ap_iface)"; IFACE="$(pick_client)"
+  test -n "$IFACE" || { echo 'Nenhuma interface Wi-Fi encontrada' >&2; exit 3; }
+
+  SAME=0
+  if test "$IFACE" = "$AP_IF"; then
+    SAME=1
+    touch "$STATE/ap-disabled"
+    systemctl stop 2pny-network-core.service >/dev/null 2>&1 || true
+    sleep .8
+  fi
+  restore_ap(){
+    if test "$SAME" = 1; then
+      rm -f "$STATE/ap-disabled"
+      systemctl restart 2pny-network-core.service >/dev/null 2>&1 || true
+    fi
+  }
+  rfkill unblock wifi >/dev/null 2>&1 || true
+  nmcli radio wifi on >/dev/null 2>&1 || true
+  nmcli device set "$IFACE" managed yes >/dev/null 2>&1 || true
+  ip link set "$IFACE" up >/dev/null 2>&1 || true
+  ip addr del "$SETUP_CIDR" dev "$IFACE" >/dev/null 2>&1 || true
+
+  nmcli connection delete PU2PNY-WIFI >/dev/null 2>&1 || true
+  nmcli device wifi rescan ifname "$IFACE" >/dev/null 2>&1 || true
+  if test -n "$PASS"; then
+    OUT="$(nmcli --wait 35 device wifi connect "$SSID" password "$PASS" ifname "$IFACE" name PU2PNY-WIFI 2>&1)" || {
+      restore_ap; echo "$OUT" >&2; exit 4;
+    }
+  else
+    OUT="$(nmcli --wait 35 device wifi connect "$SSID" ifname "$IFACE" name PU2PNY-WIFI 2>&1)" || {
+      restore_ap; echo "$OUT" >&2; exit 4;
+    }
+  fi
+
+  nmcli connection modify PU2PNY-WIFI \
+    connection.autoconnect yes connection.autoconnect-priority 100 \
+    connection.mdns yes ipv4.route-metric 50 >/dev/null 2>&1 || true
+
+  printf '%s\n' "$SSID" >"$STATE/uplink-ssid"
+  printf '%s\n' "$IFACE" >"$RUN/uplink-iface"
+
+  if test "$SAME" = 1; then
+    touch "$STATE/ap-disabled"
+  elif test "$KEEP_AP" = 1; then
+    rm -f "$STATE/ap-disabled"
+  else
+    touch "$STATE/ap-disabled"
+  fi
+  systemctl restart 2pny-network-core.service >/dev/null 2>&1 || true
+
+  for _ in $(seq 1 15); do
+    nmcli -t -f GENERAL.STATE device show "$IFACE" 2>/dev/null | grep -q ':100' && {
+      echo "Wi-Fi conectado à rede $SSID"
+      exit 0
+    }
+    sleep 1
+  done
+  echo "A rede foi salva, mas a interface Wi-Fi não permaneceu conectada" >&2
+  exit 5
+}
+case "\${1:-}" in
+  scan-json) scan_json ;;
+  connect)
+    test "$#" -eq 4 || { echo 'uso: connect SSID SENHA KEEP_AP' >&2; exit 2; }
+    connect_wifi "$2" "$3" "$4"
+    ;;
+  *) echo 'uso: 2pny-network-switch scan-json | connect SSID SENHA KEEP_AP' >&2; exit 2 ;;
+esac
