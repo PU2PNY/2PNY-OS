@@ -1,0 +1,20 @@
+[Unit]
+Description=PU2PNY automatic official component preparation
+After=NetworkManager.service network-online.target
+Wants=network-online.target
+ConditionPathExists=/var/lib/2pny/auto-maintenance.enabled
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-auto-maintenance run
+Nice=15
+IOSchedulingClass=idle
+CPUWeight=20
+IOWeight=20
+MemoryMax=256M
+TimeoutStartSec=15min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/2pny /run /var/lib/apt /var/cache/apt /var/log /etc/apt /var/lib/dpkg
