@@ -57,7 +57,7 @@ type ConnectivityStatus struct {
 	Ethernet         bool     `json:"ethernet"`
 	EthernetInterface string  `json:"ethernet_interface,omitempty"`
 	WiFi             bool     `json:"wifi"`
-	WiFiSSID         string   `json:"wifi_ssid,omitempty"`
+	WiFiSSID         string   `json:"wifi_ssid"`
 	WiFiInterfaces   []string `json:"wifi_interfaces"`
 	WiFiCount        int      `json:"wifi_count"`
 	ClientInterface  string   `json:"client_interface,omitempty"`
