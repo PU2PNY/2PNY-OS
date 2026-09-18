@@ -1,0 +1,30 @@
+[Unit]
+Description=PU2PNY-OS DMRGateway
+After=network.target mosquitto.service
+Wants=mosquitto.service
+ConditionPathExists=/var/lib/2pny/dmr/DMRGateway.ini
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=mmdvm
+Group=mmdvm
+ExecStart=/usr/local/bin/DMRGateway /var/lib/2pny/dmr/DMRGateway.ini
+Restart=on-failure
+RestartSec=2
+TimeoutStartSec=15
+TimeoutStopSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+MemoryMax=96M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target
