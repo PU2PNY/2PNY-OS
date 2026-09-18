@@ -20,7 +20,7 @@ class Regression(unittest.TestCase):
  def test_wifi_bssid_and_colon_ssid(self):
   src=(ROOT/'src/2pny-network-switch-0.2.6').read_text()
   code=src.split("python3 - \"$1\" <<'PY'",1)[1].split('\nPY',1)[0]
-  raw='Minha:rede:AA:BB:CC:DD:EE:FF:73:2437:WPA2\nMinha:rede:AA:BB:CC:DD:EE:00:20:2437:WPA2'
+  raw='Minha:rede:AA:BB:CC:DD:EE:FF:73:2437 MHz:WPA2\nMinha:rede:AA:BB:CC:DD:EE:00:20:2437:WPA2'
   p=subprocess.run([sys.executable,'-c',code,raw],capture_output=True,text=True,check=True)
   rows=json.loads(p.stdout)
   self.assertEqual(len(rows),1);self.assertEqual(rows[0]['ssid'],'Minha:rede');self.assertEqual(rows[0]['bssid'],'AA:BB:CC:DD:EE:FF')

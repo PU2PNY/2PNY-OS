@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+export LC_ALL=C
 
 RUN=/run/2pny
 STATE=/var/lib/2pny
@@ -45,7 +46,7 @@ import json,re,sys
 raw=sys.argv[1]
 best={}
 for line in raw.splitlines():
-    match=re.fullmatch(r"(.*):([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5}):(\d+):(\d+):(.*)",line)
+    match=re.fullmatch(r"(.*):([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5}):(\d+):(\d+)(?: MHz)?:(.*)",line)
     if not match: continue
     ssid,bssid,signal,freq,sec=match.groups()
     if not ssid: continue
