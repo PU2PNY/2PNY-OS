@@ -1,0 +1,13 @@
+[Unit]
+Description=PU2PNY display boot status
+After=local-fs.target
+Before=2pny-mmdvmhost.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-display-status boot "PU2PNY iniciando"
+Nice=10
+TimeoutStartSec=5s
+
+[Install]
+WantedBy=multi-user.target
