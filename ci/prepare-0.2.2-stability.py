@@ -104,7 +104,7 @@ probe = (root / "rootfs-overlay/usr/local/sbin/2pny-hardware-probe").read_text()
 service = (root / "rootfs-overlay/etc/systemd/system/2pny-mmdvmhost.service").read_text()
 
 assert '"0.2.2-alpha"' in main
-assert 'Name: "PU2PNY"' in main
+assert re.search(r'Name:\s*"PU2PNY"', main)
 assert "time.AfterFunc(2500*time.Millisecond" in main
 assert "10.42.0.1" not in wizard
 assert "http://10.43.0.1/" in wizard
