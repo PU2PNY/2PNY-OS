@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111b">
+<title>PU2PNY — Painel</title>
+<style>
+:root{--bg:#07111b;--side:#0c1825;--card:#101f2f;--card2:#132538;--line:#29425b;--text:#f5f8fb;--muted:#8fc2ed;--blue:#39aef4;--green:#35d39a;--amber:#ffc857;--red:#ff6b6b;--shadow:0 14px 34px rgba(0,0,0,.2)}
+[data-theme=light]{--bg:#eef5fb;--side:#fff;--card:#fff;--card2:#f5f9fd;--line:#c9d8e6;--text:#102033;--muted:#4f7394;--blue:#087fc7;--green:#078b60;--amber:#a66b00;--red:#c53434;--shadow:0 10px 24px rgba(30,70,100,.1)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}.side{background:var(--side);border-right:1px solid var(--line);padding:24px 18px;position:sticky;top:0;height:100vh}.brand{font-weight:800;font-size:21px}.sub{font-size:12px;color:var(--muted);margin-bottom:28px}.nav{display:grid;gap:8px}.nav a{color:var(--muted);text-decoration:none;border:1px solid transparent;border-radius:12px;padding:11px 12px;display:flex;gap:10px;align-items:center}.nav a:hover,.nav a.active{background:var(--card);border-color:var(--line);color:var(--text)}.dot{width:10px;height:10px;border-radius:50%;background:var(--blue)}.sidefoot{position:absolute;bottom:22px;left:18px;right:18px;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);font-size:12px}.main{padding:28px 32px 50px;max-width:1500px;width:100%;margin:auto}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px}.top h1{margin:0;font-size:30px}.top p{margin:4px 0 0;color:var(--muted)}.actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}.btn{border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 14px;border-radius:11px;font-weight:700;text-decoration:none;cursor:pointer}.btn.primary{background:var(--blue);color:#00111e;border-color:transparent}.badges{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:18px}.badge{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px}.badge.ok:before{content:"";display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:7px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow)}.card h2{font-size:16px;margin:0 0 14px}.big{font-size:25px;font-weight:800;margin:3px 0}.muted{color:var(--muted)}.kv{display:grid;gap:0}.kv div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--line)}.kv div:first-child{border-top:0}.kv span{color:var(--muted)}.kv b{text-align:right}.oktxt{color:var(--green)}.warn{color:var(--amber)}.err{color:var(--red)}.section{margin-top:16px}.sectionhead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 10px}.sectionhead h2{margin:0;font-size:19px}.activity{background:var(--card);border:1px solid var(--line);border-radius:15px;overflow:hidden}.activity .row{padding:10px 14px;border-top:1px solid var(--line);font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;word-break:break-word}.activity .row:first-child{border-top:0}.empty{padding:24px;color:var(--muted);text-align:center}.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.quick a{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:16px;text-decoration:none;color:var(--text)}.quick a b{display:block;margin-bottom:5px}.quick a span{color:var(--muted);font-size:13px}
+@media(max-width:1050px){.grid,.quick{grid-template-columns:repeat(2,minmax(0,1fr))}.app{grid-template-columns:190px minmax(0,1fr)}}
+@media(max-width:720px){.app{display:block}.side{height:auto;position:relative;border-right:0;border-bottom:1px solid var(--line);padding:16px}.brand{font-size:19px}.sub{margin-bottom:10px}.nav{grid-template-columns:repeat(4,1fr);overflow:auto}.nav a{padding:9px;font-size:12px;justify-content:center}.nav a span:last-child{display:none}.sidefoot{display:none}.main{padding:18px 14px 36px}.top{display:block}.top h1{font-size:25px}.actions{justify-content:flex-start;margin-top:14px}.grid,.quick{grid-template-columns:1fr}.kv div{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand">PU2PNY</div><div class="sub">Digital Radio Operating System</div>
+  <nav class="nav">
+    <a class="active" href="/dashboard"><span class="dot"></span><span>Painel</span></a>
+    <a href="/wizard?step=1"><span class="dot"></span><span>Rede</span></a>
+    <a href="/wizard?step=2"><span class="dot"></span><span>Hardware</span></a>
+    <a href="/wizard?step=3"><span class="dot"></span><span>Rádio</span></a>
+  </nav>
+  <div class="sidefoot">Acesso local<br><b>http://pu2pny.local/</b></div>
+</aside>
+<main class="main">
+  <div class="top">
+    <div><h1>Painel principal</h1><p>Estado operacional do PU2PNY em tempo real.</p></div>
+    <div class="actions"><button class="btn" id="theme">☀ Claro</button><a class="btn" href="/wizard?step=1">Configurações</a><button class="btn primary" id="refresh">Atualizar</button></div>
+  </div>
+  <div class="badges"><span class="badge ok" id="online">PU2PNY online</span><span class="badge" id="version">0.2.3-alpha</span><span class="badge" id="internet">Internet verificando</span></div>
+
+  <div class="grid">
+    <section class="card"><h2>Rádio</h2><div class="big" id="radioState">Verificando...</div><div class="kv"><div><span>Indicativo</span><b id="call">—</b></div><div><span>Protocolo</span><b id="proto">—</b></div><div><span>Modo</span><b id="mode">—</b></div></div></section>
+    <section class="card"><h2>Frequência</h2><div class="big" id="freq">—</div><div class="muted" id="freqHint">Aguardando configuração</div><div class="kv"><div><span>Operação</span><b id="operation">—</b></div><div><span>DMR ID</span><b id="dmrid">—</b></div></div></section>
+    <section class="card"><h2>Rede</h2><div class="big" id="netState">Verificando...</div><div class="kv"><div><span>Wi‑Fi</span><b id="wifi">—</b></div><div><span>Ethernet</span><b id="eth">—</b></div><div><span>IP</span><b id="ips">—</b></div></div></section>
+    <section class="card"><h2>Display</h2><div class="big" id="displayState">Verificando...</div><div class="muted" id="displayModel">—</div><div class="kv"><div><span>Integração</span><b id="displayClass">—</b></div></div></section>
+  </div>
+
+  <section class="section">
+    <div class="sectionhead"><h2>Acessos rápidos</h2></div>
+    <div class="quick">
+      <a href="/wizard?step=1"><b>Rede e Wi‑Fi</b><span>Trocar rede, buscar SSID e conferir internet.</span></a>
+      <a href="/wizard?step=2"><b>Hardware</b><span>Redetectar MMDVM e display.</span></a>
+      <a href="/wizard?step=3"><b>Rádio</b><span>Editar indicativo, frequência, protocolo e modo.</span></a>
+      <a href="/wizard"><b>Assistente</b><span>Revisar as etapas já concluídas.</span></a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sectionhead"><h2>Atividade recente</h2><span class="muted" id="updated">—</span></div>
+    <div class="activity" id="activity"><div class="empty">Aguardando atividade do MMDVMHost.</div></div>
+  </section>
+</main>
+</div>
+<script>
+const q=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function theme(t){document.documentElement.dataset.theme=t;localStorage.setItem('pu2pny-theme',t);q('theme').textContent=t==='dark'?'☀ Claro':'☾ Escuro'}
+theme(localStorage.getItem('pu2pny-theme')||'dark');q('theme').onclick=()=>theme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+function mhz(v){if(!v)return '—';return (Number(v)/1e6).toFixed(6).replace(/0+$/,'').replace(/\.$/,'')+' MHz'}
+async function load(){
+  q('refresh').disabled=true;
+  try{
+    const r=await fetch('/api/dashboard',{cache:'no-store'}),d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Falha');
+    const c=d.config||{},n=d.connectivity||{},h=d.hardware||{},disp=h.display||{};
+    q('version').textContent=d.version||'0.2.3-alpha';
+    q('internet').textContent=n.internet?'Internet conectada':'Internet sem acesso';
+    q('internet').className='badge '+(n.internet?'ok':'');
+    q('radioState').textContent=d.radio_active?'MMDVMHost ativo':'MMDVMHost parado';
+    q('radioState').className='big '+(d.radio_active?'oktxt':'warn');
+    q('call').textContent=c.callsign||'—';q('proto').textContent=c.protocol||'—';
+    q('mode').textContent=c.use_mode==='repeater'?'Repetidora':'Hotspot';
+    q('operation').textContent=c.operation==='crossmode'?'Crossmode':'Normal';q('dmrid').textContent=c.dmr_id||'—';
+    if(c.use_mode==='repeater'){q('freq').textContent=mhz(c.rx_hz)+' / '+mhz(c.tx_hz);q('freqHint').textContent='RX / TX'}
+    else{q('freq').textContent=mhz(c.rx_hz);q('freqHint').textContent='Hotspot simplex — RX e TX iguais'}
+    q('netState').textContent=n.internet?'Online':'Rede local';q('wifi').textContent=n.wifi?'Conectado':'Desligado';q('eth').textContent=n.ethernet?'Conectado':'Desligado';q('ips').textContent=(n.ipv4||[]).join(', ')||'—';
+    if(disp.detected){q('displayState').textContent='Configurado';q('displayState').className='big oktxt';q('displayModel').textContent=disp.model||'Display detectado';q('displayClass').textContent=disp.state==='mmdvm_display_port'?'Via MMDVM':(disp.class||'Detectado')}
+    else{q('displayState').textContent='Opcional';q('displayState').className='big';q('displayModel').textContent=disp.model||'Não confirmado';q('displayClass').textContent=disp.class||'—'}
+    const lines=d.activity||[];q('activity').innerHTML=lines.length?lines.map(x=>'<div class="row">'+esc(x)+'</div>').join(''):'<div class="empty">Nenhuma atividade recente registrada.</div>';
+    q('updated').textContent='Atualizado '+new Date().toLocaleTimeString();
+  }catch(e){q('updated').textContent='Falha ao atualizar';}
+  q('refresh').disabled=false;
+}
+q('refresh').onclick=load;load();setInterval(load,5000);
+</script>
+</body></html>
