@@ -5,6 +5,7 @@ on:
     branches: [ pu2pny-os-0.2.5-alpha ]
     paths:
       - 'src/2pnyd-main-0.2.5.go'
+      - 'src/2pny-rf-apply-0.2.5'
       - 'src/2pny-network-core-0.2.5'
       - 'src/2pny-network-switch-0.2.5'
       - 'src/2pny-hostfiles-update-0.2.5'
@@ -64,9 +65,11 @@ jobs:
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
+          bash -n "$GITHUB_WORKSPACE/ci/validate-0.2.5-image.sh"
+          test "$(grep -c "\[16/16\] Final result" "$GITHUB_WORKSPACE/ci/validate-0.2.5-image.sh")" = 1
           gofmt -w src/2pnyd/main.go
           go test ./...
-          for f in             rootfs-overlay/usr/local/sbin/2pny-network-core             rootfs-overlay/usr/local/sbin/2pny-network-switch             rootfs-overlay/usr/local/sbin/2pny-hostfiles-update             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-auto-maintenance             rootfs-overlay/usr/local/sbin/2pny-rf-apply             rootfs-overlay/usr/local/sbin/2pny-mode-apply; do
+          for f in             rootfs-overlay/usr/local/sbin/2pny-rf-apply             rootfs-overlay/usr/local/sbin/2pny-network-core             rootfs-overlay/usr/local/sbin/2pny-network-switch             rootfs-overlay/usr/local/sbin/2pny-hostfiles-update             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-auto-maintenance             rootfs-overlay/usr/local/sbin/2pny-rf-apply             rootfs-overlay/usr/local/sbin/2pny-mode-apply; do
               bash -n "$f"
           done
           python3 -m py_compile             rootfs-overlay/usr/local/sbin/2pny-server-catalog             rootfs-overlay/usr/local/sbin/2pny-live-status             rootfs-overlay/usr/local/sbin/2pny-hardware-probe             rootfs-overlay/usr/local/sbin/2pny-display-status
@@ -97,7 +100,7 @@ jobs:
         run: |
           set -euo pipefail
           OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
-          IMAGE="dist/PU2PNY-$VERSION-arm64.img.xz"
+          IMAGE="dist/PU2PNY-OS-$VERSION-arm64.img.xz"
           test -n "$OLD"
           if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
           sudo rm -f dist/*.img.xz.sha256
@@ -109,20 +112,20 @@ jobs:
 
       - name: Validate final 0.2.5 image
         working-directory: legacy-source/2pny-os
-        run: bash "$GITHUB_WORKSPACE/ci/validate-0.2.5-image.sh" "dist/PU2PNY-$VERSION-arm64.img.xz" "$VERSION"
+        run: bash "$GITHUB_WORKSPACE/ci/validate-0.2.5-image.sh" "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$VERSION"
 
       - name: Stage validated artifact
         working-directory: legacy-source/2pny-os
         run: |
           set -euo pipefail
           mkdir -p "$GITHUB_WORKSPACE/release-artifact"
-          cp "dist/PU2PNY-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
-          cp "dist/PU2PNY-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
           cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pu2pny-0.2.5-arm64
+          name: pu2pny-os-0.2.5-arm64
           path: release-artifact/*
           compression-level: 0
           retention-days: 7
@@ -137,13 +140,13 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: pu2pny-0.2.5-arm64
+          name: pu2pny-os-0.2.5-arm64
           path: release
 
       - name: Verify transferred image
         run: |
           set -euo pipefail
-          IMAGE="release/PU2PNY-$VERSION-arm64.img.xz"
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
           CHECKSUM="$IMAGE.sha256"
           xz -t "$IMAGE"
           EXPECTED="$(awk '{print $1}' "$CHECKSUM")"
@@ -153,7 +156,7 @@ jobs:
       - name: Write release notes
         run: |
           cat > RELEASE-NOTES.md <<'EOF'
-          PU2PNY 0.2.5 Alpha — Raspberry Pi ARM64.
+          PU2PNY-OS 0.2.5 Alpha — Raspberry Pi ARM64.
 
           Principais correções e recursos:
           - corrigida a busca Wi-Fi para não derrubar o núcleo Ethernet durante scan/associação;
@@ -168,6 +171,15 @@ jobs:
           - painel principal preservado e ampliado com servidor, estado da rede digital e atividade ao vivo;
           - TX/RX DMR, origem, destino/TG, slot, duração, BER e RSSI são exibidos quando presentes no log do MMDVMHost;
           - polling adaptativo: 2,5 s com painel visível e 10 s em segundo plano;
+          - nome público e dos artefatos padronizado como PU2PNY-OS;
+          - instalação local pode continuar sem Internet;
+          - RX Offset e TX Offset voltaram como ajustes avançados e são preservados;
+          - aplicação RF exige MMDVM realmente detectada na porta correspondente e reinicia o MMDVMHost com a nova configuração;
+          - RF, modo, rede DMR e estado são protegidos por rollback transacional no assistente;
+          - campos DMR rejeitam caracteres de controle e limites inválidos;
+          - estado da rede DMR só é confirmado depois que o MMDVMHost permanece ativo;
+          - status de conectividade e atividade ao vivo usam cache curto para reduzir subprocessos;
+          - Crossmode aparece como planejado e não é apresentado como funcional;
           - Nextion continua sendo marcada como confirmada apenas quando responde ao protocolo; nenhum HMI é sobrescrito automaticamente.
 
           Escopo desta Alpha:
@@ -187,11 +199,11 @@ jobs:
         with:
           tag_name: v0.2.5-alpha
           target_commitish: pu2pny-os-0.2.5-alpha
-          name: PU2PNY 0.2.5 Alpha
+          name: PU2PNY-OS 0.2.5 Alpha
           prerelease: true
           body_path: RELEASE-NOTES.md
           fail_on_unmatched_files: true
           files: |
-            release/PU2PNY-0.2.5-alpha-arm64.img.xz
-            release/PU2PNY-0.2.5-alpha-arm64.img.xz.sha256
+            release/PU2PNY-OS-0.2.5-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.2.5-alpha-arm64.img.xz.sha256
             release/BUILD-INFO.txt
