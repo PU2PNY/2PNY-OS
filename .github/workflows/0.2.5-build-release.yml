@@ -1,4 +1,4 @@
-name: Build and release PU2PNY 0.2.5 Alpha
+name: Build and release PU2PNY-OS 0.2.5 Alpha
 
 on:
   push:
@@ -69,7 +69,7 @@ jobs:
           test "$(grep -c "\[16/16\] Final result" "$GITHUB_WORKSPACE/ci/validate-0.2.5-image.sh")" = 1
           gofmt -w src/2pnyd/main.go
           go test ./...
-          for f in             rootfs-overlay/usr/local/sbin/2pny-rf-apply             rootfs-overlay/usr/local/sbin/2pny-network-core             rootfs-overlay/usr/local/sbin/2pny-network-switch             rootfs-overlay/usr/local/sbin/2pny-hostfiles-update             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-auto-maintenance             rootfs-overlay/usr/local/sbin/2pny-rf-apply             rootfs-overlay/usr/local/sbin/2pny-mode-apply; do
+          for f in             rootfs-overlay/usr/local/sbin/2pny-rf-apply             rootfs-overlay/usr/local/sbin/2pny-network-core             rootfs-overlay/usr/local/sbin/2pny-network-switch             rootfs-overlay/usr/local/sbin/2pny-hostfiles-update             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-auto-maintenance             rootfs-overlay/usr/local/sbin/2pny-mode-apply; do
               bash -n "$f"
           done
           python3 -m py_compile             rootfs-overlay/usr/local/sbin/2pny-server-catalog             rootfs-overlay/usr/local/sbin/2pny-live-status             rootfs-overlay/usr/local/sbin/2pny-hardware-probe             rootfs-overlay/usr/local/sbin/2pny-display-status
