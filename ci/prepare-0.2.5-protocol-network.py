@@ -13,6 +13,7 @@ def install(src,dst,mode):
     os.chmod(target,mode)
 
 install("src/2pnyd-main-0.2.5.go","src/2pnyd/main.go",0o644)
+install("src/2pny-rf-apply-0.2.5","rootfs-overlay/usr/local/sbin/2pny-rf-apply",0o755)
 install("src/2pny-network-core-0.2.5","rootfs-overlay/usr/local/sbin/2pny-network-core",0o755)
 install("src/2pny-network-switch-0.2.5","rootfs-overlay/usr/local/sbin/2pny-network-switch",0o755)
 install("src/2pny-hostfiles-update-0.2.5","rootfs-overlay/usr/local/sbin/2pny-hostfiles-update",0o755)
@@ -63,6 +64,7 @@ for rel in (
 
 subprocess.run(["gofmt","-w",str(root/"src/2pnyd/main.go")],check=True)
 for rel in (
+    "rootfs-overlay/usr/local/sbin/2pny-rf-apply",
     "rootfs-overlay/usr/local/sbin/2pny-network-core",
     "rootfs-overlay/usr/local/sbin/2pny-network-switch",
     "rootfs-overlay/usr/local/sbin/2pny-hostfiles-update",
@@ -90,6 +92,10 @@ assert 'http.HandleFunc("/api/servers"' in main
 assert 'http.HandleFunc("/api/live"' in main
 assert 'http.HandleFunc("/api/display/override"' in main
 assert 'selecione um servidor/master DMR válido' in main
+assert 'Crossmode ainda está em desenvolvimento nesta Alpha' in main
+assert 'rx_offset_hz' in main and 'tx_offset_hz' in main
+assert 'beginApplyTransaction' in main
+assert 'cachedConnectivitySnapshot' in main
 assert '2pny-protocol-network-apply' in main
 assert 'systemctl stop 2pny-network-core.service' not in switch
 assert 'ap-scan-hold' in switch and 'ap-scan-hold' in core
@@ -97,6 +103,9 @@ assert 'PU2PNY-WIFI-CANDIDATE' in switch
 assert '"DMR Network"' in network and '"Enable":"1"' in network
 assert 'Servidor DMR' in wizard and '/api/servers' in wizard
 assert 'singleWifiNote' in wizard
+assert 'Continuar sem internet' in wizard
+assert 'RX Offset (Hz)' in wizard and 'TX Offset (Hz)' in wizard
+assert 'PU2PNY-OS' in wizard and 'PU2PNY-OS' in dash
 assert 'confirmNextion' in wizard and '/api/display/override' in wizard
 assert 'Ao vivo' in dash and '/api/live' in dash
 assert (hosts/"DMR_Hosts.txt").exists()
