@@ -924,7 +924,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 				log.Printf("DMR network apply failed: %v: %s", netErr, m)
 				return
 			}
-			networkState = "configured"
+			networkState = "connecting"
 		}
 
 		apiConfigured := false
