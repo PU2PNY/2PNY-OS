@@ -134,6 +134,14 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
         <div class="field hidden" id="txWrap"><label for="tx">Frequência TX (MHz)</label><input id="tx" inputmode="decimal" placeholder="439.125"></div>
       </div>
 
+      <details style="margin-top:12px">
+        <summary><b>Ajustes avançados de RF</b></summary>
+        <div class="formgrid" style="margin-top:10px">
+          <div class="field"><label for="rxOffset">RX Offset (Hz)</label><input id="rxOffset" inputmode="numeric" value="0" placeholder="0"><small class="hint">Use somente para calibração do modem.</small></div>
+          <div class="field"><label for="txOffset">TX Offset (Hz)</label><input id="txOffset" inputmode="numeric" value="0" placeholder="0"><small class="hint">Use somente para calibração do modem.</small></div>
+        </div>
+      </details>
+
       <div class="section-title">Protocolo principal</div>
       <div class="choice-grid">
         <div class="choice"><input type="radio" name="protocol" id="pdstar" value="DSTAR"><label for="pdstar"><b>D‑STAR</b></label></div>
@@ -171,7 +179,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
               <label for="serverPassword">Senha do master</label>
               <div class="password-row"><input id="serverPassword" type="password" placeholder="Usa o padrão da lista se vazio"><button class="btn" id="showServerPass" type="button">Mostrar</button></div>
             </div>
-            <div class="field"><label for="colorCode">Color Code</label><select id="colorCode"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option></select></div>
+            <div class="field"><label for="colorCode">Color Code</label><select id="colorCode"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option></select></div>
           </div>
           <details style="margin-top:8px"><summary>Ajuste avançado da rede DMR</summary><div class="field"><label for="serverOptions">Options do master (opcional)</label><input id="serverOptions" placeholder="Ex.: StartRef=...;RelinkTime=..."></div></details>
         </div>
@@ -559,6 +567,8 @@ async function loadCurrentConfig(){
     if(c.use_mode==='repeater')q('repeater').checked=true;else q('hotspot').checked=true;
     if(c.rx_hz)q('rx').value=(Number(c.rx_hz)/1000000).toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
     if(c.tx_hz)q('tx').value=(Number(c.tx_hz)/1000000).toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+    q('rxOffset').value=String(c.rx_offset_hz||0);
+    q('txOffset').value=String(c.tx_offset_hz||0);
     let p=document.querySelector('input[name=protocol][value="'+(c.protocol||'DMR')+'"]');if(p)p.checked=true;
     let o=document.querySelector('input[name=operation][value="'+(c.operation||'normal')+'"]');if(o)o.checked=true;
     syncUseMode();
@@ -581,6 +591,8 @@ q('saveBasic').onclick=async function(){
     use_mode:document.querySelector('input[name=usemode]:checked').value,
     rx:q('rx').value.trim(),
     tx:q('repeater').checked?q('tx').value.trim():q('rx').value.trim(),
+    rx_offset:q('rxOffset').value.trim()||'0',
+    tx_offset:q('txOffset').value.trim()||'0',
     protocol:selectedProtocol(),
     operation:document.querySelector('input[name=operation]:checked').value,
     server_name:serverCustom?'Personalizado':((serverObj&&serverObj.name)||''),
