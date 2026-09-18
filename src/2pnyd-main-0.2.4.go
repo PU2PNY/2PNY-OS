@@ -57,6 +57,7 @@ type ConnectivityStatus struct {
 	Ethernet         bool     `json:"ethernet"`
 	EthernetInterface string  `json:"ethernet_interface,omitempty"`
 	WiFi             bool     `json:"wifi"`
+	WiFiSSID         string   `json:"wifi_ssid,omitempty"`
 	WiFiInterfaces   []string `json:"wifi_interfaces"`
 	WiFiCount        int      `json:"wifi_count"`
 	ClientInterface  string   `json:"client_interface,omitempty"`
@@ -118,6 +119,17 @@ func wifiInterfaces() []string {
 		}
 	}
 	return out
+}
+
+func currentWiFiSSID() string {
+	out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SSID", "dev", "wifi").Output()
+	if err != nil { return "" }
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.HasPrefix(line, "yes:") {
+			return strings.TrimSpace(strings.TrimPrefix(line, "yes:"))
+		}
+	}
+	return ""
 }
 
 func ethernetInterface() string {
@@ -190,6 +202,7 @@ func connectivitySnapshot() ConnectivityStatus {
 		Ethernet: eth != "" && interfaceUp(eth),
 		EthernetInterface: eth,
 		WiFi: wifiUp,
+		WiFiSSID: currentWiFiSSID(),
 		WiFiInterfaces: wifis,
 		WiFiCount: len(wifis),
 		ClientInterface: client,
