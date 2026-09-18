@@ -105,6 +105,8 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
             <div><span>Display</span><b id="sumDisplay">Opcional</b></div>
             <div><span>Status geral</span><b id="sumStatus">Preparando...</b></div>
           </div>
+          <button class="btn widebtn hidden" id="confirmNextion" type="button">Usar minha Nextion pela MMDVM</button>
+          <small class="hint hidden" id="nextionHint">Use somente se sua tela Nextion estiver fisicamente ligada ao conector de display da MMDVM. Isso não grava nem troca o HMI da tela.</small>
           <div class="result hidden" id="hardwareResult"></div>
         </div>
       </div>
@@ -416,7 +418,10 @@ function hardwareSummary(s){
   let m=s.mmdvm||{},d=s.display||{};
   q('sumPi').textContent=pi;
   q('sumModem').textContent=m.detected?'MMDVM identificado':'MMDVM não confirmado';
-  q('sumDisplay').textContent=d.detected?(d.class==='nextion_mmdvm'?('Nextion confirmada via MMDVM'+(d.model?' • '+d.model:'')):(d.model||'Display identificado')):(d.state==='mmdvm_display_candidate'?'Porta para display disponível; Nextion não respondeu':'Opcional / não identificado');
+  q('sumDisplay').textContent=d.detected?(d.class==='nextion_mmdvm'?((d.state==='manual_override'?'Nextion via MMDVM (confirmação manual)':'Nextion confirmada via MMDVM')+(d.model?' • '+d.model:'')):(d.model||'Display identificado')):(d.state==='mmdvm_display_candidate'?'Porta para display disponível; Nextion não respondeu':'Opcional / não identificado');
+  let canForce=m.detected&&!d.detected&&d.state==='mmdvm_display_candidate';
+  q('confirmNextion').classList.toggle('hidden',!canForce);
+  q('nextionHint').classList.toggle('hidden',!canForce);
   if(m.detected){
     q('sumStatus').textContent='Pronto para continuar';
     taskState('taskMmdvm','done','Concluído');
@@ -431,6 +436,23 @@ function hardwareSummary(s){
     q('toBasic').disabled=true
   }
 }
+
+q('confirmNextion').onclick=async function(){
+  q('confirmNextion').disabled=true;
+  q('hardwareResult').className='result';
+  q('hardwareResult').textContent='Habilitando Nextion pela porta de display da MMDVM...';
+  try{
+    await getj('/api/display/override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true})});
+    let st=await getj('/api/hardware/status');
+    hardwareSummary(st);
+    q('hardwareResult').className='result success';
+    q('hardwareResult').innerHTML='<b>Nextion habilitada via MMDVM.</b><br>O PU2PNY não alterou o HMI/TFT da tela. A saída será ativada quando a configuração RF for salva.';
+  }catch(e){
+    q('hardwareResult').className='result error';q('hardwareResult').textContent=e.message;
+  }
+  q('confirmNextion').disabled=false;
+};
+
 async function startHardware(){
   q('toBasic').disabled=true;q('hardwareResult').className='result hidden';
   q('bar').style.width='12%';q('percent').textContent='12%';
