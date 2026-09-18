@@ -4,13 +4,6 @@ on:
   push:
     branches: [ pu2pny-os-0.2.1-alpha ]
     paths:
-      - 'src/2pnyd-main-0.2.0.go'
-      - 'src/2pny-network-core-0.2.0'
-      - 'src/2pny-network-switch-0.2.0'
-      - 'src/2pny-hardware-prepare-0.2.0'
-      - 'src/2pny-mode-apply-0.2.0'
-      - 'src/wizard-0.2.0.html'
-      - 'ci/prepare-0.2.0-onboarding.sh'
       - 'src/2pnyd-main-0.2.1.go'
       - 'src/2pny-network-core-0.2.1'
       - 'src/2pny-network-switch-0.2.1'
@@ -49,7 +42,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2
 
-      - name: Restore baseline and apply 0.2.0
+      - name: Restore baseline and apply patches
         run: |
           set -euo pipefail
           bash legacy-source/2pny-os/bootstrap.sh
@@ -104,338 +97,21 @@ jobs:
           done
           python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-hardware-probe
           rm -rf rootfs-overlay/usr/local/sbin/__pycache__
-          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.2\.0-alpha"' src/2pnyd/main.go
-          grep -Fq 'http.HandleFunc("/api/connectivity"' src/2pnyd/main.go
-          grep -Fq 'http.HandleFunc("/api/network/connect"' src/2pnyd/main.go
-          grep -Fq 'http.HandleFunc("/api/basic/apply"' src/2pnyd/main.go
-          grep -Fq 'Primeiro acesso — Internet' rootfs-overlay/usr/share/2pny/wizard.html
-          grep -Fq 'Preparando hardware' rootfs-overlay/usr/share/2pny/wizard.html
-          grep -Fq 'Configuração básica' rootfs-overlay/usr/share/2pny/wizard.html
-          ! grep -qi 'offset' rootfs-overlay/usr/share/2pny/wizard.html
-          ! grep -qi 'porta mmdvm' rootfs-overlay/usr/share/2pny/wizard.html
-          grep -qx 'dhcp-option=3' rootfs-overlay/usr/share/2pny/network/dnsmasq-eth.template
-          grep -qx 'dhcp-option=6' rootfs-overlay/usr/share/2pny/network/dnsmasq-eth.template
-          grep -Fq 'MASQUERADE' rootfs-overlay/usr/local/sbin/2pny-network-core
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.2\.1-alpha"' src/2pnyd/main.go
+          grep -Fq 'http.HandleFunc("/api/network/connect/status"' src/2pnyd/main.go
+          grep -Fq 'http.HandleFunc("/captive-api"' src/2pnyd/main.go
+          grep -Fq 'time.AfterFunc(900*time.Millisecond' src/2pnyd/main.go
+          grep -Fq 'scan-json' rootfs-overlay/usr/local/sbin/2pny-network-switch
           grep -Fq '10.43.0.11/24' rootfs-overlay/usr/local/sbin/2pny-network-core
           grep -Fq 'LAST_CARRIER' rootfs-overlay/usr/local/sbin/2pny-network-core
-          grep -Fq 'scan-json' rootfs-overlay/usr/local/sbin/2pny-network-switch
-          grep -q '^ssid=pu2pny
-
-      - name: Build ARM64 image
-        working-directory: legacy-source/2pny-os
-        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
-
-      - name: Normalize image and checksum
-        working-directory: legacy-source/2pny-os
-        run: |
-          set -euo pipefail
-          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
-          IMAGE="dist/pu2pnu-os-$VERSION-arm64.img.xz"
-          test -n "$OLD"
-          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
-          sudo rm -f dist/*.img.xz.sha256
-          HASH="$(sudo sha256sum "$IMAGE" | awk '{print $1}')"
-          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" | sudo tee "$IMAGE.sha256" >/dev/null
-          sudo chown "$USER:$USER" "$IMAGE" "$IMAGE.sha256" dist/BUILD-INFO.txt
-          xz -t "$IMAGE"
-          test "$(sha256sum "$IMAGE" | awk '{print $1}')" = "$HASH"
-
-      - name: Validate final 0.2.1 image
-        working-directory: legacy-source/2pny-os
-        run: bash "$GITHUB_WORKSPACE/ci/validate-0.2.1-image.sh" "dist/pu2pnu-os-$VERSION-arm64.img.xz" "$VERSION"
-
-      - name: Stage validated artifact
-        working-directory: legacy-source/2pny-os
-        run: |
-          set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/release-artifact"
-          cp "dist/pu2pnu-os-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
-          cp "dist/pu2pnu-os-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
-          cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pu2pnu-os-0.2.1-arm64
-          path: release-artifact/*
-          compression-level: 0
-          retention-days: 7
-          if-no-files-found: error
-
-  publish-x64:
-    needs: build-arm64
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
-    env:
-      VERSION: 0.2.1-alpha
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: pu2pnu-os-0.2.1-arm64
-          path: release
-
-      - name: Verify transferred image
-        run: |
-          set -euo pipefail
-          IMAGE="release/pu2pnu-os-$VERSION-arm64.img.xz"
-          CHECKSUM="$IMAGE.sha256"
-          test -s "$IMAGE"
-          test -s "$CHECKSUM"
-          xz -t "$IMAGE"
-          EXPECTED="$(awk '{print $1}' "$CHECKSUM")"
-          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
-          test "$EXPECTED" = "$ACTUAL"
-          echo "artifact verified sha256=$ACTUAL"
-
-      - name: Write release notes
-        run: |
-          cat > RELEASE-NOTES.md <<'EOF'
-          pu2pnu-os 0.2.1 Alpha — Raspberry Pi ARM64.
-
-          Novo assistente profissional:
-          - fluxo: Internet -> Hardware -> Configuração básica -> Conclusão;
-          - internet configurada antes da preparação de hardware;
-          - Ethernet tenta DHCP antes do fallback local 10.43.0.1;
-          - fallback direto não anuncia gateway nem DNS para não derrubar a internet Wi-Fi do computador;
-          - duas interfaces Wi-Fi podem separar AP e internet;
-          - AP pode compartilhar o uplink durante a configuração;
-          - preparação segura de drivers e firmware por pacotes oficiais;
-          - detecção automática de Raspberry Pi, MMDVM e display;
-          - tela básica sem offsets e sem mostrar porta MMDVM;
-          - indicativo, DMR ID, Hotspot/Repetidora, RX/TX, protocolo e Normal/Crossmode;
-          - dark mode padrão, tema claro opcional e layout responsivo.
-
-          Primeiro acesso:
-          AP: pu2pny (aberto) -> http://10.42.0.1
-          Cabo direto fallback -> http://10.43.0.1
-          Rede normal -> http://pu2pny.local
-          EOF
-
-      - name: Publish verified prerelease and assets
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: v0.2.1-alpha
-          target_commitish: pu2pny-os-0.2.1-alpha
-          name: pu2pnu-os 0.2.1 Alpha
-          prerelease: true
-          body_path: RELEASE-NOTES.md
-          fail_on_unmatched_files: true
-          files: |
-            release/pu2pnu-os-0.2.1-alpha-arm64.img.xz
-            release/pu2pnu-os-0.2.1-alpha-arm64.img.xz.sha256
-            release/BUILD-INFO.txt
- rootfs-overlay/usr/share/2pny/network/hostapd.template
-          grep -q '^dhcp-option-force=114,http://10.42.0.1/captive-api
-
-      - name: Build ARM64 image
-        working-directory: legacy-source/2pny-os
-        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
-
-      - name: Normalize image and checksum
-        working-directory: legacy-source/2pny-os
-        run: |
-          set -euo pipefail
-          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
-          IMAGE="dist/pu2pnu-os-$VERSION-arm64.img.xz"
-          test -n "$OLD"
-          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
-          sudo rm -f dist/*.img.xz.sha256
-          HASH="$(sudo sha256sum "$IMAGE" | awk '{print $1}')"
-          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" | sudo tee "$IMAGE.sha256" >/dev/null
-          sudo chown "$USER:$USER" "$IMAGE" "$IMAGE.sha256" dist/BUILD-INFO.txt
-          xz -t "$IMAGE"
-          test "$(sha256sum "$IMAGE" | awk '{print $1}')" = "$HASH"
-
-      - name: Validate final 0.2.1 image
-        working-directory: legacy-source/2pny-os
-        run: bash "$GITHUB_WORKSPACE/ci/validate-0.2.1-image.sh" "dist/pu2pnu-os-$VERSION-arm64.img.xz" "$VERSION"
-
-      - name: Stage validated artifact
-        working-directory: legacy-source/2pny-os
-        run: |
-          set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/release-artifact"
-          cp "dist/pu2pnu-os-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
-          cp "dist/pu2pnu-os-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
-          cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pu2pnu-os-0.2.1-arm64
-          path: release-artifact/*
-          compression-level: 0
-          retention-days: 7
-          if-no-files-found: error
-
-  publish-x64:
-    needs: build-arm64
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
-    env:
-      VERSION: 0.2.1-alpha
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: pu2pnu-os-0.2.1-arm64
-          path: release
-
-      - name: Verify transferred image
-        run: |
-          set -euo pipefail
-          IMAGE="release/pu2pnu-os-$VERSION-arm64.img.xz"
-          CHECKSUM="$IMAGE.sha256"
-          test -s "$IMAGE"
-          test -s "$CHECKSUM"
-          xz -t "$IMAGE"
-          EXPECTED="$(awk '{print $1}' "$CHECKSUM")"
-          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
-          test "$EXPECTED" = "$ACTUAL"
-          echo "artifact verified sha256=$ACTUAL"
-
-      - name: Write release notes
-        run: |
-          cat > RELEASE-NOTES.md <<'EOF'
-          pu2pnu-os 0.2.1 Alpha — Raspberry Pi ARM64.
-
-          Novo assistente profissional:
-          - fluxo: Internet -> Hardware -> Configuração básica -> Conclusão;
-          - internet configurada antes da preparação de hardware;
-          - Ethernet tenta DHCP antes do fallback local 10.43.0.1;
-          - fallback direto não anuncia gateway nem DNS para não derrubar a internet Wi-Fi do computador;
-          - duas interfaces Wi-Fi podem separar AP e internet;
-          - AP pode compartilhar o uplink durante a configuração;
-          - preparação segura de drivers e firmware por pacotes oficiais;
-          - detecção automática de Raspberry Pi, MMDVM e display;
-          - tela básica sem offsets e sem mostrar porta MMDVM;
-          - indicativo, DMR ID, Hotspot/Repetidora, RX/TX, protocolo e Normal/Crossmode;
-          - dark mode padrão, tema claro opcional e layout responsivo.
-
-          Primeiro acesso:
-          AP: pu2pny (aberto) -> http://10.42.0.1
-          Cabo direto fallback -> http://10.43.0.1
-          Rede normal -> http://pu2pny.local
-          EOF
-
-      - name: Publish verified prerelease and assets
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: v0.2.1-alpha
-          target_commitish: pu2pny-os-0.2.1-alpha
-          name: pu2pnu-os 0.2.1 Alpha
-          prerelease: true
-          body_path: RELEASE-NOTES.md
-          fail_on_unmatched_files: true
-          files: |
-            release/pu2pnu-os-0.2.1-alpha-arm64.img.xz
-            release/pu2pnu-os-0.2.1-alpha-arm64.img.xz.sha256
-            release/BUILD-INFO.txt
- rootfs-overlay/usr/share/2pny/network/dnsmasq-ap.template
-          grep -q '^dhcp-option-force=114,http://10.43.0.1/captive-api
-
-      - name: Build ARM64 image
-        working-directory: legacy-source/2pny-os
-        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
-
-      - name: Normalize image and checksum
-        working-directory: legacy-source/2pny-os
-        run: |
-          set -euo pipefail
-          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
-          IMAGE="dist/pu2pnu-os-$VERSION-arm64.img.xz"
-          test -n "$OLD"
-          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
-          sudo rm -f dist/*.img.xz.sha256
-          HASH="$(sudo sha256sum "$IMAGE" | awk '{print $1}')"
-          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" | sudo tee "$IMAGE.sha256" >/dev/null
-          sudo chown "$USER:$USER" "$IMAGE" "$IMAGE.sha256" dist/BUILD-INFO.txt
-          xz -t "$IMAGE"
-          test "$(sha256sum "$IMAGE" | awk '{print $1}')" = "$HASH"
-
-      - name: Validate final 0.2.1 image
-        working-directory: legacy-source/2pny-os
-        run: bash "$GITHUB_WORKSPACE/ci/validate-0.2.1-image.sh" "dist/pu2pnu-os-$VERSION-arm64.img.xz" "$VERSION"
-
-      - name: Stage validated artifact
-        working-directory: legacy-source/2pny-os
-        run: |
-          set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/release-artifact"
-          cp "dist/pu2pnu-os-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
-          cp "dist/pu2pnu-os-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
-          cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pu2pnu-os-0.2.1-arm64
-          path: release-artifact/*
-          compression-level: 0
-          retention-days: 7
-          if-no-files-found: error
-
-  publish-x64:
-    needs: build-arm64
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
-    env:
-      VERSION: 0.2.1-alpha
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: pu2pnu-os-0.2.1-arm64
-          path: release
-
-      - name: Verify transferred image
-        run: |
-          set -euo pipefail
-          IMAGE="release/pu2pnu-os-$VERSION-arm64.img.xz"
-          CHECKSUM="$IMAGE.sha256"
-          test -s "$IMAGE"
-          test -s "$CHECKSUM"
-          xz -t "$IMAGE"
-          EXPECTED="$(awk '{print $1}' "$CHECKSUM")"
-          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
-          test "$EXPECTED" = "$ACTUAL"
-          echo "artifact verified sha256=$ACTUAL"
-
-      - name: Write release notes
-        run: |
-          cat > RELEASE-NOTES.md <<'EOF'
-          pu2pnu-os 0.2.1 Alpha — Raspberry Pi ARM64.
-
-          Novo assistente profissional:
-          - fluxo: Internet -> Hardware -> Configuração básica -> Conclusão;
-          - internet configurada antes da preparação de hardware;
-          - Ethernet tenta DHCP antes do fallback local 10.43.0.1;
-          - fallback direto não anuncia gateway nem DNS para não derrubar a internet Wi-Fi do computador;
-          - duas interfaces Wi-Fi podem separar AP e internet;
-          - AP pode compartilhar o uplink durante a configuração;
-          - preparação segura de drivers e firmware por pacotes oficiais;
-          - detecção automática de Raspberry Pi, MMDVM e display;
-          - tela básica sem offsets e sem mostrar porta MMDVM;
-          - indicativo, DMR ID, Hotspot/Repetidora, RX/TX, protocolo e Normal/Crossmode;
-          - dark mode padrão, tema claro opcional e layout responsivo.
-
-          Primeiro acesso:
-          AP: pu2pny (aberto) -> http://10.42.0.1
-          Cabo direto fallback -> http://10.43.0.1
-          Rede normal -> http://pu2pny.local
-          EOF
-
-      - name: Publish verified prerelease and assets
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: v0.2.1-alpha
-          target_commitish: pu2pny-os-0.2.1-alpha
-          name: pu2pnu-os 0.2.1 Alpha
-          prerelease: true
-          body_path: RELEASE-NOTES.md
-          fail_on_unmatched_files: true
-          files: |
-            release/pu2pnu-os-0.2.1-alpha-arm64.img.xz
-            release/pu2pnu-os-0.2.1-alpha-arm64.img.xz.sha256
-            release/BUILD-INFO.txt
- rootfs-overlay/usr/share/2pny/network/dnsmasq-eth.template
+          grep -Fq 'PU2PNY-ETH-AUTO' rootfs-overlay/usr/local/sbin/2pny-network-core
+          grep -q '^ssid=pu2pny$' rootfs-overlay/usr/share/2pny/network/hostapd.template
+          grep -q '^dhcp-option-force=114,http://10.42.0.1/captive-api$' rootfs-overlay/usr/share/2pny/network/dnsmasq-ap.template
+          grep -q '^dhcp-option-force=114,http://10.43.0.1/captive-api$' rootfs-overlay/usr/share/2pny/network/dnsmasq-eth.template
+          grep -Fq 'ssidSelect' rootfs-overlay/usr/share/2pny/wizard.html
           grep -Fq 'wifiScan' rootfs-overlay/usr/share/2pny/wizard.html
           grep -Fq 'showPass' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq 'pu2pnu-os' rootfs-overlay/usr/share/2pny/wizard.html
 
       - name: Build ARM64 image
         working-directory: legacy-source/2pny-os
@@ -500,30 +176,28 @@ jobs:
           EXPECTED="$(awk '{print $1}' "$CHECKSUM")"
           ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
           test "$EXPECTED" = "$ACTUAL"
-          echo "artifact verified sha256=$ACTUAL"
 
       - name: Write release notes
         run: |
           cat > RELEASE-NOTES.md <<'EOF'
           pu2pnu-os 0.2.1 Alpha — Raspberry Pi ARM64.
 
-          Novo assistente profissional:
-          - fluxo: Internet -> Hardware -> Configuração básica -> Conclusão;
-          - internet configurada antes da preparação de hardware;
-          - Ethernet tenta DHCP antes do fallback local 10.43.0.1;
-          - fallback direto não anuncia gateway nem DNS para não derrubar a internet Wi-Fi do computador;
-          - duas interfaces Wi-Fi podem separar AP e internet;
-          - AP pode compartilhar o uplink durante a configuração;
-          - preparação segura de drivers e firmware por pacotes oficiais;
-          - detecção automática de Raspberry Pi, MMDVM e display;
-          - tela básica sem offsets e sem mostrar porta MMDVM;
-          - indicativo, DMR ID, Hotspot/Repetidora, RX/TX, protocolo e Normal/Crossmode;
-          - dark mode padrão, tema claro opcional e layout responsivo.
+          Correções:
+          - busca automática de redes Wi-Fi com seletor de SSID;
+          - botão para mostrar/ocultar senha;
+          - troca de Wi-Fi assíncrona para eliminar o erro Failed to fetch;
+          - SSID do AP simplificado para pu2pny;
+          - detecção de cabo Ethernet após o boot;
+          - Ethernet por DHCP no roteador;
+          - fallback de cabo direto em 10.43.0.1 e 10.43.0.11;
+          - captive portal com DHCP option 114 para abrir a configuração automaticamente quando o cliente suportar;
+          - preserva a internet do notebook no fallback direto, sem anunciar gateway ou DNS;
+          - fluxo Internet -> Hardware -> Configuração básica -> Conclusão.
 
           Primeiro acesso:
-          AP: pu2pny (aberto) -> http://10.42.0.1
-          Cabo direto fallback -> http://10.43.0.1
-          Rede normal -> http://pu2pny.local
+          AP: pu2pny -> http://10.42.0.1
+          Cabo direto: http://10.43.0.1 ou http://10.43.0.11
+          Rede normal: http://pu2pny.local
           EOF
 
       - name: Publish verified prerelease and assets
