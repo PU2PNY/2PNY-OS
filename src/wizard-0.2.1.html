@@ -62,7 +62,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
         </div>
         <div class="option-card">
           <h3>Cabo de rede</h3><p>Primeiro tentamos DHCP. Isso funciona em roteadores e também com Compartilhamento de Internet do computador.</p>
-          <div class="notice"><b>Cabo direto ao computador:</b><br>o fallback 10.43.0.1 não anuncia gateway nem DNS. Assim o computador mantém a internet do próprio Wi‑Fi. Para dar internet ao pu2pnu-os pelo cabo, habilite o compartilhamento da conexão no computador e clique em reverificar.</div>
+          <div class="notice"><b>Cabo direto ao computador:</b><br>o pu2pnu-os tenta DHCP automaticamente. Sem DHCP, o acesso local fica disponível em <b>10.43.0.1</b> e também em <b>10.43.0.11</b>, sem anunciar gateway nem DNS para não derrubar o Wi‑Fi do notebook. Para fornecer internet pelo cabo, use o compartilhamento de conexão do computador.</div>
           <button class="btn widebtn" id="refreshEthernet">Reverificar cabo e internet</button>
         </div>
       </div>
