@@ -107,6 +107,20 @@ PY
     return 0
   fi
 
+  phy="$(iw dev "$iface" info 2>/dev/null | awk '/wiphy/{print "phy"$2;exit}')"
+  tmpif="pny-scan0"
+  if test -n "$phy"; then
+    iw dev "$tmpif" del >/dev/null 2>&1 || true
+    if iw phy "$phy" interface add "$tmpif" type managed >/dev/null 2>&1; then
+      ip link set "$tmpif" up >/dev/null 2>&1 || true
+      if scan_iw "$tmpif"; then
+        iw dev "$tmpif" del >/dev/null 2>&1 || true
+        return 0
+      fi
+      iw dev "$tmpif" del >/dev/null 2>&1 || true
+    fi
+  fi
+
   echo '[]'
 }
 
