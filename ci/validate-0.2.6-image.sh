@@ -95,7 +95,7 @@ grep -Fq 'Name=host' "$RF"
 echo '[10/20] DMR network applier routes through DMRGateway'
 NET="$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'DMRGateway.ini' "$NET"
-grep -Fq '"XLX Network"' "$NET"
+grep -Fq '[XLX Network]' "$NET"
 grep -Fq '"GatewayAddress":"127.0.0.1"' "$NET"
 grep -Fq '"GatewayPort":"62031"' "$NET"
 grep -Fq 'BrandMeister requires the Hotspot Security password' "$NET"
@@ -175,7 +175,7 @@ grep -Fxq 'ScreenLayout=2' "$DISPCONF"
 
 echo '[14/20] Wizard exposes network-specific DMR controls'
 WIZ="$ROOT/usr/share/2pny/wizard.html"
-for needle in '0.2.6-alpha' 'Time Slot' 'Hotspot Security' 'BrandMeister API Key' 'Módulo XLX' 'ON7LDS / Pi-Star' 'BSSID'; do grep -Fq "$needle" "$WIZ"; done
+for needle in '0.2.6-alpha' 'Time Slot' 'Hotspot Security' 'BrandMeister API Key' 'Módulo XLX' 'ON7LDS / Pi-Star' 'dataset.bssid'; do grep -Fq "$needle" "$WIZ"; done
 
 echo '[15/20] Responsive live dashboard exposes RX TX and quality'
 DASH="$ROOT/usr/share/2pny/dashboard.html"

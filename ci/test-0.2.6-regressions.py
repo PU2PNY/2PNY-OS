@@ -5,6 +5,18 @@ from pathlib import Path
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 class Regression(unittest.TestCase):
+ def test_validator_source_contracts(self):
+  validator=(ROOT/'ci/validate-0.2.6-image.sh').read_text()
+  names={'NET':'2pny-protocol-network-apply-0.2.6.py','SW':'2pny-network-switch-0.2.6','RF':'2pny-rf-apply-0.2.6','MOSQ':'mosquitto-pu2pny-0.2.6.conf'}
+  import shlex
+  for line in validator.splitlines():
+   words=shlex.split(line)
+   if len(words)==4 and words[0]=='grep' and words[1] in ('-Fq','-Fxq') and words[3].lstrip('$') in names:
+    src=(ROOT/'src'/names[words[3].lstrip('$')]).read_text()
+    self.assertIn(words[2],src,line)
+   if line.startswith('for needle in '):
+    filename='wizard-0.2.6.html' if 'Time Slot' in line else 'dashboard-0.2.6.html'
+    for term in shlex.split(line.split('; do')[0])[3:]:self.assertIn(term,(ROOT/'src'/filename).read_text())
  def test_wifi_bssid_and_colon_ssid(self):
   src=(ROOT/'src/2pny-network-switch-0.2.6').read_text()
   code=src.split("python3 - \"$1\" <<'PY'",1)[1].split('\nPY',1)[0]
