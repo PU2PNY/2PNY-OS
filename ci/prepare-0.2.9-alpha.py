@@ -268,5 +268,6 @@ assert "/api/network/country" in main and '"/flags/"' in main
 assert 'id="liveCard"' in dash and 'id="liveName"' in dash and "operatorView" in dash
 assert "País / região do Wi" in wiz and "reconnectOverlay" in wiz
 assert "RadioID" in (root/"rootfs-overlay/usr/local/sbin/2pny-station-worker").read_text()
-assert "TG4000" in (root/"builder/patch-dmrgateway-pu2pny-0.2.9.py").read_text()\nassert "PU2PNY_029_BUILD_HEADROOM" in builder.read_text() and "PU2PNY_029_RESIZE_ROOTFS" in builder.read_text()
+assert "TG4000" in (root/"builder/patch-dmrgateway-pu2pny-0.2.9.py").read_text()
+assert "PU2PNY_029_BUILD_HEADROOM" in builder.read_text() and "PU2PNY_029_RESIZE_ROOTFS" in builder.read_text()
 print("PU2PNY-OS 0.2.9 modular overlay applied")
