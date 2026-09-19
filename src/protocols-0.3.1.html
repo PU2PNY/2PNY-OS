@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PU2PNY — Protocolos</title>
+<link rel="stylesheet" href="/ui-0.3.0.css">
+<style>
+.protoTabs{display:flex;gap:8px;flex-wrap:wrap}.protoTabs button.active{background:var(--blue);color:#06131d;border-color:var(--blue)}
+.formline{display:grid;grid-template-columns:1fr 2fr;gap:12px}.field{margin-top:12px}
+.advanced{margin-top:15px}.advanced summary{cursor:pointer;font-weight:850}
+.statusgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.statusgrid>div{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.statusgrid small{display:block;color:var(--muted)}.help{min-height:48px}.hidden{display:none!important}
+@media(max-width:760px){.formline,.statusgrid{grid-template-columns:1fr}.main{padding:14px}.topnav{position:sticky;top:0;z-index:20}}
+</style></head><body>
+<header class="topnav"><div class="brand">PU2PNY-OS<small>Protocolos digitais</small></div><nav class="nav" id="mainNav"></nav><div class="navtools"><span class="pill"><span id="clockLocal">--:--:--</span></span><button class="btn" id="themeToggle">☀ Claro</button></div></header>
+<main class="main">
+<div class="top"><div><h1>Protocolos</h1><p>Escolha o protocolo, a rede e o servidor. Apenas uma alteração real reconecta o rádio.</p></div><span class="badge">Atual: <b id="currentProto">—</b></span></div>
+<section class="section"><div class="card"><div class="protoTabs" id="tabs"></div></div></section>
+<section class="section"><div class="grid2">
+<article class="card">
+<h2 id="title">D-Star</h2><p class="muted help" id="help"></p>
+<div class="formline">
+ <div class="field" id="familyWrap"><label id="familyLabel">Sistema</label><select id="family"></select></div>
+ <div class="field"><label id="serverLabel">Servidor / refletor</label><select id="server"></select></div>
+</div>
+<div class="field hidden" id="moduleWrap"><label>Módulo</label><select id="module"></select></div>
+<div class="field hidden" id="dmrEssentials">
+ <div class="formline"><div><label>Time Slot</label><select id="slot"><option value="2">TS2</option><option value="1">TS1</option></select></div>
+ <div><label>Color Code</label><input id="cc" type="number" min="0" max="15" value="1"></div></div>
+</div>
+<details class="advanced">
+ <summary>Avançado — endereço, porta e credenciais</summary>
+ <div class="field"><label>Nome</label><input id="serverName"></div>
+ <div class="formline"><div class="field"><label>IP / hostname</label><input id="address"></div><div class="field"><label>Porta</label><input id="port" type="number" min="0" max="65535"></div></div>
+ <div class="field hidden" id="passwordWrap"><label id="passwordLabel">Senha / chave</label><input id="password" type="password" autocomplete="new-password"></div>
+ <p class="muted" id="advancedHint"></p>
+</details>
+<div class="actions" style="margin-top:16px"><button class="btn" id="reload">Atualizar lista pública</button><button class="btn primary" id="save">Aplicar mudança</button></div>
+<p id="result" class="statusmsg"></p>
+</article>
+<article class="card">
+<h3>Estado atual</h3><div class="big" id="state">—</div>
+<div class="statusgrid">
+<div><small>Protocolo</small><b id="stProto">—</b></div>
+<div><small>Rede</small><b id="stKind">—</b></div>
+<div><small>Servidor</small><b id="stServer">—</b></div>
+<div><small>Módulo</small><b id="stModule">—</b></div>
+<div><small>Gateway</small><b id="stGateway">—</b></div>
+<div><small>Endereço</small><b id="stAddress">—</b></div>
+</div>
+<div class="notice" style="margin-top:12px">Abrir esta página não reinicia nada. Troca de servidor/módulo reconecta somente o gateway necessário; troca de protocolo reinicia o motor RF e o gateway correspondente.</div>
+</article></div></section></main>
+<script src="/ui-common-0.3.0.js"></script><script>
+PNY.nav('protocols');PNY.initTheme();PNY.startClock();
+var definitions={
+ DSTAR:{label:'D-Star',familyLabel:'Sistema D-Star',serverLabel:'Refletor / servidor',
+   help:'Escolha somente o sistema D-Star, o refletor e o módulo. RPT1/RPT2/URCALL ficam no rádio e não são exigidos nesta tela.',
+   families:[['DPlus','REF / DPlus'],['DExtra','XRF / DExtra'],['DCS','DCS'],['XLX','XLX']]},
+ DMR:{label:'DMR',familyLabel:'Rede DMR',serverLabel:'Master / servidor',
+   help:'Escolha a rede DMR e o master. XLX também permite selecionar o módulo.',
+   families:[['BrandMeister','BrandMeister'],['XLX','XLX'],['TGIF','TGIF'],['FreeDMR','FreeDMR'],['DMR+','DMR+'],['HBLink','HBLink'],['DMR','Outros DMR']]},
+ YSF:{label:'YSF / C4FM',familyLabel:'Rede YSF',serverLabel:'Refletor / sala',
+   help:'Escolha YSF ou FCS e o refletor. As portas locais do gateway são automáticas.',
+   families:[['YSF','YSF'],['FCS','FCS']]},
+ P25:{label:'P25',familyLabel:'Rede P25',serverLabel:'Servidor / Talkgroup',help:'Escolha o destino P25 da lista local.',families:[['P25','P25']]},
+ NXDN:{label:'NXDN',familyLabel:'Rede NXDN',serverLabel:'Servidor / Talkgroup',help:'Escolha o destino NXDN da lista local.',families:[['NXDN','NXDN']]},
+ POCSAG:{label:'POCSAG / DAPNET',familyLabel:'Rede POCSAG',serverLabel:'Servidor',help:'Escolha o servidor DAPNET e informe a AuthKey em Avançado.',families:[['DAPNET','DAPNET']]}
+};
+var protocols=['DSTAR','DMR','YSF','P25','NXDN','POCSAG'],selected='DSTAR',catalog=[],cfg={},current={};
+
+function familyText(kind){var d=definitions[selected]||{},x=(d.families||[]).find(function(a){return a[0]===kind});return x?x[1]:kind}
+function fillModules(items,def){
+ var s=PNY.q('module'),list=items&&items.length?items:Array.from({length:26},function(_,i){return String.fromCharCode(65+i)});
+ s.innerHTML='';list.forEach(function(x){var o=document.createElement('option');o.value=x;o.textContent=x;s.appendChild(o)});
+ s.value=list.includes(def)?def:(list[0]||'C')
+}
+function renderFamilies(){
+ var d=definitions[selected],available=new Set(catalog.map(function(x){return x.kind}));
+ var families=d.families.filter(function(x){return available.has(x[0])||catalog.length===0});
+ PNY.q('family').innerHTML=families.map(function(x){return '<option value="'+PNY.esc(x[0])+'">'+PNY.esc(x[1])+'</option>'}).join('');
+ var wanted=current.kind||cfg.network_kind||'';
+ if(families.some(function(x){return x[0]===wanted}))PNY.q('family').value=wanted;
+ renderServers()
+}
+function renderServers(){
+ var family=PNY.q('family').value,list=catalog.filter(function(x){return !family||x.kind===family});
+ var sel=PNY.q('server'),wanted=current.server_name||cfg.server_name||'';
+ sel.innerHTML='';
+ list.forEach(function(x){
+   var o=document.createElement('option');o.value=String(catalog.indexOf(x));
+   o.textContent=(x.priority===0?'★ ':'')+(x.name||x.address);
+   sel.appendChild(o)
+ });
+ if(!list.length){var o=document.createElement('option');o.value='';o.textContent='Nenhum servidor no cache local';sel.appendChild(o)}
+ var idx=catalog.findIndex(function(x){return x.name===wanted});
+ if(idx>=0&&list.includes(catalog[idx]))sel.value=String(idx);
+ serverChanged()
+}
+function serverChanged(){
+ var x=catalog[Number(PNY.q('server').value)]||{};
+ PNY.q('serverName').value=x.name||'';
+ PNY.q('address').value=x.address||'';
+ PNY.q('port').value=x.port==null?'':x.port;
+ var modules=x.modules||[];
+ var showModule=selected==='DSTAR'||(selected==='DMR'&&x.kind==='XLX');
+ PNY.q('moduleWrap').classList.toggle('hidden',!showModule);
+ if(showModule)fillModules(modules,x.default_module||(selected==='DSTAR'?'D':'C'));
+ PNY.q('dmrEssentials').classList.toggle('hidden',selected!=='DMR');
+ var needPass=selected==='DMR' || selected==='POCSAG';
+ PNY.q('passwordWrap').classList.toggle('hidden',!needPass);
+ PNY.q('passwordLabel').textContent=x.password_label||(selected==='POCSAG'?'DAPNET AuthKey':'Senha / Hotspot Security');
+ PNY.q('advancedHint').textContent=selected==='DSTAR'?'As portas de REF/DPlus, XRF/DExtra e DCS são definidas pelo protocolo. XLX é gerenciado pelo DStarGateway. Edite apenas para servidor personalizado.':'Endereço e porta vieram da lista local. Edite apenas quando usar um servidor personalizado.'
+}
+async function loadCatalog(refresh){
+ PNY.q('result').textContent=refresh?'Atualizando lista pública...':'Carregando lista local...';
+ try{
+   var d=await PNY.getj('/api/servers?protocol='+selected,{method:refresh?'POST':'GET'},25000);
+   catalog=d.servers||[];
+   renderFamilies();
+   PNY.q('result').textContent=catalog.length+' servidor(es) pré-carregados para '+definitions[selected].label+'.'
+ }catch(e){PNY.q('result').textContent='Não foi possível atualizar agora. A última lista válida será preservada. '+e.message}
+}
+function choose(p){
+ selected=p;var d=definitions[p];
+ document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('active',b.dataset.p===p)});
+ PNY.q('title').textContent=d.label;PNY.q('help').textContent=d.help;PNY.q('familyLabel').textContent=d.familyLabel;PNY.q('serverLabel').textContent=d.serverLabel;
+ PNY.q('moduleWrap').classList.add('hidden');PNY.q('dmrEssentials').classList.toggle('hidden',p!=='DMR');
+ PNY.q('passwordWrap').classList.add('hidden');loadCatalog(false)
+}
+async function load(){
+ cfg=await PNY.getj('/api/config').catch(function(){return{}});
+ current=await PNY.getj('/api/protocol/status').catch(function(){return{}});
+ PNY.q('currentProto').textContent=String(current.protocol||cfg.protocol||'—').replace('DSTAR','D-Star');
+ PNY.q('state').textContent=current.active?'Conectado':'Aguardando';
+ PNY.q('state').className='big '+(current.active?'green':'yellow');
+ PNY.q('stProto').textContent=current.protocol||cfg.protocol||'—';
+ PNY.q('stKind').textContent=current.kind||cfg.network_kind||'—';
+ PNY.q('stServer').textContent=current.server_name||cfg.server_name||'—';
+ PNY.q('stModule').textContent=current.module||cfg.xlx_module||'—';
+ PNY.q('stGateway').textContent=current.gateway||'—';
+ PNY.q('stAddress').textContent=current.address||cfg.server_address||'—';
+ var p=String(current.protocol||cfg.protocol||'DSTAR').toUpperCase();if(!definitions[p])p='DSTAR';choose(p)
+}
+PNY.q('tabs').innerHTML=protocols.map(function(p){return '<button class="btn" data-p="'+p+'">'+definitions[p].label+'</button>'}).join('');
+PNY.q('tabs').querySelectorAll('button').forEach(function(b){b.onclick=function(){choose(b.dataset.p)}});
+PNY.q('family').onchange=renderServers;PNY.q('server').onchange=serverChanged;PNY.q('reload').onclick=function(){loadCatalog(true)};
+PNY.q('save').onclick=async function(){
+ var x=catalog[Number(PNY.q('server').value)]||{},body={
+  protocol:selected,server_name:PNY.q('serverName').value.trim()||x.name||'',
+  server_address:PNY.q('address').value.trim()||x.address||'',
+  server_port:Number(PNY.q('port').value||x.port||0),
+  network_kind:PNY.q('family').value||x.kind||'',
+  module:PNY.q('moduleWrap').classList.contains('hidden')?'':PNY.q('module').value,
+  color_code:Number(PNY.q('cc').value||1),dmr_slot:PNY.q('slot').value,password:PNY.q('password').value
+ };
+ PNY.q('save').disabled=true;PNY.q('result').textContent='Validando e aplicando somente a mudança necessária...';
+ try{
+   var r=await PNY.getj('/api/protocol/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},45000);
+   PNY.q('result').textContent=r.changed?'Alteração aplicada e validada.':'Nada mudou; nenhum serviço foi reiniciado.';
+   setTimeout(load,1500)
+ }catch(e){PNY.q('result').textContent=e.message}finally{PNY.q('save').disabled=false}
+};
+load();
+</script></body></html>
