@@ -1,0 +1,61 @@
+name: Publish PU2PNY-OS 0.3.0 Alpha validated artifact
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.0-alpha ]
+    paths:
+      - '.github/workflows/0.3.0-publish-only.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Download validated 0.3.0 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.0-arm64
+          path: release
+          repository: PU2PNY/2PNY-OS
+          run-id: 35450093645
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify image and checksum
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-0.3.0-alpha-arm64.img.xz"
+          xz -t "$IMAGE"
+          EXPECTED="$(awk '{print $1}' "$IMAGE.sha256")"
+          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          test "$EXPECTED" = "$ACTUAL"
+          echo "SHA256=$ACTUAL" >> "$GITHUB_ENV"
+      - name: Release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.0 Alpha — imagem ARM64 validada para teste físico.
+
+          Inclui a revisão modular do Wi-Fi/mDNS, Nextion, Ao Vivo, Internet,
+          Protocolos, histórico de uso, APRS, Sistema e Expert.
+
+          Esta é uma versão Alpha para teste em hardware real. As versões anteriores
+          permanecem disponíveis como retorno seguro.
+
+          SHA256: será publicado também no arquivo .sha256 anexado à release.
+          EOF
+      - name: Publish validated release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.0-alpha
+          target_commitish: 016e5ea0374571fcdb436f8a70083dbae6f5cf0b
+          name: PU2PNY-OS 0.3.0 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.0-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.3.0-alpha-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
