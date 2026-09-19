@@ -78,6 +78,11 @@ for service in ("2pny-station.service","2pny-display-core.service","2pny-aprs.se
 # the known purge anchor, so compile all optional gateways immediately before it.
 builder=root/"builder/build-image.sh"
 s=builder.read_text()
+# DStarGateway uses header-only Boost components during compilation.
+build_deps="g++ make git libmosquitto-dev nlohmann-json3-dev"
+if "libboost-dev" not in s:
+    s=s.replace("apt-get install -y --no-install-recommends "+build_deps,
+                "apt-get install -y --no-install-recommends "+build_deps+" libboost-dev",1)
 # The gateway compilation happens inside the target chroot before the normal
 # overlay rsync. Stage the two tiny source patches into the target first.
 chroot_anchor='chroot "$ROOT_MNT" env MMDVMHOST_COMMIT="$MMDVMHOST_COMMIT" /bin/bash -s <<\'MMDVM_BUILD\''
@@ -91,6 +96,9 @@ chmod 0755 "$ROOT_MNT/builder/"*.py
 '''
     s=s.replace(chroot_anchor,stage+chroot_anchor,1)
 anchor="apt-get purge -y g++ make git libmosquitto-dev nlohmann-json3-dev"
+if "apt-get purge -y g++ make git libmosquitto-dev nlohmann-json3-dev libboost-dev" not in s:
+    s=s.replace(anchor,anchor+" libboost-dev",1)
+anchor="apt-get purge -y g++ make git libmosquitto-dev nlohmann-json3-dev libboost-dev"
 if anchor not in s:
     raise SystemExit("0.2.9 builder: compile/purge anchor missing")
 if "PU2PNY_OPTIONAL_GATEWAYS_0_2_9" not in s:
