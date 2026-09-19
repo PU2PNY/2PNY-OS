@@ -447,11 +447,11 @@ async function watchWiFiConnection(ssid,eta){
         // client receives its LAN address; never require a manual refresh.
         for(let i=0;i<90;i++){if(await continueAfterReconnect())return;await new Promise(r=>setTimeout(r,1200))}
       }
-      if(st.state==='error'){
+      if(st.state==='error'||st.state==='recovery_ap'){
         failed=true;localStorage.removeItem('pu2pny-pending-ssid');
         q('reconnectOverlay').hidden=true;
         box.className='result error';
-        box.innerHTML='<b>A conexão Wi‑Fi não foi concluída.</b><br>'+esc(st.message||'O AP pu2pny foi restaurado. Confira a senha e tente novamente.');
+        box.innerHTML='<b>A conexão Wi‑Fi não foi concluída.</b><br>'+esc(st.message||'O perfil foi preservado e o AP pu2pny voltou para recuperação. Confira a senha e tente novamente.');
         q('wifiConnect').disabled=false;
         return
       }
@@ -817,7 +817,7 @@ async function boot(){
       let box=q('wifiResult');box.className='result success';
       let access=(n.resume_urls&&n.resume_urls.length?n.resume_urls[0]:"http://pu2pny.local");box.innerHTML="<b>Wi‑Fi conectado"+(n.ssid?" à "+esc(n.ssid):"")+".</b><br>Continue a configuração. Acesso normal: <b>"+esc(access)+"</b>. O endereço 10.43.0.1 só existe enquanto o AP pu2pny estiver ativo."; 
       if(n.connectivity)showConnectivity(n.connectivity)
-    }else if(n.state==='error'){
+    }else if(n.state==='error'||n.state==='recovery_ap'){
       localStorage.removeItem('pu2pny-pending-ssid');
       let box=q('wifiResult');box.className='result error';
       box.innerHTML='<b>A última tentativa de Wi‑Fi falhou.</b><br>'+(n.message||'Confira a senha e tente novamente.');
