@@ -55,6 +55,23 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
         <div class="option-card">
           <h3>Wi‑Fi</h3><p>Conecte a uma rede existente. Com duas interfaces Wi‑Fi, uma permanece no AP e a outra vira internet.</p>
           <div class="field">
+            <label for="wifiCountry">País / região do Wi‑Fi</label>
+            <select id="wifiCountry">
+              <option value="BR">Brasil</option><option value="PT">Portugal</option><option value="US">Estados Unidos</option>
+              <option value="AR">Argentina</option><option value="UY">Uruguai</option><option value="PY">Paraguai</option>
+              <option value="CL">Chile</option><option value="BO">Bolívia</option><option value="PE">Peru</option>
+              <option value="CO">Colômbia</option><option value="MX">México</option><option value="CA">Canadá</option>
+              <option value="GB">Reino Unido</option><option value="ES">Espanha</option><option value="FR">França</option>
+              <option value="DE">Alemanha</option><option value="IT">Itália</option><option value="NL">Países Baixos</option>
+              <option value="BE">Bélgica</option><option value="CH">Suíça</option><option value="AT">Áustria</option>
+              <option value="PL">Polônia</option><option value="SE">Suécia</option><option value="NO">Noruega</option>
+              <option value="DK">Dinamarca</option><option value="FI">Finlândia</option><option value="IE">Irlanda</option>
+              <option value="JP">Japão</option><option value="AU">Austrália</option><option value="NZ">Nova Zelândia</option>
+              <option value="ZA">África do Sul</option>
+            </select>
+            <small class="hint">Define os canais permitidos antes da busca. Escolher o país correto ajuda a encontrar todas as redes próximas.</small>
+          </div>
+          <div class="field">
             <label for="ssidSelect">Rede Wi‑Fi encontrada</label>
             <div class="wifi-picker">
               <select id="ssidSelect"><option value="">Buscando redes...</option></select>
@@ -326,6 +343,15 @@ q('autoMaintenance').onchange=async function(){
   }
 };
 
+async function loadWiFiCountry(){
+  try{let d=await getj('/api/network/country'),v=String(d.country||'BR').toUpperCase();if([...q('wifiCountry').options].some(o=>o.value===v))q('wifiCountry').value=v}catch(_){}
+}
+async function saveWiFiCountry(){
+  let v=q('wifiCountry').value;
+  await getj('/api/network/country',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({country:v})});
+}
+q('wifiCountry').onchange=async()=>{try{await saveWiFiCountry();await loadWifi()}catch(e){q('scanHint').textContent=e.message}};
+
 function selectedSSID(){
   let sel=q('ssidSelect');
   if(sel.value==='__manual__')return q('ssidManual').value.trim();
@@ -355,7 +381,8 @@ function renderNetworks(a){
   setManualSSID();wifiLoaded=true;
 }
 async function loadWifi(){
-  let btn=q('wifiScan'),hint=q('scanHint'),deadline=Date.now()+50000,first=true;
+  let btn=q('wifiScan'),hint=q('scanHint'),deadline=Date.now()+45000,first=true;
+  try{await saveWiFiCountry()}catch(_){};
   btn.disabled=true;btn.textContent='Buscando...';hint.textContent='Buscando redes Wi‑Fi. Em aparelhos com uma única placa, o AP pode reiniciar rapidamente durante a busca.';
   while(Date.now()<deadline){
     try{
@@ -385,33 +412,32 @@ q('showPass').onclick=function(){
 let reconnectTimer=null,reconnectDeadline=0;
 function showReconnect(ssid){
   let ov=q('reconnectOverlay');ov.hidden=false;
-  reconnectDeadline=Date.now()+90000;
+  reconnectDeadline=Date.now()+75000;
   q('reconnectText').innerHTML='Conectando à rede <b>'+esc(ssid)+'</b>. A interface de rede do hotspot será reiniciada; o rádio não deve ser desligado.';
   if(reconnectTimer)clearInterval(reconnectTimer);
   reconnectTimer=setInterval(()=>{
     let left=Math.max(0,Math.ceil((reconnectDeadline-Date.now())/1000));
     q('reconnectCount').textContent=left;
-    q('reconnectBar').style.width=Math.min(98,Math.max(5,100-left/90*100))+'%';
+    q('reconnectBar').style.width=Math.min(98,Math.max(5,100-left/75*100))+'%';
     if(!left)clearInterval(reconnectTimer);
   },500);
 }
-async function pu2pnyReachable(){
-  try{
-    await fetch('http://pu2pny.local/healthz?ts='+Date.now(),{mode:'no-cors',cache:'no-store'});
-    return true
-  }catch(_){return false}
+async function reachable(url){
+  try{await fetch(url+'/healthz?ts='+Date.now(),{mode:'no-cors',cache:'no-store',signal:AbortSignal.timeout?AbortSignal.timeout(2200):undefined});return true}catch(_){return false}
 }
 async function continueAfterReconnect(){
-  if(await pu2pnyReachable()){
-    location.href='http://pu2pny.local/wizard?step=2';
-    return true
+  let candidates=[];
+  if(location.hostname!=='10.43.0.1')candidates.push(location.origin);
+  candidates.push('http://pu2pny.local');
+  for(let base of [...new Set(candidates)]){
+    if(await reachable(base)){location.href=base+'/wizard?step=2';return true}
   }
   return false
 }
 q('reconnectManual').onclick=()=>{location.href='http://pu2pny.local/wizard?step=2'};
-async function watchWiFiConnection(ssid){
-  let box=q('wifiResult'),deadline=Date.now()+90000,offlineShown=false;
-  showReconnect(ssid);
+async function watchWiFiConnection(ssid,eta){
+  let seconds=Math.max(45,Math.min(120,Number(eta)||75)),box=q('wifiResult'),deadline=Date.now()+seconds*1000,offlineShown=false;
+  showReconnect(ssid);reconnectDeadline=Date.now()+seconds*1000;q('reconnectCount').textContent=seconds;
   while(Date.now()<deadline){
     try{
       let st=await getj('/api/network/connect/status');
@@ -455,8 +481,8 @@ q('wifiConnect').onclick=async function(){
   box.className='result';box.textContent='Validando a senha e preparando a troca de rede...';
   try{
     let opt=q('ssidSelect').selectedOptions[0],bssid=(q('ssidSelect').value==='__manual__'||!opt)?'':(opt.dataset.bssid||'');
-    await getj('/api/network/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ssid:ssid,password:q('wpass').value,bssid:bssid,keep_ap:q('keepap').checked})});
-    watchWiFiConnection(ssid)
+    let accepted=await getj('/api/network/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ssid:ssid,password:q('wpass').value,bssid:bssid,keep_ap:q('keepap').checked})});
+    watchWiFiConnection(ssid,accepted.eta_seconds)
   }catch(e){
     q('wifiConnect').disabled=false;
     localStorage.removeItem('pu2pny-pending-ssid');
@@ -754,12 +780,12 @@ async function boot(){
   if(st.provisioned)await loadCurrentConfig();
   if(requested>=1&&requested<=3){
     step(requested);
-    if(requested===1)loadWifi();
+    if(requested===1)loadWiFiCountry().then(loadWifi);
     if(requested===2)startHardware();
   }else if(st.provisioned){
     await loadConclusion();step(4);
   }else{
-    step(1);q('scanHint').textContent='Clique em Buscar redes. No AP, use http://10.43.0.1/ se o nome local não abrir.';
+    step(1);q('scanHint').textContent='Preparando a busca Wi‑Fi...';await loadWiFiCountry();loadWifi();
   }
   if(requested===3&&!serverCatalog.length)loadServers(false);
   try{
