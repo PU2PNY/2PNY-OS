@@ -1319,6 +1319,7 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 		"ysfgateway_active":serviceActive("2pny-ysfgateway.service"),
 		"p25gateway_active":serviceActive("2pny-p25gateway.service"),
 		"nxdngateway_active":serviceActive("2pny-nxdngateway.service"),
+		"dapnetgateway_active":serviceActive("2pny-dapnetgateway.service"),
 		"display_active":serviceActive("2pny-display-core.service") || serviceActive("2pny-display.service"),
 		"display_core_active":serviceActive("2pny-display-core.service"),
 		"mqtt_active":serviceActive("mosquitto.service"),
