@@ -1937,4 +1937,414 @@ func systemControlHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_ = exec.Command("timedatectl", "set-ntp", "true").Run()
-		_ = 
+		_ = exec.Command("systemctl", "restart", "systemd-timesyncd.service").Run()
+	case "voice-settings":
+		lang := strings.ToLower(strings.TrimSpace(in.Language))
+		if lang != "pt" && lang != "en" && lang != "es" {
+			lang = "pt"
+		}
+		raw, _ := json.Marshal(map[string]any{"enabled": in.Enabled, "language": lang})
+		if err := os.WriteFile(filepath.Join(dataDir, "voice-settings.json"), raw, 0600); err != nil {
+			writeJSON(w, 500, map[string]any{"error": "falha ao salvar voz"})
+			return
+		}
+		marker := filepath.Join(dataDir, "voice-hourly.enabled")
+		if in.Hourly {
+			_ = os.WriteFile(marker, []byte("1\n"), 0600)
+		} else {
+			_ = os.Remove(marker)
+		}
+		if serviceActive("2pny-dmrgateway.service") {
+			_ = exec.Command("systemctl", "restart", "2pny-dmrgateway.service").Run()
+		}
+	case "operational-off":
+		for _, u := range []string{"2pny-dmrgateway.service", "2pny-dstargateway.service", "2pny-ysfgateway.service", "2pny-p25gateway.service", "2pny-nxdngateway.service", "2pny-dapnetgateway.service", "2pny-mmdvmhost.service"} {
+			_ = exec.Command("systemctl", "stop", u).Run()
+		}
+	case "operational-on":
+		var cfg Config
+		if b, e := os.ReadFile(configFile); e == nil {
+			_ = json.Unmarshal(b, &cfg)
+		}
+		_ = exec.Command("systemctl", "start", "2pny-mmdvmhost.service").Run()
+		m := map[string]string{"DMR": "2pny-dmrgateway.service", "DSTAR": "2pny-dstargateway.service", "YSF": "2pny-ysfgateway.service", "P25": "2pny-p25gateway.service", "NXDN": "2pny-nxdngateway.service", "POCSAG": "2pny-dapnetgateway.service"}
+		if u := m[strings.ToUpper(cfg.Protocol)]; u != "" {
+			_ = exec.Command("systemctl", "start", u).Run()
+		}
+	case "reboot":
+		go func() { time.Sleep(800 * time.Millisecond); _ = exec.Command("systemctl", "reboot").Run() }()
+	case "poweroff":
+		go func() { time.Sleep(800 * time.Millisecond); _ = exec.Command("systemctl", "poweroff").Run() }()
+	default:
+		writeJSON(w, 400, map[string]any{"error": "ação inválida"})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true})
+}
+
+func dashboardHandler(w http.ResponseWriter, r *http.Request) {
+	if !fileExists(provisionedFile) {
+		http.Redirect(w, r, "/wizard", http.StatusFound)
+		return
+	}
+	b, err := os.ReadFile(dashboardFile)
+	if err != nil {
+		http.Error(w, "painel indisponível", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(b)
+}
+
+func healthzHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("PU2PNY OK\n"))
+}
+
+func wizardHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := os.ReadFile(wizardFile)
+	if err != nil {
+		http.Error(w, "assistente indisponível", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(b)
+}
+
+func captiveAPIHandler(w http.ResponseWriter, r *http.Request) {
+	host := r.Host
+	base := "http://10.43.0.1"
+	if strings.HasPrefix(host, "10.43.0.") {
+		base = "http://10.43.0.1"
+	} else if strings.Contains(host, "pu2pny") {
+		base = "http://pu2pny.local"
+	}
+	w.Header().Set("Content-Type", "application/captive+json")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"captive":         !fileExists(provisionedFile),
+		"user-portal-url": base + "/wizard",
+	})
+}
+
+func captivePortalHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+	if !fileExists(provisionedFile) {
+		http.Redirect(w, r, "/wizard", http.StatusFound)
+		return
+	}
+	switch r.URL.Path {
+	case "/generate_204", "/gen_204":
+		w.WriteHeader(http.StatusNoContent)
+	case "/connecttest.txt":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("Microsoft Connect Test"))
+	case "/ncsi.txt":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("Microsoft NCSI"))
+	case "/hotspot-detect.html", "/library/test/success.html":
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte("<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>"))
+	case "/canonical.html", "/success.txt":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("success\n"))
+	case "/check_network_status.txt", "/connectivity-check.html":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = w.Write([]byte("NetworkManager is online\n"))
+	default:
+		http.Redirect(w, r, "/wizard", http.StatusFound)
+	}
+}
+
+func readPublicJSON(path string) map[string]any {
+	d := map[string]any{}
+	if b, e := os.ReadFile(path); e == nil {
+		json.Unmarshal(b, &d)
+	}
+	return d
+}
+func sameOrigin(r *http.Request) bool {
+	o := r.Header.Get("Origin")
+	if o == "" {
+		return true
+	}
+	u, e := url.Parse(o)
+	return e == nil && u.Host == r.Host
+}
+func stationSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		writeJSON(w, 200, map[string]any{"qrz_configured": fileExists("/var/lib/2pny/secrets/qrz.json"), "ssh_active": serviceActive("ssh.service")})
+		return
+	}
+	if r.Method != http.MethodPost || !sameOrigin(r) {
+		http.Error(w, "request rejected", 403)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 8192)
+	var in struct {
+		Action   string `json:"action"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Key      string `json:"key"`
+	}
+	if json.NewDecoder(r.Body).Decode(&in) != nil {
+		http.Error(w, "invalid JSON", 400)
+		return
+	}
+	switch in.Action {
+	case "qrz":
+		if in.Username == "" || in.Password == "" {
+			http.Error(w, "Informe usuário e senha QRZ", 400)
+			return
+		}
+		os.MkdirAll("/var/lib/2pny/secrets", 0700)
+		b, _ := json.Marshal(map[string]string{"username": in.Username, "password": in.Password})
+		if e := os.WriteFile("/var/lib/2pny/secrets/qrz.json", b, 0600); e != nil {
+			http.Error(w, "save failed", 500)
+			return
+		}
+	case "qrz-remove":
+		os.Remove("/var/lib/2pny/secrets/qrz.json")
+	case "ssh-enable", "ssh-disable":
+		cmd := exec.Command("/usr/local/sbin/2pny-expert-ssh", in.Action)
+		cmd.Stdin = strings.NewReader(in.Key)
+		if out, e := cmd.CombinedOutput(); e != nil {
+			writeJSON(w, 400, map[string]any{"error": strings.TrimSpace(string(out))})
+			return
+		}
+	default:
+		http.Error(w, "unknown action", 400)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true})
+}
+
+func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	const settingsPath = "/var/lib/2pny/aprs-settings.json"
+	const statusPath = "/run/2pny/aprs-status.json"
+	if r.Method == http.MethodGet {
+		settings := readPublicJSON(settingsPath)
+		if _, ok := settings["callsign"]; !ok {
+			var cfg Config
+			if b, err := os.ReadFile(configFile); err == nil && json.Unmarshal(b, &cfg) == nil && cfg.Callsign != "" {
+				settings["callsign"] = cfg.Callsign
+			}
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"settings": settings, "status": readPublicJSON(statusPath), "service_active": serviceActive("2pny-aprs.service")})
+		return
+	}
+	if r.Method != http.MethodPost || !sameOrigin(r) {
+		http.Error(w, "request rejected", http.StatusForbidden)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 8192)
+	var in struct {
+		Enabled         bool    `json:"enabled"`
+		Latitude        float64 `json:"latitude"`
+		Longitude       float64 `json:"longitude"`
+		Server          string  `json:"server"`
+		Port            int     `json:"port"`
+		IntervalSeconds int     `json:"interval_seconds"`
+		Comment         string  `json:"comment"`
+		SymbolTable     string  `json:"symbol_table"`
+		Symbol          string  `json:"symbol"`
+		SSID            int     `json:"ssid"`
+	}
+	if json.NewDecoder(r.Body).Decode(&in) != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	in.Server = strings.TrimSpace(in.Server)
+	in.Comment = strings.TrimSpace(in.Comment)
+	if in.Server == "" {
+		in.Server = "brazil.aprs2.net"
+	}
+	if in.Port == 0 {
+		in.Port = 14580
+	}
+	if in.IntervalSeconds == 0 {
+		in.IntervalSeconds = 1800
+	}
+	if in.SymbolTable == "" {
+		in.SymbolTable = "/"
+	}
+	if in.Symbol == "" {
+		in.Symbol = "r"
+	}
+	if in.SSID == 0 {
+		in.SSID = 10
+	}
+	if in.SSID < 0 || in.SSID > 15 {
+		http.Error(w, "SSID APRS deve ficar entre 0 e 15", http.StatusBadRequest)
+		return
+	}
+	if len(in.Server) > 255 || hasUnsafeControl(in.Server) || in.Port < 1 || in.Port > 65535 {
+		http.Error(w, "Servidor APRS-IS inválido", http.StatusBadRequest)
+		return
+	}
+	if in.IntervalSeconds < 300 || in.IntervalSeconds > 86400 {
+		http.Error(w, "Intervalo APRS deve ficar entre 300 e 86400 segundos", http.StatusBadRequest)
+		return
+	}
+	if in.Latitude < -90 || in.Latitude > 90 || in.Longitude < -180 || in.Longitude > 180 {
+		http.Error(w, "Latitude/longitude inválidas", http.StatusBadRequest)
+		return
+	}
+	if len(in.Comment) > 60 || len(in.SymbolTable) != 1 || len(in.Symbol) != 1 || hasUnsafeControl(in.Comment) {
+		http.Error(w, "Configuração APRS inválida", http.StatusBadRequest)
+		return
+	}
+	var cfg Config
+	if b, err := os.ReadFile(configFile); err != nil || json.Unmarshal(b, &cfg) != nil || cfg.Callsign == "" {
+		http.Error(w, "Configure o indicativo do hotspot antes do APRS", http.StatusConflict)
+		return
+	}
+	obj := map[string]any{
+		"enabled": in.Enabled, "callsign": cfg.Callsign, "latitude": in.Latitude, "longitude": in.Longitude,
+		"server": in.Server, "port": in.Port, "interval_seconds": in.IntervalSeconds, "comment": in.Comment,
+		"symbol_table": in.SymbolTable, "symbol": in.Symbol, "ssid": in.SSID,
+	}
+	raw, _ := json.MarshalIndent(obj, "", "  ")
+	tmp := settingsPath + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0600); err != nil {
+		http.Error(w, "Falha ao salvar APRS", 500)
+		return
+	}
+	if err := os.Rename(tmp, settingsPath); err != nil {
+		http.Error(w, "Falha ao aplicar APRS", 500)
+		return
+	}
+	action := "restart"
+	if !in.Enabled {
+		action = "stop"
+	}
+	if out, err := exec.Command("systemctl", action, "2pny-aprs.service").CombinedOutput(); err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": strings.TrimSpace(string(out))})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": in.Enabled})
+}
+
+func aprsMessageHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost || !sameOrigin(r) {
+		http.Error(w, "request rejected", http.StatusForbidden)
+		return
+	}
+	var in struct {
+		To   string `json:"to"`
+		Text string `json:"text"`
+	}
+	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&in) != nil {
+		http.Error(w, "JSON inválido", 400)
+		return
+	}
+	to := strings.ToUpper(strings.TrimSpace(in.To))
+	msg := strings.TrimSpace(in.Text)
+	if !regexp.MustCompile(`^[A-Z0-9]{1,6}(?:-[0-9]{1,2})?$`).MatchString(to) {
+		writeJSON(w, 400, map[string]any{"error": "destino APRS inválido"})
+		return
+	}
+	if msg == "" || len(msg) > 60 || hasUnsafeControl(msg) {
+		writeJSON(w, 400, map[string]any{"error": "mensagem deve ter 1 a 60 caracteres"})
+		return
+	}
+	dir := "/var/lib/2pny/aprs-outbox"
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		writeJSON(w, 500, map[string]any{"error": "não foi possível abrir a caixa de saída"})
+		return
+	}
+	id := fmt.Sprintf("%d-%d", time.Now().UnixNano(), os.Getpid())
+	raw, _ := json.Marshal(map[string]any{"to": to, "text": msg, "id": strconv.FormatInt(time.Now().UnixNano()/1e6%1000, 10)})
+	tmp := filepath.Join(dir, "."+id+".tmp")
+	dst := filepath.Join(dir, id+".json")
+	if err := os.WriteFile(tmp, raw, 0600); err != nil {
+		writeJSON(w, 500, map[string]any{"error": "falha ao enfileirar mensagem"})
+		return
+	}
+	if err := os.Rename(tmp, dst); err != nil {
+		_ = os.Remove(tmp)
+		writeJSON(w, 500, map[string]any{"error": "falha ao publicar mensagem"})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true})
+}
+
+func main() {
+	if err := os.MkdirAll(dataDir, 0750); err != nil {
+		log.Fatal(err)
+	}
+	go watchLiveState("/run/2pny/live-state.json")
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		if fileExists(provisionedFile) {
+			http.Redirect(w, r, "/dashboard", http.StatusFound)
+		} else {
+			http.Redirect(w, r, "/wizard", http.StatusFound)
+		}
+	})
+	http.HandleFunc("/wizard", wizardHandler)
+	http.HandleFunc("/dashboard", dashboardHandler)
+	http.HandleFunc("/live", dashboardHandler)
+	http.HandleFunc("/internet", pageHandler(internetFile))
+	http.HandleFunc("/protocols", pageHandler(protocolsFile))
+	http.HandleFunc("/history", pageHandler(historyFile))
+	http.HandleFunc("/aprs", pageHandler(aprsFile))
+	http.HandleFunc("/system", pageHandler(systemFile))
+	http.HandleFunc("/expert", pageHandler(expertFile))
+	http.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/dashboard", http.StatusFound) })
+	http.HandleFunc("/ui-language.js", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "/usr/share/2pny/ui-language.js") })
+	http.HandleFunc("/ui-0.3.0.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "/usr/share/2pny/ui-0.3.0.css") })
+	http.HandleFunc("/ui-common-0.3.0.js", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "/usr/share/2pny/ui-common-0.3.0.js")
+	})
+	http.HandleFunc("/api/status", statusHandler)
+	http.HandleFunc("/api/dashboard", dashboardDataHandler)
+	http.HandleFunc("/api/connectivity", connectivityHandler)
+	http.HandleFunc("/api/wifi/scan", wifiScanHandler)
+	http.HandleFunc("/api/network/country", networkCountryHandler)
+	http.HandleFunc("/api/network/connect", networkConnectHandler)
+	http.HandleFunc("/api/network/connect/status", networkConnectStatusHandler)
+	http.HandleFunc("/api/network/refresh", networkRefreshHandler)
+	http.HandleFunc("/api/maintenance", maintenanceHandler)
+	http.HandleFunc("/api/hardware", hardwareHandler)
+	http.HandleFunc("/api/hardware/status", hardwareStatusHandler)
+	http.HandleFunc("/api/hardware/scan", hardwareScanHandler)
+	http.HandleFunc("/api/display/override", displayOverrideHandler)
+	http.HandleFunc("/api/config", publicConfigHandler)
+	http.HandleFunc("/api/servers", serversHandler)
+	http.HandleFunc("/api/protocol/status", protocolStatusHandler)
+	http.HandleFunc("/api/protocol/apply", protocolApplyHandler)
+	http.HandleFunc("/api/netdiag", netdiagHandler)
+	http.HandleFunc("/api/history/summary", historySummaryHandler)
+	http.HandleFunc("/api/system", systemControlHandler)
+	http.HandleFunc("/api/update", updateStatusHandler)
+	http.HandleFunc("/api/live", liveStatusHandler)
+	http.HandleFunc("/api/live/events", liveEventsHandler)
+	http.HandleFunc("/api/station/settings", stationSettingsHandler)
+	http.HandleFunc("/api/aprs", aprsSettingsHandler)
+	http.HandleFunc("/api/aprs/message", aprsMessageHandler)
+	http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, 200, readPublicJSON("/run/2pny/contacts.json"))
+	})
+	http.Handle("/operator-photo/", http.StripPrefix("/operator-photo/", http.FileServer(http.Dir("/var/cache/2pny/photos"))))
+	http.Handle("/flags/", http.StripPrefix("/flags/", http.FileServer(http.Dir("/usr/share/2pny/flags"))))
+	http.HandleFunc("/api/basic/apply", basicApplyHandler)
+	http.HandleFunc("/api/rf", rfStatusHandler)
+	http.HandleFunc("/api/rf/apply", rfApplyHandler)
+	http.HandleFunc("/api/modules", moduleStatusHandler)
+	http.HandleFunc("/api/ap", apControlHandler)
+	http.HandleFunc("/healthz", healthzHandler)
+	http.HandleFunc("/captive-api", captiveAPIHandler)
+	for _, p := range []string{"/generate_204", "/gen_204", "/hotspot-detect.html", "/library/test/success.html", "/connecttest.txt", "/ncsi.txt", "/canonical.html", "/success.txt", "/check_network_status.txt", "/connectivity-check.html", "/redirect"} {
+		http.HandleFunc(p, captivePortalHandler)
+	}
+	log.Printf("PU2PNY-OS %s listening on %s", appVersion, listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
+}
