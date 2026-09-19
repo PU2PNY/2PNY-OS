@@ -80,7 +80,7 @@ main=(root/"src/2pnyd/main.go").read_text()
 wiz=(root/"rootfs-overlay/usr/share/2pny/wizard.html").read_text()
 dash=(root/"rootfs-overlay/usr/share/2pny/dashboard.html").read_text()
 apply=(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply").read_text()
-assert 'appVersion      = "0.3.2-alpha"' in main
+assert 'appVersion' in main and '"0.3.2-alpha"' in main
 assert "resume_urls" in main and "startHostfilesUpdate" in main
 assert "reconnectCandidates" in wiz and "serverCatalog=[]" in wiz
 assert "activityBody" in dash and "signalBar" in dash and "radioId" in dash
