@@ -1,0 +1,17 @@
+[Unit]
+Description=PU2PNY lightweight Internet route diagnostics
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/2pny-netdiag
+Restart=always
+RestartSec=5
+Nice=8
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/2pny
+MemoryMax=32M
+[Install]
+WantedBy=multi-user.target
