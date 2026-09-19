@@ -900,6 +900,20 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusConflict, map[string]any{"ok":false, "error":"Crossmode ainda está em desenvolvimento nesta Alpha; use operação Normal"})
 		return
 	}
+	if in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" {
+		if in.ServerName == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione um servidor/refletor para o protocolo"})
+			return
+		}
+		if len(in.ServerName)>128 || len(in.ServerAddress)>255 || hasUnsafeControl(in.ServerName) || hasUnsafeControl(in.ServerAddress) {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"servidor/refletor inválido"})
+			return
+		}
+		if in.Protocol == "DSTAR" && (len(in.XLXModule)!=1 || in.XLXModule[0]<'A' || in.XLXModule[0]>'Z') {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"D-Star exige módulo A-Z"})
+			return
+		}
+	}
 	if in.Protocol == "DMR" {
 		if in.ServerName == "" || in.ServerAddress == "" || in.ServerPort < 1 || in.ServerPort > 65535 {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione um servidor/master DMR válido"})
@@ -998,15 +1012,15 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		networkState := "rf-only"
-		if in.Protocol == "DMR" {
+		if in.Protocol == "DMR" || in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" {
 			netOut, netErr := exec.Command("/usr/local/sbin/2pny-protocol-network-apply",
-				"DMR", in.ServerName, in.ServerAddress, strconv.Itoa(in.ServerPort),
+				in.Protocol, in.ServerName, in.ServerAddress, strconv.Itoa(in.ServerPort),
 				in.ServerPassword, in.UseMode, strconv.Itoa(in.ColorCode), in.DMRSlot,
 				in.XLXModule, in.ESSID, in.NetworkKind, in.ServerOptions).CombinedOutput()
 			if netErr != nil {
 				m := strings.TrimSpace(string(netOut)); if m == "" { m = netErr.Error() }
-				writeRFApplyState("error", "RF validada, mas a rede DMR não pôde ser aplicada: "+m)
-				log.Printf("DMR network apply failed: %v: %s", netErr, m)
+				writeRFApplyState("error", "RF validada, mas a rede "+in.Protocol+" não pôde ser aplicada: "+m)
+				log.Printf("%s network apply failed: %v: %s", in.Protocol, netErr, m)
 				return
 			}
 			networkState = "connecting"
@@ -1046,8 +1060,8 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = exec.Command("systemctl", "restart", "avahi-daemon.service").Run()
 		done := "RF e MMDVMHost configurados."
-		if in.Protocol == "DMR" {
-			done = "RF configurada e servidor DMR aplicado. Acompanhe o estado da rede no painel principal."
+		if networkState == "connecting" {
+			done = "RF configurada e rede "+in.Protocol+" aplicada. Acompanhe o estado no painel principal."
 		}
 		committed = true
 		writeRFApplyState("applied", done)
@@ -1250,6 +1264,10 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 		"provisioned":fileExists(provisionedFile),
 		"radio_active":serviceActive("2pny-mmdvmhost.service"),
 		"dmrgateway_active":serviceActive("2pny-dmrgateway.service"),
+		"dstargateway_active":serviceActive("2pny-dstargateway.service"),
+		"ysfgateway_active":serviceActive("2pny-ysfgateway.service"),
+		"p25gateway_active":serviceActive("2pny-p25gateway.service"),
+		"nxdngateway_active":serviceActive("2pny-nxdngateway.service"),
 		"display_active":serviceActive("2pny-display.service"),
 		"mqtt_active":serviceActive("mosquitto.service"),
 		"mmdvm_baud":baud,
