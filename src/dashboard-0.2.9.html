@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>PU2PNY-OS — Painel</title>
+<script>(function(){var t=localStorage.getItem('pu2pny-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
+<style>
+:root{color-scheme:dark;--bg:#07111b;--side:#0b1723;--card:#102030;--card2:#13283b;--line:#27425b;--text:#f6f9fc;--muted:#8fb2d0;--blue:#3fb3ff;--green:#35d69a;--yellow:#ffc85a;--red:#ff6c79;--shadow:0 16px 48px rgba(0,0,0,.24)}
+html[data-theme=light]{color-scheme:light;--bg:#f3f7fb;--side:#fff;--card:#fff;--card2:#edf4fa;--line:#cfddea;--text:#12202e;--muted:#5d7488;--blue:#087bc7;--green:#087e57;--yellow:#946300;--red:#c83343;--shadow:0 14px 34px rgba(40,64,88,.1)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,a{font:inherit}.shell{min-height:100vh;display:grid;grid-template-columns:230px minmax(0,1fr)}aside{position:sticky;top:0;height:100vh;background:var(--side);border-right:1px solid var(--line);padding:24px 18px;display:flex;flex-direction:column}.brand{font-size:20px;font-weight:900;letter-spacing:.2px}.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}.nav{display:grid;gap:7px;margin-top:28px}.nav a{display:flex;gap:10px;align-items:center;text-decoration:none;color:#a9d8fb;padding:11px 12px;border:1px solid transparent;border-radius:12px}.nav a:hover,.nav a.active{background:var(--card);border-color:var(--line);color:var(--text)}.nav i{width:8px;height:8px;border-radius:50%;background:var(--blue)}.local{margin-top:auto;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);font-size:12px}.local b{color:var(--blue);display:block;margin-top:3px}.main{width:min(1460px,100%);padding:28px 32px 52px;margin:auto}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.top h1{margin:0;font-size:30px;line-height:1.1}.top p{color:var(--muted);margin:7px 0 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 13px;border-radius:11px;text-decoration:none;font-weight:800;cursor:pointer}.btn.primary{background:var(--blue);border-color:var(--blue);color:#06131d}.badges{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}.badge{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}.dot.good{background:var(--green)}.dot.warn{background:var(--yellow)}.dot.bad{background:var(--red)}.section{scroll-margin-top:18px;margin-top:22px}.sectionhead{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px}.sectionhead h2{margin:0;font-size:18px}.sectionhead small{color:var(--muted)}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow);min-width:0}.card h3{margin:0 0 12px;font-size:14px}.big{font-size:24px;font-weight:900;line-height:1.2}.green{color:var(--green)}.yellow{color:var(--yellow)}.red{color:var(--red)}.blue{color:var(--blue)}.rows{margin-top:12px}.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row span{color:#79c2f5}.row b{text-align:right;overflow-wrap:anywhere}.meter{height:10px;border-radius:999px;background:color-mix(in srgb,var(--line) 72%,transparent);overflow:hidden;margin-top:9px}.meter>i{display:block;height:100%;width:0;background:var(--muted);transition:width .35s ease,background .2s}.meter>i.q-good{background:var(--green)}.meter>i.q-ok{background:var(--yellow)}.meter>i.q-bad{background:var(--red)}.livegrid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}.livecard{position:relative;overflow:hidden;min-height:245px}.livehead{display:flex;justify-content:space-between;align-items:center;gap:10px}.direction{font-size:13px;color:var(--muted)}.livebody{display:grid;grid-template-columns:124px minmax(0,1fr);gap:18px;align-items:center;margin:12px 0}.avatar{width:112px;height:112px;border-radius:18px;border:1px solid var(--line);background:var(--card2);display:grid;place-items:center;position:relative;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover}.operatorname{font-size:30px;font-weight:950;line-height:1.08;letter-spacing:.1px}.callsignline{display:flex;align-items:center;gap:9px;margin-top:5px;font-size:17px;font-weight:850;color:var(--blue)}.flag{width:28px;height:20px;object-fit:cover;border-radius:3px;border:1px solid color-mix(in srgb,var(--line) 75%,transparent);box-shadow:0 1px 3px rgba(0,0,0,.18)}.livefacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}.livefact{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:9px 10px}.livefact small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em}.livefact b{display:block;margin-top:2px;font-size:14px;overflow-wrap:anywhere}.opcell{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:center}.opcell .flag{width:24px;height:17px}.opname{font-weight:850}.opmeta{color:var(--muted);font-size:11px;margin-top:2px}.orb{width:28px;height:28px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 0 color-mix(in srgb,var(--blue) 40%,transparent)}.livecard.active .orb{background:var(--green);animation:pulse 1.15s infinite}.livecard.tx.active .orb{background:var(--blue)}@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--blue) 55%,transparent)}70%{box-shadow:0 0 0 24px transparent}100%{box-shadow:0 0 0 0 transparent}}.talker{font-size:25px;font-weight:950;overflow-wrap:anywhere}.target{color:var(--blue);font-size:16px;margin-top:4px}.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.metric{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:10px}.metric small{display:block;color:var(--muted);font-size:11px}.metric b{display:block;margin-top:3px;font-size:15px}.qualityline{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-top:14px;color:var(--muted);font-size:12px}.qualityline .meter{margin:0}.statuspill{border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800}.statuspill.good{border-color:color-mix(in srgb,var(--green) 55%,var(--line));color:var(--green)}.statuspill.warn{border-color:color-mix(in srgb,var(--yellow) 55%,var(--line));color:var(--yellow)}.statuspill.bad{border-color:color-mix(in srgb,var(--red) 55%,var(--line));color:var(--red)}.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.quick a{display:block;text-decoration:none;color:var(--text);border:1px solid var(--line);background:var(--card);border-radius:13px;padding:15px}.quick a b{display:block}.quick a small{display:block;color:var(--muted);margin-top:6px}.diag{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.diagitem{border:1px solid var(--line);background:var(--card2);border-radius:12px;padding:12px}.diagitem small{display:block;color:var(--muted)}.diagitem b{display:block;margin-top:4px}.activity{display:grid;gap:7px;max-height:240px;overflow:auto}.event{display:grid;grid-template-columns:88px 62px minmax(0,1fr);gap:8px;border-bottom:1px solid var(--line);padding:8px 0}.event:last-child{border-bottom:0}.event small{color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:22px}.footnote{color:var(--muted);font-size:12px;margin-top:10px}
+@media(max-width:1050px){.shell{grid-template-columns:190px minmax(0,1fr)}.grid3{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.diag{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.shell{display:block}aside{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:14px}.brand small,.local{display:none}.nav{display:flex;overflow:auto;margin-top:12px;gap:6px}.nav a{white-space:nowrap;padding:9px}.main{padding:18px 12px 40px}.top{align-items:center}.top h1{font-size:25px}.grid3,.grid2,.livegrid{grid-template-columns:1fr}.livebody{grid-template-columns:82px minmax(0,1fr)}.avatar{width:76px;height:76px}.operatorname{font-size:23px}.callsignline{font-size:15px}.livefacts{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}.actions .btn:not(.primary){display:none}}
+@media(max-width:430px){.quick,.diag{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.card{padding:14px}.talker{font-size:21px}.row{grid-template-columns:1fr}.row b{text-align:left}.event{grid-template-columns:72px 52px minmax(0,1fr)}}
+
+/* Compact operator-first layout, with a readable light theme. */
+.shell{display:block}aside{position:sticky;top:0;z-index:50;height:auto;padding:16px 22px;backdrop-filter:blur(10px);border:0;border-bottom:1px solid var(--line);display:flex;flex-direction:row;gap:24px;align-items:center;flex-wrap:wrap}.nav{display:flex;margin:0;gap:5px;flex-wrap:wrap}.nav a{padding:8px 11px}.local{display:none}.main{padding:18px 22px 35px;max-width:1440px}.top h1{font-size:24px}.top p{font-size:13px}.badges{margin:12px 0}.section{margin-top:14px}.card{padding:14px;box-shadow:none}.livecard{min-height:220px}.livebody{margin:10px 0;gap:12px}.livegrid{gap:12px}.avatar{border-radius:50%;width:78px;height:78px}.avatar img{width:100%;height:100%;object-fit:cover}.livecard.active .orb{animation:none}.livecard.rx.active{border-color:#fb4265;box-shadow:0 0 14px #fb42652b,inset 0 0 14px #fb42650d}.livecard.tx.active{border-color:#19c987;box-shadow:0 0 14px #19c9872b,inset 0 0 14px #19c9870d}.livecard.rx.active .orb{background:#fb4265}.livecard.tx.active .orb{background:#19c987}.identity{font-size:14px;color:var(--text);margin-top:3px}.location{font-size:12px;color:var(--muted)}.metrics{gap:6px}.metric{padding:7px}.tablewrap{overflow:auto;max-height:560px}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}th,td{text-align:left;padding:10px 9px;border-bottom:1px solid var(--line)}th{color:var(--blue);position:sticky;top:0;background:var(--card)}.activity{display:block;max-height:none}.expert-only{display:none}body.expert .expert-only{display:block}.pilltx{color:var(--red)}.pillrx{color:var(--green)}input,select{background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px;max-width:100%}.row span{color:var(--muted)}html[data-theme=light] .nav a{color:#125680}.statusmsg{color:var(--muted);font-size:13px}.splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;text-align:center}.splash strong{font-size:42px;letter-spacing:3px;color:var(--blue)}.splash[hidden]{display:none}@media(max-width:760px){aside{padding:12px;gap:12px}.nav{flex-wrap:nowrap;width:100%;overflow:auto}.main{padding:12px}.actions .btn:not(.primary){display:inline-block}.livebody{grid-template-columns:74px 1fr}.avatar{width:68px;height:68px}.operatorname{font-size:22px}.top{flex-wrap:wrap}.metrics{grid-template-columns:repeat(4,1fr)}.metric b{font-size:13px}.metric small{font-size:10px}.tablewrap{max-height:430px}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body><div class="splash" id="splash"><div><strong>PU2PNY</strong><p>Preparando painel · Carregando atividade local…</p></div></div>
+<div class="shell">
+<aside>
+  <div class="brand">PU2PNY-OS<small>Digital Radio Operating System</small></div>
+  <nav class="nav">
+    <a class="active" href="#aovivo"><i></i>Ao Vivo</a>
+    <a href="#rede"><i></i>Internet</a>
+    <a href="#painel"><i></i>Hotspot</a>
+    <a href="/wizard?step=3"><i></i>Protocolos</a>
+    <a href="#historico"><i></i>Histórico</a>
+    <a href="#display"><i></i>Display</a>
+    <a href="#diagnostico"><i></i>Sistema</a>
+    <a href="#expert"><i></i>Expert</a>
+  </nav>
+  <div class="local">Acesso local<b>http://pu2pny.local/</b></div>
+</aside>
+<main class="main" id="painel">
+  <header class="top">
+    <div><h1>Painel principal</h1><p>Estado operacional do PU2PNY-OS em tempo real.</p></div>
+    <div class="actions"><select id="language" aria-label="Idioma"><option value="pt">Português</option><option value="en">English</option><option value="es">Español</option></select><button class="btn" id="viewMode">Básico / Expert</button><button class="btn" id="theme">☀ Claro</button><a class="btn" href="/wizard?step=3">Configurações</a><button class="btn primary" id="refresh">Atualizar</button></div>
+  </header>
+  <div class="badges">
+    <span class="badge"><i class="dot" id="systemDot"></i><span id="systemBadge">PU2PNY-OS</span></span>
+    <span class="badge" id="versionBadge">0.2.9-alpha</span>
+    <span class="badge"><i class="dot" id="internetDot"></i><span id="internetBadge">Internet: verificando</span></span>
+    <span class="badge"><i class="dot" id="masterDot"></i><span id="masterBadge">DMR: aguardando</span></span>
+  </div>
+
+  <section class="section">
+    <div class="grid3">
+      <article class="card">
+        <h3>Rádio</h3><div class="big" id="radioState">Verificando...</div>
+        <div class="rows"><div class="row"><span>Indicativo</span><b id="call">—</b></div><div class="row"><span>Protocolo</span><b id="proto">—</b></div><div class="row"><span>Modo</span><b id="mode">—</b></div><div class="row"><span>MMDVM baud</span><b id="baud">—</b></div></div>
+      </article>
+      <article class="card">
+        <h3>RF / DMR</h3><div class="big" id="freq">—</div>
+        <div class="rows"><div class="row"><span>Color Code</span><b id="cc">—</b></div><div class="row"><span>Time Slot</span><b id="slot">—</b></div><div class="row"><span>DMR ID / ESSID</span><b id="dmrid">—</b></div><div class="row"><span>Módulo XLX</span><b id="module">—</b></div></div>
+      </article>
+      <article class="card" id="rede">
+        <h3>Internet e rede local</h3><div class="big" id="netState">Verificando...</div>
+        <div class="qualityline"><span>Internet</span><div class="meter"><i id="internetMeter"></i></div><b id="internetQuality">—</b></div>
+        <div class="rows"><div class="row"><span>Latência</span><b id="latency">—</b></div><div class="row"><span>Wi‑Fi cliente</span><b id="wifi">—</b></div><div class="row"><span>Ethernet</span><b id="ethernet">—</b></div><div class="row"><span>AP manutenção</span><b id="ap">—</b></div><div class="row"><span>IP</span><b id="ips">—</b></div></div>
+        <button class="btn" id="apToggle" style="margin-top:10px">Alternar AP</button>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="aovivo">
+    <div class="sectionhead"><h2>Ao Vivo</h2><small id="liveUpdated">Aguardando dados...</small></div>
+    <div class="livegrid">
+      <article class="card livecard" id="liveCard">
+        <div class="livehead"><div><b id="liveTitle">Standby</b><div class="direction" id="liveDirection">Hotspot pronto para atividade</div></div><span class="statuspill" id="liveStatus">STANDBY</span></div>
+        <div class="livebody">
+          <div class="avatar" id="liveAvatar"><div class="orb"></div></div>
+          <div>
+            <div class="operatorname" id="liveName">Aguardando operador</div>
+            <div class="callsignline"><img id="liveFlag" class="flag" hidden alt=""><span id="liveSource">Sem transmissão</span></div>
+            <div class="location" id="liveLocation"></div>
+          </div>
+        </div>
+        <div class="livefacts">
+          <div class="livefact"><small>Destino / TG / Refletor</small><b id="liveTarget">Aguardando atividade</b></div>
+          <div class="livefact"><small>Cidade / Região</small><b id="liveCity">—</b></div>
+          <div class="livefact"><small>Rede</small><b id="liveNetwork">—</b></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><small>Protocolo</small><b id="liveProtocol">—</b></div>
+          <div class="metric"><small>Slot</small><b id="liveSlot">—</b></div>
+          <div class="metric"><small>Duração</small><b id="liveDuration">—</b></div>
+          <div class="metric"><small>BER</small><b id="liveBer">—</b></div>
+          <div class="metric"><small>RSSI / Sinal RF</small><b id="liveRssi">—</b></div>
+        </div>
+        <div class="qualityline"><span>Sinal RF</span><div class="meter"><i id="rfMeter"></i></div><b id="rfQuality">—</b></div>
+        <div class="qualityline"><span>Internet · LAT/PER/JIT</span><div class="meter"><i id="liveMeter"></i></div><b id="liveQuality">—</b></div>
+      </article>
+    </div>
+    <div class="footnote">Um único box acompanha TX, RX e standby. BER e RSSI só aparecem quando emitidos pelo modem; duração é calculada localmente.</div>
+  </section>
+
+  <section class="section">
+    <div class="grid2">
+      <article class="card">
+        <h3>Servidor digital</h3><div class="big" id="serverState">Aguardando</div>
+        <div class="rows"><div class="row"><span>Rede</span><b id="serverKind">—</b></div><div class="row"><span>Servidor</span><b id="serverName">—</b></div><div class="row"><span>Endereço</span><b id="serverAddress">—</b></div><div class="row"><span>Porta</span><b id="serverPort">—</b></div></div>
+      </article>
+      <article class="card" id="display">
+        <h3>Display</h3><div class="big" id="displayState">Verificando...</div>
+        <div class="rows"><div class="row"><span>Tipo</span><b id="displayType">—</b></div><div class="row"><span>Integração</span><b id="displayIntegration">—</b></div><div class="row"><span>Driver</span><b id="displayDriver">—</b></div><div class="row"><span>Layout</span><b id="displayLayout">—</b></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sectionhead"><h2>Acessos rápidos</h2></div>
+    <div class="quick">
+      <a href="/wizard?step=1"><b>Rede e Wi‑Fi</b><small>Trocar rede, buscar SSID e revisar Internet.</small></a>
+      <a href="/wizard?step=2"><b>Hardware</b><small>Redetectar MMDVM e Nextion.</small></a>
+      <a href="/wizard?step=3"><b>Rádio e servidor</b><small>Frequência, Color Code, slot, master e módulo.</small></a>
+      <a href="#diagnostico"><b>Diagnóstico</b><small>Serviços críticos e estado do gateway.</small></a>
+    </div>
+  </section>
+
+  <section class="section expert-only" id="diagnostico">
+    <div class="sectionhead"><h2>Diagnóstico</h2><small>Serviços essenciais</small></div>
+    <div class="card"><div class="diag">
+      <div class="diagitem"><small>MMDVMHost</small><b id="diagHost">—</b></div>
+      <div class="diagitem"><small>DMRGateway</small><b id="diagGateway">—</b></div>
+      <div class="diagitem"><small>MMDVM-Display</small><b id="diagDisplay">—</b></div>
+      <div class="diagitem"><small>MQTT local</small><b id="diagMqtt">—</b></div>
+    </div></div>
+  </section>
+
+  <section class="section" id="historico">
+    <div class="sectionhead"><h2>Atividade das últimas 24 horas</h2><small id="eventsUpdated">—</small></div>
+    <div class="card"><div class="activity" id="events"><div class="empty">Nenhuma atividade RF/rede registrada ainda.</div></div><div class="footnote">Nome, cidade, país e bandeira são enriquecidos pelo cache local RadioID.net. O painel não exibe o ID digital do operador.</div></div>
+  </section>
+
+<section class="section" id="contatos"><div class="sectionhead"><h2>Operadores locais</h2><button class="btn" id="contactsRefresh">Atualizar visualização</button></div><p class="statusmsg">Consulta RadioID sob demanda, no máximo uma a cada 15 s. Dados locais revalidados a cada 24 h; mudanças dependem da atualização na origem.</p><div class="card tablewrap" id="contactsTable">Aguardando operadores…</div></section>
+<section class="section expert-only" id="expert"><div class="sectionhead"><h2>Expert</h2></div><div class="grid2"><article class="card"><h3>Sistema / recepção</h3><p id="telemetry">Aguardando telemetria…</p><p id="berAdvice">BER: aguardando chamada RF concluída.</p><p class="statusmsg">Offsets preservados. Calibração exige transmissão de referência; não alteramos a frequência automaticamente durante chamadas.</p><a class="btn" href="/wizard?step=3">Offsets / configuração RF</a></article><article class="card"><h3>SSH por chave</h3><p class="statusmsg">Conta radioexpert para diagnóstico. Sem senha e sem login root; o serviço só é habilitado ao cadastrar uma chave.</p><input id="sshKey" placeholder="ssh-ed25519 AAAA…" aria-label="Chave pública SSH"><button class="btn" id="sshEnable">Habilitar SSH</button><button class="btn" id="sshDisable">Desativar SSH</button><p id="sshAddress"></p></article><article class="card"><h3>Fotos QRZ</h3><p class="statusmsg">Use credenciais com acesso à API XML QRZ. Não existe lista gratuita de fotos integrada. Cache de fotos: até 7 dias, máximo 300 imagens.</p><input id="qrzUser" placeholder="Usuário QRZ" autocomplete="username"><input id="qrzPassword" type="password" placeholder="Senha QRZ" autocomplete="new-password"><button class="btn" id="qrzSave">Salvar QRZ</button><button class="btn" id="qrzRemove">Remover credenciais</button></article></div><p id="expertResult" role="status"></p></section>
+</main></div>
+
+<script>
+const q=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('pu2pny-theme',t);q('theme').textContent=t==='dark'?'☀ Claro':'☾ Escuro'}
+setTheme(localStorage.getItem('pu2pny-theme')||'dark');q('theme').onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+async function getj(url,opt){let ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);try{let r=await fetch(url,Object.assign({cache:'no-store',signal:ctl.signal},opt||{}));let j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Falha');return j}finally{clearTimeout(timer)}}
+function yn(v,a='Ativo',b='Parado'){return v?a:b}
+function qualityClass(label){return label==='Ótimo'||label==='Ativo'?'q-good':label==='Bom'?'q-ok':'q-bad'}
+function meter(id,score,label){let e=q(id);e.style.width=Math.max(0,Math.min(100,Number(score)||0))+'%';e.className=qualityClass(label||'')}
+function statePill(id,active,label){let e=q(id);e.textContent=label;e.className='statuspill '+(active?'good':'')}
+function flagUrl(code){let cc=String(code||'').toLowerCase();return /^[a-z]{2}$/.test(cc)?'/flags/4x3/'+cc+'.svg':''}
+function operatorView(e){let o=(e&&e.operator)||{},source=String((e&&e.source)||'').trim();return {
+  name:o.name||e?.alias||source||'Operador não identificado',
+  callsign:o.callsign||(!/^\d+$/.test(source)?source:'')||'—',
+  city:[o.city,o.state].filter(Boolean).join(' / '),
+  country:o.country||'',
+  country_code:o.country_code||'',
+  photo:o.photo||''
+}}
+function renderAvatar(op){let box=q('liveAvatar');box.innerHTML='';if(op.photo){let img=document.createElement('img');img.src=op.photo;img.alt='Foto do operador';img.loading='eager';img.onerror=()=>{box.innerHTML='<div class="orb"></div>'};box.appendChild(img)}else box.innerHTML='<div class="orb"></div>'}
+function renderFlag(img,cc){let u=flagUrl(cc);if(!img)return;if(u){img.src=u;img.hidden=false;img.alt=String(cc||'')}else{img.hidden=true;img.removeAttribute('src')}}
+
+let lastDashboard=null,lastLive=null;
+function renderDashboard(d){
+  lastDashboard=d;let c=d.config||{},n=d.connectivity||{},dr=d.display_runtime||{},nr=d.network_runtime||{};
+  q('systemDot').className='dot '+(d.radio_active?'good':'warn');
+  q('systemBadge').textContent='PU2PNY-OS '+(d.radio_active?'operacional':'atenção');
+  q('versionBadge').textContent=d.version||'0.2.9-alpha';
+  q('internetDot').className='dot '+(n.internet?(n.internet_quality==='Ruim'?'warn':'good'):'bad');
+  q('internetBadge').textContent=n.internet?'Internet '+(n.internet_quality||'online'):'Internet offline';
+  q('radioState').textContent=d.radio_active?'MMDVMHost ativo':'Rádio parado';q('radioState').className='big '+(d.radio_active?'green':'red');
+  q('call').textContent=c.callsign||'—';q('proto').textContent=c.protocol||'—';q('mode').textContent=c.use_mode==='repeater'?'Repetidora':'Hotspot';q('baud').textContent=d.mmdvm_baud?d.mmdvm_baud+' baud':'—';
+  q('freq').textContent=c.rx_hz?(Number(c.rx_hz)/1e6).toFixed(6).replace(/0+$/,'').replace(/\.$/,'')+' MHz':'—';
+  q('cc').textContent=c.color_code===0?'0':(c.color_code||'—');q('slot').textContent=c.dmr_slot?(c.dmr_slot==='both'?'TS1 + TS2':'TS'+c.dmr_slot):'—';
+  q('dmrid').textContent=(c.dmr_id||'—')+(c.essid?(' / '+c.essid):'');q('module').textContent=c.xlx_module||'—';
+  q('netState').textContent=n.internet?'Online':'Somente rede local';q('netState').className='big '+(n.internet?'green':'yellow');
+  q('internetQuality').textContent=n.internet_quality||'Offline';q('latency').textContent=n.internet_latency_ms?n.internet_latency_ms+' ms':'—';
+  let score=n.internet_quality==='Ótimo'?100:n.internet_quality==='Bom'?68:n.internet_quality==='Ruim'?35:0;meter('internetMeter',score,n.internet_quality);
+  q('wifi').textContent=n.wifi?(n.wifi_ssid||'Conectado'):'Não conectado';q('ethernet').textContent=n.ethernet?'Conectado':'Sem link';q('ap').textContent=n.ap_active?'Ativo · '+(n.ap_ssid||'pu2pny'):'Desligado';q('ips').textContent=(n.ipv4||[]).join(', ')||'—';
+  q('apToggle').textContent=n.ap_active?'Desativar AP':'Ativar AP';
+  q('serverKind').textContent=nr.kind||c.network_kind||'—';q('serverName').textContent=nr.server_name||c.server_name||'—';q('serverAddress').textContent=nr.address||c.server_address||'—';q('serverPort').textContent=nr.port||c.server_port||'—';
+  q('displayState').textContent=d.display_active?'Ativo':(dr.state==='configured'?'Configurado':'Não ativo');q('displayState').className='big '+(d.display_active?'green':'yellow');
+  q('displayType').textContent=dr.type||'—';q('displayIntegration').textContent=dr.integration||'—';q('displayDriver').textContent=d.display_active?'MMDVM-Display':'—';q('displayLayout').textContent=dr.layout===2?'ON7LDS / Pi-Star':dr.layout===3?'ON7LDS DIY':(dr.layout??'—');
+  let t=d.telemetry||{};q('telemetry').textContent='CPU '+(t.cpu_percent??'—')+'% · '+(t.temperature>=0?t.temperature+' °C':'Temperatura indisponível')+' · RAM '+(t.memory_used_mb??'—')+' / '+(t.memory_total_mb??'—')+' MB';q('sshAddress').textContent='ssh radioexpert@'+location.hostname;
+  q('diagHost').textContent=yn(d.radio_active);q('diagGateway').textContent=yn(d.dmrgateway_active);q('diagDisplay').textContent=yn(d.display_active);q('diagMqtt').textContent=yn(d.mqtt_active);
+}
+let liveStartedMs=0;
+function localDuration(){
+  if(!liveStartedMs){q('liveDuration').textContent='—';return}
+  q('liveDuration').textContent=((Date.now()-liveStartedMs)/1000).toFixed(1)+' s';
+}
+setInterval(()=>{if(!document.hidden&&liveStartedMs)localDuration()},250);
+function rfScore(rssi){
+  let v=Number(rssi);if(!Number.isFinite(v))return null;
+  return Math.max(0,Math.min(100,Math.round((v+130)/80*100)));
+}
+function renderLive(l){
+  lastLive=l||{};let n=l.network||{},active=l.active||null,card=q('liveCard');
+  let connected=n.state==='connected',bad=n.state==='error'||n.state==='disconnected';
+  q('masterDot').className='dot '+(connected?'good':bad?'bad':'warn');
+  q('masterBadge').textContent='Rede: '+(connected?'conectada':bad?'erro':(n.state||'aguardando'));
+  q('serverState').textContent=connected?'Conectado':bad?'Erro':'Aguardando';
+  q('serverState').className='big '+(connected?'green':bad?'red':'yellow');
+  card.classList.remove('active','tx','rx');
+  if(!active){
+    liveStartedMs=0;
+    q('liveTitle').textContent='Standby';
+    q('liveDirection').textContent='Hotspot pronto para atividade';
+    q('liveStatus').textContent='STANDBY';q('liveStatus').className='statuspill';
+    q('liveSource').textContent=((lastDashboard||{}).config||{}).callsign||'PU2PNY';
+    q('liveName').textContent='Hotspot pronto';q('liveLocation').textContent='Aguardando atividade digital';
+    q('liveTarget').textContent='Aguardando transmissão';q('liveCity').textContent='—';q('liveNetwork').textContent=((lastDashboard||{}).network_runtime||{}).server_name||'—';
+    renderAvatar({});renderFlag(q('liveFlag'),'');
+    q('liveProtocol').textContent=((lastDashboard||{}).config||{}).protocol||'—';
+    q('liveSlot').textContent='—';q('liveDuration').textContent='—';q('liveBer').textContent='—';q('liveRssi').textContent='—';
+    meter('rfMeter',0,'');q('rfQuality').textContent='—';
+  }else{
+    let mode=active.mode==='tx'?'tx':'rx',isTx=mode==='tx';
+    card.classList.add('active',mode);
+    q('liveTitle').textContent=isTx?'TX · Seu rádio → Internet':'RX · Internet → seu rádio';
+    q('liveDirection').textContent=isTx?'Você transmitindo pelo rádio':'Você recebendo uma transmissão da rede';
+    q('liveStatus').textContent=isTx?'TX':'RX';q('liveStatus').className='statuspill good';
+    let op=operatorView(active);
+    q('liveName').textContent=op.name;
+    q('liveSource').textContent=op.callsign;
+    q('liveLocation').textContent=[op.city,op.country].filter(Boolean).join(' · ');
+    q('liveTarget').textContent=active.target||'—';
+    q('liveCity').textContent=op.city||op.country||'—';
+    q('liveNetwork').textContent=((lastDashboard||{}).network_runtime||{}).server_name||((lastDashboard||{}).config||{}).server_name||'—';
+    renderAvatar(op);renderFlag(q('liveFlag'),op.country_code);
+    q('liveProtocol').textContent=active.protocol||((lastDashboard||{}).config||{}).protocol||'—';
+    q('liveSlot').textContent=active.slot?'TS'+active.slot:'—';
+    liveStartedMs=Number(active.started_unix_ms||0);localDuration();
+    q('liveBer').textContent=active.ber!==null&&active.ber!==undefined?Number(active.ber).toFixed(1)+'%':'—';
+    let rv=active.rssi_avg??active.rssi;
+    q('liveRssi').textContent=rv!==null&&rv!==undefined?Number(rv).toFixed(1)+' dBm':'—';
+    let rs=rfScore(rv);meter('rfMeter',rs??0,rs===null?'':rs>=70?'Ótimo':rs>=50?'Bom':'Ruim');
+    q('rfQuality').textContent=rs===null?'Indisponível':rs>=70?'Ótimo':rs>=50?'Bom':'Fraco';
+  }
+  let net=l.internet||{},lat=net.latency_ms,loss=net.loss_percent,jit=net.jitter_ms;
+  let label=net.quality||'unknown',score=label==='excellent'?100:label==='good'?70:label==='poor'?30:0;
+  meter('liveMeter',score,label);
+  q('liveQuality').textContent=(lat!==null&&lat!==undefined?Number(lat).toFixed(0)+'ms':'—')+' / '+(loss!==null&&loss!==undefined?Number(loss).toFixed(1)+'%':'—')+' / '+(jit!==null&&jit!==undefined?Number(jit).toFixed(0)+'ms':'—');
+  q('liveUpdated').textContent='Atualizado '+new Date().toLocaleTimeString();
+  let ev=Array.isArray(l.history)?l.history.slice(0,10):[];
+  q('events').innerHTML='<div class="tablewrap"><table><thead><tr><th>Nº</th><th>Direção</th><th>Operador</th><th>Local</th><th>Protocolo</th><th>Destino</th><th>Horário</th><th>Duração</th><th>BER</th><th>RSSI</th></tr></thead><tbody>'+ev.map((e,i)=>{let stamp=e.ended_at||e.started_at||e.timestamp||'',op=operatorView(e),fu=flagUrl(op.country_code),flag=fu?'<img class="flag" src="'+esc(fu)+'" alt="'+esc(op.country_code)+'">':'';return '<tr><td>'+(i+1)+'</td><td class="'+(e.direction==='RF'?'pilltx':'pillrx')+'">'+(e.direction==='RF'?'TX':'RX')+'</td><td><div class="opcell">'+flag+'<div><div class="opname">'+esc(op.name)+'</div><div class="opmeta">'+esc(op.callsign)+'</div></div></div></td><td>'+esc([op.city,op.country].filter(Boolean).join(' · ')||'—')+'</td><td>'+esc(e.protocol||'—')+'</td><td>'+esc(e.target||'—')+'</td><td>'+esc(stamp?new Date(stamp).toLocaleTimeString():'—')+'</td><td>'+esc(e.duration!==undefined?Number(e.duration).toFixed(1)+' s':'—')+'</td><td>'+esc(e.ber!==null&&e.ber!==undefined?Number(e.ber).toFixed(1)+'%':'—')+'</td><td>'+esc(e.rssi_avg??e.rssi??'—')+'</td></tr>'}).join('')+'</tbody></table></div>';
+  if(!ev.length)q('events').innerHTML='<div class="empty">Nenhuma chamada registrada. O histórico fica neste hotspot.</div>';
+  let lastRF=ev.find(e=>e.direction==='RF'&&e.ber!==undefined&&e.ber!==null);
+  if(lastRF)q('berAdvice').textContent='Último BER RF: '+Number(lastRF.ber).toFixed(1)+'%. '+(lastRF.ber<=1?'Recepção boa; mantenha os offsets.':lastRF.ber<=3?'Observe sinal e estabilidade antes de calibrar.':'Verifique sinal, interferência e calibração com referência.');
+  q('eventsUpdated').textContent='Atualizado '+new Date().toLocaleTimeString();
+}
+let liveEventSource=null,liveFallbackTimer=null;
+function startLiveStream(){
+  if(liveEventSource||document.hidden)return;
+  if(typeof EventSource!=='undefined'){
+    try{
+      liveEventSource=new EventSource('/api/live/events');
+      liveEventSource.addEventListener('live',e=>{try{renderLive(JSON.parse(e.data))}catch(_){}});
+      liveEventSource.onerror=()=>{try{liveEventSource.close()}catch(_){};liveEventSource=null;startLiveFallback()};
+      return;
+    }catch(_){}
+  }
+  startLiveFallback();
+}
+function startLiveFallback(){
+  if(liveFallbackTimer)return;
+  const tick=async()=>{if(!document.hidden){try{renderLive(await getj('/api/live'))}catch(_){}}};
+  tick();liveFallbackTimer=setInterval(tick,1500);
+}
+function stopLiveTransport(){
+  if(liveEventSource){try{liveEventSource.close()}catch(_){}liveEventSource=null}
+  if(liveFallbackTimer){clearInterval(liveFallbackTimer);liveFallbackTimer=null}
+}
+async function refreshAll(){
+  setTimeout(()=>q('splash').hidden=true,2500);
+  try{renderDashboard(await getj('/api/dashboard'))}catch(e){}
+  try{renderLive(await getj('/api/live'))}catch(e){}
+}
+q('refresh').onclick=refreshAll;
+q('apToggle').onclick=async function(){
+  let active=!!(lastDashboard&&lastDashboard.connectivity&&lastDashboard.connectivity.ap_active),body=new URLSearchParams({action:active?'off':'on'});
+  q('apToggle').disabled=true;try{await getj('/api/ap',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString()});await refreshAll()}catch(e){}q('apToggle').disabled=false
+};
+// Live boxes and history precede summary cards.
+let main=document.querySelector('main'),anchor=main.querySelector('.section');main.insertBefore(q('aovivo'),anchor);main.insertBefore(q('historico'),anchor);
+function viewExpert(value){document.body.classList.toggle('expert',value);localStorage.setItem('pu2pny-expert',value?'1':'0');q('viewMode').textContent=value?'Expert':'Básico'}
+viewExpert(localStorage.getItem('pu2pny-expert')==='1');q('viewMode').onclick=()=>viewExpert(!document.body.classList.contains('expert'));
+let expertLink=document.querySelector('a[href="#expert"]');if(expertLink)expertLink.onclick=()=>viewExpert(true);
+async function settings(body){q('expertResult').textContent='Salvando…';try{await getj('/api/station/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});q('expertResult').textContent='Configuração salva.'}catch(e){q('expertResult').textContent=e.message}}
+q('sshEnable').onclick=()=>settings({action:'ssh-enable',key:q('sshKey').value.trim()});q('sshDisable').onclick=()=>settings({action:'ssh-disable'});
+q('qrzSave').onclick=async()=>{await settings({action:'qrz',username:q('qrzUser').value.trim(),password:q('qrzPassword').value});q('qrzPassword').value=''};q('qrzRemove').onclick=()=>settings({action:'qrz-remove'});
+async function contacts(){try{let d=await getj('/api/contacts');q('contactsTable').innerHTML='<table><thead><tr><th>Bandeira</th><th>Indicativo</th><th>Nome do operador</th><th>Cidade</th><th>País</th><th>Atualizado</th></tr></thead><tbody>'+(d.contacts||[]).map(p=>{let fu=flagUrl(p.country_code),flag=fu?'<img class="flag" src="'+esc(fu)+'" alt="'+esc(p.country_code||'')+'">':'—';return '<tr><td>'+flag+'</td><td><b>'+esc(p.callsign||'—')+'</b></td><td class="opname">'+esc(p.name||'—')+'</td><td>'+esc(p.city||'—')+'</td><td>'+esc(p.country||'—')+'</td><td>'+esc(p.updated?new Date(p.updated).toLocaleString():'—')+'</td></tr>'}).join('')+'</tbody></table>'}catch(e){q('contactsTable').textContent='Cache temporariamente indisponível'}}
+q('contactsRefresh').onclick=contacts;contacts();setInterval(()=>{if(!document.hidden)contacts()},60000);
+refreshAll();
+let dashboardBusy=false;
+setInterval(async()=>{if(document.hidden||dashboardBusy)return;dashboardBusy=true;try{renderDashboard(await getj('/api/dashboard'))}catch(e){}finally{dashboardBusy=false}},7000);
+startLiveStream();
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopLiveTransport()}else{refreshAll();startLiveStream()}});
+</script>
+<script src="/ui-language.js"></script></body></html>
+
