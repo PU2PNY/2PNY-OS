@@ -28,6 +28,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f3f7fb;--side:#fff;--card:#fff;-
     <a href="#painel"><i></i>Hotspot</a>
     <a href="/wizard?step=3"><i></i>Protocolos</a>
     <a href="#historico"><i></i>Histórico</a>
+     <a href="#aprs"><i></i>APRS</a>
     <a href="#display"><i></i>Display</a>
     <a href="#diagnostico"><i></i>Sistema</a>
     <a href="#expert"><i></i>Expert</a>
@@ -135,6 +136,21 @@ html[data-theme=light]{color-scheme:light;--bg:#f3f7fb;--side:#fff;--card:#fff;-
     <div class="card"><div class="activity" id="events"><div class="empty">Nenhuma atividade RF/rede registrada ainda.</div></div><div class="footnote">Nome, cidade, país e bandeira são enriquecidos pelo cache local RadioID.net. O painel não exibe o ID digital do operador.</div></div>
   </section>
 
+<section class="section" id="aprs">
+  <div class="sectionhead"><h2>APRS</h2><small>Beacon APRS-IS independente do protocolo de voz</small></div>
+  <div class="card">
+    <div class="grid2">
+      <div><label><input id="aprsEnabled" type="checkbox"> Ativar APRS-IS</label><div class="rows"><div class="row"><span>Estado</span><b id="aprsState">—</b></div><div class="row"><span>Último beacon</span><b id="aprsLast">—</b></div></div></div>
+      <div><label for="aprsServer">Servidor APRS-IS</label><input id="aprsServer" value="rotate.aprs2.net"><label for="aprsPort">Porta</label><input id="aprsPort" type="number" min="1" max="65535" value="14580"></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div><label for="aprsLat">Latitude</label><input id="aprsLat" inputmode="decimal" placeholder="-23.000000"><label for="aprsLon">Longitude</label><input id="aprsLon" inputmode="decimal" placeholder="-46.000000"></div>
+      <div><label for="aprsInterval">Intervalo do beacon (segundos)</label><input id="aprsInterval" type="number" min="300" max="86400" value="1800"><label for="aprsComment">Comentário</label><input id="aprsComment" maxlength="60" value="PU2PNY-OS hotspot"></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn primary" id="aprsSave">Salvar APRS</button> <span class="statusmsg" id="aprsResult"></span></div>
+    <div class="footnote">APRS e D-PRS são tratados separadamente. Esta opção envia posição diretamente ao APRS-IS; não transforma o tráfego em D-PRS.</div>
+  </div>
+</section>
 <section class="section" id="contatos"><div class="sectionhead"><h2>Operadores locais</h2><button class="btn" id="contactsRefresh">Atualizar visualização</button></div><p class="statusmsg">Consulta RadioID sob demanda, no máximo uma a cada 15 s. Dados locais revalidados a cada 24 h; mudanças dependem da atualização na origem.</p><div class="card tablewrap" id="contactsTable">Aguardando operadores…</div></section>
 <section class="section expert-only" id="expert"><div class="sectionhead"><h2>Expert</h2></div><div class="grid2"><article class="card"><h3>Sistema / recepção</h3><p id="telemetry">Aguardando telemetria…</p><p id="berAdvice">BER: aguardando chamada RF concluída.</p><p class="statusmsg">Offsets preservados. Calibração exige transmissão de referência; não alteramos a frequência automaticamente durante chamadas.</p><a class="btn" href="/wizard?step=3">Offsets / configuração RF</a></article><article class="card"><h3>SSH por chave</h3><p class="statusmsg">Conta radioexpert para diagnóstico. Sem senha e sem login root; o serviço só é habilitado ao cadastrar uma chave.</p><input id="sshKey" placeholder="ssh-ed25519 AAAA…" aria-label="Chave pública SSH"><button class="btn" id="sshEnable">Habilitar SSH</button><button class="btn" id="sshDisable">Desativar SSH</button><p id="sshAddress"></p></article><article class="card"><h3>Fotos QRZ</h3><p class="statusmsg">Use credenciais com acesso à API XML QRZ. Não existe lista gratuita de fotos integrada. Cache de fotos: até 7 dias, máximo 300 imagens.</p><input id="qrzUser" placeholder="Usuário QRZ" autocomplete="username"><input id="qrzPassword" type="password" placeholder="Senha QRZ" autocomplete="new-password"><button class="btn" id="qrzSave">Salvar QRZ</button><button class="btn" id="qrzRemove">Remover credenciais</button></article></div><p id="expertResult" role="status"></p></section>
 </main></div>
@@ -290,6 +306,37 @@ let expertLink=document.querySelector('a[href="#expert"]');if(expertLink)expertL
 async function settings(body){q('expertResult').textContent='Salvando…';try{await getj('/api/station/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});q('expertResult').textContent='Configuração salva.'}catch(e){q('expertResult').textContent=e.message}}
 q('sshEnable').onclick=()=>settings({action:'ssh-enable',key:q('sshKey').value.trim()});q('sshDisable').onclick=()=>settings({action:'ssh-disable'});
 q('qrzSave').onclick=async()=>{await settings({action:'qrz',username:q('qrzUser').value.trim(),password:q('qrzPassword').value});q('qrzPassword').value=''};q('qrzRemove').onclick=()=>settings({action:'qrz-remove'});
+async function loadAPRS(){
+  try{
+    let d=await getj('/api/aprs'),a=d.settings||{},st=d.status||{};
+    q('aprsEnabled').checked=!!a.enabled;
+    q('aprsServer').value=a.server||'rotate.aprs2.net';
+    q('aprsPort').value=a.port||14580;
+    q('aprsLat').value=a.latitude??'';
+    q('aprsLon').value=a.longitude??'';
+    q('aprsInterval').value=a.interval_seconds||1800;
+    q('aprsComment').value=a.comment||'PU2PNY-OS hotspot';
+    q('aprsState').textContent=st.state||(!a.enabled?'Desativado':'Aguardando');
+    q('aprsLast').textContent=st.last_tx?new Date(st.last_tx).toLocaleString():'—';
+  }catch(e){q('aprsState').textContent='Indisponível'}
+}
+q('aprsSave').onclick=async()=>{
+  q('aprsResult').textContent='Salvando…';
+  let body={
+    enabled:q('aprsEnabled').checked,
+    latitude:Number(q('aprsLat').value),
+    longitude:Number(q('aprsLon').value),
+    server:q('aprsServer').value.trim(),
+    port:Number(q('aprsPort').value),
+    interval_seconds:Number(q('aprsInterval').value),
+    comment:q('aprsComment').value.trim(),
+    symbol_table:'/',symbol:'r'
+  };
+  try{await getj('/api/aprs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});q('aprsResult').textContent='APRS atualizado.';await loadAPRS()}
+  catch(e){q('aprsResult').textContent=e.message||'Falha ao salvar APRS'}
+};
+loadAPRS();
+setInterval(()=>{if(!document.hidden)loadAPRS()},30000);
 async function contacts(){try{let d=await getj('/api/contacts');q('contactsTable').innerHTML='<table><thead><tr><th>Bandeira</th><th>Indicativo</th><th>Nome do operador</th><th>Cidade</th><th>País</th><th>Atualizado</th></tr></thead><tbody>'+(d.contacts||[]).map(p=>{let fu=flagUrl(p.country_code),flag=fu?'<img class="flag" src="'+esc(fu)+'" alt="'+esc(p.country_code||'')+'">':'—';return '<tr><td>'+flag+'</td><td><b>'+esc(p.callsign||'—')+'</b></td><td class="opname">'+esc(p.name||'—')+'</td><td>'+esc(p.city||'—')+'</td><td>'+esc(p.country||'—')+'</td><td>'+esc(p.updated?new Date(p.updated).toLocaleString():'—')+'</td></tr>'}).join('')+'</tbody></table>'}catch(e){q('contactsTable').textContent='Cache temporariamente indisponível'}}
 q('contactsRefresh').onclick=contacts;contacts();setInterval(()=>{if(!document.hidden)contacts()},60000);
 refreshAll();

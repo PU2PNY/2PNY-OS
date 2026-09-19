@@ -928,7 +928,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione Hotspot ou Repetidora"})
 		return
 	}
-	validProtocol := map[string]bool{"DSTAR":true, "DMR":true, "YSF":true, "P25":true, "NXDN":true}
+	validProtocol := map[string]bool{"DSTAR":true, "DMR":true, "YSF":true, "P25":true, "NXDN":true, "POCSAG":true}
 	if !validProtocol[in.Protocol] {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"protocolo inválido"})
 		return
@@ -941,7 +941,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusConflict, map[string]any{"ok":false, "error":"Crossmode ainda está em desenvolvimento nesta Alpha; use operação Normal"})
 		return
 	}
-	if in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" {
+	if in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" || in.Protocol == "POCSAG" {
 		if in.ServerName == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione um servidor/refletor para o protocolo"})
 			return
@@ -952,6 +952,16 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if in.Protocol == "DSTAR" && (len(in.XLXModule)!=1 || in.XLXModule[0]<'A' || in.XLXModule[0]>'Z') {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"D-Star exige módulo A-Z"})
+			return
+		}
+	}
+	if in.Protocol == "POCSAG" {
+		if in.ServerName == "" || in.ServerAddress == "" || in.ServerPort < 1 || in.ServerPort > 65535 || in.ServerPassword == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"POCSAG/DAPNET exige servidor, porta e AuthKey"})
+			return
+		}
+		if len(in.ServerPassword) > 128 || hasUnsafeControl(in.ServerPassword) {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"DAPNET AuthKey inválida"})
 			return
 		}
 	}
@@ -1053,7 +1063,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		networkState := "rf-only"
-		if in.Protocol == "DMR" || in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" {
+		if in.Protocol == "DMR" || in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" || in.Protocol == "POCSAG" {
 			netOut, netErr := exec.Command("/usr/local/sbin/2pny-protocol-network-apply",
 				in.Protocol, in.ServerName, in.ServerAddress, strconv.Itoa(in.ServerPort),
 				in.ServerPassword, in.UseMode, strconv.Itoa(in.ColorCode), in.DMRSlot,
@@ -1423,6 +1433,80 @@ func stationSettingsHandler(w http.ResponseWriter,r *http.Request) {
  writeJSON(w,200,map[string]any{"ok":true})
 }
 
+func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	const settingsPath = "/var/lib/2pny/aprs-settings.json"
+	const statusPath = "/run/2pny/aprs-status.json"
+	if r.Method == http.MethodGet {
+		settings := readPublicJSON(settingsPath)
+		if _, ok := settings["callsign"]; !ok {
+			var cfg Config
+			if b, err := os.ReadFile(configFile); err == nil && json.Unmarshal(b, &cfg) == nil && cfg.Callsign != "" {
+				settings["callsign"] = cfg.Callsign
+			}
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"settings":settings, "status":readPublicJSON(statusPath), "service_active":serviceActive("2pny-aprs.service")})
+		return
+	}
+	if r.Method != http.MethodPost || !sameOrigin(r) {
+		http.Error(w, "request rejected", http.StatusForbidden)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 8192)
+	var in struct {
+		Enabled bool `json:"enabled"`
+		Latitude float64 `json:"latitude"`
+		Longitude float64 `json:"longitude"`
+		Server string `json:"server"`
+		Port int `json:"port"`
+		IntervalSeconds int `json:"interval_seconds"`
+		Comment string `json:"comment"`
+		SymbolTable string `json:"symbol_table"`
+		Symbol string `json:"symbol"`
+	}
+	if json.NewDecoder(r.Body).Decode(&in) != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	in.Server = strings.TrimSpace(in.Server)
+	in.Comment = strings.TrimSpace(in.Comment)
+	if in.Server == "" { in.Server = "rotate.aprs2.net" }
+	if in.Port == 0 { in.Port = 14580 }
+	if in.IntervalSeconds == 0 { in.IntervalSeconds = 1800 }
+	if in.SymbolTable == "" { in.SymbolTable = "/" }
+	if in.Symbol == "" { in.Symbol = "r" }
+	if len(in.Server) > 255 || hasUnsafeControl(in.Server) || in.Port < 1 || in.Port > 65535 {
+		http.Error(w, "Servidor APRS-IS inválido", http.StatusBadRequest); return
+	}
+	if in.IntervalSeconds < 300 || in.IntervalSeconds > 86400 {
+		http.Error(w, "Intervalo APRS deve ficar entre 300 e 86400 segundos", http.StatusBadRequest); return
+	}
+	if in.Latitude < -90 || in.Latitude > 90 || in.Longitude < -180 || in.Longitude > 180 {
+		http.Error(w, "Latitude/longitude inválidas", http.StatusBadRequest); return
+	}
+	if len(in.Comment) > 60 || len(in.SymbolTable) != 1 || len(in.Symbol) != 1 || hasUnsafeControl(in.Comment) {
+		http.Error(w, "Configuração APRS inválida", http.StatusBadRequest); return
+	}
+	var cfg Config
+	if b, err := os.ReadFile(configFile); err != nil || json.Unmarshal(b, &cfg) != nil || cfg.Callsign == "" {
+		http.Error(w, "Configure o indicativo do hotspot antes do APRS", http.StatusConflict); return
+	}
+	obj := map[string]any{
+		"enabled":in.Enabled, "callsign":cfg.Callsign, "latitude":in.Latitude, "longitude":in.Longitude,
+		"server":in.Server, "port":in.Port, "interval_seconds":in.IntervalSeconds, "comment":in.Comment,
+		"symbol_table":in.SymbolTable, "symbol":in.Symbol,
+	}
+	raw, _ := json.MarshalIndent(obj, "", "  ")
+	tmp := settingsPath + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0600); err != nil { http.Error(w, "Falha ao salvar APRS", 500); return }
+	if err := os.Rename(tmp, settingsPath); err != nil { http.Error(w, "Falha ao aplicar APRS", 500); return }
+	action := "restart"
+	if !in.Enabled { action = "stop" }
+	if out, err := exec.Command("systemctl", action, "2pny-aprs.service").CombinedOutput(); err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok":false,"error":strings.TrimSpace(string(out))}); return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok":true, "enabled":in.Enabled})
+}
+
 func main() {
 	if err := os.MkdirAll(dataDir, 0750); err != nil {
 		log.Fatal(err)
@@ -1462,6 +1546,7 @@ func main() {
 	http.HandleFunc("/api/live", liveStatusHandler)
 	http.HandleFunc("/api/live/events", liveEventsHandler)
  http.HandleFunc("/api/station/settings", stationSettingsHandler)
+ http.HandleFunc("/api/aprs", aprsSettingsHandler)
  http.HandleFunc("/api/contacts",func(w http.ResponseWriter,r *http.Request){writeJSON(w,200,readPublicJSON("/run/2pny/contacts.json"))})
  http.Handle("/operator-photo/",http.StripPrefix("/operator-photo/",http.FileServer(http.Dir("/var/cache/2pny/photos"))))
  http.Handle("/flags/",http.StripPrefix("/flags/",http.FileServer(http.Dir("/usr/share/2pny/flags"))))

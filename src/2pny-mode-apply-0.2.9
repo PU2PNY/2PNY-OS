@@ -1,0 +1,84 @@
+#!/bin/bash
+set -euo pipefail
+
+CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini
+STATE=/var/lib/2pny
+SERVICE=2pny-mmdvmhost.service
+
+PROTO="$1"
+OPERATION="$2"
+USEMODE="$3"
+
+case "$PROTO" in
+  DSTAR|DMR|YSF|P25|NXDN|POCSAG) ;;
+  *) echo "unsupported protocol" >&2; exit 2 ;;
+esac
+case "$OPERATION" in
+  normal|crossmode) ;;
+  *) echo "unsupported operation" >&2; exit 2 ;;
+esac
+case "$USEMODE" in
+  hotspot|repeater) ;;
+  *) echo "unsupported use mode" >&2; exit 2 ;;
+esac
+
+test -s "$CONFIG" || { echo "MMDVMHost config missing" >&2; exit 3; }
+
+mkdir -p "$STATE/backups/mode"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP="$STATE/backups/mode/MMDVM-Host.ini.$STAMP"
+cp -a "$CONFIG" "$BACKUP"
+
+python3 - "$CONFIG" "$PROTO" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+proto = sys.argv[2]
+mapping = {
+    "DSTAR": "D-Star",
+    "DMR": "DMR",
+    "YSF": "System Fusion",
+    "P25": "P25",
+    "NXDN": "NXDN",
+    "POCSAG": "POCSAG",
+}
+radio_sections = set(mapping.values())
+selected = mapping[proto]
+lines = path.read_text().splitlines()
+out = []
+section = ""
+for line in lines:
+    stripped = line.strip()
+    if stripped.startswith("[") and stripped.endswith("]"):
+        section = stripped[1:-1]
+        out.append(line)
+        continue
+    if section in radio_sections and stripped.startswith("Enable="):
+        out.append("Enable=1" if section == selected else "Enable=0")
+    else:
+        out.append(line)
+path.write_text("\n".join(out) + "\n")
+PY
+
+cat >"$STATE/basic-radio.json" <<EOF
+{"protocol":"$PROTO","operation":"$OPERATION","use_mode":"$USEMODE","updated":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+EOF
+chmod 0600 "$STATE/basic-radio.json"
+
+if ! systemctl restart "$SERVICE" >/dev/null 2>&1; then
+  cp -a "$BACKUP" "$CONFIG"
+  systemctl restart "$SERVICE" >/dev/null 2>&1 || true
+  echo "MMDVMHost restart failed; configuration rolled back" >&2
+  exit 4
+fi
+
+sleep 1
+if ! systemctl is-active --quiet "$SERVICE"; then
+  cp -a "$BACKUP" "$CONFIG"
+  systemctl restart "$SERVICE" >/dev/null 2>&1 || true
+  echo "MMDVMHost did not remain active; configuration rolled back" >&2
+  exit 5
+fi
+
+echo "MODE_APPLY_OK protocol=$PROTO operation=$OPERATION use_mode=$USEMODE"

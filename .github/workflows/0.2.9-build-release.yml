@@ -40,7 +40,7 @@ jobs:
             ci/patch-dmrgateway-pu2pny-0.2.9.py \
             ci/patch-dmrgateway-hourly-0.2.9.py \
             ci/prepare-0.2.9-alpha.py
-          bash -n src/2pny-network-switch-0.2.9 src/2pny-hostfiles-update-0.2.9 ci/validate-0.2.9-image.sh
+          bash -n src/2pny-network-switch-0.2.9 src/2pny-hostfiles-update-0.2.9 src/2pny-mode-apply-0.2.9 ci/validate-0.2.9-image.sh
           python3 ci/test-0.2.9-live-core.py
           node - <<'NODE'
           const fs=require('fs');
@@ -207,10 +207,10 @@ jobs:
           - Wi-Fi de primeiro acesso reforçado: país/região, múltiplas varreduras, fallback iw, três tentativas, rede oculta e restauração automática do AP;
           - tela de aviso/contagem durante a troca de Wi-Fi e retomada automática em Hardware;
           - Display Core PU2PNY separado para Nextion, OLED e LCD;
-          - DMR, D-Star, YSF/C4FM, P25 e NXDN em módulos separados;
+          - DMR, D-Star, YSF/C4FM, P25, NXDN e POCSAG/DAPNET em módulos separados;
           - DMR: TG4000 desliga XLX, TG4001–4026 escolhem módulos A–Z e TG4099 informa o estado por voz;
           - voz AMBE PT/EN/ES e anúncio horário opcional;
-          - APRS-IS separado, sem DPRS.
+          - APRS-IS separado de D-PRS, com configuração e estado no painel.
 
           A arquitetura foi dividida por módulos para que correções futuras atinjam apenas o componente com defeito.
           Esta é uma versão Alpha; a 0.2.8 continua disponível como rollback.
