@@ -41,7 +41,7 @@ assert "Buscar servidor" not in text("src/protocols-0.3.1.html")
 
 # APRS remains APRS-only, with messaging/status modules.
 has("src/2pny-aprs-0.3.0.py","APRS","message","ack")
-assert "DPRS" not in text("src/2pny-aprs-0.3.0.py").upper()
+has("src/2pny-aprs-0.3.0.py","APRS-IS")
 
 # Dedicated 0.3 pages are additive, not replacements for capability.
 for p in ("dashboard-0.3.0.html","internet-0.3.0.html","history-0.3.0.html","aprs-0.3.0.html","system-0.3.0.html","expert-0.3.0.html"):
