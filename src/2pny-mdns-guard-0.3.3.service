@@ -1,0 +1,12 @@
+[Unit]
+Description=PU2PNY mDNS hostname guard
+After=NetworkManager.service avahi-daemon.service network.target
+Wants=avahi-daemon.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-mdns-guard
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
