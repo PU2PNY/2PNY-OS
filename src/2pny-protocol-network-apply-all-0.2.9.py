@@ -2,7 +2,7 @@
 """Apply PU2PNY non-DMR protocol/gateway configuration transactionally.
 
 DMR is delegated to the physically-proven DMR helper.  D-Star, YSF/C4FM,
-P25 and NXDN get their own pinned upstream gateways and local loopback ports.
+P25, NXDN and POCSAG/DAPNET get their own pinned upstream gateways and local loopback ports.
 """
 import configparser, datetime, json, os, re, shutil, subprocess, sys, tempfile, time
 from pathlib import Path
@@ -15,6 +15,7 @@ DMR_HELPER="/usr/local/libexec/2pny-dmr-apply"
 SERVICES={
  "DMR":"2pny-dmrgateway.service","DSTAR":"2pny-dstargateway.service",
  "YSF":"2pny-ysfgateway.service","P25":"2pny-p25gateway.service","NXDN":"2pny-nxdngateway.service",
+ "POCSAG":"2pny-dapnetgateway.service",
 }
 
 def die(msg,code=2):
@@ -45,6 +46,7 @@ def gateway_paths(proto):
       "YSF":[STATE/"ysf/YSFGateway.ini",STATE/"ysf/YSFHosts.json",STATE/"ysf/FCSRooms.txt"],
       "P25":[STATE/"p25/P25Gateway.ini",STATE/"p25/P25Hosts.json"],
       "NXDN":[STATE/"nxdn/NXDNGateway.ini",STATE/"nxdn/NXDNHosts.json"],
+      "POCSAG":[STATE/"pocsag/DAPNETGateway.ini"],
     }.get(proto,[])
 
 if os.geteuid()!=0:die("root required",1)
@@ -57,9 +59,10 @@ if proto not in SERVICES:die("unsupported protocol")
 if proto=="DMR":
     os.execv(DMR_HELPER,[DMR_HELPER]+sys.argv[1:])
 
-server=q(server).strip();address=q(address).strip();kind=q(kind).strip();module=q(module).upper().strip()
+server=q(server).strip();address=q(address).strip();password=q(password).strip();kind=q(kind).strip();module=q(module).upper().strip()
 if not HOST.exists():die("MMDVMHost config missing",3)
 if proto=="DSTAR" and (not module or not re.fullmatch(r"[A-Z]",module)):die("D-Star module A-Z required")
+if proto=="POCSAG" and not password:die("DAPNET AuthKey required")
 try:port=int(port_s or 0)
 except ValueError:port=0
 if port<0 or port>65535:die("invalid port")
@@ -96,11 +99,13 @@ setsec(cp,"DMR",{"Enable":"0"})
 setsec(cp,"System Fusion",{"Enable":"1" if proto=="YSF" else "0"})
 setsec(cp,"P25",{"Enable":"1" if proto=="P25" else "0","NAC":cp.get("P25","NAC",fallback="293")})
 setsec(cp,"NXDN",{"Enable":"1" if proto=="NXDN" else "0","RAN":cp.get("NXDN","RAN",fallback="1")})
+setsec(cp,"POCSAG",{"Enable":"1" if proto=="POCSAG" else "0"})
 setsec(cp,"D-Star Network",{"Enable":"1" if proto=="DSTAR" else "0","LocalAddress":"127.0.0.1","LocalPort":"20011","GatewayAddress":"127.0.0.1","GatewayPort":"20010","Debug":"0"})
 setsec(cp,"DMR Network",{"Enable":"0"})
 setsec(cp,"System Fusion Network",{"Enable":"1" if proto=="YSF" else "0","LocalAddress":"127.0.0.1","LocalPort":"3200","GatewayAddress":"127.0.0.1","GatewayPort":"4200","Debug":"0"})
 setsec(cp,"P25 Network",{"Enable":"1" if proto=="P25" else "0","LocalAddress":"127.0.0.1","LocalPort":"32010","GatewayAddress":"127.0.0.1","GatewayPort":"42020","Debug":"0"})
 setsec(cp,"NXDN Network",{"Enable":"1" if proto=="NXDN" else "0","Protocol":"Icom","LocalAddress":"127.0.0.1","LocalPort":"14021","GatewayAddress":"127.0.0.1","GatewayPort":"14020","Debug":"0"})
+setsec(cp,"POCSAG Network",{"Enable":"1" if proto=="POCSAG" else "0","LocalAddress":"127.0.0.1","LocalPort":"3800","GatewayAddress":"127.0.0.1","GatewayPort":"4800","Debug":"0"})
 
 buf=[]
 with tempfile.NamedTemporaryFile("w+",delete=False) as tf:
@@ -350,6 +355,37 @@ Enable=0
 Enable=0
 """
         atomic(d/"NXDNGateway.ini",ini)
+
+    elif proto=="POCSAG":
+        d=STATE/"pocsag";d.mkdir(parents=True,exist_ok=True)
+        dapnet_address=address or "dapnet.afu.rwth-aachen.de"
+        dapnet_port=port or 43434
+        ini=f"""[General]
+Callsign={callsign}
+RptAddress=127.0.0.1
+RptPort=3800
+LocalAddress=127.0.0.1
+LocalPort=4800
+Daemon=0
+
+[Log]
+DisplayLevel=1
+MQTTLevel=1
+
+[MQTT]
+Address=127.0.0.1
+Port=1883
+Keepalive=60
+Auth=0
+Name=dapnet-gateway
+
+[DAPNET]
+Address={dapnet_address}
+Port={dapnet_port}
+AuthKey={password}
+Debug=0
+"""
+        atomic(d/"DAPNETGateway.ini",ini,0o600)
 
     ctl("daemon-reload")
     unit=SERVICES[proto]
