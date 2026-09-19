@@ -1,0 +1,16 @@
+[Unit]
+Description=PU2PNY APRS-IS service
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/2pny-aprs
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/2pny /var/lib/2pny
+MemoryMax=40M
+[Install]
+WantedBy=multi-user.target
