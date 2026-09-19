@@ -416,7 +416,7 @@ let reconnectDeadline=0;
 function showReconnect(ssid){
   let ov=q('reconnectOverlay');ov.hidden=false;
   reconnectDeadline=Date.now()+180000;
-  q('reconnectText').innerHTML='Conectando à rede <b>'+esc(ssid)+'</b>. O Wi‑Fi do hotspot será reiniciado e esta conexão poderá desaparecer por alguns segundos.';
+  q('reconnectText').innerHTML='Rede <b>'+esc(ssid)+'</b> recebida. O perfil será salvo antes do reinício. Depois do boot, o PU2PNY tentará conectar nessa rede e esta tela procurará o novo endereço automaticamente.';
 }
 async function reachable(base){
   try{
