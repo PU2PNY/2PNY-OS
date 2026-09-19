@@ -135,6 +135,38 @@ def persist_end(db,event):
     db.execute("INSERT OR REPLACE INTO history(id,stamp,data) VALUES(?,?,?)",
                (key,event.get("ended_at",""),json.dumps(event,ensure_ascii=False)));db.commit()
 
+def network_telemetry():
+    result={"wifi":{},"ethernet":{}}
+    for base in Path("/sys/class/net").glob("*"):
+        name=base.name
+        if name=="lo":continue
+        is_wifi=(base/"wireless").exists()
+        try:carrier=int((base/"carrier").read_text().strip())
+        except Exception:carrier=0
+        def stat(key):
+            try:return int((base/"statistics"/key).read_text().strip())
+            except Exception:return 0
+        if is_wifi:
+            wifi={"interface":name,"carrier":bool(carrier),"rx_errors":stat("rx_errors"),"tx_errors":stat("tx_errors"),
+                  "rx_dropped":stat("rx_dropped"),"tx_dropped":stat("tx_dropped")}
+            try:
+                out=subprocess.check_output(["iw","dev",name,"link"],text=True,timeout=1,stderr=subprocess.DEVNULL)
+                m=re.search(r"SSID:\\s*(.+)",out);sig=re.search(r"signal:\\s*(-?[0-9.]+)\\s*dBm",out)
+                wifi["ssid"]=m.group(1).strip() if m else ""
+                wifi["rssi_dbm"]=float(sig.group(1)) if sig else None
+            except Exception:pass
+            result["wifi"]=wifi
+        else:
+            eth={"interface":name,"carrier":bool(carrier),"rx_errors":stat("rx_errors"),"tx_errors":stat("tx_errors"),
+                 "rx_dropped":stat("rx_dropped"),"tx_dropped":stat("tx_dropped")}
+            try:eth["speed_mbps"]=int((base/"speed").read_text().strip())
+            except Exception:pass
+            try:eth["duplex"]=(base/"duplex").read_text().strip().lower()
+            except Exception:pass
+            # Prefer an active wired interface when multiple USB/Ethernet NICs exist.
+            if carrier or not result["ethernet"]:result["ethernet"]=eth
+    return result
+
 def telemetry(previous):
     nums=list(map(int,Path("/proc/stat").read_text().splitlines()[0].split()[1:]));total=sum(nums[:8]);idle=nums[3]+nums[4]
     usage=0 if not previous or total==previous[0] else max(0,min(100,100*(1-(idle-previous[1])/(total-previous[0]))))
@@ -146,7 +178,7 @@ def telemetry(previous):
     mem={l.split(":")[0]:int(l.split()[1]) for l in Path("/proc/meminfo").read_text().splitlines()}
     info={"cpu_percent":round(usage,1),"temperature":round(temp,1),"cpu_frequency_mhz":round(freq,0),
           "memory_used_mb":round((mem["MemTotal"]-mem["MemAvailable"])/1024),
-          "memory_total_mb":round(mem["MemTotal"]/1024)}
+          "memory_total_mb":round(mem["MemTotal"]/1024),"network":network_telemetry()}
     try:
         ip=json.loads(subprocess.check_output(["ip","-j","-4","addr","show","scope","global"],timeout=2))
         addresses=[{"name":i["ifname"],"ipv4":a["local"]} for i in ip for a in i.get("addr_info",[]) if a.get("family")=="inet"]
