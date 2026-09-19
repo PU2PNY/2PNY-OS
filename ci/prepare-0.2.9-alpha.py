@@ -78,11 +78,6 @@ for service in ("2pny-station.service","2pny-display-core.service","2pny-aprs.se
 # the known purge anchor, so compile all optional gateways immediately before it.
 builder=root/"builder/build-image.sh"
 s=builder.read_text()
-# DStarGateway uses header-only Boost components during compilation.
-build_deps="g++ make git libmosquitto-dev nlohmann-json3-dev"
-if "libboost-dev" not in s:
-    s=s.replace("apt-get install -y --no-install-recommends "+build_deps,
-                "apt-get install -y --no-install-recommends "+build_deps+" libboost-dev",1)
 # The gateway compilation happens inside the target chroot before the normal
 # overlay rsync. Stage the two tiny source patches into the target first.
 chroot_anchor='chroot "$ROOT_MNT" env MMDVMHOST_COMMIT="$MMDVMHOST_COMMIT" /bin/bash -s <<\'MMDVM_BUILD\''
@@ -96,9 +91,6 @@ chmod 0755 "$ROOT_MNT/builder/"*.py
 '''
     s=s.replace(chroot_anchor,stage+chroot_anchor,1)
 anchor="apt-get purge -y g++ make git libmosquitto-dev nlohmann-json3-dev"
-if "apt-get purge -y g++ make git libmosquitto-dev nlohmann-json3-dev libboost-dev" not in s:
-    s=s.replace(anchor,anchor+" libboost-dev",1)
-anchor="apt-get purge -y g++ make git libmosquitto-dev nlohmann-json3-dev libboost-dev"
 if anchor not in s:
     raise SystemExit("0.2.9 builder: compile/purge anchor missing")
 if "PU2PNY_OPTIONAL_GATEWAYS_0_2_9" not in s:
@@ -117,6 +109,12 @@ install -D -m 0755 DMRGateway /usr/local/bin/DMRGateway
 mkdir -p /usr/share/2pny/audio/dmrgateway /usr/share/2pny/upstream
 cp -a Audio/. /usr/share/2pny/audio/dmrgateway/
 printf '%s\n' "$DG_COMMIT" >/usr/share/2pny/upstream/DMRGateway.commit
+cd /
+rm -rf "$DG"
+
+# Boost is needed only to compile DStarGateway. Install it after the larger
+# MMDVM/Display builds, then remove it immediately to keep the target rootfs small.
+apt-get install -y --no-install-recommends libboost-dev
 
 DSTAR_COMMIT="{DSTAR_COMMIT}"
 DSTAR=/tmp/DStarGateway-029
@@ -128,6 +126,10 @@ make -j"$JOBS" DStarGateway/dstargateway
 strip --strip-unneeded DStarGateway/dstargateway
 install -D -m 0755 DStarGateway/dstargateway /usr/local/bin/dstargateway
 printf '%s\n' "$DSTAR_COMMIT" >/usr/share/2pny/upstream/DStarGateway.commit
+cd /
+rm -rf "$DSTAR"
+apt-get purge -y libboost-dev
+apt-get autoremove -y --purge
 
 YSF_COMMIT="{YSF_COMMIT}"
 YSF=/tmp/YSFClients-029
@@ -139,6 +141,8 @@ make -C YSFGateway -j"$JOBS"
 strip --strip-unneeded YSFGateway/YSFGateway
 install -D -m 0755 YSFGateway/YSFGateway /usr/local/bin/YSFGateway
 printf '%s\n' "$YSF_COMMIT" >/usr/share/2pny/upstream/YSFGateway.commit
+cd /
+rm -rf "$YSF"
 
 P25_COMMIT="{P25_COMMIT}"
 P25=/tmp/P25Clients-029
@@ -150,6 +154,8 @@ make -C P25Gateway -j"$JOBS"
 strip --strip-unneeded P25Gateway/P25Gateway
 install -D -m 0755 P25Gateway/P25Gateway /usr/local/bin/P25Gateway
 printf '%s\n' "$P25_COMMIT" >/usr/share/2pny/upstream/P25Gateway.commit
+cd /
+rm -rf "$P25"
 
 NXDN_COMMIT="{NXDN_COMMIT}"
 NXDN=/tmp/NXDNClients-029
@@ -161,6 +167,8 @@ make -C NXDNGateway -j"$JOBS"
 strip --strip-unneeded NXDNGateway/NXDNGateway
 install -D -m 0755 NXDNGateway/NXDNGateway /usr/local/bin/NXDNGateway
 printf '%s\n' "$NXDN_COMMIT" >/usr/share/2pny/upstream/NXDNGateway.commit
+cd /
+rm -rf "$NXDN"
 
 FLAGS_COMMIT="{FLAGS_COMMIT}"
 FLAGS=/tmp/flag-icons-029
@@ -172,9 +180,8 @@ mkdir -p /usr/share/2pny/flags
 cp -a flags/4x3 /usr/share/2pny/flags/
 cp LICENSE /usr/share/2pny/flags/LICENSE-MIT
 printf '%s\n' "$FLAGS_COMMIT" >/usr/share/2pny/upstream/flag-icons.commit
-
 cd /
-rm -rf "$DG" "$DSTAR" "$YSF" "$P25" "$NXDN" "$FLAGS"
+rm -rf "$FLAGS"
 
 '''
     # Builder runs in chroot; expose patch files at /builder.
