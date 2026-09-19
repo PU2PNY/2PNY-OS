@@ -1,0 +1,75 @@
+name: Publish validated PU2PNY-OS 0.3.2 Alpha
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.2-alpha ]
+    paths:
+      - '.github/workflows/0.3.2-publish-validated.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish-validated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      VERSION: 0.3.2-alpha
+      SOURCE_RUN_ID: 35465345243
+    steps:
+      - name: Download validated ARM64 artifact from build #13
+        uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.2-arm64
+          path: release
+          repository: PU2PNY/2PNY-OS
+          run-id: 35465345243
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify transferred image again
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          test -s "$IMAGE"
+          test -s "$IMAGE.sha256"
+          xz -t "$IMAGE"
+          EXPECTED="$(awk '{print $1}' "$IMAGE.sha256")"
+          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          test "$EXPECTED" = "$ACTUAL"
+          echo "SHA256=$ACTUAL"
+
+      - name: Write release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.2 Alpha — imagem ARM64 validada para teste físico.
+
+          Esta imagem passou pela validação do código, preparação do sistema, build ARM64, verificação xz, SHA-256 e validação final da imagem.
+
+          Correções principais:
+          - Wi-Fi/AP e recuperação de acesso;
+          - pu2pny.local/mDNS;
+          - D-Star e YSF com correção de permissões do MMDVM-Host.ini;
+          - catálogos D-Star/YSF/P25/NXDN;
+          - troca de protocolo sem manter erros antigos;
+          - painel Ao Vivo detalhado;
+          - monitoramento dos gateways DMR, D-Star, YSF, P25, NXDN e DAPNET;
+          - Nextion/Display Core e demais recursos herdados preservados.
+
+          Versão Alpha destinada ao teste físico no hotspot/MMDVM.
+          EOF
+
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.2-alpha
+          target_commitish: pu2pny-os-0.3.2-alpha
+          name: PU2PNY-OS 0.3.2 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.2-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.3.2-alpha-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
