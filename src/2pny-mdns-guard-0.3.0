@@ -1,0 +1,11 @@
+#!/bin/bash
+set -u
+hostnamectl set-hostname pu2pny >/dev/null 2>&1 || true
+mkdir -p /etc/avahi
+if test -f /etc/avahi/avahi-daemon.conf; then
+  sed -i -E 's/^#?host-name=.*/host-name=pu2pny/' /etc/avahi/avahi-daemon.conf
+  grep -q '^host-name=' /etc/avahi/avahi-daemon.conf || sed -i '/^\[server\]/a host-name=pu2pny' /etc/avahi/avahi-daemon.conf
+fi
+systemctl enable avahi-daemon.service >/dev/null 2>&1 || true
+systemctl restart avahi-daemon.service >/dev/null 2>&1 || true
+exit 0
