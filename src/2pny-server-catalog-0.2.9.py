@@ -19,7 +19,7 @@ SEED={
  ],
  "YSF":[{"name":"BR-XLX026","id":"72426","address":"82.152.175.30","port":42000,"kind":"YSF","priority":0,"description":"YSF XLX026 Brasil"}],
  "POCSAG":[
-  {"name":"DAPNET","address":"dapnet.afu.rwth-aachen.de","port":43434,"kind":"DAPNET","priority":0,"description":"DAPNET POCSAG","password_label":"DAPNET AuthKey","password_required":true},
+  {"name":"DAPNET","address":"dapnet.afu.rwth-aachen.de","port":43434,"kind":"DAPNET","priority":0,"description":"DAPNET POCSAG","password_label":"DAPNET AuthKey","password_required":True},
  ],
  "APRS":[
   {"name":"APRS-IS Rotate","address":"rotate.aprs2.net","port":14580,"kind":"APRS-IS","priority":0,"description":"APRS-IS Tier 2 rotate"},
