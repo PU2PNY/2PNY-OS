@@ -125,7 +125,7 @@ apply=(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply").read_te
 assert 'appVersion' in main and '"0.3.3-alpha"' in main
 assert "resume_urls" in main and "startHostfilesUpdate" in main and '"stage"' in main and '"systemctl", "reboot"' in main
 assert "reconnectCandidates" in wiz and "serverCatalog=[]" in wiz and 'id="versionBadge"' in wiz and "0.3.0-alpha" not in wiz
-assert "activityGroups" in dash and "signalBar" in dash and "radioId" in dash and "class=\\\"btn plus\\\"" in dash
+assert "activityGroups" in dash and "signalBar" in dash and "radioId" in dash and 'class="btn plus"' in dash
 assert 'atomic(HOST,host_text,0o640,"mmdvm")' in apply
 for name in ("DStar_Hosts.json","DPlus_Hosts.txt","DExtra_Hosts.txt","DCS_Hosts.txt",
              "XLXHosts.txt","YSFHosts.txt","YSFHosts.json","FCSRooms.txt","P25Hosts.txt","NXDNHosts.txt"):
