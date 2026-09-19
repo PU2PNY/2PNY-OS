@@ -89,6 +89,8 @@ grep -Fq 'pu2pny-display-core' "$ROOT/etc/systemd/system/2pny-display-core.servi
 grep -Fq 'SSD1306' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'nextion_mmdvm' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'rotate.aprs2.net' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'id="aprsEnabled"' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq '"/api/aprs"' "$ROOT/src/2pnyd/main.go" 2>/dev/null || grep -Fq 'APRS atualizado' "$ROOT/usr/share/2pny/dashboard.html"
 grep -Fq 'dapnet.afu.rwth-aachen.de' "$ROOT/usr/local/sbin/2pny-server-catalog"
 ! grep -Fqi 'DPRS' "$ROOT/usr/local/sbin/2pny-aprs"
 
