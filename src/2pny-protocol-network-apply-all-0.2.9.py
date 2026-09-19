@@ -207,7 +207,7 @@ Enabled=0
         for src in ("YSFHosts.json","FCSRooms.txt"):
             p=STATE/"hosts"/src
             if p.exists():shutil.copy2(p,d/src)
-        startup=server if "-" in server else "YSF-"+server
+        startup=server
         ini=f"""[General]
 Callsign={callsign}
 Suffix=ND
