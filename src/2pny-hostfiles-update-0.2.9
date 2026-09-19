@@ -71,12 +71,46 @@ TGList_BM.txt|https://www.pistar.uk/downloads/TGList_BM.txt|100
 TGList_P25.txt|https://www.pistar.uk/downloads/TGList_P25.txt|20
 TGList_NXDN.txt|https://www.pistar.uk/downloads/TGList_NXDN.txt|20
 TGList_YSF.txt|https://www.pistar.uk/downloads/TGList_YSF.txt|20
-YSFHosts.json|https://hostfiles.refcheck.radio/YSFHosts.json|20
-P25Hosts.json|https://hostfiles.refcheck.radio/P25Hosts.json|20
-NXDNHosts.json|https://hostfiles.refcheck.radio/NXDNHosts.json|20
 DMRIds.dat|https://www.pistar.uk/downloads/DMRIds.dat|100
 NXDN.csv|https://www.pistar.uk/downloads/NXDN.csv|20
 EOF
+
+# Build gateway JSON snapshots from the validated Pi-Star text cache.
+# This avoids making the runtime depend on any single JSON host service.
+python3 - "$BASE" <<'PY'
+import json,sys,os,tempfile
+from pathlib import Path
+base=Path(sys.argv[1])
+def atomic(name,obj):
+    fd,tmp=tempfile.mkstemp(prefix="."+name+".",dir=base)
+    with os.fdopen(fd,"w") as f:json.dump(obj,f,ensure_ascii=False,separators=(",",":"))
+    os.chmod(tmp,0o644);os.replace(tmp,base/name)
+
+refs=[]
+p=base/"YSFHosts.txt"
+if p.exists():
+    for raw in p.read_text(errors="ignore").splitlines():
+        line=raw.strip()
+        if not line or line.startswith("#"):continue
+        parts=line.split(";")
+        if len(parts)<5:continue
+        ident,name,desc,address,port=map(str.strip,parts[:5])
+        try:port=int(port)
+        except Exception:continue
+        prefix,sep,rest=name.partition("-")
+        if sep and 1<=len(prefix)<=4:
+            country=prefix.upper();short=rest
+        else:
+            country="YSF";short=name
+        refs.append({"designator":ident.zfill(5)[-5:],"country":country,"name":short,
+                     "use_xx_prefix":False,"user_count":"000","description":desc or name,
+                     "port":port,"ipv4":address,"ipv6":None})
+atomic("YSFHosts.json",{"reflectors":refs})
+# P25/NXDN gateways also accept their legacy text host file as HostsFile2.
+# Keep a valid empty JSON primary so parser startup is deterministic.
+atomic("P25Hosts.json",{"reflectors":[]})
+atomic("NXDNHosts.json",{"reflectors":[]})
+PY
 
 if [ "$ok" -gt 0 ]; then
   touch "$BASE/.updated"
