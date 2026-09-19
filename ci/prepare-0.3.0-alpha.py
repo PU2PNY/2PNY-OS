@@ -336,7 +336,7 @@ assert 'id="liveBox"' in dash and "Aguardando transmissão" in dash and "/intern
 assert "País / região do Wi" in wiz and "reconnectOverlay" in wiz
 assert "RadioID" in (root/"rootfs-overlay/usr/local/sbin/2pny-station-worker").read_text()
 assert "TG4000" in (root/"builder/patch-dmrgateway-pu2pny-0.2.9.py").read_text()
-assert "PU2PNY_029_BUILD_HEADROOM" in builder.read_text() and "PU2PNY_029_RESIZE_ROOTFS" in builder.read_text()
+assert "PU2PNY_029_BUILD_HEADROOM" in builder.read_text() and "PU2PNY_030_RESIZE_ROOTFS" in builder.read_text()
 assert (root/"rootfs-overlay/usr/share/2pny/protocols.html").exists()
 assert (root/"rootfs-overlay/usr/share/2pny/aprs.html").exists()
 assert "operators.sqlite" in (root/"rootfs-overlay/usr/local/sbin/2pny-station-worker").read_text()
