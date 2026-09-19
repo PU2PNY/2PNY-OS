@@ -13,6 +13,10 @@ permissions:
   contents: write
   actions: read
 
+concurrency:
+  group: pu2pny-os-0.3.3-alpha-release
+  cancel-in-progress: true
+
 jobs:
   source:
     runs-on: ubuntu-24.04
