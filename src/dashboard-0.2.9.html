@@ -54,7 +54,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f3f7fb;--side:#fff;--card:#fff;-
         <div class="rows"><div class="row"><span>Indicativo</span><b id="call">—</b></div><div class="row"><span>Protocolo</span><b id="proto">—</b></div><div class="row"><span>Modo</span><b id="mode">—</b></div><div class="row"><span>MMDVM baud</span><b id="baud">—</b></div></div>
       </article>
       <article class="card">
-        <h3>RF / DMR</h3><div class="big" id="freq">—</div>
+        <h3>RF / Protocolo</h3><div class="big" id="freq">—</div>
         <div class="rows"><div class="row"><span>Color Code</span><b id="cc">—</b></div><div class="row"><span>Time Slot</span><b id="slot">—</b></div><div class="row"><span>DMR ID / ESSID</span><b id="dmrid">—</b></div><div class="row"><span>Módulo XLX</span><b id="module">—</b></div></div>
       </article>
       <article class="card" id="rede">
@@ -125,7 +125,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f3f7fb;--side:#fff;--card:#fff;-
     <div class="sectionhead"><h2>Diagnóstico</h2><small>Serviços essenciais</small></div>
     <div class="card"><div class="diag">
       <div class="diagitem"><small>MMDVMHost</small><b id="diagHost">—</b></div>
-      <div class="diagitem"><small>DMRGateway</small><b id="diagGateway">—</b></div>
+      <div class="diagitem"><small id="diagGatewayLabel">Gateway</small><b id="diagGateway">—</b></div>
       <div class="diagitem"><small>MMDVM-Display</small><b id="diagDisplay">—</b></div>
       <div class="diagitem"><small>MQTT local</small><b id="diagMqtt">—</b></div>
     </div></div>
@@ -199,7 +199,10 @@ function renderDashboard(d){
   q('displayState').textContent=d.display_active?'Ativo':(dr.state==='configured'?'Configurado':'Não ativo');q('displayState').className='big '+(d.display_active?'green':'yellow');
   q('displayType').textContent=dr.type||'—';q('displayIntegration').textContent=dr.integration||'—';q('displayDriver').textContent=d.display_active?'MMDVM-Display':'—';q('displayLayout').textContent=dr.layout===2?'ON7LDS / Pi-Star':dr.layout===3?'ON7LDS DIY':(dr.layout??'—');
   let t=d.telemetry||{};q('telemetry').textContent='CPU '+(t.cpu_percent??'—')+'% · '+(t.temperature>=0?t.temperature+' °C':'Temperatura indisponível')+' · RAM '+(t.memory_used_mb??'—')+' / '+(t.memory_total_mb??'—')+' MB';q('sshAddress').textContent='ssh radioexpert@'+location.hostname;
-  q('diagHost').textContent=yn(d.radio_active);q('diagGateway').textContent=yn(d.dmrgateway_active);q('diagDisplay').textContent=yn(d.display_active);q('diagMqtt').textContent=yn(d.mqtt_active);
+  q('diagHost').textContent=yn(d.radio_active);
+  let p=String(c.protocol||'DMR').toUpperCase(),gm={DMR:['DMRGateway','dmrgateway_active'],DSTAR:['DStarGateway','dstargateway_active'],YSF:['YSFGateway','ysfgateway_active'],P25:['P25Gateway','p25gateway_active'],NXDN:['NXDNGateway','nxdngateway_active'],POCSAG:['DAPNETGateway','dapnetgateway_active']}[p]||['Gateway','dmrgateway_active'];
+  q('diagGatewayLabel').textContent=gm[0];q('diagGateway').textContent=yn(!!d[gm[1]]);
+  q('diagDisplay').textContent=yn(d.display_active);q('diagMqtt').textContent=yn(d.mqtt_active);
 }
 let liveStartedMs=0;
 function localDuration(){
@@ -322,10 +325,12 @@ async function loadAPRS(){
 }
 q('aprsSave').onclick=async()=>{
   q('aprsResult').textContent='Salvando…';
+  let latText=q('aprsLat').value.trim(),lonText=q('aprsLon').value.trim();
+  if(q('aprsEnabled').checked&&(!latText||!lonText)){q('aprsResult').textContent='Informe latitude e longitude antes de ativar.';return}
   let body={
     enabled:q('aprsEnabled').checked,
-    latitude:Number(q('aprsLat').value),
-    longitude:Number(q('aprsLon').value),
+    latitude:Number(latText||0),
+    longitude:Number(lonText||0),
     server:q('aprsServer').value.trim(),
     port:Number(q('aprsPort').value),
     interval_seconds:Number(q('aprsInterval').value),
