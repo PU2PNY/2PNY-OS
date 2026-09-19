@@ -68,10 +68,10 @@ test "$COUNT" -ge 240
 for cc in br us pt gb ar jp au za; do test -s "$ROOT/usr/share/2pny/flags/4x3/$cc.svg"; done
 
 echo '[7/12] radio binaries and protocol modules'
-for x in MMDVM-Host DMRGateway MMDVM-Display NextionUpdater dstargateway YSFGateway P25Gateway NXDNGateway; do
+for x in MMDVM-Host DMRGateway MMDVM-Display NextionUpdater dstargateway YSFGateway P25Gateway NXDNGateway DAPNETGateway; do
   test -x "$ROOT/usr/local/bin/$x"
 done
-for svc in 2pny-dmrgateway.service 2pny-dstargateway.service 2pny-ysfgateway.service 2pny-p25gateway.service 2pny-nxdngateway.service 2pny-display-core.service 2pny-station.service 2pny-aprs.service; do
+for svc in 2pny-dmrgateway.service 2pny-dstargateway.service 2pny-ysfgateway.service 2pny-p25gateway.service 2pny-nxdngateway.service 2pny-dapnetgateway.service 2pny-display-core.service 2pny-station.service 2pny-aprs.service; do
   test -s "$ROOT/etc/systemd/system/$svc"
 done
 
@@ -89,6 +89,7 @@ grep -Fq 'pu2pny-display-core' "$ROOT/etc/systemd/system/2pny-display-core.servi
 grep -Fq 'SSD1306' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'nextion_mmdvm' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'rotate.aprs2.net' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'dapnet.afu.rwth-aachen.de' "$ROOT/usr/local/sbin/2pny-server-catalog"
 ! grep -Fqi 'DPRS' "$ROOT/usr/local/sbin/2pny-aprs"
 
 echo '[10/12] no leaked runtime/user state'
