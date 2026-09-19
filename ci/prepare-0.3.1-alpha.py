@@ -139,7 +139,7 @@ assert 'b"connect\\xff\\xff\\xff"' in probe
 assert 'id="search"' not in proto and "Buscar servidor" not in proto
 for x in ("REF / DPlus","XRF / DExtra","DCS","XLX"): assert x in proto
 assert "Aguardando transmissão" in dash and "currentActive" in dash
-assert "Failed to fetch" not in wiz
+assert "watchWiFiConnection(ssid,75)" in wiz
 assert (hostdir/"DStar_Hosts.json").stat().st_size>1000
 assert (hostdir/"YSFHosts.txt").stat().st_size>100
 print("PU2PNY-OS 0.3.1 overlay applied with 0.2.9 parity preserved")
