@@ -54,6 +54,7 @@ jobs:
           grep -Fq 'for attempt in 1 2 3' src/2pny-network-switch-0.2.9
           grep -Fq 'Nome do operador' src/dashboard-0.2.9.html
           grep -Fq 'País / região do Wi' src/wizard-0.2.9.html
+          python3 src/2pny-server-catalog-0.2.9.py POCSAG | grep -Fq 'DAPNET'
 
   build-arm64:
     needs: source
