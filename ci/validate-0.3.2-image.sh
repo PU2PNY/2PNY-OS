@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if (( EUID != 0 )); then exec sudo bash "$0" "$@"; fi
+IMAGE="\${1:?image required}"
+VERSION="\${2:-0.3.2-alpha}"
+RAW="/tmp/PU2PNY-\${VERSION}-validate.img"
+ROOT="/mnt/pu2pny-os-032"
+LOOP=""; PID=""
+cleanup(){
+  set +e
+  test -n "$PID" && kill "$PID" 2>/dev/null || true
+  umount "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/boot/firmware" "$ROOT" 2>/dev/null || true
+  test -n "$LOOP" && losetup -d "$LOOP" 2>/dev/null || true
+  rm -f "$RAW" /tmp/pu2pnyd-032.log
+}
+trap cleanup EXIT
+trap 'echo "Validation failed at line $LINENO: $BASH_COMMAND" >&2' ERR
+
+echo '[1/14] image integrity'
+xz -t "$IMAGE"
+EXPECTED="$(awk '{print $1}' "$IMAGE.sha256")"; ACTUAL="$(sha256sum "$IMAGE"|awk '{print $1}')"
+test "$EXPECTED" = "$ACTUAL"
+xz -dc "$IMAGE" >"$RAW"
+LOOP="$(losetup --find --partscan --show "$RAW")"
+for _ in {1..60}; do test -b "\${LOOP}p2" && break; sleep .25; done
+mkdir -p "$ROOT"; mount "\${LOOP}p2" "$ROOT"; mkdir -p "$ROOT/boot/firmware"; mount "\${LOOP}p1" "$ROOT/boot/firmware"
+
+echo '[2/14] identity'
+grep -Fxq "$VERSION" "$ROOT/etc/2pny/version"
+grep -Fxq 'pu2pny' "$ROOT/etc/hostname"
+grep -Fq 'id="liveBox"' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'reconnectOverlay' "$ROOT/usr/share/2pny/wizard.html"
+
+echo '[3/14] runtime syntax'
+for x in 2pny-network-core 2pny-network-switch 2pny-hostfiles-update 2pny-rf-apply 2pny-mode-apply 2pny-mdns-guard; do
+  test -x "$ROOT/usr/local/sbin/$x"; bash -n "$ROOT/usr/local/sbin/$x"
+done
+for x in 2pny-station-worker 2pny-hardware-probe 2pny-display-core 2pny-display-apply 2pny-server-catalog 2pny-protocol-network-apply 2pny-aprs 2pny-netdiag 2pny-nextion-autodetect; do
+  test -x "$ROOT/usr/local/sbin/$x"; python3 -m py_compile "$ROOT/usr/local/sbin/$x"
+done
+python3 -m py_compile "$ROOT/usr/local/lib/2pny-live-core.py" "$ROOT/usr/local/libexec/2pny-dmr-apply"
+rm -rf "$ROOT/usr/local/sbin/__pycache__" "$ROOT/usr/local/lib/__pycache__" "$ROOT/usr/local/libexec/__pycache__"
+
+echo '[4/14] 0.2.9 feature parity preserved'
+grep -Fq 'operators.sqlite' "$ROOT/usr/local/sbin/2pny-station-worker"
+grep -Fq 'radioid.net/api/dmr/user/' "$ROOT/usr/local/sbin/2pny-station-worker"
+grep -Fq 'qrz_photo' "$ROOT/usr/local/sbin/2pny-station-worker"
+grep -Fq 'country_code' "$ROOT/usr/local/sbin/2pny-station-worker"
+for lang in pt_PT en_GB es_ES; do
+  test -s "$ROOT/usr/share/2pny/audio/dmrgateway/$lang.ambe"
+  test -s "$ROOT/usr/share/2pny/audio/dmrgateway/$lang.indx"
+done
+strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX module control'
+strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX status voice requested'
+strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, hourly time voice'
+
+echo '[5/14] Wi-Fi handoff and mDNS'
+SW="$ROOT/usr/local/sbin/2pny-network-switch"; WIZ="$ROOT/usr/share/2pny/wizard.html"
+grep -Fq 'create_candidate' "$SW"
+grep -Fq 'try_profile' "$SW"
+grep -Fq 'restore_on_error' "$SW"
+grep -Fq 'wpa-psk' "$SW"; grep -Fq 'sae' "$SW"
+grep -Fq 'connection.autoconnect-retries 0' "$SW"
+grep -Fq 'Aguardando o PU2PNY reaparecer automaticamente' "$WIZ"
+! grep -Fq 'reconnectManual' "$WIZ"
+grep -Fq 'host-name","pu2pny' "$ROOT/usr/local/sbin/2pny-mdns-guard"
+grep -Fq '_http._tcp' "$ROOT/usr/local/sbin/2pny-mdns-guard"
+test -s "$ROOT/etc/systemd/system/2pny-mdns-guard.service"
+
+echo '[6/14] Nextion / Display Core'
+grep -Fq 'nextion_mmdvm' "$ROOT/usr/local/sbin/2pny-display-core"
+grep -Fq 'SSD1306' "$ROOT/usr/local/sbin/2pny-display-core"
+grep -Fq 'class LCD' "$ROOT/usr/local/sbin/2pny-display-core"
+grep -Fq 'b"connect\xff\xff\xff"' "$ROOT/usr/local/sbin/2pny-hardware-probe"
+grep -Fq 'PU2PNY Display Core is authoritative' "$ROOT/usr/local/sbin/2pny-display-apply"
+grep -Fq 'input=b"connect\xff\xff\xff"' "$ROOT/usr/local/sbin/2pny-nextion-autodetect"
+grep -Fq 'disable","--now",LEGACY' "$ROOT/usr/local/sbin/2pny-display-apply"
+
+echo '[7/14] live-state regression fixed'
+grep -Fq 'source-less END' "$ROOT/usr/local/lib/2pny-live-core.py"
+grep -Fq 'action in ("end","lost","timeout")' "$ROOT/usr/local/lib/2pny-live-core.py"
+grep -Fq 'currentActive' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Aguardando transmissão' "$ROOT/usr/share/2pny/dashboard.html"
+! grep -Fq 'Operador não identificado' "$ROOT/usr/share/2pny/dashboard.html"
+
+echo '[8/14] preloaded protocol catalogs'
+HOSTS="$ROOT/var/lib/2pny/hosts"
+for x in DStar_Hosts.json DPlus_Hosts.txt DExtra_Hosts.txt DCS_Hosts.txt XLXHosts.txt YSFHosts.txt YSFHosts.json FCSRooms.txt P25Hosts.txt NXDNHosts.txt; do
+  test -s "$HOSTS/$x"
+done
+test "$(wc -c <"$HOSTS/DStar_Hosts.json")" -gt 1000
+test "$(wc -c <"$HOSTS/YSFHosts.txt")" -gt 100
+
+echo '[9/14] protocol UI and gateways'
+PROTO="$ROOT/usr/share/2pny/protocols.html"
+! grep -Fq 'Buscar servidor' "$PROTO"
+! grep -Fq 'id="search"' "$PROTO"
+for label in 'REF / DPlus' 'XRF / DExtra' 'DCS' 'XLX'; do grep -Fq "$label" "$PROTO"; done
+for x in MMDVM-Host DMRGateway MMDVM-Display NextionUpdater dstargateway YSFGateway P25Gateway NXDNGateway DAPNETGateway; do
+  test -x "$ROOT/usr/local/bin/$x"
+done
+for svc in 2pny-dmrgateway.service 2pny-dstargateway.service 2pny-ysfgateway.service 2pny-p25gateway.service 2pny-nxdngateway.service 2pny-dapnetgateway.service; do
+  test -s "$ROOT/etc/systemd/system/$svc"
+done
+
+echo '[10/14] RadioID, flags and activity'
+test -f "$ROOT/usr/share/2pny/flags/LICENSE-MIT"
+COUNT="$(find "$ROOT/usr/share/2pny/flags/4x3" -maxdepth 1 -type f -name '*.svg' | wc -l)"
+test "$COUNT" -ge 240
+for cc in br us pt gb ar jp au za; do test -s "$ROOT/usr/share/2pny/flags/4x3/$cc.svg"; done
+grep -Fq 'renderActivity' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'history-summary.json' "$ROOT/usr/local/sbin/2pny-station-worker"
+
+echo '[11/14] dedicated pages and APRS'
+for page in internet protocols history aprs system expert; do test -s "$ROOT/usr/share/2pny/$page.html"; done
+grep -Fq 'traceroute' "$ROOT/usr/local/sbin/2pny-netdiag"
+grep -Fq 'APRS-IS' "$ROOT/usr/share/2pny/aprs.html"
+grep -Fq 'brazil.aprs2.net' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'Google Time' "$ROOT/usr/share/2pny/system.html"
+
+echo '[12/14] no leaked user/runtime state'
+for p in \
+ "$ROOT/var/lib/2pny/provisioned" "$ROOT/var/lib/2pny/rf-configured" \
+ "$ROOT/var/lib/2pny/network-radio.json" "$ROOT/var/lib/2pny/network-connect.json" \
+ "$ROOT/var/lib/2pny/wifi-country" "$ROOT/var/lib/2pny/display-runtime.json" \
+ "$ROOT/var/lib/2pny/station/operators.sqlite"; do test ! -e "$p"; done
+
+echo '[13/14] backend boot and APIs'
+mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
+mount -t proc proc "$ROOT/proc"; mount --bind /dev "$ROOT/dev"; mount --bind /sys "$ROOT/sys"
+chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-032.log 2>&1 & PID=$!
+OK=0
+for _ in {1..100}; do
+  if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
+  sleep .2
+done
+test "$OK" = 1 || { cat /tmp/pu2pnyd-032.log; exit 1; }
+curl -fsS http://127.0.0.1/api/status | grep -Fq '"version":"0.3.2-alpha"'
+curl -fsS http://127.0.0.1/api/network/country | grep -Fq '"country":"BR"'
+curl -fsS http://127.0.0.1/flags/4x3/br.svg | grep -Eq '<svg|<SVG'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/protocol/apply'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/aprs/message'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '2pny-nextion-autodetect'
+kill "$PID"; PID=""
+
+echo '[13b/14] 0.3.2 regressions'
+test ! -d "$ROOT/var/lib/2pny/hostfiles"
+grep -Fq 'atomic(HOST,host_text,0o640,"mmdvm")' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'normalize_host_permissions' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'FCSRooms.txt' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'cloned-mac-address permanent' "$ROOT/usr/local/sbin/2pny-network-switch"
+grep -Fq 'ACTIVE_SSID' "$ROOT/usr/local/sbin/2pny-network-switch"
+grep -Fq 'reconnectCandidates' "$ROOT/usr/share/2pny/wizard.html"
+grep -Fq 'serverCatalog=[]' "$ROOT/usr/share/2pny/wizard.html"
+grep -Fq 'id="activityBody"' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'id="signalBar"' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq '2pny-dstargateway.service' "$ROOT/usr/local/sbin/2pny-station-worker"
+grep -Fq '2pny-ysfgateway.service' "$ROOT/usr/local/sbin/2pny-station-worker"
+echo '[14/14] final result'
+echo "PU2PNY-OS $VERSION ARM64 image: OK"
