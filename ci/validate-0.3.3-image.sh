@@ -156,9 +156,16 @@ for _ in {1..100}; do
 done
 test "$OK" = 1 || { cat /tmp/pu2pnyd-033.log; exit 1; }
 curl -fsS http://127.0.0.1/api/status | grep -Fq '"version":"0.3.3-alpha"'
+# Fresh images are intentionally unprovisioned, so /dashboard must redirect
+# to the wizard until onboarding is complete.
+CODE="$(curl -sS -o /tmp/pu2pny-dashboard-unprovisioned -w '%{http_code}' http://127.0.0.1/dashboard)"
+test "$CODE" = "302"
+# Then simulate completed onboarding only for route validation.
+touch "$ROOT/var/lib/2pny/provisioned"
 curl -fsS http://127.0.0.1/dashboard | grep -Fq 'id="liveBox"'
 curl -fsS http://127.0.0.1/hotspot | grep -Fq '<h1>Hotspot</h1>'
 curl -fsS http://127.0.0.1/display | grep -Fq '<h1>Display</h1>'
+rm -f "$ROOT/var/lib/2pny/provisioned" /tmp/pu2pny-dashboard-unprovisioned
 curl -fsS http://127.0.0.1/ui-common-0.3.0.js | grep -Fq "['/hotspot','Hotspot','hotspot']"
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'will_reboot'
 curl -fsS http://127.0.0.1/api/network/country | grep -Fq '"country":"BR"'
