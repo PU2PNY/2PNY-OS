@@ -1,0 +1,248 @@
+name: Build and release PU2PNY-OS 0.2.8 Alpha
+
+on:
+  push:
+    branches: [ pu2pny-os-0.2.8-alpha ]
+    paths:
+      - 'src/*0.2.8*'
+      - 'ci/prepare-0.2.8-alpha.py'
+      - 'ci/test-0.2.8-live-core.py'
+      - '.github/workflows/0.2.8-build-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Validate 0.2.8 sources
+        run: |
+          set -euo pipefail
+          gofmt -w src/2pnyd-main-0.2.8.go
+          go test src/2pnyd-main-0.2.8.go
+          python3 -m py_compile src/2pny-live-core-0.2.8.py src/2pny-station-worker-0.2.8.py src/2pny-display-status-0.2.8.py ci/prepare-0.2.8-alpha.py
+          python3 ci/test-0.2.8-live-core.py
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('src/dashboard-0.2.8.html').read_text()
+          assert s.count('id="liveCard"') == 1
+          assert 'id="rxCard"' not in s and 'id="txCard"' not in s
+          assert "new EventSource('/api/live/events')" in s
+          assert '0.2.8-alpha' in s
+          PY
+          node - <<'NODE'
+          const fs=require('fs');
+          const h=fs.readFileSync('src/dashboard-0.2.8.html','utf8');
+          for(const m of h.matchAll(/<script>([\s\S]*?)<\/script>/g)) new Function(m[1]);
+          NODE
+          printf '%s  %s\n' \
+            96a9da369b79c12d6ec7f9d6bf904bec3d00c5386b733ebdb7439bbc1595099c src/2pny-rf-apply-0.2.7 \
+            639f42a73453ee087e3f4af041280c791e0f35c95551e41debd4c70a56b6cc3b src/2pny-protocol-network-apply-0.2.7.py \
+            53ae377bee89e05367ef9efccea5b3123c36dba94344b9fda7a6970ec79b1925 src/2pny-mmdvmhost-0.2.7.service \
+            dd642b9c03a0b1add2dab7b8cb06b5b200189ee9e855a3414a91be8cbbfcf58f src/2pny-dmrgateway-0.2.7.service | sha256sum -c -
+
+  build-arm64:
+    needs: source
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 100
+    env:
+      VERSION: 0.2.8-alpha
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2
+      - name: Restore baseline and apply PU2PNY patches
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-base-fix.sh \
+            ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-anchor-compat.sh \
+            ci/prepare-0.1.8-network-core.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh \
+            ci/prepare-0.1.9-pu2pny-hardware-ui.sh \
+            ci/prepare-0.1.9-network-pid-fix.sh \
+            ci/prepare-0.1.9-build-metadata-fix.sh \
+            ci/prepare-0.1.9-hotfix1-hardware-status.sh \
+            ci/prepare-0.2.0-onboarding.sh \
+            ci/prepare-0.2.1-network-ux.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+          python3 ci/prepare-0.2.2-stability.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.3-dashboard.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.4-network-display.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.5-protocol-network.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.7-radio-live.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.8-alpha.py legacy-source/2pny-os
+      - name: Validate staged source
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          gofmt -w src/2pnyd/main.go
+          go test ./...
+          python3 "$GITHUB_WORKSPACE/ci/test-0.2.7-regressions.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.2.8-live-core.py"
+          python3 -m py_compile rootfs-overlay/usr/local/lib/2pny-live-core.py rootfs-overlay/usr/local/sbin/2pny-station-worker rootfs-overlay/usr/local/sbin/2pny-display-status
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.2\.8-alpha"' src/2pnyd/main.go
+          grep -Fq '/api/live/events' src/2pnyd/main.go
+          grep -Fq 'id="liveCard"' rootfs-overlay/usr/share/2pny/dashboard.html
+          ! grep -Fq 'id="rxCard"' rootfs-overlay/usr/share/2pny/dashboard.html
+          ! grep -Fq 'id="txCard"' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq "new EventSource('/api/live/events')" rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'Iniciando / Starting' rootfs-overlay/usr/local/sbin/2pny-display-status
+          grep -Fq 'UARTSpeed=$MODEM_BAUD' rootfs-overlay/usr/local/sbin/2pny-rf-apply
+          ! grep -Fq 'UARTSpeed=115200' rootfs-overlay/usr/local/sbin/2pny-rf-apply
+          grep -Fq 'DMRGateway.ini' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+      - name: Build ARM64 image
+        working-directory: legacy-source/2pny-os
+        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
+      - name: Normalize image and checksum
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
+          IMAGE="dist/PU2PNY-OS-$VERSION-arm64.img.xz"
+          test -n "$OLD"
+          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
+          sudo rm -f dist/*.img.xz.sha256
+          HASH="$(sudo sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" | sudo tee "$IMAGE.sha256" >/dev/null
+          sudo chown "$USER:$USER" "$IMAGE" "$IMAGE.sha256" dist/BUILD-INFO.txt
+          xz -t "$IMAGE"
+          test "$(sha256sum "$IMAGE" | awk '{print $1}')" = "$HASH"
+      - name: Validate final image
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          python3 - "$GITHUB_WORKSPACE/ci/validate-0.2.7-image.sh" /tmp/validate-0.2.8-image.sh <<'PY'
+          import sys
+          s=open(sys.argv[1]).read()
+          s=s.replace('0.2.7-alpha','0.2.8-alpha')
+          s=s.replace("'MTR / qualidade'","'Internet · LAT/PER/JIT'")
+          s=s.replace('assert "rx" in d and "tx" in d','assert "active" in d and "standby" in d')
+          open(sys.argv[2],'w').write(s)
+          PY
+          chmod +x /tmp/validate-0.2.8-image.sh
+          /tmp/validate-0.2.8-image.sh "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$VERSION"
+      - name: Stage validated artifact
+        working-directory: legacy-source/2pny-os
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/release-artifact"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
+          cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.2.8-arm64
+          path: release-artifact/*
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      VERSION: 0.2.8-alpha
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.2.8-arm64
+          path: release
+      - name: Verify transferred image
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.2.8 Alpha — imagem ARM64 para teste físico.
+
+          Implementado nesta imagem:
+          - base DMR/RF da 0.2.7 preservada por hash;
+          - worker residente de atividade em RAM com histórico limitado;
+          - SSE /api/live/events para atualização rápida sem polling pesado;
+          - Ao Vivo com um único box para TX/RX/standby;
+          - BER/RSSI somente quando fornecidos pelo modem;
+          - duração calculada no navegador, sem requisição por segundo;
+          - LAT/PER/JIT resumidos pelo coletor local;
+          - boot físico Nextion com texto PT/EN quando o display já está detectado;
+          - versão 0.2.8-alpha no sistema e painel.
+
+          Ainda em desenvolvimento nesta Alpha:
+          - D-Star de rede completo e seleção funcional de módulos;
+          - Display Core completo para OLED/LCD/TFT e alerta de rede na Nextion;
+          - PU2PNY Direct, OTA A/B e demais itens do plano 0.2.8.
+
+          Esta é uma versão Alpha para teste físico. A 0.2.7 publicada permanece como referência de rollback.
+          EOF
+      - name: Align alpha tag with validated commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref='tags/v0.2.8-alpha';
+            const repo={owner:context.repo.owner,repo:context.repo.repo};
+            try{
+              const current=(await github.rest.git.getRef({...repo,ref})).data;
+              if(current.object.sha===context.sha)return;
+              const release=(await github.rest.repos.getReleaseByTag({...repo,tag:'v0.2.8-alpha'})).data;
+              if(!release.prerelease)throw new Error('Refusing to move stable tag');
+              const cmp=(await github.rest.repos.compareCommitsWithBasehead({...repo,basehead:current.object.sha+'...'+context.sha})).data;
+              if(cmp.status!=='ahead')throw new Error('Alpha tag can only advance');
+              await github.rest.git.updateRef({...repo,ref,sha:context.sha,force:false});
+            }catch(e){if(e.status!==404)throw e;}
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.2.8-alpha
+          target_commitish: ${{ github.sha }}
+          name: PU2PNY-OS 0.2.8 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.2.8-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.2.8-alpha-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
