@@ -1395,6 +1395,7 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 	if _,ok:=networkRuntime["module"];!ok && cfg.XLXModule!="" { networkRuntime["module"]=cfg.XLXModule }
 	baud := strings.TrimSpace(func() string { b,_:=os.ReadFile(filepath.Join(dataDir,"mmdvm-baud")); return string(b) }())
 	telemetry:=mergedTelemetry()
+	netdiag:=readPublicJSON("/run/2pny/netdiag.json")
 	writeJSON(w, http.StatusOK, map[string]any{
 		"name":"PU2PNY-OS",
 		"version":appVersion,
@@ -1417,6 +1418,7 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 		"network_runtime":networkRuntime,
 		"display_runtime":func() map[string]any { d:=map[string]any{}; if b,e:=os.ReadFile(filepath.Join(dataDir,"display-runtime.json")); e==nil { _=json.Unmarshal(b,&d) }; return d }(),
 		"telemetry":telemetry,
+		"netdiag":netdiag,
 	})
 }
 
