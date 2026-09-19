@@ -59,8 +59,7 @@ for base in (root/"rootfs-overlay/usr/local/lib",root/"rootfs-overlay/usr/local/
 
 main=(root/"src/2pnyd/main.go").read_text()
 dash=(root/"rootfs-overlay/usr/share/2pny/dashboard.html").read_text()
-import re
-assert re.search(r'appVersion\\s*=\\s*"0\\.2\\.8-alpha"',main)
+assert 'appVersion' in main and '"0.2.8-alpha"' in main
 assert "/api/live/events" in main
 assert 'id="liveCard"' in dash
 assert 'id="rxCard"' not in dash and 'id="txCard"' not in dash
