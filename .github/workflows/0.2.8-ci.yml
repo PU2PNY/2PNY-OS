@@ -1,0 +1,48 @@
+name: PU2PNY-OS 0.2.8 source gates
+
+on:
+  push:
+    branches: [ pu2pny-os-0.2.8-alpha ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Compile daemon
+        run: |
+          set -euo pipefail
+          gofmt -w src/2pnyd-main-0.2.8.go
+          go test src/2pnyd-main-0.2.8.go
+      - name: Validate bounded live worker
+        run: |
+          set -euo pipefail
+          python3 -m py_compile src/2pny-live-core-0.2.8.py src/2pny-station-worker-0.2.8.py
+          python3 ci/test-0.2.8-live-core.py | tee /tmp/live-core-benchmark.json
+          ! grep -Fq '2pny-live-status' src/2pny-station-worker-0.2.8.py
+          ! grep -Fq 'exec.Command("/usr/local/sbin/2pny-live-status")' src/2pnyd-main-0.2.8.go
+          grep -Fq '/api/live/events' src/2pnyd-main-0.2.8.go
+      - name: Preserve approved DMR/RF path
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' \
+            96a9da369b79c12d6ec7f9d6bf904bec3d00c5386b733ebdb7439bbc1595099c src/2pny-rf-apply-0.2.7 \
+            639f42a73453ee087e3f4af041280c791e0f35c95551e41debd4c70a56b6cc3b src/2pny-protocol-network-apply-0.2.7.py \
+            53ae377bee89e05367ef9efccea5b3123c36dba94344b9fda7a6970ec79b1925 src/2pny-mmdvmhost-0.2.7.service \
+            dd642b9c03a0b1add2dab7b8cb06b5b200189ee9e855a3414a91be8cbbfcf58f src/2pny-dmrgateway-0.2.7.service | sha256sum -c -
+          grep -Fq 'UARTSpeed=$MODEM_BAUD' src/2pny-rf-apply-0.2.7
+          ! grep -Fq 'UARTSpeed=115200' src/2pny-rf-apply-0.2.7
+          grep -Fq 'DMRGateway.ini' src/2pny-protocol-network-apply-0.2.7.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 0.2.8-source-gates
+          path: /tmp/live-core-benchmark.json
