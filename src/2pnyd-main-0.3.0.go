@@ -1430,10 +1430,11 @@ func systemControlHandler(w http.ResponseWriter,r *http.Request) {
 	if r.Method==http.MethodGet {
 		tz:=strings.TrimSpace(string(func()[]byte{b,_:=exec.Command("timedatectl","show","-p","Timezone","--value").Output();return b}()))
 		syncv:=strings.TrimSpace(string(func()[]byte{b,_:=exec.Command("timedatectl","show","-p","NTPSynchronized","--value").Output();return b}()))
-		writeJSON(w,200,map[string]any{"timezone":tz,"ntp_synchronized":syncv=="yes","local":time.Now().Format(time.RFC3339),"utc":time.Now().UTC().Format(time.RFC3339),"operational":serviceActive("2pny-mmdvmhost.service")});return
+		voice:=readPublicJSON(filepath.Join(dataDir,"voice-settings.json"))
+		writeJSON(w,200,map[string]any{"timezone":tz,"ntp_synchronized":syncv=="yes","local":time.Now().Format(time.RFC3339),"utc":time.Now().UTC().Format(time.RFC3339),"operational":serviceActive("2pny-mmdvmhost.service"),"voice":voice,"voice_hourly":fileExists(filepath.Join(dataDir,"voice-hourly.enabled"))});return
 	}
 	if r.Method!=http.MethodPost||!sameOrigin(r){http.Error(w,"request rejected",403);return}
-	var in struct{Action string `json:"action"`;Timezone string `json:"timezone"`}
+	var in struct{Action string `json:"action"`;Timezone string `json:"timezone"`;Enabled bool `json:"enabled"`;Hourly bool `json:"hourly"`;Language string `json:"language"`}
 	if json.NewDecoder(http.MaxBytesReader(w,r.Body,4096)).Decode(&in)!=nil {http.Error(w,"JSON inválido",400);return}
 	switch in.Action {
 	case "timezone":
@@ -1443,6 +1444,12 @@ func systemControlHandler(w http.ResponseWriter,r *http.Request) {
 		_ = os.MkdirAll("/etc/systemd/timesyncd.conf.d",0755)
 		if e:=os.WriteFile("/etc/systemd/timesyncd.conf.d/pu2pny-google.conf",[]byte("[Time]\nNTP=time.google.com time1.google.com time2.google.com time3.google.com\nFallbackNTP=pool.ntp.org\n"),0644);e!=nil{writeJSON(w,500,map[string]any{"error":e.Error()});return}
 		_ = exec.Command("timedatectl","set-ntp","true").Run();_ = exec.Command("systemctl","restart","systemd-timesyncd.service").Run()
+	case "voice-settings":
+		lang:=strings.ToLower(strings.TrimSpace(in.Language));if lang!="pt"&&lang!="en"&&lang!="es"{lang="pt"}
+		raw,_:=json.Marshal(map[string]any{"enabled":in.Enabled,"language":lang})
+		if err:=os.WriteFile(filepath.Join(dataDir,"voice-settings.json"),raw,0600);err!=nil{writeJSON(w,500,map[string]any{"error":"falha ao salvar voz"});return}
+		marker:=filepath.Join(dataDir,"voice-hourly.enabled");if in.Hourly{_ = os.WriteFile(marker,[]byte("1\n"),0600)}else{_ = os.Remove(marker)}
+		if serviceActive("2pny-dmrgateway.service"){_ = exec.Command("systemctl","restart","2pny-dmrgateway.service").Run()}
 	case "operational-off":
 		for _,u:=range []string{"2pny-dmrgateway.service","2pny-dstargateway.service","2pny-ysfgateway.service","2pny-p25gateway.service","2pny-nxdngateway.service","2pny-dapnetgateway.service","2pny-mmdvmhost.service"}{_ = exec.Command("systemctl","stop",u).Run()}
 	case "operational-on":
