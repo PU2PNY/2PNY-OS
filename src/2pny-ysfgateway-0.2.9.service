@@ -1,0 +1,16 @@
+[Unit]
+Description=PU2PNY YSF/C4FM Gateway
+After=network-online.target 2pny-mmdvmhost.service mosquitto.service
+Wants=network-online.target
+[Service]
+Type=simple
+WorkingDirectory=/var/lib/2pny/ysf
+ExecStart=/usr/local/bin/YSFGateway /var/lib/2pny/ysf/YSFGateway.ini
+Restart=on-failure
+RestartSec=4
+User=root
+Group=mmdvm
+NoNewPrivileges=true
+ProtectHome=true
+[Install]
+WantedBy=multi-user.target
