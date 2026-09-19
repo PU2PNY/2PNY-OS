@@ -45,27 +45,44 @@ for service in ("2pny-mdns-guard.service","2pny-display-core.service","2pny-stat
 hostdir=root/"rootfs-overlay/var/lib/2pny/hostfiles"
 hostdir.mkdir(parents=True,exist_ok=True)
 sources={
- "DStar_Hosts.json":"https://raw.githubusercontent.com/g4klx/DStarGateway/612f388727a9bb47aaeaae3a89f5abff3152ed93/Data/DStar_Hosts.json",
- "DPlus_Hosts.txt":"https://www.pistar.uk/downloads/DPlus_Hosts.txt",
- "DExtra_Hosts.txt":"https://www.pistar.uk/downloads/DExtra_Hosts.txt",
- "DCS_Hosts.txt":"https://www.pistar.uk/downloads/DCS_Hosts.txt",
- "XLXHosts.txt":"https://www.pistar.uk/downloads/XLXHosts.txt",
- "YSFHosts.txt":"https://www.pistar.uk/downloads/YSFHosts.txt",
- "P25Hosts.txt":"https://www.pistar.uk/downloads/P25Hosts.txt",
- "NXDNHosts.txt":"https://www.pistar.uk/downloads/NXDNHosts.txt",
+ "DStar_Hosts.json":[
+   "https://raw.githubusercontent.com/g4klx/DStarGateway/612f388727a9bb47aaeaae3a89f5abff3152ed93/Data/DStar_Hosts.json"],
+ "DPlus_Hosts.txt":[
+   "https://www.pistar.uk/downloads/DPlus_Hosts.txt",
+   "https://raw.githubusercontent.com/airphel/WPSD-HostFiles/main/DPlus_Hosts.txt"],
+ "DExtra_Hosts.txt":[
+   "https://www.pistar.uk/downloads/DExtra_Hosts.txt",
+   "https://raw.githubusercontent.com/airphel/WPSD-HostFiles/main/DExtra_Hosts.txt"],
+ "DCS_Hosts.txt":[
+   "https://www.pistar.uk/downloads/DCS_Hosts.txt",
+   "https://raw.githubusercontent.com/airphel/WPSD-HostFiles/main/DCS_Hosts.txt"],
+ "XLXHosts.txt":[
+   "https://www.pistar.uk/downloads/XLXHosts.txt",
+   "https://raw.githubusercontent.com/airphel/WPSD-HostFiles/main/XLXHosts.txt"],
+ "YSFHosts.txt":[
+   "https://www.pistar.uk/downloads/YSFHosts.txt",
+   "https://raw.githubusercontent.com/airphel/WPSD-HostFiles/main/YSF_Hosts.txt",
+   "https://raw.githubusercontent.com/dj0abr/OpenDVM/main/hosts/YSFHosts.txt"],
+ "P25Hosts.txt":[
+   "https://www.pistar.uk/downloads/P25Hosts.txt",
+   "https://raw.githubusercontent.com/airphel/WPSD-HostFiles/main/P25_Hosts.txt"],
+ "NXDNHosts.txt":[
+   "https://www.pistar.uk/downloads/NXDNHosts.txt",
+   "https://raw.githubusercontent.com/airphel/WPSD-HostFiles/main/NXDN_Hosts.txt"],
 }
-def fetch(url):
+def fetch(urls):
     last=None
-    for n in range(3):
-        try:
-            req=urllib.request.Request(url,headers={"User-Agent":"PU2PNY-OS/0.3.1-build"})
-            with urllib.request.urlopen(req,timeout=20) as r:
-                data=r.read(4_000_000)
-            if len(data)>40:return data
-        except Exception as e:last=e;time.sleep(1+n)
-    raise RuntimeError(f"catalog download failed: {url}: {last}")
-for name,url in sources.items():
-    data=fetch(url)
+    for url in urls:
+        for n in range(2):
+            try:
+                req=urllib.request.Request(url,headers={"User-Agent":"PU2PNY-OS/0.3.1-build"})
+                with urllib.request.urlopen(req,timeout=20) as r:
+                    data=r.read(4_000_000)
+                if len(data)>40:return data
+            except Exception as e:last=e;time.sleep(1+n)
+    raise RuntimeError(f"catalog download failed: {urls}: {last}")
+for name,urls in sources.items():
+    data=fetch(urls)
     (hostdir/name).write_bytes(data)
     os.chmod(hostdir/name,0o644)
 
