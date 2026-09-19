@@ -712,6 +712,9 @@ func hardwareScanHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		applyDisplayOverrideToProbe()
+		// Candidate Nextion should be tried automatically; this helper never steals
+		// the modem UART from an active MMDVMHost.
+		_, _ = exec.Command("timeout", "-k", "2", "15", "/usr/local/sbin/2pny-nextion-autodetect").CombinedOutput()
 		_ = os.Remove(hardwareScanStateFile)
 		_ = exec.Command("/usr/local/sbin/2pny-display-status", "display", "Hardware detectado").Run()
 	}()
