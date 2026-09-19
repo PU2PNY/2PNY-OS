@@ -928,7 +928,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione Hotspot ou Repetidora"})
 		return
 	}
-	validProtocol := map[string]bool{"DSTAR":true, "DMR":true, "YSF":true, "P25":true, "NXDN":true}
+	validProtocol := map[string]bool{"DSTAR":true, "DMR":true, "YSF":true, "P25":true, "NXDN":true, "POCSAG":true}
 	if !validProtocol[in.Protocol] {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"protocolo inválido"})
 		return
@@ -941,7 +941,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusConflict, map[string]any{"ok":false, "error":"Crossmode ainda está em desenvolvimento nesta Alpha; use operação Normal"})
 		return
 	}
-	if in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" {
+	if in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" || in.Protocol == "POCSAG" {
 		if in.ServerName == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"selecione um servidor/refletor para o protocolo"})
 			return
@@ -952,6 +952,16 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if in.Protocol == "DSTAR" && (len(in.XLXModule)!=1 || in.XLXModule[0]<'A' || in.XLXModule[0]>'Z') {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"D-Star exige módulo A-Z"})
+			return
+		}
+	}
+	if in.Protocol == "POCSAG" {
+		if in.ServerName == "" || in.ServerAddress == "" || in.ServerPort < 1 || in.ServerPort > 65535 || in.ServerPassword == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"POCSAG/DAPNET exige servidor, porta e AuthKey"})
+			return
+		}
+		if len(in.ServerPassword) > 128 || hasUnsafeControl(in.ServerPassword) {
+			writeJSON(w, http.StatusBadRequest, map[string]any{"ok":false, "error":"DAPNET AuthKey inválida"})
 			return
 		}
 	}
@@ -1053,7 +1063,7 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		networkState := "rf-only"
-		if in.Protocol == "DMR" || in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" {
+		if in.Protocol == "DMR" || in.Protocol == "DSTAR" || in.Protocol == "YSF" || in.Protocol == "P25" || in.Protocol == "NXDN" || in.Protocol == "POCSAG" {
 			netOut, netErr := exec.Command("/usr/local/sbin/2pny-protocol-network-apply",
 				in.Protocol, in.ServerName, in.ServerAddress, strconv.Itoa(in.ServerPort),
 				in.ServerPassword, in.UseMode, strconv.Itoa(in.ColorCode), in.DMRSlot,
