@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 if (( EUID != 0 )); then exec sudo bash "$0" "$@"; fi
-IMAGE="\${1:?image required}"
-VERSION="\${2:-0.3.2-alpha}"
-RAW="/tmp/PU2PNY-\${VERSION}-validate.img"
+IMAGE="${1:?image required}"
+VERSION="${2:-0.3.2-alpha}"
+RAW="/tmp/PU2PNY-${VERSION}-validate.img"
 ROOT="/mnt/pu2pny-os-032"
 LOOP=""; PID=""
 cleanup(){
@@ -22,8 +22,8 @@ EXPECTED="$(awk '{print $1}' "$IMAGE.sha256")"; ACTUAL="$(sha256sum "$IMAGE"|awk
 test "$EXPECTED" = "$ACTUAL"
 xz -dc "$IMAGE" >"$RAW"
 LOOP="$(losetup --find --partscan --show "$RAW")"
-for _ in {1..60}; do test -b "\${LOOP}p2" && break; sleep .25; done
-mkdir -p "$ROOT"; mount "\${LOOP}p2" "$ROOT"; mkdir -p "$ROOT/boot/firmware"; mount "\${LOOP}p1" "$ROOT/boot/firmware"
+for _ in {1..60}; do test -b "${LOOP}p2" && break; sleep .25; done
+mkdir -p "$ROOT"; mount "${LOOP}p2" "$ROOT"; mkdir -p "$ROOT/boot/firmware"; mount "${LOOP}p1" "$ROOT/boot/firmware"
 
 echo '[2/14] identity'
 grep -Fxq "$VERSION" "$ROOT/etc/2pny/version"
