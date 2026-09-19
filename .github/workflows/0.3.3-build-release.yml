@@ -40,6 +40,7 @@ jobs:
             src/2pny-netdiag-0.3.0.py \
             src/2pny-nextion-autodetect-0.3.1.py \
             ci/prepare-0.3.1-alpha.py \
+            ci/prepare-0.3.2-alpha.py \
             ci/prepare-0.3.3-alpha.py
           rm -rf src/__pycache__ ci/__pycache__
           bash -n src/2pny-network-switch-0.3.3 src/2pny-network-core-0.3.3 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.3-image.sh
@@ -52,14 +53,14 @@ jobs:
             for(const m of h.matchAll(/<script>([\s\S]*?)<\/script>/g)) new Function(m[1]);
           }
           NODE
-          grep -Fq 'atomic(HOST,host_text,0o640,"mmdvm")' src/2pny-protocol-network-apply-all-0.3.3.py
+          grep -Fq 'atomic(HOST,host_text,0o640,"mmdvm")' src/2pny-protocol-network-apply-all-0.3.2.py
           grep -Fq 'stage_wifi' src/2pny-network-switch-0.3.3
           grep -Fq 'wifi-pending' src/2pny-network-switch-0.3.3
           grep -Fq 'write_connect_state connected' src/2pny-network-core-0.3.3
           grep -Fq 'reconnectCandidates' src/wizard-0.3.3.html
           grep -Fq 'serverCatalog=[]' src/wizard-0.3.3.html
           grep -Fq 'id="activityGroups"' src/dashboard-0.3.3.html
-          grep -Fq '2pny-dstargateway.service' src/2pny-station-worker-0.3.3.py
+          grep -Fq '2pny-dstargateway.service' src/2pny-station-worker-0.3.2.py
   build-arm64:
     needs: source
     runs-on: ubuntu-24.04-arm
@@ -126,6 +127,7 @@ jobs:
           python3 ci/prepare-0.2.9-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.0-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.1-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.2-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.3-alpha.py legacy-source/2pny-os
       - name: Validate staged source
         working-directory: legacy-source/2pny-os
@@ -137,7 +139,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/ci/test-0.2.9-live-core.py"
           python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect
           bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-network-core rootfs-overlay/usr/local/sbin/2pny-mdns-guard rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns rootfs-overlay/usr/local/sbin/2pny-mode-apply
-          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.2-alpha"' src/2pnyd/main.go
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.3-alpha"' src/2pnyd/main.go
           grep -Fq '/api/live/events' src/2pnyd/main.go
           grep -Fq '/api/protocol/apply' src/2pnyd/main.go
           grep -Fq '/api/aprs/message' src/2pnyd/main.go
