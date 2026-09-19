@@ -167,9 +167,9 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
       <div class="choice-grid">
         <div class="choice"><input type="radio" name="protocol" id="pdstar" value="DSTAR"><label for="pdstar"><b>D‑STAR</b></label></div>
         <div class="choice"><input type="radio" name="protocol" id="pdmr" value="DMR" checked><label for="pdmr"><b>DMR</b></label></div>
-        <div class="choice"><input type="radio" name="protocol" id="pysf" value="YSF"><label for="pysf"><b>YSF</b><small>RF local; gateway externo em desenvolvimento</small></label></div>
-        <div class="choice"><input type="radio" name="protocol" id="pp25" value="P25"><label for="pp25"><b>P25</b><small>RF local; gateway externo em desenvolvimento</small></label></div>
-        <div class="choice"><input type="radio" name="protocol" id="pnxdn" value="NXDN"><label for="pnxdn"><b>NXDN</b><small>RF local; gateway externo em desenvolvimento</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pysf" value="YSF"><label for="pysf"><b>YSF / C4FM</b><small>Gateway YSF/FCS</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pp25" value="P25"><label for="pp25"><b>P25</b><small>Gateway P25</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pnxdn" value="NXDN"><label for="pnxdn"><b>NXDN</b><small>Gateway NXDN</small></label></div>
       </div>
 
       <div class="section-title">Rede / servidor</div>
@@ -210,6 +210,11 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
             <div class="field hidden" id="bmApiWrap"><label for="bmApiKey">BrandMeister API Key (opcional)</label><div class="password-row"><input id="bmApiKey" type="password" placeholder="Opcional — gerenciamento de TGs"><button class="btn" id="showBmApi" type="button">Mostrar</button></div><small class="hint">Não autentica o hotspot. Serve apenas para funções de gerenciamento no painel.</small></div>
           </div>
           <details style="margin-top:8px"><summary>Ajuste avançado da rede DMR</summary><div class="field"><label for="serverOptions">Options do master (opcional)</label><input id="serverOptions" placeholder="Somente quando o master exigir opções específicas"></div></details>
+        </div>
+        <div class="field hidden" id="dstarModuleWrap">
+          <label for="dstarModule">Módulo D-Star</label>
+          <select id="dstarModule"></select>
+          <small class="hint">Escolha A–Z. Quando o catálogo informar módulos específicos, o PU2PNY prioriza somente os disponíveis.</small>
         </div>
         <div class="result hidden" id="serverResult"></div>
       </div>
@@ -557,29 +562,35 @@ async function startHardware(){
 
 
 for(let i=1;i<=99;i++){let o=document.createElement('option');o.value=String(i).padStart(2,'0');o.textContent=String(i).padStart(2,'0');q('essid').appendChild(o)}
-for(let n=65;n<=90;n++){let o=document.createElement('option');o.value=String.fromCharCode(n);o.textContent=String.fromCharCode(n);q('xlxModule').appendChild(o)}
-q('xlxModule').value='C';
+for(let n=65;n<=90;n++){
+  let letter=String.fromCharCode(n);
+  for(let id of ['xlxModule','dstarModule']){let o=document.createElement('option');o.value=letter;o.textContent=letter;q(id).appendChild(o)}
+}
+q('xlxModule').value='C';q('dstarModule').value='D';
 let serverCatalog=[],serverLoadedProtocol='',networkFamily='';
 function selectedProtocol(){return document.querySelector('input[name=protocol]:checked').value}
-function serverOperational(proto){return proto==='DMR'}
+function serverOperational(proto){return ['DMR','DSTAR','YSF','P25','NXDN'].includes(proto)}
 function renderServers(items,proto){
   serverCatalog=Array.isArray(items)?items:[];
-  let kinds=proto==='DMR'?['XLX','BrandMeister','TGIF','FreeDMR','DMR+','HBLink']:proto==='DSTAR'?['DPlus','DCS','DExtra']:Array.from(new Set(serverCatalog.map(x=>x.kind)));let bar=q('networkFilters');bar.innerHTML='';
+  let kinds=proto==='DMR'?['XLX','BrandMeister','TGIF','FreeDMR','DMR+','HBLink']:proto==='DSTAR'?['XLX','DPlus','DCS','DExtra']:Array.from(new Set(serverCatalog.map(x=>x.kind)));let bar=q('networkFilters');bar.innerHTML='';
   for(let kind of ['',...kinds]){let b=document.createElement('button');b.type='button';b.className='btn '+(networkFamily===kind?'primary':'');b.textContent=kind==='DPlus'?'REF / DPlus':kind==='DExtra'?'XRF / DExtra':kind||'Todos';b.onclick=()=>{networkFamily=kind;renderServers(serverCatalog,proto)};bar.appendChild(b)}
   let sel=q('serverSelect'),filter=q('serverFilter').value.trim().toLowerCase(),current=sel.value;
   sel.innerHTML='';
   let list=serverCatalog.filter(x=>(!networkFamily||x.kind===networkFamily)&&(!filter||Object.values(x).join(' ').toLowerCase().includes(filter)));list.sort((a,b)=>(a.kind==='XLX'?0:1)-(b.kind==='XLX'?0:1));
-  list.forEach(function(x,i){
+  // Keep the catalog complete but the DOM small. Searching/filtering reveals any item.
+  let visible=list.slice(0,80);
+  visible.forEach(function(x){
     let o=document.createElement('option');
     o.value='idx:'+serverCatalog.indexOf(x);
     o.textContent=(x.priority===0?'★ ':'')+(x.name||x.address)+' · '+(x.kind||proto)+(x.description&&x.description!==x.name?' · '+x.description:'');
     sel.appendChild(o)
   });
+  if(list.length>visible.length){let more=document.createElement('option');more.disabled=true;more.textContent='… '+(list.length-visible.length)+' adicionais — use a busca';sel.appendChild(more)}
   let custom=document.createElement('option');custom.value='__custom__';custom.textContent='Servidor personalizado...';sel.appendChild(custom);
   if(current&&[...sel.options].some(o=>o.value===current))sel.value=current;
   else if(sel.options.length)sel.selectedIndex=0;
   serverSelectionChanged();
-  q('serverHint').textContent=serverCatalog.length+' servidor(es) disponível(is)'+(proto==='DMR'?'. DMR será aplicado pelo DMRGateway e validado junto ao MMDVMHost.':'. Lista disponível; o gateway desse protocolo ainda será integrado em módulo próprio.');
+  q('serverHint').textContent=serverCatalog.length+' servidor(es) no catálogo. '+(list.length>80?'Mostrando 80; pesquise para localizar qualquer outro. ':'')+'O gateway '+(proto==='DSTAR'?'D-Star':proto)+' será validado antes de salvar.';
 }
 function selectedServerObject(){
   if(q('serverSelect').value==='__custom__')return {name:'Personalizado',kind:q('serverKind').value,address:q('serverAddress').value.trim(),port:Number(q('serverPort').value||0)};
@@ -589,11 +600,19 @@ function applyNetworkRequirements(x){
   x=x||{};let kind=x.kind||'DMR';
   q('serverPasswordLabel').textContent=x.password_label||(kind==='BrandMeister'?'Hotspot Security':'Senha do master');
   q('serverPasswordHint').textContent=kind==='BrandMeister'?'Obrigatória e diferente da senha do SelfCare.':(kind==='TGIF'?'Use sua chave TGIF; passw0rd funciona no modo legado quando permitido.':(kind==='XLX'?'Senha padrão do XLX normalmente é passw0rd.':''));
-  q('networkSpecificHelp').textContent=x.help||(kind==='XLX'?'XLX será conectado pelo DMRGateway.':kind+' será conectado pelo DMRGateway.');
-  q('xlxModuleWrap').classList.toggle('hidden',kind!=='XLX');
-  q('essidWrap').classList.toggle('hidden',!(x.essid_supported||kind==='BrandMeister'||kind==='TGIF'||kind==='DMR'));
-  q('bmApiWrap').classList.toggle('hidden',kind!=='BrandMeister');
-  if(kind==='XLX'){q('xlxModule').value=x.default_module||'C'}
+  let proto=selectedProtocol();
+  q('networkSpecificHelp').textContent=x.help||(proto==='DMR'?(kind==='XLX'?'XLX será conectado pelo DMRGateway.':kind+' será conectado pelo DMRGateway.'):'Gateway '+proto+' será configurado automaticamente.');
+  q('xlxModuleWrap').classList.toggle('hidden',proto!=='DMR'||kind!=='XLX');
+  q('dstarModuleWrap').classList.toggle('hidden',proto!=='DSTAR');
+  q('essidWrap').classList.toggle('hidden',proto!=='DMR'||!(x.essid_supported||kind==='BrandMeister'||kind==='TGIF'||kind==='DMR'));
+  q('bmApiWrap').classList.toggle('hidden',proto!=='DMR'||kind!=='BrandMeister');
+  if(proto==='DMR'&&kind==='XLX')q('xlxModule').value=x.default_module||'C';
+  if(proto==='DSTAR'){
+    let allowed=Array.isArray(x.modules)&&x.modules.length?x.modules:Array.from({length:26},(_,i)=>String.fromCharCode(65+i));
+    let sel=q('dstarModule'),current=sel.value;sel.innerHTML='';
+    for(let letter of allowed){let o=document.createElement('option');o.value=letter;o.textContent=letter;sel.appendChild(o)}
+    sel.value=allowed.includes(x.default_module)?x.default_module:(allowed.includes(current)?current:allowed[0]||'D');
+  }
   if(kind==='BrandMeister'&&!x.default_password)q('serverPassword').value='';
 }
 function serverSelectionChanged(){
@@ -611,13 +630,14 @@ async function loadServers(refresh){
   serverLoadedProtocol=proto;
   q('serverTitle').textContent='Servidor '+(proto==='DSTAR'?'D‑STAR':proto);
   q('dmrNetworkFields').classList.toggle('hidden',proto!=='DMR');
+  q('dstarModuleWrap').classList.toggle('hidden',proto!=='DSTAR');
   box.className='result';box.textContent=refresh?'Atualizando lista pública...':'Carregando lista pública...';
   try{
     let j=await getj('/api/servers?protocol='+encodeURIComponent(proto),refresh?{method:'POST'}:undefined);
     if(proto!==serverLoadedProtocol)return;
     renderServers(j.servers||[],proto);
     box.className='result '+(serverOperational(proto)?'success':'');
-    box.textContent=serverOperational(proto)?'Rede DMR pronta para seleção.':'Lista carregada. Nesta Alpha a integração automática de rede externa está concluída primeiro para DMR; o RF dos demais protocolos continua disponível.';
+    box.textContent='Catálogo '+(proto==='DSTAR'?'D-Star':proto)+' carregado. A rede será aplicada e testada ao salvar.';
     setTimeout(()=>box.classList.add('hidden'),3500)
   }catch(e){box.className='result error';box.textContent='Não foi possível atualizar agora. '+e.message}
 }
@@ -662,7 +682,7 @@ async function loadCurrentConfig(){
     }
     if(c.color_code!==undefined)q('colorCode').value=String(c.color_code);
     if(c.dmr_slot)q('dmrSlot').value=c.dmr_slot;
-    if(c.xlx_module)q('xlxModule').value=c.xlx_module;
+    if(c.xlx_module){q('xlxModule').value=c.xlx_module;q('dstarModule').value=c.xlx_module;}
     if(c.essid!==undefined)q('essid').value=c.essid||'';
     if(c.bm_api_configured)q('bmApiKey').placeholder='API Key já configurada — deixe vazio para preservar';
   }catch(e){syncUseMode()}
@@ -690,11 +710,11 @@ q('saveBasic').onclick=async function(){
     network_kind:kind,
     color_code:Number(q('colorCode').value),
     dmr_slot:q('dmrSlot').value,
-    xlx_module:kind==='XLX'?q('xlxModule').value:'',
+    xlx_module:selectedProtocol()==='DSTAR'?q('dstarModule').value:(kind==='XLX'?q('xlxModule').value:''),
     essid:q('essidWrap').classList.contains('hidden')?'':q('essid').value,
     bm_api_key:kind==='BrandMeister'?q('bmApiKey').value.trim():''
   };
-  let box=q('basicResult');box.className='result';box.textContent=data.protocol==='DMR'?'Aplicando RF, MMDVMHost e servidor DMR...':'Aplicando RF e MMDVMHost...';q('saveBasic').disabled=true;
+  let box=q('basicResult');box.className='result';box.textContent='Aplicando RF, MMDVMHost e gateway '+(data.protocol==='DSTAR'?'D-Star':data.protocol)+'...';q('saveBasic').disabled=true;
   try{
     await getj('/api/basic/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     let deadline=Date.now()+45000;
