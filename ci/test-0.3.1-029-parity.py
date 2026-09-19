@@ -22,7 +22,7 @@ has("ci/patch-dmrgateway-hourly-0.2.9.py","hourly")
 # Physical display baseline + 0.3.1 Nextion correction.
 has("src/2pny-display-core-0.2.9.py","nextion_mmdvm","SSD1306","class LCD","CPU","RX ")
 has("src/2pny-hardware-probe-0.3.1.py",'b"connect\\xff\\xff\\xff"',"nextion_mmdvm")
-has("src/2pny-display-apply-0.3.1.py","PU2PNY Display Core is authoritative","disable","--now",LEGACY","nextion_mmdvm")
+has("src/2pny-display-apply-0.3.1.py","PU2PNY Display Core is authoritative",'disable","--now",LEGACY',"nextion_mmdvm")
 has("src/2pny-nextion-autodetect-0.3.1.py",'input=b"connect\\xff\\xff\\xff"',"NEXTION_AUTO_OK")
 
 # 0.2.9 Wi-Fi safety retained, but 0.3.1 no longer depends on a post-AP scan.
