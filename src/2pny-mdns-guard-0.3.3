@@ -1,0 +1,62 @@
+#!/bin/bash
+set -u
+hostnamectl set-hostname pu2pny >/dev/null 2>&1 || true
+printf 'pu2pny\n' >/etc/hostname
+
+mkdir -p /etc/avahi/services
+CONF=/etc/avahi/avahi-daemon.conf
+if test -f "$CONF"; then
+  python3 - "$CONF" <<'PY'
+import sys
+from pathlib import Path
+p=Path(sys.argv[1]); lines=p.read_text().splitlines()
+sections={}
+for i,l in enumerate(lines):
+    t=l.strip()
+    if t.startswith("[") and t.endswith("]"): sections[t.lower()]=i
+def setkey(section,key,value):
+    global lines
+    header=f"[{section}]"; low=header.lower()
+    try:start=next(i for i,l in enumerate(lines) if l.strip().lower()==low)
+    except StopIteration:
+        if lines and lines[-1].strip():lines.append("")
+        lines.append(header);start=len(lines)-1
+    end=len(lines)
+    for i in range(start+1,len(lines)):
+        if lines[i].strip().startswith("["):end=i;break
+    for i in range(start+1,end):
+        t=lines[i].strip()
+        if t.startswith("#"):t=t[1:].strip()
+        if t.split("=",1)[0].strip().lower()==key.lower() and "=" in t:
+            lines[i]=f"{key}={value}";return
+    lines.insert(start+1,f"{key}={value}")
+lines=[l for l in lines if l.strip().lstrip("#").split("=",1)[0].strip().lower() not in ("allow-interfaces","deny-interfaces")]
+for k,v in (
+ ("host-name","pu2pny"),("domain-name","local"),("use-ipv4","yes"),("use-ipv6","yes"),
+): setkey("server",k,v)
+for k,v in (
+ ("publish-addresses","yes"),("publish-workstation","yes"),("publish-hinfo","no"),
+ ("publish-domain","yes"),
+): setkey("publish",k,v)
+p.write_text("\n".join(lines)+"\n")
+PY
+fi
+
+cat >/etc/avahi/services/pu2pny-http.service <<'EOF'
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">PU2PNY-OS on %h</name>
+  <service>
+    <type>_http._tcp</type>
+    <port>80</port>
+    <txt-record>path=/</txt-record>
+  </service>
+</service-group>
+EOF
+
+systemctl enable avahi-daemon.service >/dev/null 2>&1 || true
+systemctl restart avahi-daemon.service >/dev/null 2>&1 || true
+sleep .5
+systemctl is-active --quiet avahi-daemon.service || exit 1
+exit 0
