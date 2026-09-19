@@ -85,7 +85,7 @@ strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX status voice re
 strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, hourly time voice'
 
 echo '[9/12] display and APRS modules'
-grep -Fq 'pu2pny-display-core' "$ROOT/etc/systemd/system/2pny-display-core.service"
+grep -Fq 'ExecStart=/usr/local/sbin/2pny-display-core' "$ROOT/etc/systemd/system/2pny-display-core.service"
 grep -Fq 'SSD1306' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'nextion_mmdvm' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'rotate.aprs2.net' "$ROOT/usr/local/sbin/2pny-aprs"
