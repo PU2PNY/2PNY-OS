@@ -10,6 +10,7 @@ DSTAR_COMMIT="612f388727a9bb47aaeaae3a89f5abff3152ed93"
 YSF_COMMIT="a71e33aaed25a93e8c2bb2d87fc5fb7491e72fe7"
 P25_COMMIT="3c5fb387c4e2d676a7c79069d2bb3541473b0528"
 NXDN_COMMIT="8950677e9876e577fb87b955cfa93bacd059209d"
+DAPNET_COMMIT="b869053a8046f6791d5bbb83fdae4f9e967f75e7"
 FLAGS_COMMIT="086f7e97d657358203916dbe84f61c2bccaa81eb"
 
 def install(src,dst,mode):
@@ -27,6 +28,7 @@ install("src/ui-language-0.2.7.js","rootfs-overlay/usr/share/2pny/ui-language.js
 # Wi-Fi module
 install("src/2pny-network-switch-0.2.9","rootfs-overlay/usr/local/sbin/2pny-network-switch",0o755)
 install("src/2pny-network-core-0.2.7","rootfs-overlay/usr/local/sbin/2pny-network-core",0o755)
+install("src/2pny-mode-apply-0.2.9","rootfs-overlay/usr/local/sbin/2pny-mode-apply",0o755)
 
 # Live/RadioID database module
 install("src/2pny-live-core-0.2.9.py","rootfs-overlay/usr/local/lib/2pny-live-core.py",0o644)
@@ -49,6 +51,7 @@ for src,dst in (
  ("src/2pny-ysfgateway-0.2.9.service","rootfs-overlay/etc/systemd/system/2pny-ysfgateway.service"),
  ("src/2pny-p25gateway-0.2.9.service","rootfs-overlay/etc/systemd/system/2pny-p25gateway.service"),
  ("src/2pny-nxdngateway-0.2.9.service","rootfs-overlay/etc/systemd/system/2pny-nxdngateway.service"),
+ ("src/2pny-dapnetgateway-0.2.9.service","rootfs-overlay/etc/systemd/system/2pny-dapnetgateway.service"),
 ):
     install(src,dst,0o644)
 
@@ -63,7 +66,7 @@ install("ci/patch-dmrgateway-hourly-0.2.9.py","builder/patch-dmrgateway-hourly-0
 (root/"rootfs-overlay/etc/2pny/version").write_text(version+"\n")
 for rel in ("rootfs-overlay/var/lib/2pny/station","rootfs-overlay/var/cache/2pny/photos",
             "rootfs-overlay/run/2pny","rootfs-overlay/var/lib/2pny/dstar","rootfs-overlay/var/lib/2pny/ysf",
-            "rootfs-overlay/var/lib/2pny/p25","rootfs-overlay/var/lib/2pny/nxdn"):
+            "rootfs-overlay/var/lib/2pny/p25","rootfs-overlay/var/lib/2pny/nxdn","rootfs-overlay/var/lib/2pny/pocsag"):
     (root/rel).mkdir(parents=True,exist_ok=True)
 
 # Enable only passive/control modules. Protocol gateways are enabled when selected.
@@ -198,6 +201,19 @@ printf '%s\n' "$NXDN_COMMIT" >/usr/share/2pny/upstream/NXDNGateway.commit
 cd /
 rm -rf "$NXDN"
 
+DAPNET_COMMIT="{DAPNET_COMMIT}"
+DAPNET=/tmp/DAPNETGateway-029
+rm -rf "$DAPNET"
+git init -q "$DAPNET"; cd "$DAPNET"
+git remote add origin https://github.com/g4klx/DAPNETGateway.git
+git fetch -q --depth=1 origin "$DAPNET_COMMIT"; git checkout -q --detach FETCH_HEAD
+make -j"$JOBS"
+strip --strip-unneeded DAPNETGateway
+install -D -m 0755 DAPNETGateway /usr/local/bin/DAPNETGateway
+printf '%s\n' "$DAPNET_COMMIT" >/usr/share/2pny/upstream/DAPNETGateway.commit
+cd /
+rm -rf "$DAPNET"
+
 FLAGS_COMMIT="{FLAGS_COMMIT}"
 FLAGS=/tmp/flag-icons-029
 rm -rf "$FLAGS"
@@ -246,7 +262,7 @@ for rel in (
 subprocess.run(["gofmt","-w",str(root/"src/2pnyd/main.go")],check=True)
 for rel in (
  "rootfs-overlay/usr/local/sbin/2pny-network-switch","rootfs-overlay/usr/local/sbin/2pny-network-core",
- "rootfs-overlay/usr/local/sbin/2pny-hostfiles-update",
+ "rootfs-overlay/usr/local/sbin/2pny-hostfiles-update","rootfs-overlay/usr/local/sbin/2pny-mode-apply",
 ):
     subprocess.run(["bash","-n",str(root/rel)],check=True)
 for rel in (
