@@ -1,0 +1,20 @@
+[Unit]
+Description=PU2PNY RAM-first live state and bounded history
+After=2pny-network-core.service mosquitto.service 2pny-mmdvmhost.service 2pny-dmrgateway.service
+
+[Service]
+RuntimeDirectory=2pny
+RuntimeDirectoryPreserve=yes
+ExecStart=/usr/local/sbin/2pny-station-worker
+Restart=on-failure
+RestartSec=3
+Nice=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/2pny /run/2pny /var/cache/2pny
+MemoryMax=72M
+TasksMax=16
+
+[Install]
+WantedBy=multi-user.target
