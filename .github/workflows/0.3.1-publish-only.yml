@@ -1,0 +1,65 @@
+name: Publish validated PU2PNY-OS 0.3.1 Alpha
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.1-alpha ]
+    paths:
+      - '.github/workflows/0.3.1-publish-only.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Download validated ARM64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.1-arm64
+          path: release
+          repository: PU2PNY/2PNY-OS
+          run-id: 35458555882
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify validated image
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-0.3.1-alpha-arm64.img.xz"
+          xz -t "$IMAGE"
+          EXPECTED="$(awk '{print $1}' "$IMAGE.sha256")"
+          ACTUAL="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          test "$EXPECTED" = "$ACTUAL"
+          echo "SHA256=$ACTUAL" >> "$GITHUB_ENV"
+      - name: Release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.1 Alpha — imagem ARM64 validada.
+
+          Base completa da 0.2.9 + recursos da 0.3.0 + correções do teste físico:
+          - Wi-Fi com perfil criado antes de derrubar o AP, WPA2/WPA3 e restauração segura;
+          - pu2pny.local reforçado por Avahi/mDNS;
+          - Nextion corrigida com terminadores FF FF FF reais e PU2PNY Display Core;
+          - Ao Vivo corrige TX/RX preso em END MQTT sem source;
+          - CPU/temperatura/rede com fallback no backend;
+          - listas de D-Star/YSF/P25/NXDN/XLX pré-carregadas;
+          - Protocolos sem busca, com listas específicas por modo e IP/porta em Avançado;
+          - preserva RadioID, QRZ, bandeiras, histórico agrupado, voz, APRS, Internet/MTR, Sistema e Expert.
+
+          Alpha destinada a teste físico. 0.3.0 e 0.2.9 permanecem como rollback.
+          EOF
+      - name: Publish release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.1-alpha
+          target_commitish: dc12761e88b00ed9f87c485feace9be6e9884642
+          name: PU2PNY-OS 0.3.1 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.1-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.3.1-alpha-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
