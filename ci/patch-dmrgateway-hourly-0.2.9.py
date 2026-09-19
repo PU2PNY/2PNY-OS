@@ -44,10 +44,10 @@ if "PU2PNY_HOURLY_VOICE" not in s:
     if inc not in s:
         raise SystemExit("DMRGateway include anchor not found")
     s=s.replace(inc,inc+"#include <ctime>\n",1)
-    loop="\tstopWatch.start();\n\n\twhile (!m_killed) {"
+    loop="\twhile (!m_killed) {"
     if loop not in s:
         raise SystemExit("DMRGateway loop anchor not found")
-    s=s.replace(loop,"\tstopWatch.start();\n\n\t// PU2PNY_HOURLY_VOICE\n\tint pu2pnyLastHour = -1;\n\n\twhile (!m_killed) {",1)
+    s=s.replace(loop,"\t// PU2PNY_HOURLY_VOICE\n\tint pu2pnyLastHour = -1;\n\n\twhile (!m_killed) {",1)
     clock='''\t\tif (m_xlxVoice != nullptr)
 \t\t\tm_xlxVoice->clock(ms);
 '''
