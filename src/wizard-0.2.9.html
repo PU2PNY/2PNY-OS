@@ -187,6 +187,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
         <div class="choice"><input type="radio" name="protocol" id="pysf" value="YSF"><label for="pysf"><b>YSF / C4FM</b><small>Gateway YSF/FCS</small></label></div>
         <div class="choice"><input type="radio" name="protocol" id="pp25" value="P25"><label for="pp25"><b>P25</b><small>Gateway P25</small></label></div>
         <div class="choice"><input type="radio" name="protocol" id="pnxdn" value="NXDN"><label for="pnxdn"><b>NXDN</b><small>Gateway NXDN</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="ppocsag" value="POCSAG"><label for="ppocsag"><b>POCSAG</b><small>DAPNET paging</small></label></div>
       </div>
 
       <div class="section-title">Rede / servidor</div>
@@ -595,7 +596,7 @@ for(let n=65;n<=90;n++){
 q('xlxModule').value='C';q('dstarModule').value='D';
 let serverCatalog=[],serverLoadedProtocol='',networkFamily='';
 function selectedProtocol(){return document.querySelector('input[name=protocol]:checked').value}
-function serverOperational(proto){return ['DMR','DSTAR','YSF','P25','NXDN'].includes(proto)}
+function serverOperational(proto){return ['DMR','DSTAR','YSF','P25','NXDN','POCSAG'].includes(proto)}
 function renderServers(items,proto){
   serverCatalog=Array.isArray(items)?items:[];
   let kinds=proto==='DMR'?['XLX','BrandMeister','TGIF','FreeDMR','DMR+','HBLink']:proto==='DSTAR'?['XLX','DPlus','DCS','DExtra']:Array.from(new Set(serverCatalog.map(x=>x.kind)));let bar=q('networkFilters');bar.innerHTML='';
@@ -625,7 +626,7 @@ function selectedServerObject(){
 function applyNetworkRequirements(x){
   x=x||{};let kind=x.kind||'DMR';
   q('serverPasswordLabel').textContent=x.password_label||(kind==='BrandMeister'?'Hotspot Security':'Senha do master');
-  q('serverPasswordHint').textContent=kind==='BrandMeister'?'Obrigatória e diferente da senha do SelfCare.':(kind==='TGIF'?'Use sua chave TGIF; passw0rd funciona no modo legado quando permitido.':(kind==='XLX'?'Senha padrão do XLX normalmente é passw0rd.':''));
+  q('serverPasswordHint').textContent=kind==='BrandMeister'?'Obrigatória e diferente da senha do SelfCare.':(kind==='DAPNET'?'Use a AuthKey fornecida pelo DAPNET para seu indicativo.':(kind==='TGIF'?'Use sua chave TGIF; passw0rd funciona no modo legado quando permitido.':(kind==='XLX'?'Senha padrão do XLX normalmente é passw0rd.':'')));
   let proto=selectedProtocol();
   q('networkSpecificHelp').textContent=x.help||(proto==='DMR'?(kind==='XLX'?'XLX será conectado pelo DMRGateway.':kind+' será conectado pelo DMRGateway.'):'Gateway '+proto+' será configurado automaticamente.');
   q('xlxModuleWrap').classList.toggle('hidden',proto!=='DMR'||kind!=='XLX');
