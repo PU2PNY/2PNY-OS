@@ -78,6 +78,34 @@ for service in ("2pny-station.service","2pny-display-core.service","2pny-aprs.se
 # the known purge anchor, so compile all optional gateways immediately before it.
 builder=root/"builder/build-image.sh"
 s=builder.read_text()
+# Give the target root filesystem temporary build headroom.  The Raspberry Pi
+# Lite image is intentionally tight and compiling all gateways in-chroot can
+# exhaust dpkg scratch space even after source trees are removed.  We extend
+# only the final root partition; zero-filled space compresses efficiently and
+# first boot can still expand normally to the SD card.
+raw_anchor='xz -dc "$BASE_XZ" > "$OUT_IMG"'
+if "PU2PNY_029_BUILD_HEADROOM" not in s:
+    if raw_anchor not in s:
+        raise SystemExit("0.2.9 builder: raw image anchor missing")
+    s=s.replace(raw_anchor,raw_anchor+"""
+# PU2PNY_029_BUILD_HEADROOM
+truncate -s +1024M "$OUT_IMG"
+parted -s "$OUT_IMG" resizepart 2 100%
+""",1)
+part_anchor='[[ -b "$ROOT_PART" ]] || { echo "ERRO: partição root não apareceu" >&2; exit 4; }'
+if "PU2PNY_029_RESIZE_ROOTFS" not in s:
+    if part_anchor not in s:
+        raise SystemExit("0.2.9 builder: root partition anchor missing")
+    s=s.replace(part_anchor,part_anchor+"""
+# PU2PNY_029_RESIZE_ROOTFS
+E2RC=0
+e2fsck -fy "$ROOT_PART" || E2RC=$?
+if [[ "$E2RC" -gt 1 ]]; then
+  echo "ERRO: e2fsck falhou antes de ampliar rootfs (rc=$E2RC)" >&2
+  exit 41
+fi
+resize2fs "$ROOT_PART"
+""",1)
 # The gateway compilation happens inside the target chroot before the normal
 # overlay rsync. Stage the two tiny source patches into the target first.
 chroot_anchor='chroot "$ROOT_MNT" env MMDVMHOST_COMMIT="$MMDVMHOST_COMMIT" /bin/bash -s <<\'MMDVM_BUILD\''
@@ -240,5 +268,5 @@ assert "/api/network/country" in main and '"/flags/"' in main
 assert 'id="liveCard"' in dash and 'id="liveName"' in dash and "operatorView" in dash
 assert "País / região do Wi" in wiz and "reconnectOverlay" in wiz
 assert "RadioID" in (root/"rootfs-overlay/usr/local/sbin/2pny-station-worker").read_text()
-assert "TG4000" in (root/"builder/patch-dmrgateway-pu2pny-0.2.9.py").read_text()
+assert "TG4000" in (root/"builder/patch-dmrgateway-pu2pny-0.2.9.py").read_text()\nassert "PU2PNY_029_BUILD_HEADROOM" in builder.read_text() and "PU2PNY_029_RESIZE_ROOTFS" in builder.read_text()
 print("PU2PNY-OS 0.2.9 modular overlay applied")
