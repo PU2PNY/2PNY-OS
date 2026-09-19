@@ -45,7 +45,7 @@ jobs:
           grep -Fq 'REF/DPlus' src/protocols-0.3.0.html
           grep -Fq 'APRS-IS' src/aprs-0.3.0.html
           grep -Fq 'Timeout=180' src/2pny-mode-apply-0.3.0
-          python3 src/2pny-server-catalog-0.3.0.py DSTAR | grep -Fq 'DPlus'
+          grep -Fq 'DPlus_Hosts.txt' src/2pny-server-catalog-0.3.0.py
           python3 src/2pny-server-catalog-0.3.0.py POCSAG | grep -Fq 'DAPNET'
 
   build-arm64:
