@@ -1407,6 +1407,22 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 func netdiagHandler(w http.ResponseWriter,r *http.Request){writeJSON(w,200,readPublicJSON("/run/2pny/netdiag.json"))}
 func historySummaryHandler(w http.ResponseWriter,r *http.Request){writeJSON(w,200,readPublicJSON("/run/2pny/history-summary.json"))}
 
+func updateStatusHandler(w http.ResponseWriter,r *http.Request) {
+	if r.Method!=http.MethodGet {http.Error(w,"GET required",405);return}
+	client:=&http.Client{Timeout:5*time.Second}
+	req,_:=http.NewRequest(http.MethodGet,"https://api.github.com/repos/PU2PNY/2PNY-OS/releases?per_page=10",nil)
+	req.Header.Set("User-Agent","PU2PNY-OS/"+appVersion)
+	resp,err:=client.Do(req);if err!=nil{writeJSON(w,503,map[string]any{"current":appVersion,"error":"catálogo de atualizações indisponível"});return}
+	defer resp.Body.Close();if resp.StatusCode!=200{writeJSON(w,503,map[string]any{"current":appVersion,"error":"GitHub respondeu "+resp.Status});return}
+	var releases []struct{Tag string `json:"tag_name"`;Name string `json:"name"`;Body string `json:"body"`;HTML string `json:"html_url"`;Draft bool `json:"draft"`;Prerelease bool `json:"prerelease"`}
+	if json.NewDecoder(http.MaxBytesReader(w,resp.Body,1<<20)).Decode(&releases)!=nil{writeJSON(w,503,map[string]any{"current":appVersion,"error":"catálogo inválido"});return}
+	latest:="";name:="";body:="";link:=""
+	for _,rel:=range releases{if rel.Draft{continue};latest=strings.TrimPrefix(rel.Tag,"v");name=rel.Name;body=strings.TrimSpace(rel.Body);link=rel.HTML;break}
+	if len(body)>300{body=body[:300]+"…"}
+	available:=latest!=""&&latest!=appVersion
+	writeJSON(w,200,map[string]any{"current":appVersion,"latest":latest,"available":available,"name":name,"notes":body,"url":link,"install_mode":"blocked_until_ab_validated"})
+}
+
 func systemControlHandler(w http.ResponseWriter,r *http.Request) {
 	if r.Method==http.MethodGet {
 		tz:=strings.TrimSpace(string(func()[]byte{b,_:=exec.Command("timedatectl","show","-p","Timezone","--value").Output();return b}()))
@@ -1683,6 +1699,7 @@ func main() {
 	http.HandleFunc("/api/netdiag", netdiagHandler)
 	http.HandleFunc("/api/history/summary", historySummaryHandler)
 	http.HandleFunc("/api/system", systemControlHandler)
+	http.HandleFunc("/api/update", updateStatusHandler)
 	http.HandleFunc("/api/live", liveStatusHandler)
 	http.HandleFunc("/api/live/events", liveEventsHandler)
  http.HandleFunc("/api/station/settings", stationSettingsHandler)
