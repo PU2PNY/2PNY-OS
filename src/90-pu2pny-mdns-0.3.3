@@ -1,0 +1,10 @@
+#!/bin/bash
+set -u
+IFACE="${1:-}"
+ACTION="${2:-}"
+case "$ACTION" in
+  up|dhcp4-change|dhcp6-change|connectivity-change|hostname)
+    /usr/local/sbin/2pny-mdns-guard >/dev/null 2>&1 || logger -t pu2pny-mdns "mDNS refresh failed after $ACTION on ${IFACE:-global}"
+    ;;
+esac
+exit 0
