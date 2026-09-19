@@ -244,6 +244,43 @@ rm -rf "$FLAGS"
     # Builder runs in chroot; expose patch files at /builder.
     s=s.replace(anchor,block+anchor,1)
 
+# 0.3.0: the resized loop partition can briefly disappear while udev/partprobe
+# settles on hosted ARM runners. Make the filesystem-resize gate deterministic.
+legacy_resize='''# PU2PNY_029_RESIZE_ROOTFS
+E2RC=0
+e2fsck -fy "$ROOT_PART" || E2RC=$?
+if [[ "$E2RC" -gt 1 ]]; then
+  echo "ERRO: e2fsck falhou antes de ampliar rootfs (rc=$E2RC)" >&2
+  exit 41
+fi
+resize2fs "$ROOT_PART"
+'''
+stable_resize='''# PU2PNY_030_RESIZE_ROOTFS
+partprobe "$LOOP" >/dev/null 2>&1 || true
+udevadm settle >/dev/null 2>&1 || true
+for _ in {1..60}; do
+  [[ -b "$ROOT_PART" ]] && blockdev --getsize64 "$ROOT_PART" >/dev/null 2>&1 && break
+  sleep 0.25
+done
+[[ -b "$ROOT_PART" ]] || { echo "ERRO: rootfs não reapareceu após resizepart" >&2; exit 40; }
+E2RC=8
+for _ in {1..8}; do
+  E2RC=0
+  e2fsck -fy "$ROOT_PART" || E2RC=$?
+  [[ "$E2RC" -le 1 ]] && break
+  sleep 0.5
+  partprobe "$LOOP" >/dev/null 2>&1 || true
+  udevadm settle >/dev/null 2>&1 || true
+done
+if [[ "$E2RC" -gt 1 ]]; then
+  echo "ERRO: e2fsck falhou antes de ampliar rootfs (rc=$E2RC)" >&2
+  exit 41
+fi
+resize2fs "$ROOT_PART"
+'''
+if legacy_resize in s:
+    s=s.replace(legacy_resize,stable_resize,1)
+
 # Make patch scripts visible inside the mounted/chroot tree.
 overlay_builder=root/"rootfs-overlay/builder"
 overlay_builder.mkdir(parents=True,exist_ok=True)
