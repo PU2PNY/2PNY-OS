@@ -1,0 +1,16 @@
+[Unit]
+Description=PU2PNY P25 Gateway
+After=network-online.target 2pny-mmdvmhost.service mosquitto.service
+Wants=network-online.target
+[Service]
+Type=simple
+WorkingDirectory=/var/lib/2pny/p25
+ExecStart=/usr/local/bin/P25Gateway /var/lib/2pny/p25/P25Gateway.ini
+Restart=on-failure
+RestartSec=4
+User=root
+Group=mmdvm
+NoNewPrivileges=true
+ProtectHome=true
+[Install]
+WantedBy=multi-user.target
