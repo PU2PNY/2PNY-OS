@@ -202,6 +202,7 @@ Enabled=0
         for src in ("YSFHosts.json","FCSRooms.txt"):
             p=STATE/"hosts"/src
             if p.exists():shutil.copy2(p,d/src)
+        startup=server if "-" in server else "YSF-"+server
         ini=f"""[General]
 Callsign={callsign}
 Suffix=ND
@@ -234,7 +235,7 @@ Keepalive=60
 Auth=0
 Name=ysf-gateway
 [Network]
-Startup={server}
+Startup={startup}
 InactivityTimeout=10
 Reconnect=1
 Revert=0
@@ -284,6 +285,7 @@ Name=p25-gateway
 [Network]
 Port=42010
 HostsFile1={d/"P25Hosts.json"}
+HostsFile2=/var/lib/2pny/hosts/P25Hosts.txt
 ReloadTime=60
 Static={static}
 RFHangTime=120
@@ -336,6 +338,7 @@ Name=nxdn-gateway
 [Network]
 Port=14050
 HostsFile1={d/"NXDNHosts.json"}
+HostsFile2=/var/lib/2pny/hosts/NXDNHosts.txt
 ReloadTime=60
 Static={static}
 RFHangTime=120
