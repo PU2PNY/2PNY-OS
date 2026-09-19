@@ -1,0 +1,27 @@
+[Unit]
+Description=PU2PNY adaptive physical display core
+After=mosquitto.service 2pny-mmdvmhost.service
+Wants=mosquitto.service
+ConditionPathExists=/var/lib/2pny/hardware-probe.json
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/2pny-display-core
+Restart=always
+RestartSec=3
+Nice=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/2pny /var/lib/2pny
+DeviceAllow=/dev/ttyAMA0 rw
+DeviceAllow=/dev/ttyS0 rw
+DeviceAllow=/dev/ttyUSB0 rw
+DeviceAllow=/dev/ttyACM0 rw
+DeviceAllow=/dev/i2c-1 rw
+SupplementaryGroups=dialout i2c
+MemoryMax=80M
+
+[Install]
+WantedBy=multi-user.target
