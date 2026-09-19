@@ -1570,6 +1570,7 @@ func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		Comment string `json:"comment"`
 		SymbolTable string `json:"symbol_table"`
 		Symbol string `json:"symbol"`
+		SSID int `json:"ssid"`
 	}
 	if json.NewDecoder(r.Body).Decode(&in) != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -1577,11 +1578,13 @@ func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	in.Server = strings.TrimSpace(in.Server)
 	in.Comment = strings.TrimSpace(in.Comment)
-	if in.Server == "" { in.Server = "rotate.aprs2.net" }
+	if in.Server == "" { in.Server = "brazil.aprs2.net" }
 	if in.Port == 0 { in.Port = 14580 }
 	if in.IntervalSeconds == 0 { in.IntervalSeconds = 1800 }
 	if in.SymbolTable == "" { in.SymbolTable = "/" }
 	if in.Symbol == "" { in.Symbol = "r" }
+	if in.SSID == 0 { in.SSID = 10 }
+	if in.SSID < 0 || in.SSID > 15 { http.Error(w, "SSID APRS deve ficar entre 0 e 15", http.StatusBadRequest); return }
 	if len(in.Server) > 255 || hasUnsafeControl(in.Server) || in.Port < 1 || in.Port > 65535 {
 		http.Error(w, "Servidor APRS-IS inválido", http.StatusBadRequest); return
 	}
@@ -1601,7 +1604,7 @@ func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	obj := map[string]any{
 		"enabled":in.Enabled, "callsign":cfg.Callsign, "latitude":in.Latitude, "longitude":in.Longitude,
 		"server":in.Server, "port":in.Port, "interval_seconds":in.IntervalSeconds, "comment":in.Comment,
-		"symbol_table":in.SymbolTable, "symbol":in.Symbol,
+		"symbol_table":in.SymbolTable, "symbol":in.Symbol, "ssid":in.SSID,
 	}
 	raw, _ := json.MarshalIndent(obj, "", "  ")
 	tmp := settingsPath + ".tmp"
@@ -1613,6 +1616,22 @@ func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok":false,"error":strings.TrimSpace(string(out))}); return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok":true, "enabled":in.Enabled})
+}
+
+func aprsMessageHandler(w http.ResponseWriter,r *http.Request) {
+	if r.Method!=http.MethodPost || !sameOrigin(r){http.Error(w,"request rejected",http.StatusForbidden);return}
+	var in struct{To string `json:"to"`;Text string `json:"text"`}
+	if json.NewDecoder(http.MaxBytesReader(w,r.Body,4096)).Decode(&in)!=nil{http.Error(w,"JSON inválido",400);return}
+	to:=strings.ToUpper(strings.TrimSpace(in.To));msg:=strings.TrimSpace(in.Text)
+	if !regexp.MustCompile(`^[A-Z0-9]{1,6}(?:-[0-9]{1,2})?$`).MatchString(to){writeJSON(w,400,map[string]any{"error":"destino APRS inválido"});return}
+	if msg==""||len(msg)>60||hasUnsafeControl(msg){writeJSON(w,400,map[string]any{"error":"mensagem deve ter 1 a 60 caracteres"});return}
+	dir:="/var/lib/2pny/aprs-outbox";if err:=os.MkdirAll(dir,0700);err!=nil{writeJSON(w,500,map[string]any{"error":"não foi possível abrir a caixa de saída"});return}
+	id:=fmt.Sprintf("%d-%d",time.Now().UnixNano(),os.Getpid())
+	raw,_:=json.Marshal(map[string]any{"to":to,"text":msg,"id":strconv.FormatInt(time.Now().UnixNano()/1e6%1000,10)})
+	tmp:=filepath.Join(dir,"."+id+".tmp");dst:=filepath.Join(dir,id+".json")
+	if err:=os.WriteFile(tmp,raw,0600);err!=nil{writeJSON(w,500,map[string]any{"error":"falha ao enfileirar mensagem"});return}
+	if err:=os.Rename(tmp,dst);err!=nil{_ = os.Remove(tmp);writeJSON(w,500,map[string]any{"error":"falha ao publicar mensagem"});return}
+	writeJSON(w,200,map[string]any{"ok":true})
 }
 
 func main() {
@@ -1668,6 +1687,7 @@ func main() {
 	http.HandleFunc("/api/live/events", liveEventsHandler)
  http.HandleFunc("/api/station/settings", stationSettingsHandler)
  http.HandleFunc("/api/aprs", aprsSettingsHandler)
+ http.HandleFunc("/api/aprs/message", aprsMessageHandler)
  http.HandleFunc("/api/contacts",func(w http.ResponseWriter,r *http.Request){writeJSON(w,200,readPublicJSON("/run/2pny/contacts.json"))})
  http.Handle("/operator-photo/",http.StripPrefix("/operator-photo/",http.FileServer(http.Dir("/var/cache/2pny/photos"))))
  http.Handle("/flags/",http.StripPrefix("/flags/",http.FileServer(http.Dir("/usr/share/2pny/flags"))))
