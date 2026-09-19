@@ -28,8 +28,8 @@ mkdir -p "$ROOT"; mount "${LOOP}p2" "$ROOT"; mkdir -p "$ROOT/boot/firmware"; mou
 echo '[2/12] identity and modular sources'
 grep -Fxq "$VERSION" "$ROOT/etc/2pny/version"
 grep -Fxq 'pu2pny' "$ROOT/etc/hostname"
-grep -Fq '0.3.0-alpha' "$ROOT/usr/share/2pny/dashboard.html"
-grep -Fq '0.3.0-alpha' "$ROOT/usr/share/2pny/wizard.html"
+grep -Fq 'id="liveBox"' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'reconnectOverlay' "$ROOT/usr/share/2pny/wizard.html"
 
 echo '[3/12] runtime module syntax'
 for x in 2pny-network-core 2pny-network-switch 2pny-hostfiles-update 2pny-rf-apply 2pny-mode-apply; do
