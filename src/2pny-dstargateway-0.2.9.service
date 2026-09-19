@@ -4,7 +4,7 @@ After=network-online.target 2pny-mmdvmhost.service mosquitto.service
 Wants=network-online.target
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/DStarGateway /var/lib/2pny/dstar/DStarGateway.ini
+ExecStart=/usr/local/bin/dstargateway /var/lib/2pny/dstar/DStarGateway.ini
 Restart=on-failure
 RestartSec=4
 User=root
