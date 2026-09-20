@@ -403,7 +403,7 @@ Enable=0
         p=STATE/"hosts/P25Hosts.json"
         if not p.exists(): atomic(p,'{"reflectors":[]}\n',0o644)
         shutil.copy2(p,d/"P25Hosts.json")
-        ident=re.search(r"\d{2,7}",server);static=ident.group(0) if ident else ""
+        idents=re.findall(r"\d{2,7}",server);static=idents[-1] if idents else ""
         ini=f"""[General]
 Callsign={callsign}
 RptAddress=127.0.0.1
@@ -444,7 +444,7 @@ Enable=0
         p=STATE/"hosts/NXDNHosts.json"
         if not p.exists(): atomic(p,'{"reflectors":[]}\n',0o644)
         shutil.copy2(p,d/"NXDNHosts.json")
-        ident=re.search(r"\d{2,7}",server);static=ident.group(0) if ident else ""
+        idents=re.findall(r"\d{2,7}",server);static=idents[-1] if idents else ""
         ini=f"""[General]
 Callsign={callsign}
 Suffix=NXDN
