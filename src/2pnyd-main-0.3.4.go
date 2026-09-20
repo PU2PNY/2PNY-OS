@@ -1658,22 +1658,37 @@ func maintenanceHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, st)
 	case http.MethodPost:
 		var in struct {
-			Enabled bool `json:"enabled"`
+			Enabled *bool  `json:"enabled"`
+			Action  string `json:"action"`
 		}
 		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&in); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "opção inválida"})
 			return
 		}
-		action := "disable"
-		if in.Enabled {
-			action = "enable"
+		action := strings.ToLower(strings.TrimSpace(in.Action))
+		if action == "" && in.Enabled != nil {
+			if *in.Enabled { action = "enable" } else { action = "disable" }
 		}
-		out, err := exec.Command("/usr/local/sbin/2pny-auto-maintenance", action).CombinedOutput()
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": strings.TrimSpace(string(out))})
-			return
+		switch action {
+		case "enable", "disable":
+			out, err := exec.Command("/usr/local/sbin/2pny-auto-maintenance", action).CombinedOutput()
+			if err != nil {
+				writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": strings.TrimSpace(string(out))})
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": action == "enable"})
+		case "run":
+			if err := exec.Command("systemctl", "start", "--no-block", "2pny-auto-maintenance.service").Run(); err != nil {
+				writeJSON(w, 500, map[string]any{"ok": false, "error": "não foi possível iniciar a manutenção"})
+				return
+			}
+			writeJSON(w, 202, map[string]any{"ok": true, "state": "running"})
+		case "force":
+			go func(){ _,_ = exec.Command("/usr/local/sbin/2pny-auto-maintenance", "force").CombinedOutput() }()
+			writeJSON(w, 202, map[string]any{"ok": true, "state": "running"})
+		default:
+			writeJSON(w, 400, map[string]any{"ok": false, "error": "ação de manutenção inválida"})
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": in.Enabled})
 	default:
 		http.Error(w, "GET or POST required", http.StatusMethodNotAllowed)
 	}
