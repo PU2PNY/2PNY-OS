@@ -241,7 +241,7 @@ class T(unittest.TestCase):
         self.assertEqual(backend.count("package main"),1)
         self.assertEqual(backend.count('http.HandleFunc("/radioid"'),1)
         self.assertNotIn("radioIDPageHandler",backend)
-        self.assertIn('radioIDFile',backend)
+        self.assertIn('radioIDFile           = "/usr/share/2pny/radioid.html"',backend)
 
 
 if __name__=="__main__":
