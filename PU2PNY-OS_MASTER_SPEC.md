@@ -360,3 +360,32 @@ Na linha 32-bit, priorizar Raspberry Pi OS Lite, serviços mínimos, sem desktop
 
 ### REL-007 — Gate independente ARM32
 A imagem ARM32 só pode ser publicada como Alpha quando: build armhf completo, xz -t, SHA-256, montagem/validação estrutural, confirmação de arquitetura dos binários críticos e boot/teste HW em pelo menos um Raspberry Pi ARMv6 ou ARMv7. O PASS ARM64 não vale como HW PASS ARM32 e vice-versa. A falha do pipeline 32-bit não pode bloquear nem alterar silenciosamente a imagem ARM64 já validada. Um artefato de CI explicitamente marcado EXPERIMENTAL/HW-TEST pode ser disponibilizado após todos os gates SW/estruturais passarem, somente para obter a validação física inicial; isso não o transforma em Alpha, HW PASS, PROD nem substitui a imagem ARM64.
+
+## 16. Regras obrigatórias adicionadas para 0.3.7-alpha — 2026-09-20
+
+### REL-008 — Continuidade integral da 0.3.6
+A 0.3.7-alpha deve ser construída sobre a 0.3.6-alpha preservando integralmente tudo que já foi aprovado, implementado e validado. Nenhuma correção anterior pode desaparecer para acomodar Direct/P2P, display ou voz. DMR TX/RX fisicamente aprovado continua baseline de regressão e não pode ser alterado sem teste/rollback próprios.
+
+### P2P-002 — Chamada PU2PNY Direct por indicativo/agenda
+PU2PNY Direct deve permitir comunicação entre dois equipamentos PU2PNY pela Internet sem exigir BrandMeister, XLX, YSF Room ou FCS. Na primeira fase, o transporte de rádio é somente entre o mesmo protocolo: DMR↔DMR, D-Star↔D-Star e YSF/C4FM↔YSF/C4FM. Cross-mode fica fora deste gate inicial. O usuário escolhe um indicativo/contato no painel; não deve informar IP, porta, NAT ou comandos de terminal.
+
+### P2P-003 — NAT/CGNAT: direto primeiro, relay somente quando necessário
+O módulo `direct-core` deve tentar caminho direto autenticado entre os dois PU2PNY usando descoberta de endpoint/NAT compatível com ICE/STUN e transporte criptografado. Se NAT/firewall/CGNAT impedir o caminho direto, deve usar relay PU2PNY autenticado. O painel deve mostrar exatamente `Direct`, `Relay` ou `Offline`, nunca chamar uma conexão relay de direta. Latência e estado de criptografia devem ser visíveis quando medidos.
+
+### P2P-004 — Infraestrutura própria e separação control/data plane
+O serviço de controle PU2PNY Direct deve ser próprio/self-hosted, responsável por registro, identidade, chaves, presença, autorização e rendezvous. O tráfego de voz/dados não deve passar pelo control plane. Em fallback Relay, somente o relay explicitamente destinado ao transporte encaminha pacotes já criptografados de ponta a ponta. Não depender de conta/comercial de terceiros para funcionamento normal.
+
+### P2P-005 — Pareamento e segurança
+Cada hotspot possui identidade criptográfica própria. Contato/pareamento exige autorização explícita do dono e deve permitir revogação. Nenhuma porta administrativa deve ser aberta indiscriminadamente. Chaves privadas ficam fora da API pública, com permissões mínimas. Direct é opt-in e não muda a rota normal dos demais protocolos quando não está em uso.
+
+### P2P-006 — Integração de rádio mesma-modalidade
+O Direct Core deve separar sinalização do transporte de quadros de rádio. D-Star deve respeitar a identidade/callsign/URCALL; DMR deve respeitar Radio ID/slot/TG ou chamada privada conforme o modo Direct definido; YSF deve preservar a identidade de origem/destino disponível. O primeiro gate de release exige implementação verificável do caminho local e testes determinísticos de encapsulamento/anti-replay; funcionamento RF ponta a ponta permanece HW até dois hotspots reais.
+
+### DISPLAY-013 — PU2PNY Moderno V2 em displays suportados
+Nextion e displays gráficos suportados devem usar apresentação visual PU2PNY própria, limpa e moderna, com splash, cards, ícones/indicadores, estados visuais distintos de Standby/TX/RX, boa hierarquia e alto contraste. O desenho deve ser feito pelo renderer quando possível, sem sobrescrever HMI/TFT do usuário. OLED SSD1306/SH1106 deve usar layout gráfico compacto, não apenas linhas de texto. LCD HD44780/PCF8574 continua textual por limitação física, mas deve ter hierarquia coerente. Framebuffer/SPI/TFT só pode ser ativado quando houver driver/kernel confirmado; nunca adivinhar hardware.
+
+### PROTO-013 — Aviso de conexão por voz em todos os protocolos suportados
+Quando uma conexão de rede de protocolo for confirmada por evidência real do gateway, o PU2PNY deve poder emitir aviso de voz pelo rádio no protocolo ativo, respeitando configuração de idioma/voz e sem fabricar confirmação. DMR preserva o mecanismo já aprovado. D-Star, YSF, P25 e NXDN devem usar mecanismo nativo/compatível quando tecnicamente disponível; POCSAG não deve fingir voz. Falha do anúncio nunca pode derrubar RF, gateway ou conexão. O anúncio só ocorre após estado `connected` real, com rate-limit para evitar repetição/flood.
+
+### TEST-007 — Gate de nova imagem
+Antes de divulgar a 0.3.7-alpha: source tests, regressões 0.3.6, testes Direct/Display/Voice, build ARM64, XZ, SHA-256 e validação estrutural precisam passar. D-Star/YSF/Direct/Displays permanecem HW PENDENTE onde ainda não houver equipamento real testado.
