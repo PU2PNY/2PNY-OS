@@ -23,6 +23,29 @@
       var sc=document.createElement('script');sc.src='/ui-language.js';sc.dataset.pnyLanguage='1';document.body.appendChild(sc)
     }else if(window.translateNavigation){window.translateNavigation()}
   }
+  function showAPRSToast(m){
+    var old=q('pnyAprsToast');if(old)old.remove();
+    var a=document.createElement('a');a.id='pnyAprsToast';a.href='/aprs';
+    a.style.cssText='position:fixed;right:18px;top:84px;z-index:3000;width:min(360px,calc(100vw - 36px));display:block;text-decoration:none;border:1px solid var(--green);background:var(--card);color:var(--text);border-radius:14px;padding:13px 15px;box-shadow:var(--shadow)';
+    a.innerHTML='<b style="display:block;margin-bottom:4px">Nova mensagem APRS · '+esc(m.station||'—')+'</b><span style="display:block;color:var(--muted)">'+esc(m.text||'Nova mensagem')+'</span><small style="display:block;margin-top:6px;color:var(--blue)">Clique para abrir APRS e responder</small>';
+    document.body.appendChild(a);
+    setTimeout(function(){if(a&&a.parentNode)a.remove()},5000)
+  }
+  var aprsWatchStarted=false;
+  function startAPRSWatch(){
+    if(aprsWatchStarted)return;aprsWatchStarted=true;
+    async function poll(){
+      if(document.hidden)return;
+      try{
+        var d=await getj('/api/aprs',null,3500),st=d.status||{},rows=(st.messages||[]).filter(function(x){return x.direction==='in'}),m=rows.length?rows[rows.length-1]:null;
+        if(!m)return;
+        var sig=[m.timestamp||'',m.station||'',m.id||'',m.text||''].join('|'),old=localStorage.getItem('pu2pny-aprs-last-message');
+        if(!old){localStorage.setItem('pu2pny-aprs-last-message',sig);return}
+        if(sig!==old){localStorage.setItem('pu2pny-aprs-last-message',sig);showAPRSToast(m)}
+      }catch(e){}
+    }
+    poll();setInterval(poll,5000)
+  }
   function footer(){
     if(q('pnyFooter'))return;
     var f=document.createElement('footer');f.id='pnyFooter';
@@ -30,7 +53,7 @@
     f.textContent='PU2PNY-OS · versão…';document.body.appendChild(f);
     getj('/api/status').then(function(s){f.textContent='PU2PNY-OS · '+(s.version||'versão indisponível')}).catch(function(){f.textContent='PU2PNY-OS'});
   }
-  function nav(active){var items=[['/dashboard','Ao Vivo','live'],['/internet','Internet','internet'],['/hotspot','Hotspot','hotspot'],['/protocols','Protocolos','protocols'],['/aprs','APRS / D-PRS','aprs'],['/history','Histórico','history'],['/display','Display','display'],['/system','Sistema','system']];var n=q('mainNav');if(!n)return;n.innerHTML=items.map(function(x){return '<a '+(x[2]===active?'class="active" ':'')+'href="'+x[0]+'">'+x[1]+'</a>'}).join('');ensureTools(active)}
+  function nav(active){var items=[['/dashboard','Ao Vivo','live'],['/internet','Internet','internet'],['/hotspot','Hotspot','hotspot'],['/protocols','Protocolos','protocols'],['/aprs','APRS / D-PRS','aprs'],['/history','Histórico','history'],['/display','Display','display'],['/system','Sistema','system']];var n=q('mainNav');if(!n)return;n.innerHTML=items.map(function(x){return '<a '+(x[2]===active?'class="active" ':'')+'href="'+x[0]+'">'+x[1]+'</a>'}).join('');ensureTools(active);startAPRSWatch()}
   async function clock(){var l=q('clockLocal'),u=q('clockUTC');if(!l&&!u)return;var d=new Date();if(l)l.textContent=d.toLocaleTimeString();if(u)u.textContent=d.toISOString().slice(11,19)+' UTC'}
   function startClock(){clock();setInterval(clock,1000)}
   window.PNY={q:q,esc:esc,getj:getj,setTheme:setTheme,initTheme:initTheme,flagUrl:flagUrl,fmtTime:fmtTime,nav:nav,startClock:startClock};
