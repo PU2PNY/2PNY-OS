@@ -93,7 +93,7 @@ assert 'Rede Wi-Fi 2' in wp
 assert 'quality_label' in nd and 'Melhor opção' in nd
 assert '[Gateway]' in pa and '[Repeater_1]' in pa and '[HostsFiles]' in pa
 assert 'Ensure the server selected' in pa and '"connected":False' in pa
-assert 'protocol-profiles.json' in profiles and 'rollback' in profiles
+assert 'protocol-profiles.json' in profiles and 'BACKUPS' in profiles and 'try:rf(old)' in profiles
 assert 'ALLOWED_PREFIX' in updater and 'sha256(pkg)' in updater and 'rollback' in updater
 assert 'DExtra|D-Plus|DCS' in station and 'Link has failed, polls lost' in station
 assert 'Rede Wi‑Fi 1 e Rede Wi‑Fi 2' in internet and 'wifiSecondManual' in internet
