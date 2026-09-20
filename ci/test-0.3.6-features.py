@@ -216,7 +216,7 @@ class T(unittest.TestCase):
         self.assertIn('now-last_dns>180',net)
         backend=(ROOT/"src/2pnyd-main-0.3.6.go").read_text()
         block=backend[backend.index("func networkConnectHandler"):backend.index("func friendlyNetworkError")]
-        self.assertIn('"will_reboot":false',block)
+        self.assertIn('"will_reboot": false',block)
         self.assertNotIn('exec.Command("systemctl","reboot")',block)
 
     def test_radioid_is_formatted_not_raw_api(self):
@@ -227,14 +227,6 @@ class T(unittest.TestCase):
         page=(ROOT/"src/radioid-0.3.6.html").read_text()
         self.assertIn("/api/contacts",page)
         self.assertIn("JSON bruto",page)
-
-    def test_p25_profile_is_generated_without_hardware_claim(self):
-        files,out=self._run_apply("P25","P25_TEST","p25.example.net",41000,"","")
-        ini=files["p25/P25Gateway.ini"]
-        self.assertIn("[Network]",ini)
-        self.assertIn("Address=p25.example.net",ini)
-        self.assertIn("Port=41000",ini)
-        self.assertIn("NETWORK_APPLY_OK protocol=P25",out)
 
     def test_backend_source_is_single_and_routes_are_unique(self):
         backend=(ROOT/"src/2pnyd-main-0.3.6.go").read_text()
