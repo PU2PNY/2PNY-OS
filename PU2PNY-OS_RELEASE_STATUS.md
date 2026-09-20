@@ -95,7 +95,7 @@ A causa raiz do erro observado ao trocar protocolos permanece classificada como 
 - Após Ethernet, `pu2pny.local` falhou com DNS_PROBE_FINISHED_NXDOMAIN; IP LAN abriu.
 - Wi-Fi selecionado novamente não associou ao roteador; Ethernet permaneceu funcional.
 - D-Star e YSF continuam falhando no restart do MMDVMHost com `MQTT Error connecting: No such file or directory`; rollback funcionou.
-- DMR: ao mudar TG, o link conecta mas áudio TX não passa; investigar/patch com regressão DMR.
+- DMR RF/XLX: TX e RX estão funcionando. Ao usar TG de controle para trocar módulo (ex.: 4003/C → 4002/B), o gateway muda/conecta corretamente, porém o painel continuava exibindo o módulo configurado C. Classificado como falha de sincronização de estado/UI, não falha RF.
 - Ao Vivo/Histórico ainda pobres em colunas/dados.
 - APRS: botões de notificação/atualização não deram feedback observável; mensagem saiu como enfileirada.
 - Navegação "Trocar rede" força refazer etapas de primeiro acesso.
