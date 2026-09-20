@@ -76,13 +76,20 @@ class T(unittest.TestCase):
             files={str(p.relative_to(state)):p.read_text(errors="ignore") for p in state.rglob("*") if p.is_file()}
             return files,out.getvalue()
 
-    def test_dstar_native_gateway_sections(self):
+    def test_dstar_pinned_612f388_schema(self):
         files,out=self._run_apply("DSTAR","XLX026","82.152.175.30",0,"D","XLX")
         ini=files["dstar/DStarGateway.ini"]
-        for section in ("[Gateway]","[ircddb_1]","[Repeater_1]","[HostsFiles]","[DPlus]","[DCS]","[XLX]","[DRats]","[Remote]"):
+        for section in ("[General]","[IRCDDB 1]","[Repeater 1]","[Hosts Files]","[Log]","[MQTT]","[D-Plus]","[DCS]","[XLX]","[D-Rats]","[Remote Commands]"):
             self.assertIn(section,ini)
-        self.assertIn("reflector=XLX026 D",ini)
-        self.assertIn("port=20011",ini)
+        self.assertIn("Callsign=PU2ABC",ini)
+        self.assertIn("Band=D",ini)
+        self.assertIn("Type=HB",ini)
+        self.assertIn("Reflector=XLX026 D",ini)
+        self.assertIn("Port=20011",ini)
+        self.assertIn("DisplayLevel=2",ini)
+        self.assertIn("MQTTLevel=0",ini)
+        self.assertNotIn("[Gateway]",ini)
+        self.assertNotIn("[Repeater_1]",ini)
         self.assertIn("NETWORK_APPLY_OK protocol=DSTAR",out)
 
     def test_ysf_selected_name_is_exactly_resolvable(self):
