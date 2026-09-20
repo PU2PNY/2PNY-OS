@@ -223,7 +223,7 @@ Estado antes do CI final:
 - DISPLAY-012 passa a exigir Standby/TX/RX em OLED/LCD e demais drivers genéricos suportados, com ativação pelo painel/auto-detecção segura e sem terminal.
 - O Display Core atual já possui renderers para SSD1306/SH1106 e HD44780/PCF8574; isso é evidência de código, não HW PASS.
 - ARCH-004/REL-007 abrem uma linha ARM32 armhf paralela, sem substituir ARM64. O artefato será .img.xz, adequado a cartão SD Raspberry Pi, e terá pipeline/gates próprios.
-- Base proposta: Raspberry Pi OS Legacy Lite Bookworm 32-bit, por proximidade com a base Bookworm já usada pelo builder atual e por compatibilidade oficial com Raspberry Pi antigos.
+- Base primária proposta: Raspberry Pi OS Lite Trixie 32-bit de 15/09/2026, alinhada à base Trixie atual do builder ARM64 e oficialmente compatível com todos os modelos Raspberry Pi. Bookworm Legacy Lite 32-bit fica como fallback se o teste HW dos modelos antigos exigir.
 - Target próprio Go proposto: GOARCH=arm GOARM=6; binários C/C++ serão reconstruídos para armhf.
 - Pi Zero/1 possuem recursos muito menores; PERF-003 exige modo enxuto e prioridade absoluta para RF/rede.
 - Estado atual ARM32: DOC/planejado, sem build e sem HW PASS.
