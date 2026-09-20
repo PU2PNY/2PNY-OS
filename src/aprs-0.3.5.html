@@ -10,7 +10,7 @@
 <div class="notice hidden" id="inAppNotice" role="status" style="margin-top:12px"><b>Nova mensagem APRS</b><div id="inAppNoticeText"></div></div>
 <section class="section"><div class="grid2"><article class="card"><h2>Enviar mensagem</h2><label>Indicativo destino</label><input id="to" maxlength="9" placeholder="PY2ABC"><label>Mensagem</label><textarea id="message" maxlength="60" rows="3" placeholder="Até 60 caracteres"></textarea><button class="btn primary" id="send" style="margin-top:10px">Enviar pelo APRS</button><p id="sendResult" class="statusmsg"></p></article>
 <article class="card"><h2>Notificações</h2><p class="muted">Quando uma nova mensagem chegar enquanto esta página estiver aberta, o navegador pode avisar.</p><button class="btn" id="notify">Ativar notificações do navegador</button><p id="notifyState" class="statusmsg"></p></article></div></section>
-<section class="section"><div class="sectionhead"><h2>Mensagens</h2><button class="btn" id="refresh">Atualizar</button></div><div class="card"><div class="msglist" id="messages"><span class="muted">Sem mensagens.</span></div></div></section>
+<section class="section"><div class="sectionhead"><h2>Mensagens</h2><div><span class="muted" id="refreshState"></span> <button class="btn" id="refresh">Atualizar</button></div></div><div class="card"><div class="msglist" id="messages"><span class="muted">Sem mensagens.</span></div></div></section>
 </main><script src="/ui-common-0.3.0.js"></script><script>
 PNY.nav('aprs');PNY.initTheme();PNY.startClock();var lastUnread=0;
 async function servers(refresh){try{var d=await PNY.getj('/api/servers?protocol=APRS',{method:refresh?'POST':'GET'}),rows=d.servers||[],sel=PNY.q('server'),old=sel.value;sel.innerHTML=rows.map(function(x){return'<option value="'+PNY.esc(x.address)+'" data-port="'+(x.port||14580)+'">'+PNY.esc(x.name)+' · '+PNY.esc(x.address)+'</option>'}).join('')+'<option value="custom">Outro servidor...</option>';if(old&&Array.from(sel.options).some(function(o){return o.value===old}))sel.value=old;sel.onchange=function(){var o=sel.options[sel.selectedIndex];if(o&&o.dataset.port)PNY.q('port').value=o.dataset.port}}catch(e){}}
@@ -26,5 +26,7 @@ PNY.q('notify').onclick=async function(){
   var p=await Notification.requestPermission();
   state.textContent=p==='granted'?'Notificações do sistema ativadas.':'Permissão não concedida. O alerta interno continua ativo.';
 };
-PNY.q('refreshServers').onclick=function(){servers(true)};PNY.q('refresh').onclick=load;servers(false).then(load);setInterval(function(){if(!document.hidden)load()},3000);
+PNY.q('refreshServers').onclick=async function(){PNY.q('result').textContent='Atualizando servidores...';await servers(true);PNY.q('result').textContent='Lista de servidores atualizada.'};
+PNY.q('refresh').onclick=async function(){PNY.q('refresh').disabled=true;PNY.q('refreshState').textContent='Atualizando...';await load();PNY.q('refreshState').textContent='Atualizado às '+new Date().toLocaleTimeString();PNY.q('refresh').disabled=false};
+servers(false).then(load);setInterval(function(){if(!document.hidden)load()},5000);
 </script></body></html>
