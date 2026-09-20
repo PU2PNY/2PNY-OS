@@ -52,16 +52,16 @@ def effective_dns(iface):
         if p and p.returncode==0:
             for line in p.stdout.splitlines():
                 ip=line.strip()
-                if re.fullmatch(r"(?:\\d{1,3}\\.){3}\\d{1,3}",ip) and ip not in out:out.append(ip)
+                if re.fullmatch(r"(?:\d{1,3}\.){3}\d{1,3}",ip) and ip not in out:out.append(ip)
         if not out:
             p=run("resolvectl","dns",iface,timeout=3)
             if p and p.returncode==0:
-                for ip in re.findall(r"(?<![0-9A-Fa-f:])(?:\\d{1,3}\\.){3}\\d{1,3}(?![0-9A-Fa-f:])",p.stdout):
+                for ip in re.findall(r"(?<![0-9A-Fa-f:])(?:\d{1,3}\.){3}\d{1,3}(?![0-9A-Fa-f:])",p.stdout):
                     if ip not in out:out.append(ip)
     if not out:
         try:
             for line in Path("/etc/resolv.conf").read_text(errors="ignore").splitlines():
-                m=re.match(r"\\s*nameserver\\s+((?:\\d{1,3}\\.){3}\\d{1,3})",line)
+                m=re.match(r"\s*nameserver\s+((?:\d{1,3}\.){3}\d{1,3})",line)
                 if m and m.group(1) not in out:out.append(m.group(1))
         except Exception:pass
     return out[:4]
@@ -141,12 +141,17 @@ def main():
         if h!=last_target or now-last_route>600:
             cached_hops=route(h);last_route=now;last_target=h
         dns_key=(iface,tuple(servers))
-        if dns_key!=last_dns_key or now-last_dns>600:
+        if dns_key!=last_dns_key or now-last_dns>180:
             cached_dns,cached_rec=dns_snapshot(servers);last_dns=now;last_dns_key=dns_key
         health,quality_label=classify(metrics)
         atomic({"target":h,"health":health,"quality_label":quality_label,"metrics":metrics,"interface":iface,"gateway":gateway,
                 "dns_servers":servers,"dns_tests":cached_dns,"dns_recommendation":cached_rec,
+                "dns_tested_at":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(last_dns)) if last_dns else None,
+                "dns_refresh_seconds":180,"dns_age_seconds":round(max(0,now-last_dns)) if last_dns else None,
                 "hops":cached_hops,"hop_count":len(cached_hops),
+                "route_tested_at":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(last_route)) if last_route else None,
+                "route_age_seconds":round(max(0,now-last_route)) if last_route else None,
+                "quality_criteria":{"best":"perda ≤1%, latência ≤140 ms e jitter ≤35 ms","good":"até 5% / 250 ms / 60 ms","poor":"até 15% / 350 ms / 100 ms","terrible":"destino inalcançável ou acima desses limites"},
                 "updated":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
                 "note":"Hops sem resposta ICMP não significam necessariamente falha. DNS sugerido nunca é aplicado automaticamente."})
         time.sleep(30)
