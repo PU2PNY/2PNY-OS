@@ -64,7 +64,7 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-NET-009 / NET-009 | salvar 2 Wi-Fi e alternar | troca rápida, associação+IPv4, rollback sem refazer wizard | PENDENTE | HW |
 | TEST-NET-010 / NET-010 | scan de canais | canal/freq/sinal e ocupação sem quebrar AP/Ethernet | PENDENTE | HW |
 | TEST-NET-011 / NET-011 | rota ativa | rótulo Ótima/Boa/Ruim + gateway/destino/hops coerentes | PENDENTE | SW/HW |
-| TEST-PROTO-007 / PROTO-007 | XLX: trocar TG suportado e falar | link muda e áudio RF→XLX passa; TG6 continua funcionando | FAIL atual | HW |
+| TEST-LIVE-008 / LIVE-008 | DMR XLX: TG4003/C → TG4002/B e depois TG6 | TX/RX continuam; painel muda runtime C→B e mantém B durante TG6 | FAIL UI atual; RF HW PASS | HW |
 | TEST-LIVE-006 / LIVE-006 | Ao Vivo/Histórico | tabela rica compartilhada, sem dados inventados | PENDENTE | SW/HW |
 | TEST-LIVE-007 / LIVE-007 | standby | radar leve e sem "Aguardando" duplicado | PENDENTE | SW/HW |
 | TEST-APRS-002 / APRS-002 | mensagem recebida | toast 5 s clicável → APRS | PENDENTE | SW/HW |
