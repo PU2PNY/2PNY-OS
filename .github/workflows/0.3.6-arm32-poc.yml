@@ -63,3 +63,76 @@ jobs:
           sudo chroot mnt /bin/uname -m
           sudo chroot mnt /bin/true
           echo 'ARMHF_CHROOT_OK'
+
+  inspect-staged-builder:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Apply full overlay chain and inspect native artifacts
+        run: |
+          set -Eeuo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-base-fix.sh \
+            ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-anchor-compat.sh \
+            ci/prepare-0.1.8-network-core.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh \
+            ci/prepare-0.1.9-pu2pny-hardware-ui.sh \
+            ci/prepare-0.1.9-network-pid-fix.sh \
+            ci/prepare-0.1.9-build-metadata-fix.sh \
+            ci/prepare-0.1.9-hotfix1-hardware-status.sh \
+            ci/prepare-0.2.0-onboarding.sh \
+            ci/prepare-0.2.1-network-ux.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+          python3 ci/prepare-0.2.2-stability.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.3-dashboard.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.4-network-display.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.5-protocol-network.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.7-radio-live.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.8-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.9-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.0-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.1-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.2-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.3-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.4-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.5-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.6-alpha.py legacy-source/2pny-os
+          cd legacy-source/2pny-os
+          echo '=== staged builder architecture anchors ==='
+          grep -nE 'arm64|armhf|GOARCH|GOARM|raspios|BASE|bookworm|trixie|aarch64' builder/build-image.sh || true
+          echo '=== native executable architectures in overlay ==='
+          find rootfs-overlay/usr/local -type f -perm /111 -print0 | while IFS= read -r -d '' f; do
+            t="$(file -b "$f")"
+            case "$t" in *ELF*) printf '%s :: %s\n' "$f" "$t";; esac
+          done
