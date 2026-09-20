@@ -46,3 +46,16 @@
 ## Próxima sequência obrigatória
 
 Rede/Wizard primeiro; depois preflight RF/MQTT; DMR regressão; D-Star; YSF; somente então Live/UI/Nextion/APRS. Cada bloco só avança após testes do bloco anterior e rollback disponível.
+
+## Implementação 0.3.4 já staged
+
+O código corretivo está na branch de trabalho, mas os estados HW da tabela acima continuam válidos até novo teste físico.
+
+- Rede/Wi-Fi: correção staged; **SW/CI pendente, HW pendente**.
+- Estado real do AP: correção staged; **SW/CI pendente, HW pendente**.
+- MMDVMHost/MQTT/D-Star/YSF: preflight e rollback determinístico staged; **não chamar D-Star/YSF de funcionando antes do HW**.
+- Ao Vivo, idioma, Expert, APRS e rodapé: implementação staged; **SW/CI pendente**.
+- Nextion: mudança de renderização staged; **HW obrigatório** para confirmar ausência de flicker.
+- Artefato 0.3.4: **ainda não liberado** até ARM64 + validação estrutural + SHA-256.
+
+A causa raiz do erro observado ao trocar protocolos permanece classificada como não confirmada em HW. O código agora impede uma troca quando o endpoint MQTT local não está pronto e produz evidência mais específica para o próximo teste.
