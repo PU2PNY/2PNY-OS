@@ -297,3 +297,14 @@ As novas funções explicitamente aprovadas no feedback físico da 0.3.5 não de
 
 ### REL-005 — DMR 0.3.5 é baseline de regressão
 O comportamento DMR considerado excelente no teste físico da 0.3.5 deve ser preservado. Mudanças para Wi‑Fi, D-Star, YSF, perfis, display, update ou UI não podem alterar o caminho DMR funcional sem evidência, backup, teste e rollback.
+
+## 13. Requisitos BrandMeister incorporados em 2026-09-20
+
+### PROTO-010 — Identificação DMR por rádio/hotspot
+Para hotspot pessoal BrandMeister, manter o Radio ID base de 7 dígitos e permitir selecionar um alias/ESSID de **dois dígitos** `01..99`. A interface deve apresentar nomes leigos como `Rádio 1 (01)`, `Rádio 2 (02)` etc. O ID efetivo de rede passa a ser o Radio ID de 7 dígitos acrescido desses dois dígitos, totalizando 9 dígitos, sem alterar o Radio ID programado no rádio. Não usar sufixo de um único dígito. Perfis/hotspots diferentes devem poder usar aliases distintos e a UI deve recomendar frequências diferentes quando houver mais de um hotspot. Em redes que não aceitam esse mecanismo, não inventar compatibilidade.
+
+### PROTO-011 — BrandMeister API Key separada da autenticação DMR
+Quando a rede selecionada for BrandMeister, o painel deve permitir cadastrar/remover uma **API Key BrandMeister** opcional. A API Key é destinada às funções de gerenciamento disponibilizadas pela API BrandMeister (por exemplo, informações do hotspot e gerenciamento suportado de talkgroups) e **não substitui** a Hotspot Security usada para autenticar o hotspot no master DMR. A implementação não deve pedir nem inventar um `API Secret`: a documentação BrandMeister atual descreve uma única API Key/token. A chave deve ser armazenada fora da configuração pública, com permissão restrita, nunca devolvida pela API do PU2PNY e nunca registrada em log. O painel pode informar apenas `configurada/não configurada`.
+
+### SEC-021 — Segredos BrandMeister
+Hotspot Security e BrandMeister API Key são segredos distintos. Ambos devem permanecer fora de respostas públicas, histórico, logs e arquivos exportados sem proteção. Alterar/remover a API Key não deve reiniciar MMDVMHost nem DMRGateway. Alterar ESSID/alias DMR pode exigir reconexão do gateway, mas deve preservar rollback e a baseline DMR da 0.3.5.
