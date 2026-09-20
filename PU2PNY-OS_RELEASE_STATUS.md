@@ -217,3 +217,13 @@ Estado antes do CI final:
 - Display: layout TX/RX e telas compactas ajustados sem sobrescrever HMI; foto dinâmica Nextion permanece condicionada a HMI compatível.
 - Update: download e instalação separados; instalação fica bloqueada até download 100% + SHA-256.
 - Release completa: **NÃO declarada PROD** até ARM64/estrutura/SHA concluírem e as pendências HW críticas forem repetidas no equipamento.
+
+## Escopo adicional — displays genéricos e Raspberry Pi 32-bit — 2026-09-20
+
+- DISPLAY-012 passa a exigir Standby/TX/RX em OLED/LCD e demais drivers genéricos suportados, com ativação pelo painel/auto-detecção segura e sem terminal.
+- O Display Core atual já possui renderers para SSD1306/SH1106 e HD44780/PCF8574; isso é evidência de código, não HW PASS.
+- ARCH-004/REL-007 abrem uma linha ARM32 armhf paralela, sem substituir ARM64. O artefato será .img.xz, adequado a cartão SD Raspberry Pi, e terá pipeline/gates próprios.
+- Base proposta: Raspberry Pi OS Legacy Lite Bookworm 32-bit, por proximidade com a base Bookworm já usada pelo builder atual e por compatibilidade oficial com Raspberry Pi antigos.
+- Target próprio Go proposto: GOARCH=arm GOARM=6; binários C/C++ serão reconstruídos para armhf.
+- Pi Zero/1 possuem recursos muito menores; PERF-003 exige modo enxuto e prioridade absoluta para RF/rede.
+- Estado atual ARM32: DOC/planejado, sem build e sem HW PASS.

@@ -157,3 +157,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Update: separa download e instalação; exige 100% + SHA-256 + confirmação de risco antes de aplicar.
 - Display: melhora hierarquia TX/RX e inclui identidade/localização/rede em OLED/LCD compactos sem gravar HMI.
 - Adiciona teste SW de configuração P25; HW continua pendente.
+
+## 2026-09-20 — displays genéricos e planejamento ARM32
+
+- Registrado DISPLAY-012: OLED SSD1306/SH1106, LCD HD44780/PCF8574 e novos displays genéricos suportados devem operar Standby/TX/RX sem terminal, com layouts proporcionais à capacidade.
+- O código existente já possui renderers OLED/LCD e autoaplicação do Display Core, mas permanece HW pendente.
+- Registrados ARCH-004, PERF-003 e REL-007 para uma imagem Raspberry Pi 32-bit paralela.
+- A imagem será distribuída como .img.xz para cartão SD, não como ISO de PC.
+- Estratégia inicial: Raspberry Pi OS Legacy Lite Bookworm 32-bit + GOARCH=arm GOARM=6, mantendo ARM64 independente.
+- Pesquisa externa: Raspberry Pi OS 32-bit segue disponível; a edição Legacy 32-bit Bookworm cobre modelos antigos. MMDVM-Host/MMDVM-Display declaram suporte a Linux 32-bit.
+- Nenhuma afirmação de funcionamento ARM32/HW foi feita nesta etapa.

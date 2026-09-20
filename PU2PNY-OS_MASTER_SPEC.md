@@ -337,3 +337,26 @@ A implementação deve usar porta APRS-IS bidirecional recomendada e servidores/
 - **UPDATE-005 — Download verificado antes da instalação:** atualização deve baixar em segundo plano, exibir progresso real quando mensurável, atingir 100%, validar SHA-256 e somente então permitir instalação após confirmação explícita. Falha de rede antes de 100% não pode modificar o sistema. A confirmação deve alertar sobre alimentação, rollback e possibilidade de regravar o cartão em falha grave.
 - **DISPLAY-011 — TX/RX e telas compactas:** TX/RX deve priorizar indicativo, nome, cidade/país, protocolo, origem/destino e estado RF/rede. OLED/LCD compactos devem incluir identidade e contexto de rede/IP dentro do espaço disponível. Foto dinâmica em Nextion só pode ser habilitada com HMI explicitamente compatível; o sistema não deve sobrescrever HMI/TFT automaticamente.
 - **TEST-006 — P25 sem hardware disponível:** nesta etapa P25 só pode receber DOC/SW/VPS. Não declarar HW/PROD até teste com rádio P25 real.
+
+## 15. Displays genéricos e linha Raspberry Pi 32-bit — 2026-09-20
+
+### DISPLAY-012 — OLED/LCD/eLED e displays genéricos operacionais
+Displays suportados detectados pelo PU2PNY devem ser ativados pelo PU2PNY Display Core sem exigir terminal. O comportamento mínimo obrigatório é:
+- Standby: identidade PU2PNY, hora, protocolo, frequência quando real, uplink/IP e estado de rede dentro do espaço disponível;
+- TX: protocolo, indicativo/identidade, destino/TG/módulo quando aplicável, direção, duração e métricas RF somente quando reais;
+- RX: protocolo, origem/indicativo/nome quando disponível, destino/TG/módulo, direção, duração e BER/RSSI somente quando reais;
+- telas pequenas devem usar layout compacto e legível, sem rolagem/polling agressivo;
+- suportar inicialmente OLED SSD1306/SH1106 e LCD HD44780/PCF8574 já presentes no Display Core; novos drivers genéricos devem entrar por adaptadores isolados;
+- endereço I2C isolado pode ser tratado como candidato, não como identidade absoluta do modelo. Quando não houver confirmação segura do controlador, usar tentativa controlada/diagnóstico e rollback sem afetar RF;
+- Nextion/HMI continua obedecendo DISPLAY-006/011: nenhuma gravação automática de HMI/TFT.
+
+### ARCH-004 — Artefato paralelo Raspberry Pi 32-bit
+Manter a imagem ARM64 como linha principal e criar uma imagem ARM 32-bit (armhf) separada, baseada inicialmente em Raspberry Pi OS Legacy Lite Bookworm 32-bit para reduzir divergência em relação à base Bookworm já usada pelo PU2PNY. O artefato deve ser uma imagem de cartão Raspberry Pi (.img.xz), não ISO de PC. O alvo mínimo é Raspberry Pi Zero/Zero W, 1A+/1B+ e 2B, mantendo compatibilidade com modelos 32-bit posteriores quando a base oficial suportar.
+
+O binário Go próprio deve ser compilado com GOOS=linux GOARCH=arm GOARM=6 para cobrir ARMv6 e superiores. Gateways/MMDVM e demais binários nativos precisam ser compilados dentro do rootfs armhf ou por toolchain compatível; nenhum binário ARM64 pode ser reutilizado no artefato 32-bit.
+
+### PERF-003 — Perfil para Raspberry Pi antigos
+Na linha 32-bit, priorizar Raspberry Pi OS Lite, serviços mínimos, sem desktop, logs limitados, polling reduzido, cache limitado e nenhuma função visual pesada no host. O painel web continua completo, mas processamento opcional de alto custo deve permanecer sob demanda. Em Raspberry Pi Zero/1 com 512 MB, estabilidade de RF/rede tem precedência sobre efeitos visuais ou coleta não essencial.
+
+### REL-007 — Gate independente ARM32
+A imagem ARM32 só pode ser publicada como Alpha quando: build armhf completo, xz -t, SHA-256, montagem/validação estrutural, confirmação de arquitetura dos binários críticos e boot/teste HW em pelo menos um Raspberry Pi ARMv6 ou ARMv7. O PASS ARM64 não vale como HW PASS ARM32 e vice-versa. A falha do pipeline 32-bit não pode bloquear nem alterar silenciosamente a imagem ARM64 já validada.

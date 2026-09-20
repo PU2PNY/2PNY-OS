@@ -158,3 +158,15 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-036-UPDATE-STAGED | UPDATE-005 | Simular download/estado; instalação só aceita pacote staged verificado e SHA correspondente | SW | PENDENTE |
 | TEST-036-P25-STATIC | TEST-006 | Gerar P25Gateway/MMDVMHost sem systemd/RF real e conferir portas/seções | SW | PENDENTE |
 | TEST-036-DISPLAY-CONTEXT | DISPLAY-011 | Verificar campos essenciais de TX/RX e contexto de IP/uplink nos renderers compactos | SW | PENDENTE |
+
+## Casos adicionados — displays genéricos e Raspberry Pi 32-bit
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-DISPLAY-012A | DISPLAY-012 | OLED SSD1306/SH1106 | ativa sem terminal e mostra Standby/TX/RX com dados reais/compactos | código parcial existente; HW pendente | SW/HW |
+| TEST-DISPLAY-012B | DISPLAY-012 | LCD HD44780/PCF8574 | ativa sem terminal e mostra Standby/TX/RX conforme linhas/colunas | código parcial existente; HW pendente | SW/HW |
+| TEST-DISPLAY-012C | DISPLAY-012 | display genérico candidato/ambíguo | não marca modelo como confirmado sem evidência; falha do driver não afeta RF | PENDENTE | SW/HW |
+| TEST-ARCH-004A | ARCH-004 | build armhf/GOARM=6 | binário 2pnyd é ARM 32-bit e rootfs contém somente componentes compatíveis | PENDENTE | SW |
+| TEST-ARCH-004B | ARCH-004 | boot em Pi Zero/1/2 | boot, rede, painel, MMDVM e ao menos DMR baseline sem regressão | PENDENTE | HW |
+| TEST-PERF-003 | PERF-003 | idle e TX/RX em 512 MB | sem OOM, sem swapping excessivo, RF estável e polling/logs controlados | PENDENTE | HW |
+| TEST-REL-007 | REL-007 | artefato ARM32 | .img.xz íntegro, SHA-256, validação estrutural e arquitetura correta | PENDENTE | SW/HW |
