@@ -27,7 +27,7 @@ jobs:
         with:
           go-version: '1.24.x'
           cache: false
-      - name: Validate 0.3.4 sources
+      - name: Validate 0.3.5 sources
         run: |
           set -euo pipefail
           gofmt -w src/2pnyd-main-0.3.5.go
@@ -35,7 +35,8 @@ jobs:
           python3 -m py_compile \
             src/2pny-live-core-0.3.1.py \
             src/2pny-station-worker-0.3.5.py \
-            src/2pny-display-core-0.2.9.py \
+            src/2pny-display-core-0.3.5.py \
+            src/2pny-display-status-0.3.5.py \
             src/2pny-display-apply-0.3.1.py \
             src/2pny-protocol-network-apply-0.3.0.py \
             src/2pny-protocol-network-apply-all-0.3.5.py \
@@ -47,6 +48,7 @@ jobs:
             ci/prepare-0.3.1-alpha.py \
             ci/prepare-0.3.2-alpha.py \
             ci/prepare-0.3.3-alpha.py \
+            ci/prepare-0.3.4-alpha.py \
             ci/prepare-0.3.5-alpha.py
           rm -rf src/__pycache__ ci/__pycache__
           bash -n src/2pny-network-switch-0.3.5 src/2pny-network-core-0.3.5 src/2pny-wifi-profiles-0.3.5 src/2pny-auto-maintenance-0.3.5 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.5-image.sh
@@ -73,6 +75,13 @@ jobs:
           grep -Fq 'openActivity' src/dashboard-0.3.5.html
           grep -Fq 'dns_recommendation' src/2pny-netdiag-0.3.5.py
           grep -Fq '2pny-dstargateway.service' src/2pny-station-worker-0.3.5.py
+          grep -Fq 'space_around_delimiters=False' src/2pny-protocol-network-apply-all-0.3.5.py
+          grep -Fq 'network-runtime.json' src/2pny-station-worker-0.3.5.py
+          grep -Fq 'PU2PNY-WIFI-SECONDARY' src/2pny-wifi-profiles-0.3.5
+          grep -Fq 'Bem-vindo / Welcome' src/wizard-0.3.5.html
+          grep -Fq 'Módulo / TG' src/dashboard-0.3.5.html
+          grep -Fq 'PU2PNY Moderno' src/display-0.3.5.html
+          grep -Fq 'Iniciando / Starting' src/2pny-display-core-0.3.5.py
   build-arm64:
     needs: source
     runs-on: ubuntu-24.04-arm
@@ -141,6 +150,7 @@ jobs:
           python3 ci/prepare-0.3.1-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.2-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.3-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.4-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.5-alpha.py legacy-source/2pny-os
       - name: Validate staged source
         working-directory: legacy-source/2pny-os
@@ -161,7 +171,7 @@ jobs:
           grep -Fq '/api/protocol/apply' src/2pnyd/main.go
           grep -Fq '/api/aprs/message' src/2pnyd/main.go
           grep -Fq 'id="liveBox"' rootfs-overlay/usr/share/2pny/dashboard.html
-          grep -Fq 'Aguardando transmissão' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'Rastreando sinais' rootfs-overlay/usr/share/2pny/dashboard.html
           grep -Fq 'location.replace' rootfs-overlay/usr/share/2pny/wizard.html
           grep -Fq 'id="versionBadge"' rootfs-overlay/usr/share/2pny/wizard.html
           grep -Fq "['/hotspot','Hotspot','hotspot']" rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
