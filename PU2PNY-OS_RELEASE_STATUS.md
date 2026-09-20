@@ -1,8 +1,8 @@
 # PU2PNY-OS — RELEASE STATUS
 
-**Branch de trabalho:** `pu2pny-os-0.3.5-alpha`  
-**Base preservada:** `pu2pny-os-0.3.4-alpha`  
-**Backup criado antes das mudanças:** `backup/0.3.4-hw-feedback-20260920`  
+**Branch de trabalho:** `pu2pny-os-0.3.6-alpha`  
+**Base preservada:** `pu2pny-os-0.3.5-alpha`  
+**Backup criado antes das mudanças:** `backup/0.3.5-hw-feedback-20260920`  
 **Data do último feedback físico incorporado:** 2026-09-20  
 **Estado global:** ALPHA / correção. **Não PROD.**
 
@@ -129,3 +129,30 @@ Código Go/Python/Bash/JS válido nos gates definidos, overlay completo, build A
 
 ### O que continua exigindo HW
 Wi-Fi pós-save/reboot, troca entre duas redes, mDNS após handoff, DMR módulo B/C no painel em tempo real, D-Star, YSF, Nextion PU2PNY Moderno, contagem TOT 10→0, APRS toast e atualização/manutenção no Raspberry Pi real. Nenhum desses itens foi promovido automaticamente para HW PASS por causa do CI.
+
+
+## Feedback físico da 0.3.5-alpha — ciclo 0.3.6 aberto em 2026-09-20
+
+**Regra de escopo:** REL-004. As novas funções aprovadas neste feedback pertencem à própria 0.3.6-alpha e não serão tratadas como roadmap futuro por conveniência. Quando uma função depender de hardware/cliente externo, a implementação deve chegar ao nível SW/VPS verificável nesta versão e continuar marcada como HW PENDENTE até o teste real.
+
+### Baseline preservada
+- DMR da 0.3.5 foi considerado excelente e permanece baseline de regressão obrigatória.
+- Preparação de hardware automática foi considerada excelente e deve ser preservada.
+- Não alterar caminho RF/DMR para corrigir UI, rede, D-Star, YSF, display ou update.
+
+### Bloqueadores e funções obrigatórias da 0.3.6
+- AP→Wi‑Fi ainda falha no handoff inicial; captive portal deve ser melhorado sem depender exclusivamente da abertura automática do navegador.
+- Gerenciamento Wi‑Fi 1/2 apresentou erro `unbound variable`; edição pós-provisionamento não pode voltar ao wizard completo.
+- DNS efetivo ficou inconsistente após troca; UI precisa confirmação de operações e retorno ao módulo.
+- Tradução integral PT/EN/ES, timezone via backend autorizado e Expert com Estado Ao Vivo são obrigatórios.
+- APRS: localização com permissão + toast global de mensagem.
+- Display: layout profissional para Nextion e demais displays, com conteúdo proporcional à capacidade real.
+- Histórico: atalhos QRZ/RadioID opcionais somente quando URL válida.
+- D-Star e YSF permanecem HW FAIL de tráfego de rede e bloqueiam qualquer afirmação de protocolo funcional.
+- Perfis independentes por protocolo são obrigatórios nesta versão.
+- Update oficial com verificação, backup opcional, rollback e downgrade entra nesta versão.
+- Manutenção deve mostrar último resultado e próxima execução elegível.
+- Toda correção comum deve ser global.
+
+### Gate
+A 0.3.6-alpha só pode ser publicada para teste físico depois que os novos casos SW/CI de NET/UI/APRS/DISPLAY/UPDATE/PROTO passarem e o build ARM64 + validação estrutural + SHA-256 concluírem. A publicação será Alpha; D-Star/YSF/Wi‑Fi/perfis/display/update só viram HW PASS após novo teste real.
