@@ -167,3 +167,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Inspeção da cadeia completa mostrou que os overlays fixam o builder final em Raspberry Pi OS Legacy Lite Bookworm 64-bit. A estratégia ARM32 foi corrigida para Bookworm Legacy Lite 32-bit de 15/09/2026 + GOARCH=arm GOARM=6; Trixie fica para avaliação posterior, evitando divergência desnecessária.
 - Pesquisa externa: Raspberry Pi OS 32-bit segue disponível; a edição Legacy 32-bit Bookworm cobre modelos antigos. MMDVM-Host/MMDVM-Display declaram suporte a Linux 32-bit.
 - Nenhuma afirmação de funcionamento ARM32/HW foi feita nesta etapa.
+
+## 2026-09-20 — POC ARM32 concluída em CI
+
+- O runner ARM64 executou o rootfs oficial Raspberry Pi OS Legacy Lite Bookworm `armhf` sem QEMU.
+- A cadeia completa 0.3.6 foi portada de forma isolada para `GOARCH=arm GOARM=6` e base Bookworm 32-bit.
+- A imagem ARM32 foi gerada, passou integridade/checksum e o validador estrutural completo.
+- Todos os binários críticos inspecionados são ELF 32-bit ARM EABI5.
+- Artefato experimental de CI criado para o primeiro ciclo HW; não é Alpha/PROD e não altera a linha ARM64.
+- Em paralelo, o run ARM64 `35544963950` passou todos os gates e publicou a 0.3.6-alpha atualizada com SHA-256 `8460357f780577abdd12cb5cf91288aad48d27d4c130a96c97d737f8d050a50c`.
