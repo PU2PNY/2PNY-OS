@@ -132,3 +132,16 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-PROTO-011C / PROTO-011 | API Key x Hotspot Security | API Key nunca é enviada como senha do master; Hotspot Security continua obrigatória | PASS estrutural; HW pendente | SW/HW |
 | TEST-SEC-021 / SEC-021 | logs/API/config pública | valor da API Key não aparece em JSON público, logs ou estado do protocolo | PASS estrutural/compile; runtime HW pendente | SW |
 | TEST-REL-006 / REL-005 | regressão DMR após alias/API | DMR TX/RX da 0.3.5 permanece baseline; API isolada não reinicia o rádio | HW requerido | HW |
+
+## Casos adicionais 0.3.6-alpha — APRS mensagens
+
+| ID | Caso de teste | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|
+| TEST-APRS-004A / APRS-004 | TCP conecta mas `logresp` ainda não confirmou | nenhuma mensagem/beacon sai; UI mostra aguardando autenticação | PENDENTE | SW/VPS |
+| TEST-APRS-004B / APRS-004 | `logresp ... verified` | sessão muda para verificada e fila pode transmitir | PENDENTE | SW/VPS |
+| TEST-APRS-004C / APRS-004 | mensagem na outbox com sessão verificada | pacote APRS correto é enviado; histórico marca tentativa/estado | PENDENTE | SW/VPS/HW |
+| TEST-APRS-004D / APRS-004 | mensagem recebida com ID | inbox registra uma vez e cliente envia `ack<ID>` | PENDENTE | SW/VPS/HW |
+| TEST-APRS-004E / APRS-004 | mesma mensagem recebida novamente | não duplica inbox/unread e reenvia ACK | PENDENTE | SW/VPS |
+| TEST-APRS-004F / APRS-004 | ACK/REJ remoto | mensagem enviada muda para `ack`/`rejected` | PENDENTE | SW/VPS/HW |
+| TEST-APRS-004G / APRS-004 | sem ACK após envio | retry limitado usa o mesmo ID e para após limite, sem flood | PENDENTE | SW/VPS |
+| TEST-APRS-004H / APRS-004 | servidor/login indisponível | fila é preservada; painel mostra erro/fila pendente sem perda da mensagem | PENDENTE | SW/VPS/HW |
