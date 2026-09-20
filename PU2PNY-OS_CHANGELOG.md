@@ -56,7 +56,7 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Criado backup `backup/0.3.4-hw-feedback-20260920`.
 - Criada branch `pu2pny-os-0.3.5-alpha`.
 - Registrados como baseline físico os itens aprovados: AP/primeiro acesso, tela de idioma, hardware, RF, DMR/XLX com voz de conexão, TOT 180 s, Internet/Ethernet/MTR, submenu + persistente, Protocolos, telemetria Nextion e voz.
-- Registradas sem mascarar: regressões Wi-Fi/mDNS, D-Star/YSF/MQTT, DMR troca de TG sem áudio, navegação pós-provisionamento, APRS UX, layout Ao Vivo/Histórico, Nextion, timezone, térmica e update preso.
+- Registradas sem mascarar: regressões Wi-Fi/mDNS, D-Star/YSF/MQTT, sincronização visual do módulo DMR após TG de controle, navegação pós-provisionamento, APRS UX, layout Ao Vivo/Histórico, Nextion, timezone, térmica e update preso.
 - Novos requisitos: WIZ-003/004, NET-009/010/011, UI-005/006, PROTO-007, LIVE-006/007, APRS-002, DISPLAY-007/008/009, RF-011, PERF-002, UPDATE-001/002 e TEST-002.
 
 ### Correção de classificação DMR/XLX
@@ -65,3 +65,14 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Nenhuma mudança no caminho RF/DMRGateway foi aplicada para este defeito.
 - Implementado tracking de módulo efetivo em runtime a partir dos eventos do DMRGateway; a API do painel passa a usar esse runtime sobre o preset salvo.
 - Exemplo obrigatório de regressão: preset C/TG4003 → comando TG4002 → runtime/painel B → falar em TG6 → continuar exibindo B.
+
+
+### Build e publicação 0.3.5-alpha
+- Backend 0.3.5 foi reconstruído a partir do fonte 0.3.4 preservado após o primeiro CI detectar corrupção/sintaxe; a baseline 0.3.4 permaneceu intacta.
+- Workflow corrigido para aplicar explicitamente `prepare-0.3.4-alpha.py` antes do overlay 0.3.5.
+- Gate do Wi-Fi ajustado para a grafia visual `Wi‑Fi` sem alterar a funcionalidade.
+- GitHub Actions run `35513524374` concluiu source, staged source, build ARM64, checksum, validação final, artefato e publicação com PASS.
+- Prerelease publicada: `v0.3.5-alpha`.
+- Imagem: `PU2PNY-OS-0.3.5-alpha-arm64.img.xz`.
+- SHA-256: `616d6089e2e699187e577104b070e757698d6f27a0917b5afb4d27ecaec1f5a9`.
+- Validação permanece **SW**; D-Star/YSF/Wi-Fi/Nextion e demais mudanças físicas ainda precisam novo ciclo HW.
