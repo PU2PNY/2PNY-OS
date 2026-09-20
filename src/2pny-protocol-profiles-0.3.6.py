@@ -35,7 +35,11 @@ def validate(profile):
     if mode=="hotspot":tx=rx
     module=str(profile.get("xlx_module") or "").upper()
     if proto=="DSTAR" and not re.fullmatch(r"[A-Z]",module or ""):module="D"
-    out=dict(profile);out.update(protocol=proto,rx_hz=rx,tx_hz=tx,use_mode=mode,xlx_module=module)
+    essid=str(profile.get("essid") or "").strip()
+    if proto=="DMR":
+        if essid and not re.fullmatch(r"(?:0[1-9]|[1-9][0-9])",essid):die("identificação DMR deve ser 01 a 99")
+    else:essid=""
+    out=dict(profile);out.update(protocol=proto,rx_hz=rx,tx_hz=tx,use_mode=mode,xlx_module=module,essid=essid)
     out["server_port"]=int(out.get("server_port") or 0)
     out["color_code"]=int(out.get("color_code") or 1)
     out["dmr_slot"]=str(out.get("dmr_slot") or "2")
