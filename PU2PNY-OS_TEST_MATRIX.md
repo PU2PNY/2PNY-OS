@@ -124,11 +124,11 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 
 | ID | Caso de teste | Resultado esperado | Estado atual | Nível |
 |---|---|---|---|---|
-| TEST-PROTO-010A / PROTO-010 | Radio ID base de 7 dígitos + `Rádio 1 (01)` | DMRGateway recebe ID de rede de 9 dígitos terminando em `01`; Radio ID base permanece inalterado | PENDENTE | SW/HW |
-| TEST-PROTO-010B / PROTO-010 | trocar para `Rádio 2 (02)` | somente alias/ESSID muda para `02`; apply é transacional e DMR volta conectado | PENDENTE | SW/HW |
-| TEST-PROTO-010C / PROTO-010 | sufixo inválido `1`, `00`, texto ou >99 | backend rejeita antes de alterar DMR funcional | PENDENTE | SW |
-| TEST-PROTO-011A / PROTO-011 | salvar BrandMeister API Key | segredo vai para arquivo restrito; resposta retorna apenas `configured=true` | PENDENTE | SW/VPS |
-| TEST-PROTO-011B / PROTO-011 | remover BrandMeister API Key | segredo é removido sem reiniciar MMDVMHost/DMRGateway | PENDENTE | SW/VPS |
-| TEST-PROTO-011C / PROTO-011 | API Key x Hotspot Security | API Key nunca é enviada como senha do master; Hotspot Security continua obrigatória | PENDENTE | SW/HW |
-| TEST-SEC-021 / SEC-021 | logs/API/config pública | valor da API Key não aparece em JSON público, logs ou estado do protocolo | PENDENTE | SW/VPS |
+| TEST-PROTO-010A / PROTO-010 | Radio ID base de 7 dígitos + `Rádio 1 (01)` | DMRGateway recebe ID de rede de 9 dígitos terminando em `01`; Radio ID base permanece inalterado | PASS determinístico; HW pendente | VPS/HW |
+| TEST-PROTO-010B / PROTO-010 | trocar para `Rádio 2 (02)` | somente alias/ESSID muda para `02`; apply é transacional e DMR volta conectado | PASS determinístico; HW pendente | VPS/HW |
+| TEST-PROTO-010C / PROTO-010 | sufixo inválido `1`, `00`, texto ou >99 | backend rejeita antes de alterar DMR funcional | PASS | VPS |
+| TEST-PROTO-011A / PROTO-011 | salvar BrandMeister API Key | segredo vai para arquivo restrito; resposta retorna apenas `configured=true` | PASS estrutural/compile; runtime HW pendente | SW |
+| TEST-PROTO-011B / PROTO-011 | remover BrandMeister API Key | segredo é removido sem reiniciar MMDVMHost/DMRGateway | PASS estrutural; runtime HW pendente | SW |
+| TEST-PROTO-011C / PROTO-011 | API Key x Hotspot Security | API Key nunca é enviada como senha do master; Hotspot Security continua obrigatória | PASS estrutural; HW pendente | SW/HW |
+| TEST-SEC-021 / SEC-021 | logs/API/config pública | valor da API Key não aparece em JSON público, logs ou estado do protocolo | PASS estrutural/compile; runtime HW pendente | SW |
 | TEST-REL-006 / REL-005 | regressão DMR após alias/API | DMR TX/RX da 0.3.5 permanece baseline; API isolada não reinicia o rádio | HW requerido | HW |
