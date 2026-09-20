@@ -216,7 +216,7 @@ class T(unittest.TestCase):
         self.assertIn('now-last_dns>180',net)
         backend=(ROOT/"src/2pnyd-main-0.3.6.go").read_text()
         block=backend[backend.index("func networkConnectHandler"):backend.index("func friendlyNetworkError")]
-        self.assertIn('"will_reboot": false',block)
+        self.assertIn('"will_reboot":false',block.replace(" ","").replace("\t","").replace("\n",""))
         self.assertNotIn('exec.Command("systemctl","reboot")',block)
 
     def test_radioid_is_formatted_not_raw_api(self):
