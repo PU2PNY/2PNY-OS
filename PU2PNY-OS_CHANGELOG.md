@@ -50,3 +50,11 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Imagem: `PU2PNY-OS-0.3.4-alpha-arm64.img.xz`.
 - SHA-256 da imagem: `4bc808da8f4c3fc259dd72a66a08e68e1a704b5cf13f754692c9864b40282e2c`.
 - Nível de validação permanece **SW** até novo ciclo físico. DMR/D-Star/YSF/Nextion/Wi-Fi não foram promovidos a HW PASS por causa do CI.
+
+## 2026-09-20 — feedback HW da 0.3.4 e abertura da 0.3.5
+
+- Criado backup `backup/0.3.4-hw-feedback-20260920`.
+- Criada branch `pu2pny-os-0.3.5-alpha`.
+- Registrados como baseline físico os itens aprovados: AP/primeiro acesso, tela de idioma, hardware, RF, DMR/XLX com voz de conexão, TOT 180 s, Internet/Ethernet/MTR, submenu + persistente, Protocolos, telemetria Nextion e voz.
+- Registradas sem mascarar: regressões Wi-Fi/mDNS, D-Star/YSF/MQTT, DMR troca de TG sem áudio, navegação pós-provisionamento, APRS UX, layout Ao Vivo/Histórico, Nextion, timezone, térmica e update preso.
+- Novos requisitos: WIZ-003/004, NET-009/010/011, UI-005/006, PROTO-007, LIVE-006/007, APRS-002, DISPLAY-007/008/009, RF-011, PERF-002, UPDATE-001/002 e TEST-002.
