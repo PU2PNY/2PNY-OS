@@ -144,3 +144,16 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Imagem SHA-256: `ec1f2676fa2a21715d5da99dc43a25607e8a7433b4580b9122416063e99eaa82`.
 - A classificação permanece **Alpha/SW+VPS** para os recursos novos; APRS, D-Star, YSF, Wi-Fi, perfis e displays ainda exigem HW PASS.
 
+## 0.3.6 hwfix2 — 20/09/2026
+
+- Corrige D-Star para o schema real do F4FXL DStarGateway `v20260323-612f388`, eliminando a incompatibilidade que produzia `General.Callsign` vazio, ausência de repetidores e `Log.DisplayLevel=info` inválido.
+- Mantém DMR e YSF sem alteração funcional.
+- Remove reboot obrigatório após Wi-Fi já validado; mantém rollback para rede anterior/AP.
+- Torna busca Wi-Fi tolerante à pausa temporária do AP e disponibiliza busca/manual nos perfis Wi-Fi 1 e 2.
+- Corrige parsing de DNS efetivo e torna comparação de resposta dinâmica em cache leve de 180 s.
+- Restaura seletor de idioma em instalação não provisionada mesmo com dados antigos do navegador.
+- APRS: adiciona teste/ajuda, explicação de geolocalização bloqueada em HTTP e resposta direta ao clicar no remetente.
+- RadioID: substitui abertura de JSON bruto por visualização legível sob demanda; QRZ/RID também em atividade recente.
+- Update: separa download e instalação; exige 100% + SHA-256 + confirmação de risco antes de aplicar.
+- Display: melhora hierarquia TX/RX e inclui identidade/localização/rede em OLED/LCD compactos sem gravar HMI.
+- Adiciona teste SW de configuração P25; HW continua pendente.
