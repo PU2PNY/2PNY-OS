@@ -76,3 +76,19 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-UPDATE-001 / UPDATE-001 | atualização falha/interrompe | nunca congela progresso; preserva versão e informa rollback | PENDENTE | SW/VPS/HW |
 | TEST-UPDATE-002 / UPDATE-002 | manutenção | manual/auto, baixa prioridade, sem full-upgrade/RF mutation | PENDENTE | SW/VPS |
 | TEST-UI-005 / UI-005 | Trocar rede após provisionar | retorna ao painel sem repetir HW/RF/conclusão | FAIL atual | HW |
+
+
+## Casos SW/CI específicos da 0.3.5
+
+| ID | Caso SW/CI | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|
+| TEST-SW-035-001 | fontes 0.3.5 | Go/Python/Bash/JS passam validação | PASS | SW |
+| TEST-SW-035-002 | cadeia de overlays | 0.3.4 completo é aplicado antes da 0.3.5, preservando baseline | PASS | SW |
+| TEST-SW-035-003 | MMDVMHost INI D-Star/YSF | candidato usa delimitador nativo `Key=Value` e gate contra formato incompatível | PASS estrutural | SW |
+| TEST-SW-035-004 | DMR módulo runtime | estado de módulo efetivo pode sobrescrever apenas a apresentação, sem reiniciar DMRGateway/MMDVMHost | PASS estrutural | SW |
+| TEST-SW-035-005 | rede/UI | segunda Wi-Fi, DNS manual, rota/canais, wizard e retorno pós-provisionamento presentes | PASS estrutural/JS | SW |
+| TEST-SW-035-006 | Live/Histórico/APRS | tabela rica, radar, TOT UI e toast APRS passam sintaxe/gates | PASS estrutural/JS | SW |
+| TEST-SW-035-007 | Display/Manutenção | PU2PNY Moderno, splash, TOT 10→0 e manutenção sem percentual inventado passam compile/gates | PASS estrutural | SW |
+| TEST-SW-035-008 | imagem ARM64 | build, XZ, SHA-256, montagem, APIs e validador final | PASS | SW |
+
+**Regra:** estes PASS autorizam somente a imagem **0.3.5 Alpha para teste físico**. Os casos NET/PROTO/LIVE/DISPLAY/APRS de nível HW permanecem PENDENTE/FAIL até o novo teste no equipamento.
