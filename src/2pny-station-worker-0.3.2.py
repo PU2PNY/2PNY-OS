@@ -11,7 +11,7 @@ from pathlib import Path
 from importlib.machinery import SourceFileLoader
 
 CORE=SourceFileLoader("pny_live_core","/usr/local/lib/2pny-live-core.py").load_module()
-RUN=Path("/run/2pny"); STATE=Path("/var/lib/2pny/station"); PHOTOS=Path("/var/cache/2pny/photos"); NETWORK_RUNTIME=RUN/"network-runtime.json"
+RUN=Path("/run/2pny"); STATE=Path("/var/lib/2pny/station"); PHOTOS=Path("/var/cache/2pny/photos")
 
 COUNTRY_CODES={
  "brazil":"BR","brasil":"BR","united states":"US","usa":"US","united kingdom":"GB",
@@ -94,35 +94,6 @@ def lookup(key):
     person["updated"]=datetime.datetime.now(datetime.timezone.utc).isoformat()
     return person
 
-def update_network_runtime_from_gateway(msg, ts=None):
-    """Track the effective XLX module selected over RF without rewriting the saved preset."""
-    msg=str(msg or "")
-    if not msg:return
-    runtime=read_json(NETWORK_RUNTIME,{})
-    changed=False
-    # Custom PU2PNY group-call control, e.g. TG4002 -> module B.
-    m=re.search(r"PU2PNY, XLX module control:\s*TG(40(?:0[1-9]|1[0-9]|2[0-6]))\s*->\s*module\s+([A-Z])",msg,re.I)
-    if m:
-        runtime.update({"protocol":"DMR","module":m.group(2).upper(),"module_tg":int(m.group(1)),
-                        "module_source":"rf-control","linked":True})
-        changed=True
-    # Upstream confirms/relinks the effective room using the module letter.
-    m=re.search(r"XLX,\s*(?:Re-)?Linking to reflector\s+XLX([0-9]{3})\s+([A-Z])",msg,re.I)
-    if m:
-        letter=m.group(2).upper()
-        runtime.update({"protocol":"DMR","server_name":"XLX"+m.group(1),"module":letter,
-                        "module_tg":4000+(ord(letter)-64),"module_source":"gateway","linked":True})
-        changed=True
-    if "PU2PNY, XLX module control: unlinked by TG4000" in msg:
-        runtime.update({"protocol":"DMR","module":"","module_tg":4000,"module_source":"rf-control","linked":False})
-        changed=True
-    if re.search(r"XLX,\s*Unlinking from XLX[0-9]{3}",msg,re.I):
-        runtime.update({"linked":False})
-        changed=True
-    if changed:
-        runtime["updated"]=CORE.iso(ts or time.time())
-        atomic(NETWORK_RUNTIME,runtime)
-
 def configured_host():
     for filename in ("/var/lib/2pny/network-radio.json","/var/lib/2pny/protocol-network.json"):
         data=read_json(filename)
@@ -160,12 +131,6 @@ def start_mqtt():
 
 def persist_end(db,event):
     if not event or not isinstance(event,dict) or event.get("event")!="end":return
-    event=dict(event)
-    if str(event.get("protocol") or "").upper()=="DMR" and not event.get("module"):
-        rt=read_json(NETWORK_RUNTIME,{})
-        if rt.get("module"):
-            event["module"]=rt.get("module")
-            event["module_tg"]=rt.get("module_tg")
     key=f'{event.get("started_unix_ms",0)}:{event.get("direction")}:{event.get("protocol")}:{event.get("slot","")}'
     db.execute("INSERT OR REPLACE INTO history(id,stamp,data) VALUES(?,?,?)",
                (key,event.get("ended_at",""),json.dumps(event,ensure_ascii=False)));db.commit()
@@ -211,18 +176,7 @@ def telemetry(previous):
     try:freq=float(Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq").read_text())/1000
     except Exception:pass
     mem={l.split(":")[0]:int(l.split()[1]) for l in Path("/proc/meminfo").read_text().splitlines()}
-    try:load1,load5,load15=os.getloadavg()
-    except Exception:load1=load5=load15=0.0
-    throttled_raw=None;throttled_active=None
-    try:
-        p=subprocess.run(["vcgencmd","get_throttled"],text=True,capture_output=True,timeout=1)
-        m=re.search(r"0x([0-9A-Fa-f]+)",p.stdout or "")
-        if m:
-            throttled_raw=int(m.group(1),16);throttled_active=bool(throttled_raw & 0xF)
-    except Exception:pass
     info={"cpu_percent":round(usage,1),"temperature":round(temp,1),"cpu_frequency_mhz":round(freq,0),
-          "load_1":round(load1,2),"load_5":round(load5,2),"load_15":round(load15,2),
-          "throttled_raw":throttled_raw,"throttled_active":throttled_active,
           "memory_used_mb":round((mem["MemTotal"]-mem["MemAvailable"])/1024),
           "memory_total_mb":round(mem["MemTotal"]/1024),"network":network_telemetry()}
     try:
@@ -239,18 +193,10 @@ def history_summary(db):
     for (raw,) in db.execute("SELECT data FROM history ORDER BY stamp DESC LIMIT 1000"):
         try: rows.append(json.loads(raw))
         except Exception: pass
-    cfg=read_json("/var/lib/2pny/config.json")
-    station_type="Repetidora" if str(cfg.get("use_mode") or "").lower()=="repeater" else "Hotspot"
     by_call={};by_proto={};by_target={};tx_count=rx_count=0;tx_seconds=rx_seconds=0.0
     for e in rows:
-        rawcall=str(e.get("source") or "").strip().upper()
-        if not rawcall: continue
-        person={}
-        row=db.execute("SELECT data FROM contacts WHERE key=?",(rawcall,)).fetchone()
-        if row:
-            try: person=json.loads(row[0])
-            except Exception: person={}
-        call=str(person.get("callsign") or rawcall).strip().upper()
+        call=str(e.get("source") or "").strip().upper()
+        if not call: continue
         proto=str(e.get("protocol") or "—").upper()
         target=str(e.get("target") or "—")
         dur=float(e.get("duration") or 0)
@@ -259,15 +205,9 @@ def history_summary(db):
         else: rx_count+=1;rx_seconds+=dur
         by_proto[proto]=by_proto.get(proto,0)+1
         by_target[target]=by_target.get(target,0)+1
-        e=dict(e);e["operator"]=person;e["station_type"]=station_type
-        g=by_call.setdefault(call,{"callsign":call,"name":person.get("name") or "","city":person.get("city") or "",
-            "state":person.get("state") or "","country":person.get("country") or "","country_code":person.get("country_code") or "",
-            "photo":person.get("photo") or "","station_type":station_type,"count":0,"tx_count":0,"rx_count":0,"seconds":0.0,
-            "last":e.get("ended_at") or e.get("started_at"),"last_protocol":proto,"last_target":target,
-            "last_module":e.get("module") or "","items":[]})
+        g=by_call.setdefault(call,{"callsign":call,"count":0,"tx_count":0,"rx_count":0,"seconds":0.0,"last":e.get("ended_at") or e.get("started_at"),"last_protocol":proto,"last_target":target,"items":[]})
         g["count"]+=1;g["seconds"]+=dur
         g["tx_count"]+=1 if direction=="RF" else 0;g["rx_count"]+=1 if direction!="RF" else 0
-        if not g.get("last_module") and e.get("module"):g["last_module"]=e.get("module")
         if len(g["items"])<60:g["items"].append(e)
     groups=sorted(by_call.values(),key=lambda x:x.get("last") or "",reverse=True)
     top_proto=max(by_proto,key=by_proto.get) if by_proto else None
@@ -308,7 +248,6 @@ def main():
     for unit in gateway_units:
         for raw in journal_rows(unit,"-15 minutes"):
             msg,ts=decode_journal(raw);state.ingest(msg,ts,gateway=True)
-            if unit=="2pny-dmrgateway.service":update_network_runtime_from_gateway(msg,ts)
 
     hostlog=start_follow("2pny-mmdvmhost.service");gwlogs=[start_follow(unit) for unit in gateway_units];mqtt=start_mqtt()
     sel=selectors.DefaultSelector()
@@ -336,16 +275,11 @@ def main():
                             action=str(link.get("action") or "")
                             if action in ("linking","linked","connected"):
                                 state.network={"state":"connected","message":action,"updated":CORE.iso(wall)};state._touch()
-                                rt=read_json(NETWORK_RUNTIME,{})
-                                rt.update({"protocol":"DMR","linked":True,"updated":CORE.iso(wall)});atomic(NETWORK_RUNTIME,rt)
                             elif action in ("unlinked","disconnected"):
                                 state.network={"state":"disconnected","message":action,"updated":CORE.iso(wall)};state._touch()
-                                rt=read_json(NETWORK_RUNTIME,{})
-                                rt.update({"protocol":"DMR","linked":False,"updated":CORE.iso(wall)});atomic(NETWORK_RUNTIME,rt)
                 except Exception:pass
             else:
                 msg,ts=decode_journal(raw);event=state.ingest(msg,ts,gateway=gateway)
-                if gateway:update_network_runtime_from_gateway(msg,ts)
             persist_end(db,event)
             if event:dirty=True
 
