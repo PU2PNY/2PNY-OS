@@ -47,6 +47,7 @@
 <div><small>Protocolo</small><b id="stProto">—</b></div>
 <div><small>Rede</small><b id="stKind">—</b></div>
 <div><small>Servidor</small><b id="stServer">—</b></div>
+<div><small>Hotspot / Rádio</small><b id="stAlias">—</b></div>
 <div><small>Módulo</small><b id="stModule">—</b></div>
 <div><small>Gateway</small><b id="stGateway">—</b></div>
 <div><small>Endereço</small><b id="stAddress">—</b></div>
@@ -147,6 +148,7 @@ async function load(){
  PNY.q('stProto').textContent=current.protocol||cfg.protocol||'—';
  PNY.q('stKind').textContent=current.kind||cfg.network_kind||'—';
  PNY.q('stServer').textContent=current.server_name||cfg.server_name||'—';
+ var alias=String(cfg.essid||'');PNY.q('stAlias').textContent=(String(current.protocol||cfg.protocol||'').toUpperCase()==='DMR'&&alias)?('Rádio '+Number(alias)+' ('+alias+')'):'—';
  PNY.q('stModule').textContent=current.module||cfg.xlx_module||'—';
  PNY.q('stGateway').textContent=current.gateway||'—';
  PNY.q('stAddress').textContent=current.address||cfg.server_address||'—';
