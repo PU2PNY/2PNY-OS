@@ -229,12 +229,20 @@ class T(unittest.TestCase):
         self.assertIn("JSON bruto",page)
 
     def test_p25_profile_is_generated_without_hardware_claim(self):
-        files,out=self._run_apply("P25","P25_TEST","p25.example.net",41000,"","","")
+        files,out=self._run_apply("P25","P25_TEST","p25.example.net",41000,"","")
         ini=files["p25/P25Gateway.ini"]
         self.assertIn("[Network]",ini)
         self.assertIn("Address=p25.example.net",ini)
         self.assertIn("Port=41000",ini)
         self.assertIn("NETWORK_APPLY_OK protocol=P25",out)
+
+    def test_backend_source_is_single_and_routes_are_unique(self):
+        backend=(ROOT/"src/2pnyd-main-0.3.6.go").read_text()
+        self.assertEqual(backend.count("package main"),1)
+        self.assertEqual(backend.count('http.HandleFunc("/radioid"'),1)
+        self.assertNotIn("radioIDPageHandler",backend)
+        self.assertIn('radioIDFile',backend)
+
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
