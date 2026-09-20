@@ -154,8 +154,16 @@ setsec(cp,"POCSAG Network",{"Enable":"1" if proto=="POCSAG" else "0","LocalAddre
 
 buf=[]
 with tempfile.NamedTemporaryFile("w+",delete=False) as tf:
-    cp.write(tf);tmp_host=Path(tf.name)
+    # MMDVMHost's native parser tokenizes the key on " =" but then reads the
+    # value only up to CR/LF. ConfigParser's default "Key = Value" formatting
+    # therefore turns the value into "= Value" for this upstream parser.
+    # Always render "Key=Value" exactly as the original working RF config.
+    cp.write(tf,space_around_delimiters=False);tmp_host=Path(tf.name)
 host_text=tmp_host.read_text();tmp_host.unlink(missing_ok=True)
+# Gate against reintroducing the incompatible ConfigParser format.
+bad=[line for line in host_text.splitlines() if re.match(r"^[A-Za-z][A-Za-z0-9 _-]*\s+=\s+",line)]
+if bad:
+    raise RuntimeError("MMDVMHost candidate contains spaced INI delimiters")
 
 voice=read_voice={}
 try:read_voice=json.loads((STATE/"voice-settings.json").read_text())
