@@ -265,7 +265,10 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/release-component"
           tar -C "$BROOT" -czf "$GITHUB_WORKSPACE/release-component/PU2PNY-OS-$VERSION-update.tar.gz" manifest.json payload
           sha256sum "$GITHUB_WORKSPACE/release-component/PU2PNY-OS-$VERSION-update.tar.gz" > "$GITHUB_WORKSPACE/release-component/PU2PNY-OS-$VERSION-update.tar.gz.sha256"
-          tar -tzf "$GITHUB_WORKSPACE/release-component/PU2PNY-OS-$VERSION-update.tar.gz" | grep -Fq 'payload/usr/local/bin/2pnyd'
+          BUNDLE="$GITHUB_WORKSPACE/release-component/PU2PNY-OS-$VERSION-update.tar.gz"
+          CONTENTS="$GITHUB_WORKSPACE/release-component/update-contents.txt"
+          tar -tzf "$BUNDLE" > "$CONTENTS"
+          grep -Fxq 'payload/usr/local/bin/2pnyd' "$CONTENTS"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.6-features.py"
 
       - name: Build ARM64 image
