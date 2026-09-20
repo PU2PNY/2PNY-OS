@@ -261,6 +261,7 @@ jobs:
             /usr/share/2pny/display.html
             /usr/share/2pny/system.html
             /usr/share/2pny/expert.html
+            /usr/share/2pny/radioid.html
             /usr/share/2pny/ui-common-0.3.0.js
             /usr/share/2pny/ui-language.js
             /etc/2pny/version
