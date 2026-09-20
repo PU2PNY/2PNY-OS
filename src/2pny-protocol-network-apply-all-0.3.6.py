@@ -180,108 +180,118 @@ try:
     mqtt_preflight()
 
     if proto=="DSTAR":
-        # F4FXL DStarGateway uses [Gateway], [Repeater_1], [HostsFiles],
-        # [DPlus], [DRats] and [Remote].  Do not reuse ircDDBGateway section
-        # names such as [General]/[Repeater 1], which can leave the process
-        # alive while no RF<->network path is configured.
+        # The image pins F4FXL DStarGateway v20260323-612f388.  That revision
+        # uses the legacy/native schema [General], [Repeater 1], [IRCDDB 1],
+        # [Hosts Files] and numeric Log levels.  Do not generate the newer
+        # develop-branch [Gateway]/[Repeater_1] schema for this binary.
         d=STATE/"dstar";d.mkdir(parents=True,exist_ok=True)
         normalized=server.replace("_","").replace("-","").upper()
         if normalized.startswith("XLX") and len(normalized)>=6:reflector=normalized[:6]+" "+module
         elif normalized.startswith(("REF","DCS","XRF")):reflector=normalized[:6]+" "+module
         else:reflector=(normalized+" "+module).strip()
-        logdir=STATE/"dstar/log";logdir.mkdir(parents=True,exist_ok=True)
         custom=d/"custom";custom.mkdir(parents=True,exist_ok=True)
-        ini=f"""[Gateway]
-type=hotspot
-callsign={callsign}
-address=0.0.0.0
-hbAddress=127.0.0.1
-hbPort=20010
-latitude=0.0
-longitude=0.0
-description1=PU2PNY-OS
-description2=Digital Radio Hotspot
-url=https://xlx026.net
-language={lang}
+        dpath=str(d)+"/";cpath=str(custom)+"/"
+        ini=f"""[General]
+Callsign={callsign}
+Address=0.0.0.0
+HBAddress=127.0.0.1
+HBPort=20010
+IcomAddress=127.0.0.1
+IcomPort=20000
+Latitude=0.0
+Longitude=0.0
+Description1=PU2PNY-OS
+Description2=Digital Radio Hotspot
+URL=https://xlx026.net
+Type=Hotspot
+Language={lang}
 
-[ircddb_1]
-enabled=false
-hostname=
-username={callsign}
-password=
+[IRCDDB 1]
+Enabled=0
+Hostname=
+Username={callsign}
+Password=
 
-[Repeater_1]
-enabled=true
-band={module}
-callsign={callsign}
-address=127.0.0.1
-port=20011
-type=hb
-reflector={reflector}
-reflectorAtStartup=true
-reflectorReconnect=fixed
-frequency={rx/1000000:.6f}
-offset={(tx-rx)/1000000:.6f}
-rangeKm=1
-latitude=0.0
-longitude=0.0
-description1=PU2PNY-OS
-description2=Hotspot
-url=https://xlx026.net
-
-[APRS]
-enabled=false
-
-[Log]
-path={logdir}
-fileRoot=dstargateway
-fileRotate=true
-fileLevel=info
-displayLevel=info
-repeatThreshold=2
-logIRCDDBTraffic=false
+[Repeater 1]
+Enabled=1
+Band={module}
+Callsign={callsign}
+Address=127.0.0.1
+Port=20011
+Type=HB
+Reflector={reflector}
+ReflectorAtStartup=1
+ReflectorReconnect=Fixed
+Frequency={rx/1000000:.6f}
+Offset={(tx-rx)/1000000:.6f}
+RangeKm=1
+Latitude=0.0
+Longitude=0.0
+AGL=0
+Description1=PU2PNY-OS
+Description2=Hotspot
+URL=https://xlx026.net
 
 [Paths]
-data={d}
+Data={dpath}
 
-[HostsFiles]
-downloadedHostsFiles={d}
-downloadTimer=72
-customHostsfiles={custom}
+[Hosts Files]
+HostsFiles={dpath}
+CustomHostsfiles={cpath}
+ReloadTime=72
 
-[DExtra]
-enabled=true
-maxDongles=5
-hostfileUrl=
+[Log]
+DisplayLevel=2
+MQTTLevel=0
+LogIRCDDBTraffic=0
 
-[DPlus]
-enabled=true
-maxDongles=5
-login={callsign}
-hostfileUrl=
+[MQTT]
+Address=127.0.0.1
+Port=1883
+Keepalive=60
+Authenticate=0
+Username=mmdvm
+Password=mmdvm
+Name=dstar-gateway
+
+[APRS]
+Enabled=0
+PositionSource=Fixed
+
+[Dextra]
+Enabled=1
+MaxDongles=5
+
+[D-Plus]
+Enabled=1
+MaxDongles=5
+Login={callsign}
 
 [DCS]
-enabled=true
-hostfileUrl=
+Enabled=1
 
 [XLX]
-enabled=true
-hostfileUrl=
+Enabled=1
 
-[DRats]
-enabled=false
+[D-Rats]
+Enabled=0
 
-[Remote]
-enabled=false
-port=4242
-password=
+[Remote Commands]
+Enabled=0
+
+[Access Control]
+WhiteList=
+BlackList=
+RestrictList=
 
 [Daemon]
-daemon=false
+Daemon=0
+PidFile=
+User=
 """
         atomic(d/"DStarGateway.ini",ini)
-        # Preserve the complete locally cached host lists; the gateway never
-        # downloads arbitrary files during a protocol switch.
+        # Preserve the complete locally cached host lists; protocol switching
+        # itself never downloads arbitrary files.
         for src in ("DPlus_Hosts.txt","DExtra_Hosts.txt","DCS_Hosts.txt","XLXHosts.txt","XLX_Hosts.txt"):
             srcp=STATE/"hosts"/src
             if srcp.exists():shutil.copy2(srcp,d/src)
