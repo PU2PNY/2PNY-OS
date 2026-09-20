@@ -688,37 +688,54 @@ func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, err := exec.Command("/usr/local/sbin/2pny-network-switch", "stage", in.SSID, in.Password, in.BSSID).CombinedOutput()
-	msg := strings.TrimSpace(string(out))
-	if err != nil {
-		if msg == "" {
-			msg = "não foi possível salvar o perfil Wi-Fi"
-		}
-		writeNetworkConnectState("error", msg, in.SSID)
-		writeJSON(w, http.StatusBadGateway, map[string]any{"ok": false, "error": msg})
-		return
-	}
-	writeNetworkConnectState("saved", "Rede salva. Reiniciando o PU2PNY para entrar no Wi-Fi...", in.SSID)
 	snap := connectivitySnapshot()
-
-	time.AfterFunc(2500*time.Millisecond, func() {
-		writeNetworkConnectState("rebooting", "Reiniciando. Depois do boot, o PU2PNY tentará primeiro a rede Wi-Fi salva...", in.SSID)
-		if err := exec.Command("systemctl", "reboot").Run(); err != nil {
-			log.Printf("wifi staged but reboot failed: %v", err)
-			writeNetworkConnectState("error", "A rede foi salva, mas o reinício automático falhou. Reinicie o hotspot com segurança.", in.SSID)
+	writeNetworkConnectState("connecting", "Validando a rede Wi-Fi antes de reiniciar...", in.SSID)
+	keepAP := "0"
+	if in.KeepAP {
+		keepAP = "1"
+	}
+	// Return the HTTP response while the setup AP is still alive. The helper
+	// then performs the real association transactionally, restores the old
+	// link/AP on failure, and only after a proven association do we reboot to
+	// verify that the saved profile survives a normal boot.
+	go func(ssid, password, bssid, keep string) {
+		time.Sleep(900 * time.Millisecond)
+		out, err := exec.Command("/usr/local/sbin/2pny-network-switch", "connect", ssid, password, keep, bssid).CombinedOutput()
+		msg := strings.TrimSpace(string(out))
+		if err != nil {
+			if msg == "" {
+				msg = "não foi possível concluir a associação Wi-Fi"
+			}
+			writeNetworkConnectState("error", msg, ssid)
+			invalidateConnectivityCache()
+			return
 		}
-	})
+		invalidateConnectivityCache()
+		c := connectivitySnapshot()
+		if !c.WiFi || (ssid != "" && c.WiFiSSID != ssid) {
+			writeNetworkConnectState("error", "O rádio não permaneceu associado à rede selecionada. A conexão anterior/AP foi preservada.", ssid)
+			return
+		}
+		_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
+		writeNetworkConnectState("connected", "Wi-Fi validado. Reiniciando para confirmar o perfil salvo...", ssid)
+		time.Sleep(1800 * time.Millisecond)
+		writeNetworkConnectState("rebooting", "Reiniciando. O PU2PNY voltará pela rede validada; se falhar, o AP de recuperação retorna.", ssid)
+		if err := exec.Command("systemctl", "reboot").Run(); err != nil {
+			log.Printf("validated wifi but reboot failed: %v", err)
+			writeNetworkConnectState("error", "O Wi-Fi foi validado, mas o reinício automático falhou. Reinicie o hotspot com segurança.", ssid)
+		}
+	}(in.SSID, in.Password, in.BSSID, keep)
 
 	writeJSON(w, http.StatusAccepted, map[string]any{
 		"ok":            true,
-		"state":         "saved",
+		"state":         "connecting",
 		"ssid":          in.SSID,
 		"will_reboot":   true,
-		"message":       "Rede salva. O hotspot reiniciará e tentará conectar automaticamente.",
+		"message":       "Validando a rede. O PU2PNY só reinicia depois de confirmar associação e IP.",
 		"reconnect_url": "http://pu2pny.local/wizard",
 		"resume_urls":   lanResumeURLs(snap.IPv4),
 		"setup_url":     "http://10.43.0.1/wizard",
-		"eta_seconds":   90,
+		"eta_seconds":   75,
 	})
 }
 
@@ -772,8 +789,21 @@ func networkRefreshHandler(w http.ResponseWriter, r *http.Request) {
 	// the user plugged an Ethernet cable in. The resident network core already
 	// watches carrier every three seconds.
 	invalidateConnectivityCache()
-	time.Sleep(500 * time.Millisecond)
-	c := connectivitySnapshot()
+	var c ConnectivityStatus
+	deadline := time.Now().Add(12 * time.Second)
+	for {
+		c = connectivitySnapshot()
+		if c.Internet || c.Ethernet || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(750 * time.Millisecond)
+		invalidateConnectivityCache()
+	}
+	if c.DefaultInterface != "" {
+		_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
+		invalidateConnectivityCache()
+		c = connectivitySnapshot()
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "connectivity": c})
 }
 
