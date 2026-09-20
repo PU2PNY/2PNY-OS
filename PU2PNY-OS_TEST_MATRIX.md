@@ -92,3 +92,30 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-SW-035-008 | imagem ARM64 | build, XZ, SHA-256, montagem, APIs e validador final | PASS | SW |
 
 **Regra:** estes PASS autorizam somente a imagem **0.3.5 Alpha para teste físico**. Os casos NET/PROTO/LIVE/DISPLAY/APRS de nível HW permanecem PENDENTE/FAIL até o novo teste no equipamento.
+
+
+## Casos adicionados para 0.3.6-alpha após teste físico da 0.3.5
+
+| ID | Caso de teste | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|
+| TEST-NET-012 / NET-012 | conectar cliente ao AP | captive portal é oferecido/aberto quando suportado; fallback local sempre funciona | PENDENTE | SW/HW/client |
+| TEST-NET-013 / NET-013 | buscar/salvar Wi‑Fi 2 no painel | sem `unbound variable`; rede salva e UI permanece em Internet | FAIL reportado | HW |
+| TEST-NET-014 / NET-014 | Google → Cloudflare | DNS efetivo mostra somente perfil ativo e confirma retorno à página | FAIL reportado | HW |
+| TEST-NET-015 / NET-015 | diagnóstico de rota | explicação leiga + Melhor/Bom/Ruim/Péssimo com critérios | PENDENTE | SW/HW |
+| TEST-WIZ-005 / WIZ-005 | primeiro acesso | exemplos genéricos; rótulo Radio ID aplicável | FAIL visual atual | SW/HW |
+| TEST-UI-007 / UI-007 | alternar PT/EN/ES | 100% dos textos de UI/avisos seguem idioma selecionado | FAIL/PARCIAL atual | SW/HW |
+| TEST-UI-008 / UI-008 | salvar/aplicar/atualizar | feedback imediato, etapa real, resultado e retorno ao contexto | FAIL/PARCIAL atual | SW/HW |
+| TEST-UI-009 / UI-009 | abrir configuração detalhada após provisionar | não volta ao primeiro acesso | FAIL reportado | HW |
+| TEST-UI-010 / UI-010 | trocar timezone | backend autorizado aplica; sem Access denied | FAIL reportado | SW/HW |
+| TEST-UI-011 / UI-011 | Expert | estado Ao Vivo aparece e RF/protocolo ficam em Hotspot | FAIL reportado | SW/HW |
+| TEST-LIVE-009 / LIVE-009 | histórico/última atividade | QRZ/RadioID aparecem só com URL válida e abrem nova aba | PENDENTE | SW/HW |
+| TEST-APRS-003 / APRS-003 | usar localização | pede permissão, preenche lat/lon, manual continua disponível | PENDENTE | browser/HW |
+| TEST-DISPLAY-010 / DISPLAY-010 | Nextion/OLED/TFT/LCD | standby/RX/TX profissionais e responsivos à capacidade da tela | FAIL visual atual | HW |
+| TEST-UPDATE-003 / UPDATE-003 | versão nova/downgrade | check leve, checksum, backup opcional, install/rollback e downgrade explícito | PENDENTE | SW/VPS/HW |
+| TEST-UPDATE-004 / UPDATE-004 | manutenção | mostra última execução e próxima elegível | FAIL reportado | SW/HW |
+| TEST-PROTO-007 / PROTO-007 | D-Star XLX026 | RF→rede, rede→RF, módulo efetivo e feedback de conexão | FAIL reportado | HW |
+| TEST-PROTO-008 / PROTO-008 | YSF72426 | RF→rede e rede→RF com tráfego real | FAIL reportado | HW |
+| TEST-PROTO-009 / PROTO-009 | perfis DMR/D-Star/YSF | cada protocolo restaura sua RF/rede sem reconfiguração manual | PENDENTE | SW/HW |
+| TEST-ARCH-003 / ARCH-003 | mudança comum | comportamento corrigido em todas as páginas/protocolos aplicáveis | PENDENTE | SW |
+| TEST-REL-004 / REL-004 | escopo 0.3.6 | novas funções deste feedback estão implementadas no nível verificável nesta versão | PENDENTE | DOC/SW/VPS |
+| TEST-REL-005 / REL-005 | regressão DMR | TX/RX DMR permanecem iguais à 0.3.5 aprovada | HW requerido | HW |
