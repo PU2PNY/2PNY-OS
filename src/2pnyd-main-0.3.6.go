@@ -39,6 +39,7 @@ const (
 	aprsFile              = "/usr/share/2pny/aprs.html"
 	systemFile            = "/usr/share/2pny/system.html"
 	expertFile            = "/usr/share/2pny/expert.html"
+	radioIDFile           = "/usr/share/2pny/radioid.html"
 	wifiScanStateFile     = "/var/lib/2pny/wifi-scan.json"
 	wifiCountryFile       = "/var/lib/2pny/wifi-country"
 	displayOverrideFile   = "/var/lib/2pny/display-override.json"
@@ -6570,6 +6571,7 @@ func main() {
 	http.HandleFunc("/aprs", pageHandler(aprsFile))
 	http.HandleFunc("/system", pageHandler(systemFile))
 	http.HandleFunc("/expert", pageHandler(expertFile))
+	http.HandleFunc("/radioid", pageHandler(radioIDFile))
 	http.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/dashboard", http.StatusFound) })
 	http.HandleFunc("/ui-language.js", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "/usr/share/2pny/ui-language.js") })
 	http.HandleFunc("/ui-0.3.0.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "/usr/share/2pny/ui-0.3.0.css") })
