@@ -28,7 +28,7 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
 <div class="reconnect" id="reconnectOverlay" hidden>
   <div class="reconnectbox">
     <h2>Conectando o PU2PNY à sua rede</h2>
-    <p id="reconnectText">As credenciais serão salvas antes do reinício. Depois do boot, o PU2PNY tentará primeiro sua rede Wi-Fi e esta tela procurará o novo endereço automaticamente.</p>
+    <p id="reconnectText">A rede será validada antes de encerrar o AP. Depois da associação e do endereço IP, esta tela procurará o PU2PNY automaticamente na nova rede.</p>
     <div class="reconnectLoader" aria-hidden="true"></div>
     <div class="reconnectDots">● ● ●</div>
     <p><b>Não desligue o hotspot e não atualize a página.</b><br>Assim que o PU2PNY voltar na nova rede, esta página abrirá Hardware automaticamente.</p>
@@ -427,7 +427,7 @@ let reconnectDeadline=0;
 function showReconnect(ssid){
   let ov=q('reconnectOverlay');ov.hidden=false;
   reconnectDeadline=Date.now()+180000;
-  q('reconnectText').innerHTML='Rede <b>'+esc(ssid)+'</b> recebida. O perfil será salvo antes do reinício. Depois do boot, o PU2PNY tentará conectar nessa rede e esta tela procurará o novo endereço automaticamente.';
+  q('reconnectText').innerHTML='Rede <b>'+esc(ssid)+'</b> recebida. O PU2PNY validará associação e IP antes de concluir a troca. Esta tela procurará o novo endereço automaticamente.';
 }
 async function reachable(base){
   try{
@@ -824,9 +824,9 @@ async function loadConclusion(){
     q('doneMessage').textContent=c.operation==='crossmode'?'Base pronta e perfil Crossmode registrado.':'Configuração básica concluída e motor RF validado.'
   }catch(e){}
 }
-function initLanguageWelcome(){
+function initLanguageWelcome(force){
   let ov=q('languageWelcome'),sel=q('welcomeLanguage'),btn=q('welcomeContinue');
-  if(localStorage.getItem('pu2pny-language-welcome')==='1'){ov.hidden=true;return}
+  if(!force&&localStorage.getItem('pu2pny-language-welcome')==='1'){ov.hidden=true;return}
   ov.hidden=false;sel.value=localStorage.getItem('pu2pny-language')||'pt';
   function copy(){
     let v=sel.value,dict={
@@ -844,8 +844,8 @@ function initLanguageWelcome(){
   }
 }
 async function boot(){
-  initLanguageWelcome();
   try{let vs=await getj('/api/status');alreadyProvisioned=!!vs.provisioned;if(q('versionBadge'))q('versionBadge').textContent=vs.version||'PU2PNY-OS'}catch(_){}
+  initLanguageWelcome(!alreadyProvisioned);
   await pollConnectivity();
   await loadMaintenance();
   const params=new URLSearchParams(location.search);
