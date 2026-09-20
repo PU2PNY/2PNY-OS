@@ -184,3 +184,23 @@ A 0.3.6-alpha só pode ser publicada para teste físico depois que os novos caso
 - O cliente APRS deve validar `logresp verified`, preservar a fila em falha, receber mensagens/ACKs e mostrar diagnóstico observável.
 - Ponto de retorno criado antes da correção: `backup/0.3.6-pre-aprs-msgfix-20260920` no commit `769de1a2dcadf26fdb0af48457a83b94d90a7128`.
 - Mesmo após SW/VPS PASS, APRS continua **HW PENDENTE** até novo teste real de envio e recebimento.
+
+## Build/publicação final da 0.3.6-alpha — 2026-09-20
+
+- GitHub Actions run `35531259706`: **PASS**.
+- Source validation: **PASS**.
+- Overlay completo/staged source: **PASS**.
+- Bundle de atualização verificado: **PASS**.
+- Build ARM64: **PASS**.
+- XZ + SHA-256: **PASS**.
+- Validação estrutural da imagem: **PASS**.
+- Publicação da prerelease: **PASS**.
+- Release: `v0.3.6-alpha`.
+- Target commit da release: `0967a020eefc0f997211b46d97d3cc3d5600b5db`.
+- Imagem: `PU2PNY-OS-0.3.6-alpha-arm64.img.xz`.
+- SHA-256 da imagem: `ec1f2676fa2a21715d5da99dc43a25607e8a7433b4580b9122416063e99eaa82`.
+- Tamanho comprimido: `579089116` bytes.
+- Bundle in-place: `PU2PNY-OS-0.3.6-alpha-update.tar.gz`, SHA-256 `7dfad819d3fb36d00dd46dce4ee473214059ed7454b2396059740de7720b1bb5`.
+- APRS: 6 testes determinísticos PASS; VPS resolveu `soam.aprs2.net` e recebeu greeting do servidor na porta 14580. Isso é evidência VPS de transporte, **não** substitui envio/recebimento HW real.
+- A imagem está liberada como **Alpha para teste físico**. DMR da 0.3.5 continua baseline; D-Star/YSF/Wi-Fi/APRS/perfis/displays/update permanecem HW pendente até confirmação no Raspberry Pi/MMDVM.
+
