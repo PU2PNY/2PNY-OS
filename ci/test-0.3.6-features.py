@@ -110,6 +110,68 @@ class T(unittest.TestCase):
             ns["update_network_runtime_from_gateway"]("Link has failed, polls lost",1236.0,"2pny-ysfgateway.service")
             d=json.loads(runtime.read_text());self.assertFalse(d["connected"])
 
+
+    def _run_dmr_alias(self,essid):
+        original=(ROOT/"src/2pny-protocol-network-apply-0.2.9.py").read_text()
+        with tempfile.TemporaryDirectory() as td:
+            state=Path(td)
+            cfg=state/"mmdvm/MMDVM-Host.ini";cfg.parent.mkdir(parents=True)
+            cfg.write_text("[General]\nCallsign=PU2ABC\nId=7240000\nDuplex=0\n[Modem]\nRXFrequency=438800000\nTXFrequency=438800000\n[DMR]\nEnable=1\n")
+            code=original.replace('/var/lib/2pny',td)
+            def fake_run(args,*a,**kw):
+                return subprocess.CompletedProcess(args,0,"","")
+            argv=["apply","DMR","BM_TEST","master.example.net","62031","hotspot-pass","hotspot","1","2","",essid,"BrandMeister",""]
+            out=io.StringIO()
+            with patch.object(sys,"argv",argv),patch("os.geteuid",return_value=0),patch("os.chown"),\
+                 patch("grp.getgrnam",return_value=types.SimpleNamespace(gr_gid=os.getgid())),\
+                 patch("subprocess.run",fake_run),patch("time.sleep"),contextlib.redirect_stdout(out):
+                exec(compile(code,"dmr_alias_036","exec"),{})
+            return cfg.read_text(),(state/"dmr/DMRGateway.ini").read_text(),out.getvalue()
+
+    def test_brandmeister_radio_alias_01_02(self):
+        host,gw,_=self._run_dmr_alias("01")
+        self.assertIn("Id=7240000",host)
+        self.assertIn("Id=724000001",gw)
+        host,gw,_=self._run_dmr_alias("02")
+        self.assertIn("Id=7240000",host)
+        self.assertIn("Id=724000002",gw)
+        ui=(ROOT/"src/protocols-0.3.6.html").read_text()
+        self.assertIn("Rádio '+ri+' (",ui)
+        self.assertIn("ID efetivo BrandMeister",ui)
+        wiz=(ROOT/"src/wizard-0.3.6.html").read_text()
+        self.assertIn("Rádio '+i+' (",wiz)
+
+    def test_brandmeister_invalid_alias_is_rejected(self):
+        original=(ROOT/"src/2pny-protocol-network-apply-0.2.9.py").read_text()
+        with tempfile.TemporaryDirectory() as td:
+            state=Path(td);cfg=state/"mmdvm/MMDVM-Host.ini";cfg.parent.mkdir(parents=True)
+            cfg.write_text("[General]\nCallsign=PU2ABC\nId=7240000\nDuplex=0\n[Modem]\nRXFrequency=438800000\nTXFrequency=438800000\n")
+            code=original.replace('/var/lib/2pny',td)
+            argv=["apply","DMR","BM_TEST","master.example.net","62031","hotspot-pass","hotspot","1","2","","1","BrandMeister",""]
+            with patch.object(sys,"argv",argv),patch("os.geteuid",return_value=0),self.assertRaises(SystemExit):
+                exec(compile(code,"dmr_alias_bad_036","exec"),{})
+        backend=(ROOT/"src/2pnyd-main-0.3.6.go").read_text()
+        self.assertIn("identificação DMR deve ser 01 a 99",backend)
+        profiles=(ROOT/"src/2pny-protocol-profiles-0.3.6.py").read_text()
+        self.assertIn("identificação DMR deve ser 01 a 99",profiles)
+
+    def test_brandmeister_api_key_isolated_from_hotspot_password(self):
+        backend=(ROOT/"src/2pnyd-main-0.3.6.go").read_text()
+        self.assertIn("/api/brandmeister/api-key",backend)
+        self.assertIn("brandmeister-api.key",backend)
+        self.assertIn("os.CreateTemp(secretDir",backend)
+        self.assertIn("tmp.Chmod(0600)",backend)
+        start=backend.index("type Config struct")
+        end=backend.index("type Status struct",start)
+        self.assertNotIn("bm_api_key",backend[start:end].lower())
+        hs=backend.index("func brandmeisterAPIKeyHandler")
+        he=backend.index("func netdiagHandler",hs)
+        self.assertNotIn("exec.Command(",backend[hs:he])
+        ui=(ROOT/"src/protocols-0.3.6.html").read_text()
+        self.assertIn("não substitui a Hotspot Security",ui)
+        self.assertIn("O PU2PNY não pede API Secret",ui)
+        self.assertIn("API Key salva sem reiniciar MMDVMHost ou DMRGateway",ui)
+
     def test_updater_restricts_official_assets_and_hash(self):
         s=(ROOT/"src/2pny-update-manager-0.3.6.py").read_text()
         self.assertIn("https://github.com/PU2PNY/2PNY-OS/releases/download/",s)
