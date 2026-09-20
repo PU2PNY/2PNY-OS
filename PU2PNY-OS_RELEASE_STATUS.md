@@ -175,3 +175,12 @@ A 0.3.6-alpha só pode ser publicada para teste físico depois que os novos caso
 - Evidência VPS em `6c95904614064340d97917e71a361af8cc2d7d4c`: Go compile PASS, Python/JS/Bash PASS e **12/12 testes determinísticos PASS**.
 - Ainda não é HW PASS: Rádio 1/2 e API devem ser retestados no Raspberry Pi/MMDVM após a imagem ARM64 publicada.
 
+## Novo bloqueador HW — APRS mensagens — 2026-09-20
+
+- Teste físico reportado pelo usuário: **APRS não enviou e não recebeu mensagens**.
+- Classificação atual: **APRS-004 = HW FAIL**.
+- A 0.3.6-alpha deve incorporar a correção antes da próxima imagem.
+- O estado `Mensagem enfileirada` não será tratado como envio concluído.
+- O cliente APRS deve validar `logresp verified`, preservar a fila em falha, receber mensagens/ACKs e mostrar diagnóstico observável.
+- Ponto de retorno criado antes da correção: `backup/0.3.6-pre-aprs-msgfix-20260920` no commit `769de1a2dcadf26fdb0af48457a83b94d90a7128`.
+- Mesmo após SW/VPS PASS, APRS continua **HW PENDENTE** até novo teste real de envio e recebimento.
