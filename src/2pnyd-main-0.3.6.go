@@ -38,6 +38,7 @@ const (
 	aprsFile              = "/usr/share/2pny/aprs.html"
 	systemFile            = "/usr/share/2pny/system.html"
 	expertFile            = "/usr/share/2pny/expert.html"
+	radioIDFile           = "/usr/share/2pny/radioid.html"
 	wifiScanStateFile     = "/var/lib/2pny/wifi-scan.json"
 	wifiCountryFile       = "/var/lib/2pny/wifi-country"
 	displayOverrideFile   = "/var/lib/2pny/display-override.json"
