@@ -97,8 +97,8 @@ jobs:
           grep -Fq '/api/brandmeister/api-key' src/2pnyd-main-0.3.6.go
           grep -Fq 'cfg.ESSID = in.ESSID' src/2pnyd-main-0.3.6.go
           grep -Fq 'identificação DMR deve ser 01 a 99' src/2pny-protocol-profiles-0.3.6.py
-          grep -Fq '[Gateway]' src/2pny-protocol-network-apply-all-0.3.6.py
-          grep -Fq '[Repeater_1]' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq '[General]' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq '[Repeater 1]' src/2pny-protocol-network-apply-all-0.3.6.py
           grep -Fq 'Link has failed, polls lost' src/2pny-station-worker-0.3.6.py
           grep -Fq 'ALLOWED_PREFIX' src/2pny-update-manager-0.3.6.py
           grep -Fq 'navigator.geolocation' src/aprs-0.3.6.html
@@ -214,8 +214,8 @@ jobs:
           grep -Fq 'PU2PNY Moderno' rootfs-overlay/usr/share/2pny/display.html
           grep -Fq 'Manutenção automática' rootfs-overlay/usr/share/2pny/system.html
           grep -Fq 'Perfil do protocolo' rootfs-overlay/usr/share/2pny/protocols.html
-          grep -Fq '[Gateway]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
-          grep -Fq '[Repeater_1]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq '[General]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq '[Repeater 1]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'protocol-profiles.json' rootfs-overlay/usr/local/sbin/2pny-protocol-profiles
           grep -Fq 'ALLOWED_PREFIX' rootfs-overlay/usr/local/sbin/2pny-update-manager
           grep -Fq 'navigator.geolocation' rootfs-overlay/usr/share/2pny/aprs.html
