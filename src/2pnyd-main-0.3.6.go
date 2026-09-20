@@ -679,26 +679,24 @@ func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w,400,map[string]any{"ok":false,"error":"BSSID inválido"}); return
 	}
 	snap := connectivitySnapshot()
-	writeNetworkConnectState("connecting","Validando a rede Wi-Fi antes de reiniciar...",in.SSID)
+	writeNetworkConnectState("connecting","Validando a rede Wi-Fi, associação e endereço IP...",in.SSID)
 	keep := "0"; if in.KeepAP { keep = "1" }
 	go func(ssid,password,bssid,keep string){
 		time.Sleep(900*time.Millisecond)
 		out,err := exec.Command("/usr/local/sbin/2pny-network-switch","connect",ssid,password,keep,bssid).CombinedOutput()
 		msg := strings.TrimSpace(string(out))
-		if err != nil { if msg=="" { msg="não foi possível concluir a associação Wi-Fi" }; writeNetworkConnectState("error",msg,ssid); invalidateConnectivityCache(); return }
+		if err != nil { if msg=="" { msg="não foi possível concluir a associação Wi-Fi" }; writeNetworkConnectState("error",friendlyNetworkError(msg),ssid); invalidateConnectivityCache(); return }
 		invalidateConnectivityCache(); cs := connectivitySnapshot()
 		if !cs.WiFi || (ssid!="" && cs.WiFiSSID!=ssid) { writeNetworkConnectState("error","O rádio não permaneceu associado à rede selecionada. A conexão anterior/AP foi preservada.",ssid); return }
 		_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
-		writeNetworkConnectState("connected","Wi-Fi validado. Reiniciando para confirmar o perfil salvo...",ssid)
-		time.Sleep(1800*time.Millisecond)
-		writeNetworkConnectState("rebooting","Reiniciando. O PU2PNY voltará pela rede validada; se falhar, o AP de recuperação retorna.",ssid)
-		if err := exec.Command("systemctl","reboot").Run(); err != nil { log.Printf("validated wifi but reboot failed: %v",err); writeNetworkConnectState("error","O Wi-Fi foi validado, mas o reinício automático falhou. Reinicie o hotspot com segurança.",ssid) }
+		invalidateConnectivityCache()
+		writeNetworkConnectState("connected","Wi-Fi conectado e validado. O PU2PNY está disponível na nova rede sem reinício obrigatório.",ssid)
 	}(in.SSID,in.Password,in.BSSID,keep)
 	writeJSON(w,http.StatusAccepted,map[string]any{
-		"ok":true,"state":"connecting","ssid":in.SSID,"will_reboot":true,
-		"message":"Validando a rede. O PU2PNY só reinicia depois de confirmar associação e IP.",
+		"ok":true,"state":"connecting","ssid":in.SSID,"will_reboot":false,
+		"message":"Validando associação e IP. Se a mesma placa estiver sendo usada pelo AP, a página continuará procurando o PU2PNY na nova rede.",
 		"reconnect_url":"http://pu2pny.local/wizard","resume_urls":lanResumeURLs(snap.IPv4),
-		"setup_url":"http://10.43.0.1/wizard","eta_seconds":75,
+		"setup_url":"http://10.43.0.1/wizard","eta_seconds":30,
 	})
 }
 
