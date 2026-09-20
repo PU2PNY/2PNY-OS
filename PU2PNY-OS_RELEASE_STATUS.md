@@ -73,3 +73,36 @@ A causa raiz do erro observado ao trocar protocolos permanece classificada como 
 - SHA-256 da imagem: `4bc808da8f4c3fc259dd72a66a08e68e1a704b5cf13f754692c9864b40282e2c`.
 
 **Importante:** isso não muda os casos HW que ainda estavam FAIL/PENDENTE. Wi-Fi pós-reboot, DMR regressão, D-Star, YSF, Nextion e comportamento físico do Ao Vivo precisam ser retestados no Raspberry Pi/MMDVM/display real antes de qualquer estado PROD.
+
+## Feedback físico da 0.3.4-alpha — 2026-09-20
+
+### Preservar como HW PASS/positivo
+- Primeiro AP `pu2pny` apareceu e `http://pu2pny.local/` abriu o primeiro acesso.
+- Tela inicial de idioma foi aprovada visualmente.
+- Preparação de Hardware chegou a 100% e foi considerada correta.
+- RF foi validada.
+- DMR conectou ao XLX e houve aviso de voz de conexão.
+- TOT de 180 s efetivamente derrubou TX contínuo.
+- Página Internet: conexão ativa, Ethernet e MTR foram aprovados.
+- Submenu `+` do Ao Vivo agora permanece aberto.
+- Página Protocolos foi aprovada visualmente.
+- Nextion exibe ID/nome/RX/TX/TG/BER/CPU/temperatura/qualidade de Internet, embora o layout ainda precise ser substituído.
+- Voz enviada ao rádio foi aprovada.
+
+### Falhas/bloqueadores confirmados em HW
+- Busca Wi-Fi inicial pode ficar presa em "Buscando..." sem lista.
+- Hotplug Ethernet/reverificação não atualizou Internet imediatamente.
+- Após Ethernet, `pu2pny.local` falhou com DNS_PROBE_FINISHED_NXDOMAIN; IP LAN abriu.
+- Wi-Fi selecionado novamente não associou ao roteador; Ethernet permaneceu funcional.
+- D-Star e YSF continuam falhando no restart do MMDVMHost com `MQTT Error connecting: No such file or directory`; rollback funcionou.
+- DMR: ao mudar TG, o link conecta mas áudio TX não passa; investigar/patch com regressão DMR.
+- Ao Vivo/Histórico ainda pobres em colunas/dados.
+- APRS: botões de notificação/atualização não deram feedback observável; mensagem saiu como enfileirada.
+- Navegação "Trocar rede" força refazer etapas de primeiro acesso.
+- Nextion precisa de layout PU2PNY moderno e pré-alerta de TOT.
+- Timezone exibido de forma incoerente.
+- Temperatura observada em torno de 51 °C; investigar carga/throttling antes de qualquer intervenção.
+- Atualização anterior via painel ficou presa em 30% na Nextion; mecanismo deve ser fail-safe.
+
+### Estado da 0.3.5-alpha
+Branch criada a partir da 0.3.4-alpha publicada, com backup `backup/0.3.4-hw-feedback-20260920`. **Ainda não liberar imagem** até Rede/Wizard → DMR → D-Star → YSF → UI/Display/Update passarem pelos gates SW/VPS aplicáveis.
