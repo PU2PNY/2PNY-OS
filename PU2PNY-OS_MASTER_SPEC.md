@@ -1,7 +1,7 @@
 # PU2PNY-OS — MASTER SPEC
 
 **Fonte oficial dos requisitos do projeto.**  
-**Estado:** consolidado para o ciclo corretivo pós-0.3.3-alpha em 2026-09-19.
+**Estado:** consolidado para o ciclo corretivo 0.3.6-alpha após feedback físico da 0.3.5 em 2026-09-20.
 
 > `docs/PU2PNY-MASTER-PLAN.md` e os requisitos já aprovados nas versões anteriores permanecem válidos e incorporados por referência. Este arquivo não autoriza apagar ou simplificar funcionalidades anteriores. Em conflito, a decisão mais recente e explicitamente identificada por requisito neste arquivo prevalece.
 
@@ -231,3 +231,69 @@ Durante update/manutenção, display deve mostrar progresso apenas quando o back
 
 ### TEST-002 — Fluxo pós-provisionamento
 Depois que o hotspot estiver provisionado, editar rede/protocolo/display não pode apagar ou reiniciar etapas independentes já validadas.
+
+
+## 12. Requisitos incorporados após teste físico da 0.3.5-alpha — 2026-09-20
+
+### NET-012 — Captive portal de primeiro acesso
+Ao conectar ao AP `pu2pny`, o sistema deve responder aos endpoints de detecção de captive portal usados por Android, iOS/macOS, Windows e navegadores compatíveis para abrir ou sugerir imediatamente o primeiro acesso. A abertura automática depende do sistema operacional do cliente e não pode ser tratada como garantia; `http://pu2pny.local/wizard` e `http://10.43.0.1/` permanecem caminhos de recuperação obrigatórios.
+
+### NET-013 — Wi-Fi 1 e Wi-Fi 2 operacionais
+A nomenclatura da UI passa a ser `Rede Wi‑Fi 1` e `Rede Wi‑Fi 2`. Busca automática e inclusão manual devem funcionar no painel operacional depois do provisionamento. Erro interno de script como `unbound variable` nunca pode aparecer como resposta normal ao usuário; deve haver mensagem simples, log técnico separado e rollback.
+
+### NET-014 — DNS efetivo consistente
+Ao trocar DNS, somente os resolvedores efetivamente ativos devem aparecer em `DNS efetivo`. O sistema deve aplicar a troca transacionalmente, confirmar conclusão ao usuário e retornar à página Internet. Não acumular Google + Cloudflare na UI quando apenas um perfil estiver ativo.
+
+### NET-015 — Diagnóstico de rota para leigos
+`Rota até o servidor` deve explicar em linguagem simples o que está sendo medido, destino, gateway, hops, latência/perda quando disponíveis e classificar a qualidade em `Melhor opção`, `Bom`, `Ruim` ou `Péssimo` com critérios visíveis. Hops sem resposta ICMP não são automaticamente falha.
+
+### WIZ-005 — Exemplos genéricos
+Indicativo e identificador digital mostrados como exemplo no primeiro acesso nunca devem usar dados reais do operador. Usar valores demonstrativos genéricos. A UI deve usar o rótulo `Radio ID` quando o campo for aplicável a identificador digital geral; nomes específicos de protocolo permanecem onde tecnicamente necessários.
+
+### UI-007 — Tradução integral
+Ao selecionar PT, EN ou ES, 100% do texto apresentado ao usuário nas páginas operacionais, wizard, avisos, botões, status e mensagens de erro deve seguir o idioma selecionado. Termos técnicos/protocolares podem permanecer como nomes próprios quando não houver tradução apropriada.
+
+### UI-008 — Feedback de operações e retorno ao contexto
+Toda ação iniciada pelo painel que salvar, aplicar, atualizar, reiniciar, verificar ou executar manutenção deve abrir feedback visual imediato com: ação solicitada, etapa atual, sucesso/erro em linguagem simples e, ao terminar, retornar ao mesmo módulo/página de origem. Progresso numérico 0–100 só pode ser exibido quando houver progresso real mensurável; caso contrário usar etapas determinísticas sem percentual inventado.
+
+### UI-009 — Pós-provisionamento permanente
+Depois do primeiro acesso concluído, links de Internet, Wi‑Fi, RF, protocolo, display, manutenção e Expert nunca devem redirecionar silenciosamente para o wizard completo. O wizard só reabre por ação explícita do usuário ou quando o sistema realmente estiver não provisionado.
+
+### UI-010 — Fuso horário com privilégio correto
+Alterar timezone no painel deve usar backend privilegiado/controlado, nunca depender de permissão direta do navegador/usuário não privilegiado. Falha como `Failed to set time zone: Access denied` deve ser convertida em diagnóstico claro e não deixar relógio/UI incoerentes.
+
+### UI-011 — Expert e organização de RF/protocolos
+O modo Expert deve mostrar o mesmo estado Ao Vivo normalizado do painel principal, com detalhes técnicos adicionais. Atalhos de RF e protocolos devem pertencer à área Hotspot/rádio e não redirecionar para configuração básica do primeiro acesso.
+
+### LIVE-009 — Identidade externa opcional no histórico
+Ao Vivo, Última atividade e Histórico podem mostrar mini-ícones QRZ e RadioID quando for possível construir uma URL válida para o indicativo/ID observado. O clique abre nova aba. Se a URL não puder ser validada/gerada, o ícone não aparece. A página não pode depender desses serviços para carregar.
+
+### APRS-003 — Localização assistida por permissão
+Na configuração APRS/DPRS, oferecer `Usar minha localização`. O navegador deve pedir permissão antes de acessar geolocalização e, se autorizada, preencher latitude/longitude. Sempre manter edição manual; negar permissão não pode bloquear APRS.
+
+### DISPLAY-010 — Visualização profissional em todos os displays
+Nextion, TFT, OLED, LCD e demais displays suportados devem usar uma apresentação coerente com a identidade PU2PNY e adequada à resolução disponível. Deve haver estados distintos para standby, RX e TX; em telas capazes, mostrar indicativo, nome, país/bandeira, cidade, protocolo, destino/TG/módulo, duração, horário e métricas reais de recepção. Em telas simples, priorizar informação essencial legível. Nunca inventar dados ausentes.
+
+### UPDATE-003 — Atualização integrada com GitHub e downgrade seguro
+O hotspot deve verificar automaticamente, em baixa frequência e sem polling pesado, se existe atualização do canal escolhido no repositório oficial. Ao encontrar versão nova, informar o usuário e permitir baixar/instalar pelo painel com verificação de integridade e rollback. Antes da instalação perguntar se deseja preservar a versão atual como ponto de retorno; depois permitir excluir esse backup. Downgrade deve ser uma ação explícita e usar somente artefato oficial/verificado.
+
+### UPDATE-004 — Manutenção observável
+Manutenção deve registrar `Última execução`, resultado resumido e `Próxima execução elegível` quando automática estiver habilitada. Estado `runner` interno não é informação suficiente para o usuário.
+
+### PROTO-007 — D-Star operacional completo
+D-Star deve transmitir RF→rede e rede→RF, refletir imediatamente servidor/módulo efetivo, fornecer feedback/voz de conexão quando disponível e expor no painel somente parâmetros tecnicamente relevantes. Porta `0` não pode ser apresentada como configuração válida quando a integração exige porta concreta; quando a porta for gerenciada internamente pelo protocolo/gateway, a UI deve explicar isso em vez de exibir um valor enganoso.
+
+### PROTO-008 — YSF/C4FM operacional completo
+YSF/C4FM deve transmitir RF→rede e rede→RF, reproduzir tráfego recebido do servidor e feedback/voz de conexão quando suportado. Receber apenas o sinal local do rádio sem encaminhar à rede não é considerado funcionamento.
+
+### PROTO-009 — Perfis independentes por protocolo
+Cada protocolo deve possuir perfil próprio de RF/rede, incluindo frequência e parâmetros específicos permitidos. A troca de DMR para D-Star/YSF etc. deve selecionar o perfil correspondente sem obrigar o usuário a reconfigurar frequência toda vez. Isso reduz interferência/ruído entre rádios de protocolos diferentes na mesma frequência. Troca de perfil continua transacional, com preflight e rollback.
+
+### ARCH-003 — Correções compartilhadas devem ser globais
+Correções de navegação, tradução, feedback de operação, estado Ao Vivo, identidade, tratamento de erros, segurança e componentes comuns devem ser aplicadas no componente compartilhado correspondente, não apenas em uma página/protocolo isolado, salvo quando o comportamento for tecnicamente específico.
+
+### REL-004 — Novas funções deste ciclo entram na própria versão corretiva
+As novas funções explicitamente aprovadas no feedback físico da 0.3.5 não devem ser empurradas para uma versão futura por conveniência de escopo. Elas fazem parte da versão corretiva atualmente em construção (`0.3.6-alpha`). Se alguma função depender de validação física, integração externa ou limitação do cliente, ela ainda deve ser implementada até o nível verificável (DOC/SW/VPS) nesta versão e permanecer marcada como HW/PENDENTE até o teste real. Não declarar pronta uma função que ainda não atingiu o nível de validação necessário.
+
+### REL-005 — DMR 0.3.5 é baseline de regressão
+O comportamento DMR considerado excelente no teste físico da 0.3.5 deve ser preservado. Mudanças para Wi‑Fi, D-Star, YSF, perfis, display, update ou UI não podem alterar o caminho DMR funcional sem evidência, backup, teste e rollback.
