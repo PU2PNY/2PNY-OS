@@ -351,7 +351,7 @@ Displays suportados detectados pelo PU2PNY devem ser ativados pelo PU2PNY Displa
 - Nextion/HMI continua obedecendo DISPLAY-006/011: nenhuma gravação automática de HMI/TFT.
 
 ### ARCH-004 — Artefato paralelo Raspberry Pi 32-bit
-Manter a imagem ARM64 como linha principal e criar uma imagem ARM 32-bit (armhf) separada, baseada inicialmente em Raspberry Pi OS Legacy Lite Bookworm 32-bit para reduzir divergência em relação à base Bookworm já usada pelo PU2PNY. O artefato deve ser uma imagem de cartão Raspberry Pi (.img.xz), não ISO de PC. O alvo mínimo é Raspberry Pi Zero/Zero W, 1A+/1B+ e 2B, mantendo compatibilidade com modelos 32-bit posteriores quando a base oficial suportar.
+Manter a imagem ARM64 como linha principal e criar uma imagem ARM 32-bit (armhf) separada, baseada inicialmente em Raspberry Pi OS Lite Trixie 32-bit da mesma data/base da linha ARM64 para reduzir divergência de userland. Raspberry Pi OS Legacy Lite Bookworm 32-bit permanece fallback de compatibilidade caso o teste HW em modelos antigos mostre regressão. O artefato deve ser uma imagem de cartão Raspberry Pi (.img.xz), não ISO de PC. O alvo mínimo é Raspberry Pi Zero/Zero W, 1A+/1B+ e 2B, mantendo compatibilidade com modelos 32-bit posteriores quando a base oficial suportar.
 
 O binário Go próprio deve ser compilado com GOOS=linux GOARCH=arm GOARM=6 para cobrir ARMv6 e superiores. Gateways/MMDVM e demais binários nativos precisam ser compilados dentro do rootfs armhf ou por toolchain compatível; nenhum binário ARM64 pode ser reutilizado no artefato 32-bit.
 
