@@ -88,6 +88,12 @@ jobs:
           grep -Fq 'Bem-vindo / Welcome' src/wizard-0.3.6.html
           grep -Fq 'Módulo / TG' src/dashboard-0.3.6.html
           grep -Fq 'Perfil do protocolo' src/protocols-0.3.6.html
+          grep -Fq 'id="dmrEssid"' src/protocols-0.3.6.html
+          grep -Fq 'id="bmApiKey"' src/protocols-0.3.6.html
+          grep -Fq 'O PU2PNY não pede API Secret' src/protocols-0.3.6.html
+          grep -Fq '/api/brandmeister/api-key' src/2pnyd-main-0.3.6.go
+          grep -Fq 'cfg.ESSID = in.ESSID' src/2pnyd-main-0.3.6.go
+          grep -Fq 'identificação DMR deve ser 01 a 99' src/2pny-protocol-profiles-0.3.6.py
           grep -Fq '[Gateway]' src/2pny-protocol-network-apply-all-0.3.6.py
           grep -Fq '[Repeater_1]' src/2pny-protocol-network-apply-all-0.3.6.py
           grep -Fq 'Link has failed, polls lost' src/2pny-station-worker-0.3.6.py
@@ -176,7 +182,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/ci/test-0.2.9-live-core.py"
           python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-display-status             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-protocol-profiles             rootfs-overlay/usr/local/sbin/2pny-update-manager             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect
           bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-network-core rootfs-overlay/usr/local/sbin/2pny-wifi-profiles rootfs-overlay/usr/local/sbin/2pny-auto-maintenance rootfs-overlay/usr/local/sbin/2pny-mdns-guard rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns rootfs-overlay/usr/local/sbin/2pny-mode-apply
-          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.5-alpha"' src/2pnyd/main.go
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.6-alpha"' src/2pnyd/main.go
           grep -Fq 'mqtt_preflight' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'wifi_profile_link_ok' rootfs-overlay/usr/local/sbin/2pny-network-core
           grep -Fq 'openActivity' rootfs-overlay/usr/share/2pny/dashboard.html
@@ -205,6 +211,13 @@ jobs:
           grep -Fq 'ALLOWED_PREFIX' rootfs-overlay/usr/local/sbin/2pny-update-manager
           grep -Fq 'navigator.geolocation' rootfs-overlay/usr/share/2pny/aprs.html
           grep -Fq 'function operation' rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
+          grep -Fq 'id="dmrEssid"' rootfs-overlay/usr/share/2pny/protocols.html
+          grep -Fq 'id="bmApiKey"' rootfs-overlay/usr/share/2pny/protocols.html
+          grep -Fq 'O PU2PNY não pede API Secret' rootfs-overlay/usr/share/2pny/protocols.html
+          grep -Fq 'Identificação do hotspot / rádio' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq 'network_id=dmrid+essid if essid and len(dmrid)==7 else dmrid' rootfs-overlay/usr/local/libexec/2pny-dmr-apply
+          grep -Fq 'identificação DMR deve ser 01 a 99' rootfs-overlay/usr/local/sbin/2pny-protocol-profiles
+          grep -Fq '/api/brandmeister/api-key' src/2pnyd/main.go
       - name: Build verified component update bundle
         working-directory: legacy-source/2pny-os
         run: |
@@ -329,6 +342,8 @@ jobs:
           - D-Star: configuração gerada no formato/seções nativos do F4FXL DStarGateway e status de link separado de processo ativo;
           - YSF: nome do refletor compatível com o catálogo do YSFGateway e runtime acompanha confirmação/falha por polls;
           - perfis: cada protocolo pode manter frequência/rede próprias e ser ativado transacionalmente;
+          - DMR/BrandMeister: identificação amigável Rádio 1 (01), Rádio 2 (02) e aliases 01..99 usando o mecanismo oficial de Radio ID de 7 dígitos + alias de 2 dígitos; o Radio ID do rádio não é alterado;
+          - BrandMeister API: campo opcional para uma única API Key/token, armazenada fora da configuração pública com permissão restrita; a chave é separada da Hotspot Security e não reinicia o rádio ao ser salva/removida;
           - Histórico/Ao Vivo: atalhos QRZ/RadioID quando há identidade válida;
           - Display: conteúdo adaptativo para Nextion/OLED/LCD com standby/RX/TX e métricas somente quando reais;
           - Sistema: timezone com fallback privilegiado, manutenção observável e atualizador de componentes oficial com SHA-256, backup, rollback e exclusão de backup;
@@ -337,7 +352,7 @@ jobs:
           Validação:
           - source tests, testes determinísticos 0.3.6 e validação VPS não substituem hardware;
           - build ARM64, XZ, SHA-256 e validação estrutural são gates da publicação;
-          - Wi-Fi real, D-Star RF↔rede, YSF RF↔rede, perfis, displays e update no Raspberry Pi continuam requerendo HW PASS.
+          - Wi-Fi real, D-Star RF↔rede, YSF RF↔rede, perfis, aliases DMR 01/02, displays e update no Raspberry Pi continuam requerendo HW PASS.
           EOF
 
       - name: Publish prerelease
