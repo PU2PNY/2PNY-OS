@@ -156,3 +156,12 @@ Wi-Fi pós-save/reboot, troca entre duas redes, mDNS após handoff, DMR módulo 
 
 ### Gate
 A 0.3.6-alpha só pode ser publicada para teste físico depois que os novos casos SW/CI de NET/UI/APRS/DISPLAY/UPDATE/PROTO passarem e o build ARM64 + validação estrutural + SHA-256 concluírem. A publicação será Alpha; D-Star/YSF/Wi‑Fi/perfis/display/update só viram HW PASS após novo teste real.
+
+## Escopo adicional da 0.3.6-alpha — Rádio 1/2 e BrandMeister API
+
+- Criado ponto de retorno antes da mudança DMR: `backup/0.3.6-pre-bm-suffix-api-20260920` no commit `116cab3b521af46d68e52af14efdbe1dbbba2d59`.
+- **PROTO-010:** entra nesta própria 0.3.6-alpha a seleção `Rádio 1 (01)`, `Rádio 2 (02)` e aliases 01..99 para hotspot pessoal BrandMeister. O formato oficial é Radio ID de 7 dígitos + alias de 2 dígitos, total 9 dígitos.
+- **PROTO-011/SEC-021:** BrandMeister recebe campo de API Key opcional, armazenado como segredo separado. Não será criado campo de `API Secret`, porque a documentação oficial consultada descreve uma única API Key/token.
+- Hotspot Security continua sendo a credencial de conexão ao master BrandMeister; API Key não será usada como senha DMR.
+- O helper DMR fisicamente validado não deve ser reescrito para esta função: a implementação deve reutilizar o suporte ESSID/alias já existente e limitar a mudança ao contrato UI/backend/segredo.
+- Estes itens só podem ser marcados HW PASS depois de novo teste físico DMR com pelo menos `01` e `02`.
