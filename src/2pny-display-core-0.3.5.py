@@ -119,7 +119,8 @@ class Nextion:
         ber=a.get("ber");rssi=a.get("rssi_avg",a.get("rssi"))
         city=safe(op.get("city") or "",18);country=safe(op.get("country") or "",18)
         name=safe(op.get("name") or "",22)
-        module=safe(a.get("module") or "",3)
+        nr=read_json(RUN/"network-runtime.json")
+        module=safe(a.get("module") or (nr.get("module") if str(a.get("protocol") or "").upper()=="DMR" else "") or "",3)
         rfparts=[]
         if ber is not None:rfparts.append(f"BER {ber}%")
         if rssi is not None:rfparts.append(f"RSSI {rssi}")
