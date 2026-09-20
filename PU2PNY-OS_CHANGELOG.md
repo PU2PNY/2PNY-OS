@@ -58,3 +58,10 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrados como baseline físico os itens aprovados: AP/primeiro acesso, tela de idioma, hardware, RF, DMR/XLX com voz de conexão, TOT 180 s, Internet/Ethernet/MTR, submenu + persistente, Protocolos, telemetria Nextion e voz.
 - Registradas sem mascarar: regressões Wi-Fi/mDNS, D-Star/YSF/MQTT, DMR troca de TG sem áudio, navegação pós-provisionamento, APRS UX, layout Ao Vivo/Histórico, Nextion, timezone, térmica e update preso.
 - Novos requisitos: WIZ-003/004, NET-009/010/011, UI-005/006, PROTO-007, LIVE-006/007, APRS-002, DISPLAY-007/008/009, RF-011, PERF-002, UPDATE-001/002 e TEST-002.
+
+### Correção de classificação DMR/XLX
+- Teste físico esclarecido: DMR está transmitindo e recebendo no XLX.
+- TG4002/4003 altera o módulo no gateway, mas o painel mantinha a letra do módulo salvo originalmente.
+- Nenhuma mudança no caminho RF/DMRGateway foi aplicada para este defeito.
+- Implementado tracking de módulo efetivo em runtime a partir dos eventos do DMRGateway; a API do painel passa a usar esse runtime sobre o preset salvo.
+- Exemplo obrigatório de regressão: preset C/TG4003 → comando TG4002 → runtime/painel B → falar em TG6 → continuar exibindo B.
