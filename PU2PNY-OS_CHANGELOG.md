@@ -105,3 +105,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Perfis independentes por protocolo passam a ser requisito para RF/rede.
 - Update deve verificar repositório oficial, permitir instalação segura, backup opcional, rollback e downgrade.
 - Correções compartilhadas devem ser globais.
+
+## 2026-09-20 — Rádio 1/Rádio 2 e API BrandMeister adicionados ao escopo 0.3.6
+
+### Decisão técnica
+- Pesquisa em documentação BrandMeister confirmou que hotspot pessoal usa o Radio ID de 7 dígitos acrescido de alias de **dois dígitos**: `01`, `02`, etc.; um único dígito não é aceito como formato equivalente.
+- A UI passa a tratar isso como identificação amigável `Rádio 1 (01)`, `Rádio 2 (02)` sem mudar o Radio ID programado no equipamento.
+- A API BrandMeister usa **API Key/token** independente da senha SelfCare e da Hotspot Security. O pedido inicial de `API key/secret` foi normalizado para uma única API Key, evitando inventar um segundo segredo não documentado.
+- A chave será armazenada em área privada e a API do PU2PNY só exporá o estado configurada/não configurada.
+- A Hotspot Security continua sendo a senha usada pelo DMRGateway para conectar ao master BrandMeister.
+- Backup anterior à alteração: `backup/0.3.6-pre-bm-suffix-api-20260920`.
