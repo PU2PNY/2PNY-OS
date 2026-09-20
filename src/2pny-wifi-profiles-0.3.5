@@ -1,0 +1,129 @@
+#!/bin/bash
+set -euo pipefail
+export LC_ALL=C
+RUN=/run/2pny
+STATE=/var/lib/2pny
+PRIMARY=PU2PNY-WIFI
+SECONDARY=PU2PNY-WIFI-SECONDARY
+LOCK="$RUN/wifi-profiles.lock"
+mkdir -p "$RUN" "$STATE"
+exec 9>"$LOCK"; flock -w 35 9 || { echo "Gerenciador Wi-Fi ocupado." >&2; exit 6; }
+
+nm(){ timeout -k 2 35 /usr/bin/nmcli "$@"; }
+exists(){ nm -t -f NAME connection show 2>/dev/null | grep -Fxq "$1"; }
+wifi_if(){
+  local active
+  active="$(nm -t -f DEVICE,TYPE,STATE device status 2>/dev/null | awk -F: '$2=="wifi"&&$3=="connected"{print $1;exit}')"
+  if test -n "$active"; then echo "$active"; return; fi
+  for p in /sys/class/net/*; do test -d "$p/wireless" || continue; basename "$p"; return; done
+}
+profile_ssid(){ nm -g 802-11-wireless.ssid connection show "$1" 2>/dev/null | head -1 || true; }
+profile_uuid(){ nm -g connection.uuid connection show "$1" 2>/dev/null | head -1 || true; }
+active_name(){ nm -t -f NAME,TYPE connection show --active 2>/dev/null | awk -F: '$2=="802-11-wireless"{print $1;exit}'; }
+active_ssid(){ local i; i="$(wifi_if)"; test -n "$i" && iw dev "$i" link 2>/dev/null | sed -n 's/^[[:space:]]*SSID: //p' | head -1 || true; }
+active_ip(){ local i; i="$(wifi_if)"; test -n "$i" && ip -4 -o addr show dev "$i" scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1 || true; }
+radio_info(){
+  local i out freq sig ch=0
+  i="$(wifi_if)"; out="$(test -n "$i" && iw dev "$i" link 2>/dev/null || true)"
+  freq="$(printf '%s\n' "$out" | sed -n 's/.*freq: //p' | head -1)"
+  sig="$(printf '%s\n' "$out" | sed -n 's/.*signal: \(-\?[0-9.]*\).*/\1/p' | head -1)"
+  if [[ "$freq" =~ ^[0-9]+$ ]]; then
+    if test "$freq" = 2484; then ch=14
+    elif test "$freq" -ge 2412 && test "$freq" -le 2472; then ch=$(( (freq-2407)/5 ))
+    elif test "$freq" -ge 5005 && test "$freq" -le 5895; then ch=$(( (freq-5000)/5 ))
+    elif test "$freq" -ge 5955 && test "$freq" -le 7115; then ch=$(( (freq-5950)/5 ))
+    fi
+  fi
+  printf '%s|%s|%s|%s\n' "$i" "$freq" "$ch" "$sig"
+}
+list_json(){
+  local pssid="" sssid="" an="" as="" aip="" info iface freq ch sig
+  exists "$PRIMARY" && pssid="$(profile_ssid "$PRIMARY")"
+  exists "$SECONDARY" && sssid="$(profile_ssid "$SECONDARY")"
+  an="$(active_name)"; as="$(active_ssid)"; aip="$(active_ip)"
+  info="$(radio_info)"; IFS='|' read -r iface freq ch sig <<<"$info"
+  python3 - "$pssid" "$sssid" "$an" "$as" "$aip" "$iface" "$freq" "$ch" "$sig" <<'PY'
+import json,sys
+p,s,active,ssid,ip,iface,freq,ch,sig=sys.argv[1:]
+def n(v):
+    try:return int(v)
+    except:return None
+def f(v):
+    try:return float(v)
+    except:return None
+print(json.dumps({
+ "primary":{"configured":bool(p),"ssid":p},
+ "secondary":{"configured":bool(s),"ssid":s},
+ "active_profile":active,"active_ssid":ssid,"ipv4":ip,"interface":iface,
+ "frequency_mhz":n(freq),"channel":n(ch),"rssi_dbm":f(sig)
+},ensure_ascii=False))
+PY
+}
+save_secondary(){
+  local ssid="$1" pass="$2" bssid="${3:-}" iface hidden=yes cand=PU2PNY-WIFI-SECONDARY-CANDIDATE backup=PU2PNY-WIFI-SECONDARY-BACKUP
+  test -n "$ssid" || { echo "Informe o SSID da segunda rede." >&2; exit 2; }
+  [[ -z "$bssid" || "$bssid" =~ ^([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}$ ]] || { echo "BSSID inválido." >&2; exit 2; }
+  test -n "$bssid" && hidden=no
+  iface="$(wifi_if)"; test -n "$iface" || { echo "Interface Wi-Fi não encontrada." >&2; exit 3; }
+  nm connection delete "$cand" >/dev/null 2>&1 || true
+  nm connection delete "$backup" >/dev/null 2>&1 || true
+  nm connection add type wifi ifname "$iface" con-name "$cand" ssid "$ssid" >/dev/null
+  nm connection modify "$cand" connection.autoconnect no connection.autoconnect-priority 50 connection.mdns yes      802-11-wireless.hidden "$hidden" 802-11-wireless.powersave 2 802-11-wireless.cloned-mac-address permanent      ipv4.method auto ipv4.dhcp-timeout 20 ipv4.route-metric 60 ipv6.method auto >/dev/null
+  if test -n "$pass"; then
+    nm connection modify "$cand" 802-11-wireless-security.key-mgmt wpa-psk 802-11-wireless-security.psk "$pass" >/dev/null
+    secret="$(nm -s -g 802-11-wireless-security.psk connection show "$cand" 2>/dev/null | head -1 || true)"
+    test -n "$secret" && test "$secret" != "--" || { nm connection delete "$cand" >/dev/null 2>&1 || true; echo "A senha não foi gravada no perfil." >&2; exit 4; }
+  fi
+  old=0
+  if exists "$SECONDARY"; then old=1; nm connection modify "$SECONDARY" connection.id "$backup" >/dev/null; fi
+  rollback(){
+    nm connection delete "$cand" >/dev/null 2>&1 || true
+    if test "$old" = 1 && exists "$backup"; then nm connection modify "$backup" connection.id "$SECONDARY" >/dev/null 2>&1 || true; fi
+  }
+  trap rollback ERR INT TERM
+  nm connection modify "$cand" connection.id "$SECONDARY" >/dev/null
+  exists "$backup" && nm connection delete "$backup" >/dev/null 2>&1 || true
+  trap - ERR INT TERM
+  echo "Segunda rede salva: $ssid"
+}
+switch_profiles(){
+  exists "$PRIMARY" || { echo "Rede principal não configurada." >&2; exit 3; }
+  exists "$SECONDARY" || { echo "Segunda rede não configurada." >&2; exit 3; }
+  local iface old_uuid target_ssid out rc ip actual temp=PU2PNY-WIFI-SWAP
+  iface="$(wifi_if)"; test -n "$iface" || { echo "Interface Wi-Fi não encontrada." >&2; exit 3; }
+  old_uuid="$(profile_uuid "$PRIMARY")"; target_ssid="$(profile_ssid "$SECONDARY")"
+  set +e; out="$(nm --wait 22 connection up "$SECONDARY" ifname "$iface" 2>&1)"; rc=$?; set -e
+  if test "$rc" -ne 0; then
+    test -n "$old_uuid" && nm --wait 15 connection up uuid "$old_uuid" ifname "$iface" >/dev/null 2>&1 || true
+    echo "Não foi possível entrar na segunda rede. A rede anterior foi restaurada." >&2; exit 5
+  fi
+  for _ in $(seq 1 15); do
+    actual="$(active_ssid)"; ip="$(active_ip)"
+    test "$actual" = "$target_ssid" && test -n "$ip" && break
+    sleep 1
+  done
+  if test "${actual:-}" != "$target_ssid" || test -z "${ip:-}"; then
+    test -n "$old_uuid" && nm --wait 15 connection up uuid "$old_uuid" ifname "$iface" >/dev/null 2>&1 || true
+    echo "A segunda rede não permaneceu associada. A rede anterior foi restaurada." >&2; exit 5
+  fi
+  nm connection delete "$temp" >/dev/null 2>&1 || true
+  nm connection modify "$PRIMARY" connection.id "$temp" >/dev/null
+  nm connection modify "$SECONDARY" connection.id "$PRIMARY" connection.autoconnect yes connection.autoconnect-priority 100 >/dev/null
+  nm connection modify "$temp" connection.id "$SECONDARY" connection.autoconnect yes connection.autoconnect-priority 50 >/dev/null
+  printf '%s\n' "$target_ssid" >"$STATE/uplink-ssid"
+  printf '%s\n' "$ip" >"$STATE/uplink-ipv4"
+  hostnamectl set-hostname pu2pny >/dev/null 2>&1 || true
+  systemctl restart avahi-daemon.service >/dev/null 2>&1 || true
+  echo "Rede ativa: $target_ssid ($ip)"
+}
+remove_secondary(){
+  exists "$SECONDARY" && nm connection delete "$SECONDARY" >/dev/null || true
+  echo "Segunda rede removida."
+}
+case "${1:-}" in
+  list-json) list_json ;;
+  save-secondary) test "$#" -ge 3 && test "$#" -le 4 || exit 2; save_secondary "$2" "$3" "${4:-}" ;;
+  switch) switch_profiles ;;
+  remove-secondary) remove_secondary ;;
+  *) echo "uso: 2pny-wifi-profiles list-json|save-secondary SSID SENHA [BSSID]|switch|remove-secondary" >&2; exit 2 ;;
+esac
