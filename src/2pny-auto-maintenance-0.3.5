@@ -1,0 +1,101 @@
+#!/bin/bash
+set -euo pipefail
+
+STATE=/var/lib/2pny
+RUN=/run/2pny
+ENABLED="$STATE/auto-maintenance.enabled"
+STAMP="$STATE/auto-maintenance.last"
+STATUS="$STATE/maintenance.json"
+LOCK="$RUN/auto-maintenance.lock"
+mkdir -p "$STATE" "$RUN"
+
+write_state(){
+  local state="$1" msg="$2"
+  python3 - "$STATUS" "$STAMP" "$ENABLED" "$state" "$msg" <<'PY'
+import json,sys,datetime,os,tempfile
+path,stamp,enabled,state,msg=sys.argv[1:6]
+now=datetime.datetime.now(datetime.timezone.utc)
+last=None
+try:last=datetime.datetime.fromtimestamp(os.path.getmtime(stamp),datetime.timezone.utc)
+except Exception:pass
+data={"state":state,"message":msg,"updated":now.isoformat(),"enabled":os.path.exists(enabled),
+      "last_run":last.isoformat() if last else None,
+      "next_eligible":(last+datetime.timedelta(hours=24)).isoformat() if last else None}
+fd,tmp=tempfile.mkstemp(prefix=".maintenance.",dir=os.path.dirname(path))
+with os.fdopen(fd,"w") as f: json.dump(data,f,ensure_ascii=False)
+os.chmod(tmp,0o600); os.replace(tmp,path)
+PY
+}
+
+display(){
+  command -v 2pny-display-status >/dev/null 2>&1 && 2pny-display-status "$1" "${2:-}" >/dev/null 2>&1 || true
+}
+
+is_recent(){
+  test -f "$STAMP" || return 1
+  now="$(date +%s)"; last="$(stat -c %Y "$STAMP" 2>/dev/null || echo 0)"
+  test $((now-last)) -lt 86400
+}
+
+run_maintenance(){
+  test -f "$ENABLED" || { write_state disabled "Preparação automática desativada."; exit 0; }
+  exec 9>"$LOCK"; flock -n 9 || exit 0
+  if is_recent; then
+    write_state done "Componentes oficiais já foram verificados nas últimas 24 horas."
+    exit 0
+  fi
+
+  write_state running "Verificando componentes, espaço, serviços e listas públicas..."
+  display maintenance "Verificando sistema"
+  # Read-only health snapshot first. Never changes RF/network configuration.
+  df -P / >/run/2pny/maintenance-disk.txt 2>/dev/null || true
+  systemctl --failed --no-legend >/run/2pny/maintenance-failed-services.txt 2>/dev/null || true
+
+  export DEBIAN_FRONTEND=noninteractive
+  APT=(nice -n 15 ionice -c3 apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15)
+  if ! "${APT[@]}" update -qq; then
+    write_state waiting "Internet ainda não está pronta. A verificação será tentada novamente quando a rede voltar."
+    display network "Aguardando internet"
+    exit 0
+  fi
+
+  packages=(firmware-brcm80211 firmware-realtek firmware-atheros firmware-misc-nonfree wireless-regdb iw rfkill usbutils i2c-tools python3-serial)
+  missing=()
+  for p in "${packages[@]}"; do
+    dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "install ok installed" && continue
+    apt-cache show "$p" >/dev/null 2>&1 && missing+=("$p")
+  done
+
+  if ((${#missing[@]})); then
+    write_state running "Instalando somente componentes oficiais ausentes..."
+    if ! "${APT[@]}" install -y -qq --no-install-recommends "${missing[@]}"; then
+      write_state error "Algum firmware opcional não pôde ser instalado. O sistema continuará com os componentes disponíveis."
+      display warning "Firmware opcional pendente"
+      exit 0
+    fi
+  fi
+
+  command -v 2pny-hardware-drivers >/dev/null 2>&1 && 2pny-hardware-drivers >/dev/null 2>&1 || true
+
+  write_state running "Atualizando listas públicas de servidores digitais..."
+  if command -v 2pny-hostfiles-update >/dev/null 2>&1; then
+    nice -n 15 ionice -c3 2pny-hostfiles-update >/dev/null 2>&1 || true
+  fi
+
+  "${APT[@]}" clean >/dev/null 2>&1 || true
+  touch "$STAMP"
+  write_state done "Manutenção concluída: componentes oficiais, listas públicas, espaço e serviços verificados. Nenhum upgrade completo do Debian foi executado."
+  display maintenance "Componentes prontos"
+}
+
+case "${1:-run}" in
+  enable)
+    touch "$ENABLED"; chmod 0600 "$ENABLED"; write_state waiting "Preparação automática ativada."; systemctl start --no-block 2pny-auto-maintenance.service >/dev/null 2>&1 || true ;;
+  disable)
+    rm -f "$ENABLED"; write_state disabled "Preparação automática desativada." ;;
+  status)
+    if test -f "$STATUS"; then cat "$STATUS"; elif test -f "$ENABLED"; then write_state waiting "Manutenção automática ativada."; cat "$STATUS"; else write_state disabled "Manutenção automática desativada."; cat "$STATUS"; fi ;;
+  run) run_maintenance ;;
+  force) rm -f "$STAMP"; run_maintenance ;;
+  *) echo "uso: 2pny-auto-maintenance enable|disable|status|run|force" >&2; exit 2 ;;
+esac
