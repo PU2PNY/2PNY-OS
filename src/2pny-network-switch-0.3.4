@@ -59,7 +59,6 @@ for rawline in raw.splitlines()+[""]:
             except Exception: mhz=0
             items.append({"ssid":cur.get("SSID",""),"bssid":cur.get("BSSID","").strip(),
                           "signal":str(sig),"frequency_mhz":mhz,
-                          "channel":(14 if mhz==2484 else ((mhz-2407)//5 if 2412<=mhz<=2472 else ((mhz-5000)//5 if 5005<=mhz<=5895 else ((mhz-5950)//5 if 5955<=mhz<=7115 else 0)))),
                           "security":cur.get("SECURITY","").strip(),"active":cur.get("IN-USE","")=="*"})
         cur={};continue
     if ":" in line:
@@ -96,9 +95,6 @@ for raw in open(sys.argv[1],errors="ignore"):
             dbm=float(m.group(1)); cur["signal"]=str(max(1,min(100,int(2*(dbm+100)))))
     elif line.startswith("RSN:") or line.startswith("WPA:"): cur["security"]="WPA/WPA2"
 if cur.get("ssid"): items.append(cur)
-for x in items:
-    mhz=int(x.get("frequency_mhz") or 0)
-    x["channel"]=14 if mhz==2484 else ((mhz-2407)//5 if 2412<=mhz<=2472 else ((mhz-5000)//5 if 5005<=mhz<=5895 else ((mhz-5950)//5 if 5955<=mhz<=7115 else 0)))
 best={}
 for x in items:
     s=x["ssid"]
@@ -142,7 +138,7 @@ scan_json(){
     passive="$(scan_iw_json "$iface" || true)"
     if test -n "$passive" && test "$passive" != '[]'; then echo "$passive"; return; fi
   fi
-  if test "$iface" = "$ap" && test -s "$RUN/hostapd.pid" && kill -0 "$(cat "$RUN/hostapd.pid" 2>/dev/null)" 2>/dev/null; then
+  if test "$iface" = "$ap" && /usr/local/sbin/2pny-ap-control status 2>/dev/null | grep -qx active; then
     log "temporarily pausing setup AP for Wi-Fi scan on $iface"
     pause_setup_ap "$iface"; paused=1
   fi
@@ -152,7 +148,7 @@ scan_json(){
   prepare_client "$iface"
 
   raw=""
-  for attempt in 1 2; do
+  for attempt in 1 2 3; do
     nmcli device wifi rescan ifname "$iface" >/dev/null 2>&1 || true
     sleep 0.8
     raw="$(nmcli -m multiline --escape no -f IN-USE,SSID,BSSID,SIGNAL,FREQ,SECURITY dev wifi list ifname "$iface" --rescan no 2>/dev/null || true)"
