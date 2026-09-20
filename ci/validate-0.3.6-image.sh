@@ -73,7 +73,7 @@ grep -Fq 'restore_on_error' "$SW"
 grep -Fq 'wpa-psk' "$SW"; grep -Fq 'sae' "$SW"
 grep -Fq 'connection.autoconnect-retries 0' "$SW"
 grep -Fq 'Aguardando o PU2PNY reaparecer automaticamente' "$WIZ"
-grep -Fq 'O perfil será salvo antes do reinício' "$WIZ"
+grep -Fq 'validará associação e IP antes de concluir a troca' "$WIZ"
 grep -Fq 'recovery_ap' "$WIZ"
 grep -Fq 'write_connect_state connected' "$ROOT/usr/local/sbin/2pny-network-core"
 grep -Fq 'saved Wi-Fi failed; preserving profile' "$ROOT/usr/local/sbin/2pny-network-core"
@@ -93,6 +93,9 @@ grep -Fq 'b"connect\xff\xff\xff"' "$ROOT/usr/local/sbin/2pny-hardware-probe"
 grep -Fq 'PU2PNY Display Core is authoritative' "$ROOT/usr/local/sbin/2pny-display-apply"
 grep -Fq 'input=b"connect\xff\xff\xff"' "$ROOT/usr/local/sbin/2pny-nextion-autodetect"
 grep -Fq 'disable","--now",LEGACY' "$ROOT/usr/local/sbin/2pny-display-apply"
+
+test -s "$ROOT/usr/share/2pny/radioid.html"
+grep -Fq 'Consulta RadioID' "$ROOT/usr/share/2pny/radioid.html"
 
 echo '[7/15] live-state regression fixed'
 grep -Fq 'source-less END' "$ROOT/usr/local/lib/2pny-live-core.py"
