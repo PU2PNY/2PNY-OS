@@ -95,7 +95,7 @@ assert 'friendlyNetworkError' in main and '/api/protocol/profiles' in main and '
 assert '${paused:-0}' in sw and 'set type managed' in sw
 assert 'Rede Wi-Fi 2' in wp
 assert 'quality_label' in nd and 'Melhor opção' in nd
-assert '[Gateway]' in pa and '[Repeater_1]' in pa and '[HostsFiles]' in pa
+assert '[General]' in pa and '[Repeater 1]' in pa and '[Hosts Files]' in pa and 'DisplayLevel=2' in pa
 assert 'Ensure the server selected' in pa and '"connected":False' in pa
 assert 'protocol-profiles.json' in profiles and 'BACKUPS' in profiles and 'try:rf(old)' in profiles
 assert 'ALLOWED_PREFIX' in updater and 'sha256(pkg)' in updater and 'rollback' in updater
