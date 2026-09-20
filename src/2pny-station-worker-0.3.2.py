@@ -11,7 +11,7 @@ from pathlib import Path
 from importlib.machinery import SourceFileLoader
 
 CORE=SourceFileLoader("pny_live_core","/usr/local/lib/2pny-live-core.py").load_module()
-RUN=Path("/run/2pny"); STATE=Path("/var/lib/2pny/station"); PHOTOS=Path("/var/cache/2pny/photos")
+RUN=Path("/run/2pny"); STATE=Path("/var/lib/2pny/station"); PHOTOS=Path("/var/cache/2pny/photos"); NETWORK_RUNTIME=RUN/"network-runtime.json"
 
 COUNTRY_CODES={
  "brazil":"BR","brasil":"BR","united states":"US","usa":"US","united kingdom":"GB",
@@ -93,6 +93,35 @@ def lookup(key):
     person["photo"]=qrz_photo(person["callsign"]) if person["callsign"] else ""
     person["updated"]=datetime.datetime.now(datetime.timezone.utc).isoformat()
     return person
+
+def update_network_runtime_from_gateway(msg, ts=None):
+    """Track the effective XLX module selected over RF without rewriting the saved preset."""
+    msg=str(msg or "")
+    if not msg:return
+    runtime=read_json(NETWORK_RUNTIME,{})
+    changed=False
+    # Custom PU2PNY group-call control, e.g. TG4002 -> module B.
+    m=re.search(r"PU2PNY, XLX module control:\s*TG(40(?:0[1-9]|1[0-9]|2[0-6]))\s*->\s*module\s+([A-Z])",msg,re.I)
+    if m:
+        runtime.update({"protocol":"DMR","module":m.group(2).upper(),"module_tg":int(m.group(1)),
+                        "module_source":"rf-control","linked":True})
+        changed=True
+    # Upstream confirms/relinks the effective room using the module letter.
+    m=re.search(r"XLX,\s*(?:Re-)?Linking to reflector\s+XLX([0-9]{3})\s+([A-Z])",msg,re.I)
+    if m:
+        letter=m.group(2).upper()
+        runtime.update({"protocol":"DMR","server_name":"XLX"+m.group(1),"module":letter,
+                        "module_tg":4000+(ord(letter)-64),"module_source":"gateway","linked":True})
+        changed=True
+    if "PU2PNY, XLX module control: unlinked by TG4000" in msg:
+        runtime.update({"protocol":"DMR","module":"","module_tg":4000,"module_source":"rf-control","linked":False})
+        changed=True
+    if re.search(r"XLX,\s*Unlinking from XLX[0-9]{3}",msg,re.I):
+        runtime.update({"linked":False})
+        changed=True
+    if changed:
+        runtime["updated"]=CORE.iso(ts or time.time())
+        atomic(NETWORK_RUNTIME,runtime)
 
 def configured_host():
     for filename in ("/var/lib/2pny/network-radio.json","/var/lib/2pny/protocol-network.json"):
@@ -248,6 +277,7 @@ def main():
     for unit in gateway_units:
         for raw in journal_rows(unit,"-15 minutes"):
             msg,ts=decode_journal(raw);state.ingest(msg,ts,gateway=True)
+            if unit=="2pny-dmrgateway.service":update_network_runtime_from_gateway(msg,ts)
 
     hostlog=start_follow("2pny-mmdvmhost.service");gwlogs=[start_follow(unit) for unit in gateway_units];mqtt=start_mqtt()
     sel=selectors.DefaultSelector()
@@ -275,11 +305,16 @@ def main():
                             action=str(link.get("action") or "")
                             if action in ("linking","linked","connected"):
                                 state.network={"state":"connected","message":action,"updated":CORE.iso(wall)};state._touch()
+                                rt=read_json(NETWORK_RUNTIME,{})
+                                rt.update({"protocol":"DMR","linked":True,"updated":CORE.iso(wall)});atomic(NETWORK_RUNTIME,rt)
                             elif action in ("unlinked","disconnected"):
                                 state.network={"state":"disconnected","message":action,"updated":CORE.iso(wall)};state._touch()
+                                rt=read_json(NETWORK_RUNTIME,{})
+                                rt.update({"protocol":"DMR","linked":False,"updated":CORE.iso(wall)});atomic(NETWORK_RUNTIME,rt)
                 except Exception:pass
             else:
                 msg,ts=decode_journal(raw);event=state.ingest(msg,ts,gateway=gateway)
+                if gateway:update_network_runtime_from_gateway(msg,ts)
             persist_end(db,event)
             if event:dirty=True
 
