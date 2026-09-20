@@ -227,3 +227,19 @@ Estado antes do CI final:
 - Target próprio Go proposto: GOARCH=arm GOARM=6; binários C/C++ serão reconstruídos para armhf.
 - Pi Zero/1 possuem recursos muito menores; PERF-003 exige modo enxuto e prioridade absoluta para RF/rede.
 - Estado atual ARM32: DOC/planejado, sem build e sem HW PASS.
+
+## Evidência ARM32 experimental — 2026-09-20
+
+- GitHub Actions experimental run `35545030803`: build Bookworm `armhf` completo PASS.
+- Imagem `.img.xz`: integridade, checksum e validador estrutural 0.3.6 PASS.
+- Rootfs reportou arquitetura `armhf` e executou nativamente no runner ARM64, sem QEMU.
+- `2pnyd`, `MMDVM-Host`, `DMRGateway`, `dstargateway`, `YSFGateway`, `P25Gateway`, `NXDNGateway` e `DAPNETGateway`: todos confirmados como ELF 32-bit ARM EABI5.
+- Artefato CI `pu2pny-os-0.3.6-arm32-experimental`, ID `10615957423`, ZIP digest `sha256:dc80891b18ae59e3002bfb4e492c3b9283037401e9523581d794a76a517586a7`.
+- Classificação: **SW/estrutural PASS; HW PENDENTE**. Pode ser usado somente como EXPERIMENTAL/HW-TEST até boot/RF em Raspberry Pi antigo.
+
+## Evidência ARM64 hwfix2 — 2026-09-20
+
+- GitHub Actions run `35544963950`: source, overlay, staged source, bundle, build ARM64, XZ/SHA, validação estrutural e publicação PASS.
+- Prerelease `v0.3.6-alpha` atualizada no commit `4ffbce890e839f51e6977836cf0b647fb3fe348e`.
+- Imagem ARM64 SHA-256: `8460357f780577abdd12cb5cf91288aad48d27d4c130a96c97d737f8d050a50c`.
+- Continua Alpha/SW para as correções deste ciclo; os gates HW continuam obrigatórios.
