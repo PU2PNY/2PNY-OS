@@ -27,7 +27,7 @@ jobs:
         with:
           go-version: '1.24.x'
           cache: false
-      - name: Validate 0.3.3 sources
+      - name: Validate 0.3.4 sources
         run: |
           set -euo pipefail
           gofmt -w src/2pnyd-main-0.3.4.go
@@ -139,6 +139,7 @@ jobs:
           python3 ci/prepare-0.3.0-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.1-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.2-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.3-alpha.py legacy-source/2pny-os
           python3 ci/prepare-0.3.4-alpha.py legacy-source/2pny-os
       - name: Validate staged source
         working-directory: legacy-source/2pny-os
@@ -150,7 +151,11 @@ jobs:
           python3 "$GITHUB_WORKSPACE/ci/test-0.2.9-live-core.py"
           python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect
           bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-network-core rootfs-overlay/usr/local/sbin/2pny-mdns-guard rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns rootfs-overlay/usr/local/sbin/2pny-mode-apply
-          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.3-alpha"' src/2pnyd/main.go
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.4-alpha"' src/2pnyd/main.go
+          grep -Fq 'mqtt_preflight' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'wifi_profile_link_ok' rootfs-overlay/usr/local/sbin/2pny-network-core
+          grep -Fq 'openActivity' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'id="languageWelcome"' rootfs-overlay/usr/share/2pny/wizard.html
           grep -Fq '/api/live/events' src/2pnyd/main.go
           grep -Fq '/api/protocol/apply' src/2pnyd/main.go
           grep -Fq '/api/aprs/message' src/2pnyd/main.go
