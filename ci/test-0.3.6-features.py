@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic 0.3.6 regressions. No RF hardware or real systemd changes."""
+"""Deterministic 0.3.6 regressions, including DMR aliases/BrandMeister API isolation. No RF hardware or real systemd changes."""
 import contextlib, io, json, os, runpy, subprocess, sys, tempfile, types, unittest
 from pathlib import Path
 from unittest.mock import patch
