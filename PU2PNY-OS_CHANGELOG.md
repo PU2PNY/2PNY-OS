@@ -132,3 +132,15 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - O estado anterior de `Mensagem enfileirada` deixa de ser evidência de envio.
 - Será preservado o baixo consumo: conexão única, sem polling externo pesado, histórico limitado e retries limitados.
 - Backup pré-correção: `backup/0.3.6-pre-aprs-msgfix-20260920`.
+
+### Build e publicação 0.3.6-alpha com correção APRS
+- O cliente APRS foi atualizado para exigir `logresp verified` antes de transmitir, manter outbox em falha, reconhecer ACK/REJ, deduplicar RX e realizar retry limitado com o mesmo message ID.
+- O painel APRS agora mostra login verificado, endereço de recebimento, fila pendente, último RX, último TX de mensagem e último erro.
+- Porta 14580 permanece como transporte bidirecional filtrado; pool preferencial passa a `soam.aprs2.net`, com servidores alternativos configuráveis.
+- Testes determinísticos APRS: **6/6 PASS**.
+- VPS: resolução do pool sul-americano e conexão TCP/14580 com greeting APRS-IS confirmadas; não foi usado indicativo real para fingir teste de mensagem.
+- GitHub Actions run `35531259706`: source, staged source, bundle, ARM64, checksum, validação final e publicação **PASS**.
+- Prerelease `v0.3.6-alpha` atualizada no target `0967a020eefc0f997211b46d97d3cc3d5600b5db`.
+- Imagem SHA-256: `ec1f2676fa2a21715d5da99dc43a25607e8a7433b4580b9122416063e99eaa82`.
+- A classificação permanece **Alpha/SW+VPS** para os recursos novos; APRS, D-Star, YSF, Wi-Fi, perfis e displays ainda exigem HW PASS.
+
