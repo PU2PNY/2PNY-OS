@@ -85,6 +85,7 @@ wiz=(root/"rootfs-overlay/usr/share/2pny/wizard.html").read_text()
 common=(root/"rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js").read_text()
 lang=(root/"rootfs-overlay/usr/share/2pny/ui-language.js").read_text()
 display=(root/"rootfs-overlay/usr/local/sbin/2pny-display-core").read_text()
+dmr=(root/"rootfs-overlay/usr/local/libexec/2pny-dmr-apply").read_text()
 
 assert '"0.3.6-alpha"' in main
 assert 'friendlyNetworkError' in main and '/api/protocol/profiles' in main and '2pny-update-manager' in main
@@ -107,4 +108,11 @@ assert 'Ex.: PU2ABC' in wiz and 'Ex.: 7240000' in wiz and '>Radio ID<' in wiz
 assert 'function operation' in common
 assert 'MutationObserver' in lang and "'Melhor opção'" in lang
 assert 'RF>NET' in display and 'NET>RF' in display
+assert '/api/brandmeister/api-key' in main and 'cfg.ESSID = in.ESSID' in main
+assert 'brandmeister-api.key' in main and 'tmp.Chmod(0600)' in main
+assert "Rádio '+ri+' (" in protocols and 'O PU2PNY não pede API Secret' in protocols
+assert 'id="dmrEssid"' in protocols and 'id="bmApiKey"' in protocols
+assert "Rádio '+i+' (" in wiz and 'Não existe campo API Secret' in wiz
+assert 'identificação DMR deve ser 01 a 99' in profiles
+assert 'network_id=dmrid+essid if essid and len(dmrid)==7 else dmrid' in dmr
 print("PU2PNY-OS 0.3.6 corrective/feature overlay applied")
