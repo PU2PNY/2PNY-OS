@@ -142,14 +142,19 @@ class Nextion:
             if h>=300:cmds += [self.text(10,h-54,w-20,20,f"RX {rx:.6f}  TX {tx:.6f}",GRAY,0,1),
                                self.text(10,h-30,w-20,20,f"NET {qual}  {lat if lat is not None else '-'} ms",GREEN if qual not in ("poor","offline") else RED,0,1)]
         else:
-            # Modern card hierarchy: callsign/name first, then geography and route.
+            # TX/RX identity card.  It is intentionally HMI-independent: the
+            # renderer uses vector/text commands so no TFT/HMI is overwritten.
+            # Dynamic operator photos require an explicitly compatible HMI.
+            avatar=source[:2].upper() if source else "ID"
             cmds += self.flag(op.get("country_code"),w-54,48)
-            cmds += [self.text(12,50,w-78,34,source,CYAN,0,0),
-                     self.text(12,86,w-24,28,name or "—",WHITE,0,0),
-                     self.text(12,116,w-24,22,(" · ".join([x for x in (city,country) if x])) or "Localização —",GRAY,0,0),
-                     self.text(12,142,w-24,24,f"{origin}  {duration}",YELLOW if origin=="RF" else CYAN,0,0),
-                     self.text(12,168,w-24,24,f"Destino {target or '-'}"+(f"  Mód {module}" if module else ""),WHITE,0,0)]
-            if rfline:cmds += [self.text(12,194,w-24,22,rfline,WHITE,0,0)]
+            cmds += [f"cir 54,92,38,{CYAN}",f"cir 54,92,34,{BLACK}",
+                     self.text(20,77,68,30,avatar,CYAN,0,1),
+                     self.text(102,50,max(80,w-166),34,source,CYAN,0,0),
+                     self.text(102,86,max(80,w-114),27,name or "—",WHITE,0,0),
+                     self.text(102,116,max(80,w-114),21,(" · ".join([x for x in (city,country) if x])) or "Localização —",GRAY,0,0),
+                     self.text(12,146,w-24,23,f"{origin}  {duration}  {proto}",YELLOW if origin=="RF" else CYAN,0,0),
+                     self.text(12,172,w-24,23,f"Destino {target or '-'}"+(f"  Mód {module}" if module else ""),WHITE,0,0)]
+            if rfline:cmds += [self.text(12,198,w-24,21,rfline,WHITE,0,0)]
             if tot_left is not None:
                 cmds += [f"fill 0,{max(218,h-54)},{w},30,{RED}",
                          self.text(0,max(220,h-52),w,26,f"TOT: corte em {tot_left} s",WHITE,0,1)]
@@ -201,7 +206,8 @@ class OLED(I2CBase):
             if a.get("ber") is not None:rf.append(f"B{a.get('ber')}%")
             if rv is not None:rf.append(f"R{rv}")
             place=" / ".join(x for x in (str(op.get("city") or ""),str(op.get("country") or "")) if x)
-            lines=[f"{mode.upper()} {proto} {direction}",a.get("source") or "-",op.get("name") or "-",place or (a.get("target") or "-"),(" ".join(rf) or (a.get("target") or "-"))]
+            ip=ns.get("default_ip") or "-"
+            lines=[f"{mode.upper()} {proto} {direction}",a.get("source") or "-",op.get("name") or "-",place or "Local -",a.get("target") or "-",f"{uplink} {ip}" if ip!="-" else (" ".join(rf) or "NET -")]
         self.show(lines)
 
 class LCD(I2CBase):
@@ -230,9 +236,12 @@ class LCD(I2CBase):
                 rv=a.get("rssi_avg",a.get("rssi"));rf=[]
                 if a.get("ber") is not None:rf.append(f"B{a.get('ber')}%")
                 if rv is not None:rf.append(f"R{rv}")
-                lines=[f"{mode.upper()} {proto}",a.get("source") or "-",op.get("name") or (a.get("target") or "-")," ".join(rf) or (a.get("target") or "-")]
+                ns=read_network_status();place=" / ".join(x for x in (str(op.get("city") or ""),str(op.get("country") or "")) if x)
+                who=((a.get("source") or "-")+" "+(op.get("name") or "")).strip()
+                net=f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"
+                lines=[f"{mode.upper()} {proto}",who,place or (a.get("target") or "-"),net]
         else:
-            lines=[f"{mode.upper()} {proto} {a.get('source') or 'PU2PNY'}",a.get("target") or time.strftime("%H:%M")]
+            ns=read_network_status();lines=[f"{mode.upper()} {proto} {a.get('source') or 'PU2PNY'}",f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"]
         self.show(lines)
 
 def nextion_size(model):
