@@ -98,7 +98,7 @@ echo '[7/14] live-state regression fixed'
 grep -Fq 'source-less END' "$ROOT/usr/local/lib/2pny-live-core.py"
 grep -Fq 'action in ("end","lost","timeout")' "$ROOT/usr/local/lib/2pny-live-core.py"
 grep -Fq 'currentActive' "$ROOT/usr/share/2pny/dashboard.html"
-grep -Fq 'Aguardando transmissão' "$ROOT/usr/share/2pny/dashboard.html"
+grep -Fq 'Rastreando sinais' "$ROOT/usr/share/2pny/dashboard.html"
 ! grep -Fq 'Operador não identificado' "$ROOT/usr/share/2pny/dashboard.html"
 
 echo '[8/14] preloaded protocol catalogs'
