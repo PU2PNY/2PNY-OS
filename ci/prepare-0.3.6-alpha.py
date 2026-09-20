@@ -42,6 +42,7 @@ for src,dst in (
  ("src/2pny-update-manager-0.3.6.py","rootfs-overlay/usr/local/sbin/2pny-update-manager"),
  ("src/2pny-station-worker-0.3.6.py","rootfs-overlay/usr/local/sbin/2pny-station-worker"),
  ("src/2pny-display-core-0.3.6.py","rootfs-overlay/usr/local/sbin/2pny-display-core"),
+ ("src/2pny-aprs-0.3.6.py","rootfs-overlay/usr/local/sbin/2pny-aprs"),
 ):
     install(src,dst,0o755)
 
@@ -61,6 +62,7 @@ for rel in (
  "rootfs-overlay/usr/local/sbin/2pny-update-manager",
  "rootfs-overlay/usr/local/sbin/2pny-station-worker",
  "rootfs-overlay/usr/local/sbin/2pny-display-core",
+ "rootfs-overlay/usr/local/sbin/2pny-aprs",
 ):
     subprocess.run(["python3","-m","py_compile",str(root/rel)],check=True)
     cache=(root/rel).parent/"__pycache__"
@@ -85,6 +87,7 @@ wiz=(root/"rootfs-overlay/usr/share/2pny/wizard.html").read_text()
 common=(root/"rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js").read_text()
 lang=(root/"rootfs-overlay/usr/share/2pny/ui-language.js").read_text()
 display=(root/"rootfs-overlay/usr/local/sbin/2pny-display-core").read_text()
+aprs_client=(root/"rootfs-overlay/usr/local/sbin/2pny-aprs").read_text()
 dmr=(root/"rootfs-overlay/usr/local/libexec/2pny-dmr-apply").read_text()
 
 assert '"0.3.6-alpha"' in main
@@ -101,6 +104,10 @@ assert 'Rede Wi‑Fi 1 e Rede Wi‑Fi 2' in internet and 'wifiSecondManual' in i
 assert 'Perfil do protocolo' in protocols and 'Gateway ativo / aguardando rede' in protocols
 assert 'installUpdate' in system and 'Guardar versão atual para rollback' in system
 assert 'navigator.geolocation' in aprs
+assert 'Login APRS-IS' in aprs and 'outboxPending' in aprs and 'last_message_tx' in aprs
+assert 'parse_logresp' in aprs_client and 'TCP_NODELAY' in aprs_client
+assert 'login_unverified' in aprs_client and 'retry_unacked' in aprs_client
+assert 'soam.aprs2.net' in aprs_client
 assert '/wizard?step=1' not in expert and '/wizard?step=3' not in expert
 assert 'qrz.com/db/' in history and 'radioid.net/api/dmr/user/' in history
 assert 'qrz.com/db/' in dash and 'radioid.net/api/dmr/user/' in dash
