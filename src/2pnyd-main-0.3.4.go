@@ -1769,7 +1769,7 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 				enabled, _ = ov["enabled"].(bool)
 			}
 		}
-		layout := 2
+		layout := 9
 		if b, err := os.ReadFile(displayOverrideFile); err == nil {
 			var ov map[string]any
 			if json.Unmarshal(b, &ov) == nil {
@@ -1790,10 +1790,10 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if in.Enabled {
 			if in.Layout == 0 {
-				in.Layout = 2
+				in.Layout = 9
 			}
-			if in.Layout != 2 && in.Layout != 3 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "layout Nextion deve ser ON7LDS (2) ou ON7LDS-DIY (3)"})
+			if in.Layout != 9 && in.Layout != 2 && in.Layout != 3 {
+				writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "layout Nextion inválido"})
 				return
 			}
 			if _, err := detectedModemPort(); err != nil {
