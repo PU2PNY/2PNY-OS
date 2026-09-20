@@ -6069,7 +6069,7 @@ func brandmeisterAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
 	if call=="" && id=="" { http.Error(w,"informe indicativo ou Radio ID",400);return }
 	q:=url.Values{};if call!="" { q.Set("callsign",call) };if id!="" { q.Set("id",id) }
 	req,_:=http.NewRequest(http.MethodGet,"https://radioid.net/api/dmr/user/?"+q.Encode(),nil)
-	req.Header.Set("User-Agent","PU2PNY-OS/"+appVersion+" radioid-lookup")
+	req.Header.Set("User-Agent","PU2PNY-OS/"+appVersion+" radioid-lookup (+https://github.com/PU2PNY/2PNY-OS)")
 	client:=&http.Client{Timeout:7*time.Second};resp,err:=client.Do(req)
 	type row struct { Callsign string `json:"callsign"`; City string `json:"city"`; Country string `json:"country"`; Fname string `json:"fname"`; Name string `json:"name"`; State string `json:"state"`; Surname string `json:"surname"`; RadioID int64 `json:"radio_id"`; Lastheard string `json:"lastheard"`; Lastmaster string `json:"lastmaster"`; Lasttg string `json:"lasttg"` }
 	data:=struct{Query string;Error string;Results []row}{Query:strings.TrimSpace(call+" "+id)}
