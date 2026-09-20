@@ -59,3 +59,17 @@ O código corretivo está na branch de trabalho, mas os estados HW da tabela aci
 - Artefato 0.3.4: **ainda não liberado** até ARM64 + validação estrutural + SHA-256.
 
 A causa raiz do erro observado ao trocar protocolos permanece classificada como não confirmada em HW. O código agora impede uma troca quando o endpoint MQTT local não está pronto e produz evidência mais específica para o próximo teste.
+
+## Build 0.3.4-alpha publicado
+
+**Estado do artefato:** SW PASS / Alpha para teste físico.
+
+- GitHub Actions: source PASS.
+- Build ARM64: PASS.
+- Validação estrutural da imagem: PASS.
+- SHA-256: gerado e anexado à release.
+- Publicação: prerelease `v0.3.4-alpha`.
+- Tamanho da imagem comprimida: 584112608 bytes.
+- SHA-256 da imagem: `4bc808da8f4c3fc259dd72a66a08e68e1a704b5cf13f754692c9864b40282e2c`.
+
+**Importante:** isso não muda os casos HW que ainda estavam FAIL/PENDENTE. Wi-Fi pós-reboot, DMR regressão, D-Star, YSF, Nextion e comportamento físico do Ao Vivo precisam ser retestados no Raspberry Pi/MMDVM/display real antes de qualquer estado PROD.
