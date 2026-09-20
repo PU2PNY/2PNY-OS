@@ -308,3 +308,20 @@ Quando a rede selecionada for BrandMeister, o painel deve permitir cadastrar/rem
 
 ### SEC-021 — Segredos BrandMeister
 Hotspot Security e BrandMeister API Key são segredos distintos. Ambos devem permanecer fora de respostas públicas, histórico, logs e arquivos exportados sem proteção. Alterar/remover a API Key não deve reiniciar MMDVMHost nem DMRGateway. Alterar ESSID/alias DMR pode exigir reconexão do gateway, mas deve preservar rollback e a baseline DMR da 0.3.5.
+
+## 14. Correção APRS incorporada após teste físico — 2026-09-20
+
+### APRS-004 — Mensagens APRS-IS bidirecionais funcionais
+O recurso de mensagens APRS deve realmente **enviar e receber** via APRS-IS. Não basta enfileirar uma mensagem nem considerar um socket TCP aberto como conexão válida. O cliente deve:
+- conectar a porta bidirecional/filtrada apropriada;
+- aguardar e interpretar a confirmação de login APRS-IS (`logresp`) antes de transmitir beacon ou mensagens;
+- distinguir conexão TCP de login APRS-IS verificado;
+- manter mensagem na fila quando não houver sessão verificada;
+- receber mensagens endereçadas ao indicativo/SSID APRS configurado, gerar ACK quando houver message ID e registrar a entrada;
+- reconhecer ACK/REJ recebidos e refletir o estado da mensagem enviada;
+- aplicar retry limitado e de baixo custo para mensagens sem ACK, reutilizando o mesmo message ID e evitando flood;
+- deduplicar mensagens recebidas repetidas pelo mesmo remetente/message ID, ainda respondendo ACK;
+- expor no painel estado claro de login verificado, último RX, último TX de mensagem, fila pendente e último erro;
+- preservar histórico limitado, baixo consumo e poucas gravações em SD.
+
+A implementação deve usar porta APRS-IS bidirecional recomendada e servidores/pools atuais documentados; para América do Sul, preferir o pool regional oficial quando disponível, mantendo fallback configurável.
