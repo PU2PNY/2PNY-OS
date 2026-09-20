@@ -27,6 +27,7 @@ for src,dst in (
  ("src/display-0.3.6.html","rootfs-overlay/usr/share/2pny/display.html"),
  ("src/system-0.3.6.html","rootfs-overlay/usr/share/2pny/system.html"),
  ("src/expert-0.3.6.html","rootfs-overlay/usr/share/2pny/expert.html"),
+ ("src/radioid-0.3.6.html","rootfs-overlay/usr/share/2pny/radioid.html"),
  ("src/ui-common-0.3.6.js","rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js"),
  ("src/ui-language-0.3.6.js","rootfs-overlay/usr/share/2pny/ui-language.js"),
 ):
