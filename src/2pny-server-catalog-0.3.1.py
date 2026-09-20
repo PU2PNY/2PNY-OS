@@ -22,8 +22,9 @@ SEED={
   {"name":"DAPNET","address":"dapnet.afu.rwth-aachen.de","port":43434,"kind":"DAPNET","priority":0,"description":"DAPNET POCSAG","password_label":"DAPNET AuthKey","password_required":True},
  ],
  "APRS":[
-  {"name":"Brasil APRS2","address":"brazil.aprs2.net","port":14580,"kind":"APRS-IS","priority":0,"description":"Servidor APRS-IS no Brasil"},
+  {"name":"APRS2 América do Sul","address":"soam.aprs2.net","port":14580,"kind":"APRS-IS","priority":0,"description":"Pool regional oficial Tier 2 para América do Sul"},
   {"name":"APRS2 Rotate","address":"rotate.aprs2.net","port":14580,"kind":"APRS-IS","priority":1,"description":"Balanceamento global Tier 2"},
+  {"name":"Brasil APRS2","address":"brazil.aprs2.net","port":14580,"kind":"APRS-IS","priority":2,"description":"Servidor APRS-IS Brasil / fallback configurável"},
   {"name":"APRS2 América do Norte","address":"noam.aprs2.net","port":14580,"kind":"APRS-IS","priority":10,"description":"Pool América do Norte"},
   {"name":"APRS2 Europa","address":"euro.aprs2.net","port":14580,"kind":"APRS-IS","priority":10,"description":"Pool Europa"},
  ]
