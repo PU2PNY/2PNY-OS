@@ -1,7 +1,7 @@
 (function(){
   function q(id){return document.getElementById(id)}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-  async function getj(url,opt,timeout){var ctl=window.AbortController?new AbortController():null,timer=null,o=Object.assign({cache:'no-store'},opt||{});if(ctl){o.signal=ctl.signal;timer=setTimeout(function(){ctl.abort()},timeout||8000)}try{var r=await fetch(url,o),j=await r.json().catch(function(){return {}});if(!r.ok)throw new Error(j.error||j.message||('HTTP '+r.status));return j}finally{if(timer)clearTimeout(timer)}}
+  async function getj(url,opt,timeout){var ctl=window.AbortController?new AbortController():null,timer=null,o=Object.assign({cache:'no-store'},opt||{}),method=String(o.method||'GET').toUpperCase(),auto=null;if(method!=='GET'&&!o.pnySilent&&!q('pnyOperationOverlay'))auto=operation('Aplicando alteração','Enviando, validando e aguardando confirmação do sistema...');delete o.pnySilent;if(ctl){o.signal=ctl.signal;timer=setTimeout(function(){ctl.abort()},timeout||8000)}try{var r=await fetch(url,o),j=await r.json().catch(function(){return {}});if(!r.ok)throw new Error(j.error||j.message||('HTTP '+r.status));if(auto)auto.done(j.message||'Alteração aplicada.');return j}catch(e){if(auto)auto.error(e.message);throw e}finally{if(timer)clearTimeout(timer)}}
   function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('pu2pny-theme',t);var b=q('themeToggle');if(b)b.textContent=t==='dark'?'☀ Claro':'☾ Escuro'}
   function initTheme(){setTheme(localStorage.getItem('pu2pny-theme')||'dark');var b=q('themeToggle');if(b)b.onclick=function(){setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')}}
   function flagUrl(code){var cc=String(code||'').toLowerCase();return /^[a-z]{2}$/.test(cc)?'/flags/4x3/'+cc+'.svg':''}
@@ -25,7 +25,7 @@
   }
   function showAPRSToast(m){
     var old=q('pnyAprsToast');if(old)old.remove();
-    var a=document.createElement('a');a.id='pnyAprsToast';a.href='/aprs';
+    var a=document.createElement('a');a.id='pnyAprsToast';a.href='/aprs?to='+encodeURIComponent(m.station||'');
     a.style.cssText='position:fixed;right:18px;top:84px;z-index:3000;width:min(360px,calc(100vw - 36px));display:block;text-decoration:none;border:1px solid var(--green);background:var(--card);color:var(--text);border-radius:14px;padding:13px 15px;box-shadow:var(--shadow)';
     a.innerHTML='<b style="display:block;margin-bottom:4px">Nova mensagem APRS · '+esc(m.station||'—')+'</b><span style="display:block;color:var(--muted)">'+esc(m.text||'Nova mensagem')+'</span><small style="display:block;margin-top:6px;color:var(--blue)">Clique para abrir APRS e responder</small>';
     document.body.appendChild(a);
@@ -58,7 +58,7 @@
       var m=q('pnyOpMessage'),pulse=q('pnyOpPulse'),close=q('pnyOpClose');if(m)m.textContent=msg||'';
       if(state==='done'||state==='error'){if(pulse){pulse.style.animation='none';pulse.style.width='100%';pulse.style.transform='none';pulse.style.background=state==='done'?'var(--green)':'var(--red)'}if(close){close.classList.remove('hidden');close.onclick=function(){ov.remove()}}}
     }
-    return {step:function(msg){set('running',msg)},done:function(msg,delay){set('done',msg||'Concluído.');setTimeout(function(){if(ov.parentNode)ov.remove()},delay==null?1200:delay)},error:function(msg){set('error',msg||'Não foi possível concluir.')},close:function(){if(ov.parentNode)ov.remove()}};
+    return {step:function(msg){set('running',msg)},progress:function(percent,msg){var p=Number(percent);if(!Number.isFinite(p))return set('running',msg);p=Math.max(0,Math.min(100,p));var pulse=q('pnyOpPulse');if(pulse){pulse.style.animation='none';pulse.style.transform='none';pulse.style.width=p+'%';pulse.style.background='var(--blue)'}set('running',(msg||'Executando…')+' · '+Math.round(p)+'%')},done:function(msg,delay){set('done',msg||'Concluído.');setTimeout(function(){if(ov.parentNode)ov.remove()},delay==null?1200:delay)},error:function(msg){set('error',msg||'Não foi possível concluir.')},close:function(){if(ov.parentNode)ov.remove()}};
   }
   function footer(){
     if(q('pnyFooter'))return;
