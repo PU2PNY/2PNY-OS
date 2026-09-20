@@ -137,11 +137,11 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 
 | ID | Caso de teste | Resultado esperado | Estado atual | Nível |
 |---|---|---|---|---|
-| TEST-APRS-004A / APRS-004 | TCP conecta mas `logresp` ainda não confirmou | nenhuma mensagem/beacon sai; UI mostra aguardando autenticação | PENDENTE | SW/VPS |
-| TEST-APRS-004B / APRS-004 | `logresp ... verified` | sessão muda para verificada e fila pode transmitir | PENDENTE | SW/VPS |
-| TEST-APRS-004C / APRS-004 | mensagem na outbox com sessão verificada | pacote APRS correto é enviado; histórico marca tentativa/estado | PENDENTE | SW/VPS/HW |
-| TEST-APRS-004D / APRS-004 | mensagem recebida com ID | inbox registra uma vez e cliente envia `ack<ID>` | PENDENTE | SW/VPS/HW |
-| TEST-APRS-004E / APRS-004 | mesma mensagem recebida novamente | não duplica inbox/unread e reenvia ACK | PENDENTE | SW/VPS |
-| TEST-APRS-004F / APRS-004 | ACK/REJ remoto | mensagem enviada muda para `ack`/`rejected` | PENDENTE | SW/VPS/HW |
-| TEST-APRS-004G / APRS-004 | sem ACK após envio | retry limitado usa o mesmo ID e para após limite, sem flood | PENDENTE | SW/VPS |
-| TEST-APRS-004H / APRS-004 | servidor/login indisponível | fila é preservada; painel mostra erro/fila pendente sem perda da mensagem | PENDENTE | SW/VPS/HW |
+| TEST-APRS-004A / APRS-004 | TCP conecta mas `logresp` ainda não confirmou | nenhuma mensagem/beacon sai; UI mostra aguardando autenticação | PASS determinístico | SW/VPS |
+| TEST-APRS-004B / APRS-004 | `logresp ... verified` | sessão muda para verificada e fila pode transmitir | PASS determinístico; login real HW pendente | SW/HW |
+| TEST-APRS-004C / APRS-004 | mensagem na outbox com sessão verificada | pacote APRS correto é enviado; histórico marca tentativa/estado | PASS determinístico; rede real HW pendente | SW/HW |
+| TEST-APRS-004D / APRS-004 | mensagem recebida com ID | inbox registra uma vez e cliente envia `ack<ID>` | PASS determinístico; rede real HW pendente | SW/HW |
+| TEST-APRS-004E / APRS-004 | mesma mensagem recebida novamente | não duplica inbox/unread e reenvia ACK | PASS determinístico | SW |
+| TEST-APRS-004F / APRS-004 | ACK/REJ remoto | mensagem enviada muda para `ack`/`rejected` | PASS determinístico; rede real HW pendente | SW/HW |
+| TEST-APRS-004G / APRS-004 | sem ACK após envio | retry limitado usa o mesmo ID e para após limite, sem flood | PASS determinístico | SW |
+| TEST-APRS-004H / APRS-004 | servidor/login indisponível | fila é preservada; painel mostra erro/fila pendente sem perda da mensagem | PASS fila/erro em SW + TCP `soam.aprs2.net:14580` alcançável em VPS; HW pendente | VPS/HW |
