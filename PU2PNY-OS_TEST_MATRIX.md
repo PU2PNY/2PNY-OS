@@ -145,3 +145,16 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-APRS-004F / APRS-004 | ACK/REJ remoto | mensagem enviada muda para `ack`/`rejected` | PASS determinístico; rede real HW pendente | SW/HW |
 | TEST-APRS-004G / APRS-004 | sem ACK após envio | retry limitado usa o mesmo ID e para após limite, sem flood | PASS determinístico | SW |
 | TEST-APRS-004H / APRS-004 | servidor/login indisponível | fila é preservada; painel mostra erro/fila pendente sem perda da mensagem | PASS fila/erro em SW + TCP `soam.aprs2.net:14580` alcançável em VPS; HW pendente | VPS/HW |
+
+## Casos adicionados — 0.3.6 hwfix2
+
+| ID | Requisito | Caso | Nível alvo neste build | Estado antes do CI |
+|---|---|---|---|---|
+| TEST-036-DSTAR-SCHEMA | PROTO-012 | Gerar DStarGateway.ini e exigir General/Repeater 1/IRCDDB 1/Hosts Files + log numérico; rejeitar Gateway/Repeater_1 | SW | PENDENTE |
+| TEST-036-WIFI-HANDOFF | NET-017 | Verificar busca tolerante à pausa do AP, SSID manual nos dois perfis e ausência de reboot obrigatório após associação+IP | SW/HW | PENDENTE |
+| TEST-036-DNS-EFFECTIVE | NET-016 | Validar parsing IPv4 de nmcli/resolvectl/resolv.conf e janela de 180 s | SW | PENDENTE |
+| TEST-036-APRS-UX | APRS-005 | Validar fallback de contexto inseguro, links de ajuda/teste e preenchimento de destinatário pelo remetente | SW | PENDENTE |
+| TEST-036-RADIOID-UI | UI-012 | Garantir que Live/Histórico não apontem diretamente ao endpoint JSON e que a página legível faça consulta sob demanda | SW | PENDENTE |
+| TEST-036-UPDATE-STAGED | UPDATE-005 | Simular download/estado; instalação só aceita pacote staged verificado e SHA correspondente | SW | PENDENTE |
+| TEST-036-P25-STATIC | TEST-006 | Gerar P25Gateway/MMDVMHost sem systemd/RF real e conferir portas/seções | SW | PENDENTE |
+| TEST-036-DISPLAY-CONTEXT | DISPLAY-011 | Verificar campos essenciais de TX/RX e contexto de IP/uplink nos renderers compactos | SW | PENDENTE |
