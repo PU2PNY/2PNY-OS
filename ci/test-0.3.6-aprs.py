@@ -61,7 +61,7 @@ class APRSTests(unittest.TestCase):
             sock=FakeSocket()
             self.assertEqual(m.consume_outbox(sock,"PU2ABC-10",store,100.0),1)
             self.assertFalse(q.exists())
-            self.assertIn("PU2ABC-10>APRS,TCPIP*::PY2ABC  :ola{54321",sock.sent[0])
+            self.assertIn("PU2ABC-10>APRS,TCPIP*::PY2ABC   :ola{54321",sock.sent[0])
             item=store["messages"][-1]
             self.assertEqual(item["status"],"waiting_ack")
             self.assertEqual(item["attempts"],1)
