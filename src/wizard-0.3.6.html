@@ -235,9 +235,9 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
             </div>
             <div class="field"><label for="colorCode">Color Code</label><select id="colorCode"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option></select><small class="hint">O rádio precisa usar o mesmo Color Code.</small></div>
             <div class="field"><label for="dmrSlot">Time Slot</label><select id="dmrSlot"><option value="2" selected>TS2 — recomendado para hotspot simplex</option><option value="1">TS1</option><option value="both">TS1 + TS2 — repetidora duplex</option></select><small class="hint">Hotspot simplex usa um slot; em repetidora duplex é possível usar os dois.</small></div>
-            <div class="field hidden" id="essidWrap"><label for="essid">ESSID</label><select id="essid"><option value="">Sem ESSID</option></select><small class="hint">Use 01–99 quando houver mais de um hotspot DMR com o mesmo Radio ID.</small></div>
+            <div class="field hidden" id="essidWrap"><label for="essid">Identificação do hotspot / rádio</label><select id="essid"><option value="">Sem sufixo / compatibilidade</option></select><small class="hint">BrandMeister: Rádio 1 = 01, Rádio 2 = 02. O Radio ID programado no rádio continua com 7 dígitos; use frequências diferentes para hotspots diferentes.</small></div>
             <div class="field hidden" id="xlxModuleWrap"><label for="xlxModule">Módulo XLX</label><select id="xlxModule"></select><small class="hint" id="xlxModuleHint">No XLX026, C é voz DMR. TG 6 no rádio.</small></div>
-            <div class="field hidden" id="bmApiWrap"><label for="bmApiKey">BrandMeister API Key (opcional)</label><div class="password-row"><input id="bmApiKey" type="password" placeholder="Opcional — gerenciamento de TGs"><button class="btn" id="showBmApi" type="button">Mostrar</button></div><small class="hint">Não autentica o hotspot. Serve apenas para funções de gerenciamento no painel.</small></div>
+            <div class="field hidden" id="bmApiWrap"><label for="bmApiKey">BrandMeister API Key (opcional)</label><div class="password-row"><input id="bmApiKey" type="password" placeholder="Opcional — gerenciamento BrandMeister"><button class="btn" id="showBmApi" type="button">Mostrar</button></div><small class="hint">É uma única API Key/token. Não existe campo API Secret no PU2PNY. A API Key não autentica o hotspot e não substitui a Hotspot Security.</small></div>
           </div>
           <details style="margin-top:8px"><summary>Ajuste avançado da rede DMR</summary><div class="field"><label for="serverOptions">Options do master (opcional)</label><input id="serverOptions" placeholder="Somente quando o master exigir opções específicas"></div></details>
         </div>
@@ -620,7 +620,7 @@ async function startHardware(){
 }
 
 
-for(let i=1;i<=99;i++){let o=document.createElement('option');o.value=String(i).padStart(2,'0');o.textContent=String(i).padStart(2,'0');q('essid').appendChild(o)}
+for(let i=1;i<=99;i++){let o=document.createElement('option');o.value=String(i).padStart(2,'0');o.textContent='Rádio '+i+' ('+o.value+')';q('essid').appendChild(o)}
 for(let n=65;n<=90;n++){
   let letter=String.fromCharCode(n);
   for(let id of ['xlxModule','dstarModule']){let o=document.createElement('option');o.value=letter;o.textContent=letter;q(id).appendChild(o)}
