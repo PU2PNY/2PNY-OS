@@ -170,18 +170,22 @@ def rollback(name):
 
 def main():
     BASE.mkdir(parents=True,exist_ok=True)
-    lock=open(LOCK,"a+")
-    try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    except BlockingIOError:die("Já existe uma operação de atualização em andamento",3)
     cmd=sys.argv[1] if len(sys.argv)>1 else "status"
+    # Status must remain readable while a download/install holds the exclusive
+    # mutation lock; otherwise the web UI cannot display live progress.
     if cmd=="status":
         st={}
         try:st=json.loads(STATUS.read_text())
         except Exception:st={"state":"idle"}
         staged=staged_info()
         st["staged"]=staged if staged.get("verified") else None
-        st["backups"]=list_backups();print(json.dumps(st,ensure_ascii=False))
-    elif cmd=="download" and len(sys.argv)==5:download(sys.argv[2],sys.argv[3],sys.argv[4])
+        st["backups"]=list_backups();print(json.dumps(st,ensure_ascii=False));return
+    lock=open(LOCK,"a+")
+    try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    except BlockingIOError:
+        print("Já existe uma operação de atualização em andamento",file=sys.stderr)
+        raise SystemExit(3)
+    if cmd=="download" and len(sys.argv)==5:download(sys.argv[2],sys.argv[3],sys.argv[4])
     elif cmd=="install-staged" and len(sys.argv)==5:install_staged(sys.argv[2],sys.argv[3],sys.argv[4]=="1")
     elif cmd=="install" and len(sys.argv)==6:install(sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5]=="1")
     elif cmd=="rollback" and len(sys.argv)==3:rollback(sys.argv[2])
