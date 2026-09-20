@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -2017,24 +2016,6 @@ func brandmeisterAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "configured": configured()})
-}
-
-).MatchString(id) { http.Error(w,"Radio ID inválido",400);return }
-	if call=="" && id=="" { http.Error(w,"informe indicativo ou Radio ID",400);return }
-	q:=url.Values{};if call!="" { q.Set("callsign",call) };if id!="" { q.Set("id",id) }
-	req,_:=http.NewRequest(http.MethodGet,"https://radioid.net/api/dmr/user/?"+q.Encode(),nil)
-	req.Header.Set("User-Agent","PU2PNY-OS/"+appVersion+" radioid-lookup (+https://github.com/PU2PNY/2PNY-OS)")
-	client:=&http.Client{Timeout:7*time.Second};resp,err:=client.Do(req)
-	type row struct { Callsign string `json:"callsign"`; City string `json:"city"`; Country string `json:"country"`; Fname string `json:"fname"`; Name string `json:"name"`; State string `json:"state"`; Surname string `json:"surname"`; RadioID int64 `json:"radio_id"`; Lastheard string `json:"lastheard"`; Lastmaster string `json:"lastmaster"`; Lasttg string `json:"lasttg"` }
-	data:=struct{Query string;Error string;Results []row}{Query:strings.TrimSpace(call+" "+id)}
-	if err!=nil { data.Error="Consulta RadioID indisponível neste momento." } else {
-		defer resp.Body.Close()
-		if resp.StatusCode!=200 { data.Error="RadioID respondeu "+resp.Status } else {
-			var p struct{Results []row `json:"results"`};if json.NewDecoder(http.MaxBytesReader(w,resp.Body,1<<20)).Decode(&p)!=nil { data.Error="Resposta RadioID inválida." } else { data.Results=p.Results }
-		}
-	}
-	const page=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PU2PNY — RadioID</title><style>body{font:16px system-ui;background:#07101a;color:#eef6ff;margin:0;padding:24px}.wrap{max-width:900px;margin:auto}.card{background:#101c29;border:1px solid #29415a;border-radius:16px;padding:18px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.muted{color:#9fb2c7}a{color:#55bfff}.big{font-size:26px;font-weight:800}</style></head><body><main class="wrap"><h1>RadioID</h1><p class="muted">Consulta sob demanda à base oficial RadioID. Nenhuma consulta periódica é feita.</p>{{if .Error}}<div class="card">{{.Error}}</div>{{end}}{{if not .Results}}<div class="card">Nenhum registro encontrado para <b>{{.Query}}</b>.</div>{{end}}{{range .Results}}<article class="card"><div class="big">{{.Callsign}} · {{.RadioID}}</div><div class="grid"><div><span class="muted">Nome</span><br><b>{{if .Name}}{{.Name}}{{else}}{{.Fname}} {{.Surname}}{{end}}</b></div><div><span class="muted">Cidade</span><br><b>{{.City}}</b></div><div><span class="muted">Estado</span><br><b>{{.State}}</b></div><div><span class="muted">País</span><br><b>{{.Country}}</b></div><div><span class="muted">Último master</span><br><b>{{.Lastmaster}}</b></div><div><span class="muted">Último TG</span><br><b>{{.Lasttg}}</b></div><div><span class="muted">Última atividade RadioID</span><br><b>{{.Lastheard}}</b></div></div></article>{{end}}<p><a href="https://radioid.net/database/search" target="_blank" rel="noopener">Abrir pesquisa oficial RadioID</a> · <a href="javascript:window.close()">Fechar</a></p></main></body></html>`
-	t,err:=template.New("radioid").Parse(page);if err!=nil { http.Error(w,"página indisponível",500);return };w.Header().Set("Content-Type","text/html; charset=utf-8");w.Header().Set("Cache-Control","no-store");_ = t.Execute(w,data)
 }
 
 func netdiagHandler(w http.ResponseWriter, r *http.Request) {
