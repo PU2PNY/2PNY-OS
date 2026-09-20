@@ -64,7 +64,7 @@ jobs:
           python3 ci/test-0.3.6-aprs.py
           node - <<'NODE'
           const fs=require('fs');
-          for(const f of ['src/wizard-0.3.6.html','src/dashboard-0.3.6.html','src/internet-0.3.6.html','src/hotspot-0.3.6.html','src/protocols-0.3.6.html','src/history-0.3.6.html','src/aprs-0.3.6.html','src/display-0.3.6.html','src/system-0.3.6.html','src/expert-0.3.6.html']){
+          for(const f of ['src/wizard-0.3.6.html','src/dashboard-0.3.6.html','src/internet-0.3.6.html','src/hotspot-0.3.6.html','src/protocols-0.3.6.html','src/history-0.3.6.html','src/aprs-0.3.6.html','src/display-0.3.6.html','src/system-0.3.6.html','src/expert-0.3.6.html','src/radioid-0.3.6.html']){
             const h=fs.readFileSync(f,'utf8');
             for(const m of h.matchAll(/<script>([\s\S]*?)<\/script>/g)) new Function(m[1]);
           }

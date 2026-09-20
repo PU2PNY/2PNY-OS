@@ -23,6 +23,9 @@ class T(unittest.TestCase):
         self.assertNotIn('/wizard?step=1&return=internet',internet)
         self.assertIn("Melhor opção",internet)
         self.assertIn("PNY.operation",internet)
+        self.assertIn('id="wifiPrimarySelect"',internet)
+        self.assertIn('id="wifiSavePrimary"',internet)
+        self.assertIn("Continuando automaticamente",internet)
         expert=(ROOT/"src/expert-0.3.6.html").read_text()
         self.assertNotIn('/wizard?step=1',expert);self.assertNotIn('/wizard?step=3',expert)
         self.assertIn('href="/hotspot"',expert);self.assertIn('href="/protocols"',expert)
@@ -47,6 +50,8 @@ class T(unittest.TestCase):
         self.assertIn("MutationObserver",lang)
         common=(ROOT/"src/ui-common-0.3.6.js").read_text()
         self.assertIn("function operation",common)
+        self.assertIn("progress:function(percent,msg)",common)
+        self.assertIn("/aprs?to=",common)
         segment=common.split("function operation",1)[1].split("function footer",1)[0]
         self.assertNotIn("pnyOpPercent",segment);self.assertIn("animation:pnyop",segment)
 
@@ -203,6 +208,33 @@ class T(unittest.TestCase):
         self.assertLess(s.index('if cmd=="status"'),s.index("fcntl.flock"))
         ui=(ROOT/"src/system-0.3.6.html").read_text()
         self.assertIn("Baixar atualização",ui);self.assertIn("100% completo",ui);self.assertIn("regravar o SD",ui)
+
+    def test_network_dns_and_wifi_handoff_regressions(self):
+        net=(ROOT/"src/2pny-netdiag-0.3.6.py").read_text()
+        self.assertIn('r"(?:\\d{1,3}\\.){3}\\d{1,3}"',net)
+        self.assertNotIn('r"(?:\\\\d{1,3}\\\\.){3}\\\\d{1,3}"',net)
+        self.assertIn('now-last_dns>180',net)
+        backend=(ROOT/"src/2pnyd-main-0.3.6.go").read_text()
+        block=backend[backend.index("func networkConnectHandler"):backend.index("func friendlyNetworkError")]
+        self.assertIn('"will_reboot":false',block)
+        self.assertNotIn('exec.Command("systemctl","reboot")',block)
+
+    def test_radioid_is_formatted_not_raw_api(self):
+        for name in ("history-0.3.6.html","dashboard-0.3.6.html"):
+            src=(ROOT/"src"/name).read_text()
+            self.assertIn('/radioid?callsign=',src)
+            self.assertNotIn('radioid.net/api/dmr/user/?callsign=',src)
+        page=(ROOT/"src/radioid-0.3.6.html").read_text()
+        self.assertIn("/api/contacts",page)
+        self.assertIn("JSON bruto",page)
+
+    def test_p25_profile_is_generated_without_hardware_claim(self):
+        files,out=self._run_apply("P25","P25_TEST","p25.example.net",41000,"","","")
+        ini=files["p25/P25Gateway.ini"]
+        self.assertIn("[Network]",ini)
+        self.assertIn("Address=p25.example.net",ini)
+        self.assertIn("Port=41000",ini)
+        self.assertIn("NETWORK_APPLY_OK protocol=P25",out)
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
