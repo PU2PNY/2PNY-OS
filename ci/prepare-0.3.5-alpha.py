@@ -74,7 +74,7 @@ assert "space_around_delimiters=False" in apply
 assert "network-runtime.json" in station and "module_tg" in station
 assert "Bem-vindo / Welcome" in wiz and "scheduleHardwareAdvance" in wiz
 assert "Módulo / TG" in dash and "TOT: corte automático" in dash
-assert "Wi-Fi principal e reserva" in internet and "Usar Cloudflare" in internet
+assert ("Wi‑Fi principal e reserva" in internet or "Wi-Fi principal e reserva" in internet) and "Usar Cloudflare" in internet
 assert "Atividade 24h" in history
 assert "Manutenção automática" in system and "Throttling" in system
 assert "PU2PNY Moderno" in display
