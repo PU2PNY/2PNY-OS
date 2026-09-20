@@ -45,6 +45,7 @@ jobs:
             src/2pny-mqtt-preflight-0.3.4.py \
             src/2pny-server-catalog-0.3.1.py \
             src/2pny-aprs-0.3.0.py \
+            src/2pny-aprs-0.3.6.py \
             src/2pny-netdiag-0.3.6.py \
             src/2pny-nextion-autodetect-0.3.1.py \
             ci/prepare-0.3.1-alpha.py \
@@ -53,12 +54,14 @@ jobs:
             ci/prepare-0.3.4-alpha.py \
             ci/prepare-0.3.5-alpha.py \
             ci/prepare-0.3.6-alpha.py \
-            ci/test-0.3.6-features.py
+            ci/test-0.3.6-features.py \
+            ci/test-0.3.6-aprs.py
           rm -rf src/__pycache__ ci/__pycache__
           bash -n src/2pny-network-switch-0.3.6 src/2pny-network-core-0.3.5 src/2pny-wifi-profiles-0.3.6 src/2pny-auto-maintenance-0.3.6 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.6-image.sh
           python3 ci/test-0.2.9-live-core.py
           python3 ci/test-0.3.1-live-core.py
           python3 ci/test-0.3.6-features.py
+          python3 ci/test-0.3.6-aprs.py
           node - <<'NODE'
           const fs=require('fs');
           for(const f of ['src/wizard-0.3.6.html','src/dashboard-0.3.6.html','src/internet-0.3.6.html','src/hotspot-0.3.6.html','src/protocols-0.3.6.html','src/history-0.3.6.html','src/aprs-0.3.6.html','src/display-0.3.6.html','src/system-0.3.6.html','src/expert-0.3.6.html']){
@@ -99,6 +102,11 @@ jobs:
           grep -Fq 'Link has failed, polls lost' src/2pny-station-worker-0.3.6.py
           grep -Fq 'ALLOWED_PREFIX' src/2pny-update-manager-0.3.6.py
           grep -Fq 'navigator.geolocation' src/aprs-0.3.6.html
+          grep -Fq 'Login APRS-IS' src/aprs-0.3.6.html
+          grep -Fq 'parse_logresp' src/2pny-aprs-0.3.6.py
+          grep -Fq 'retry_unacked' src/2pny-aprs-0.3.6.py
+          grep -Fq 'soam.aprs2.net' src/2pny-aprs-0.3.6.py
+          grep -Fq 'soam.aprs2.net' src/2pny-server-catalog-0.3.1.py
           grep -Fq 'PU2PNY Moderno' src/display-0.3.6.html
           grep -Fq 'RF>NET' src/2pny-display-core-0.3.6.py
   build-arm64:
@@ -180,6 +188,7 @@ jobs:
           go test ./...
           python3 "$GITHUB_WORKSPACE/ci/test-0.2.7-regressions.py"
           python3 "$GITHUB_WORKSPACE/ci/test-0.2.9-live-core.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.6-aprs.py"
           python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-display-status             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-protocol-profiles             rootfs-overlay/usr/local/sbin/2pny-update-manager             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect
           bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-network-core rootfs-overlay/usr/local/sbin/2pny-wifi-profiles rootfs-overlay/usr/local/sbin/2pny-auto-maintenance rootfs-overlay/usr/local/sbin/2pny-mdns-guard rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns rootfs-overlay/usr/local/sbin/2pny-mode-apply
           grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.6-alpha"' src/2pnyd/main.go
@@ -210,6 +219,11 @@ jobs:
           grep -Fq 'protocol-profiles.json' rootfs-overlay/usr/local/sbin/2pny-protocol-profiles
           grep -Fq 'ALLOWED_PREFIX' rootfs-overlay/usr/local/sbin/2pny-update-manager
           grep -Fq 'navigator.geolocation' rootfs-overlay/usr/share/2pny/aprs.html
+          grep -Fq 'Login APRS-IS' rootfs-overlay/usr/share/2pny/aprs.html
+          grep -Fq 'parse_logresp' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'retry_unacked' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'soam.aprs2.net' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'soam.aprs2.net' rootfs-overlay/usr/local/sbin/2pny-server-catalog
           grep -Fq 'function operation' rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
           grep -Fq 'id="dmrEssid"' rootfs-overlay/usr/share/2pny/protocols.html
           grep -Fq 'id="bmApiKey"' rootfs-overlay/usr/share/2pny/protocols.html
@@ -235,6 +249,8 @@ jobs:
             /usr/local/sbin/2pny-update-manager
             /usr/local/sbin/2pny-station-worker
             /usr/local/sbin/2pny-display-core
+            /usr/local/sbin/2pny-aprs
+            /usr/local/sbin/2pny-server-catalog
             /usr/share/2pny/wizard.html
             /usr/share/2pny/dashboard.html
             /usr/share/2pny/internet.html
@@ -270,6 +286,7 @@ jobs:
           tar -tzf "$BUNDLE" > "$CONTENTS"
           grep -Fxq 'payload/usr/local/bin/2pnyd' "$CONTENTS"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.6-features.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.6-aprs.py"
 
       - name: Build ARM64 image
         working-directory: legacy-source/2pny-os
@@ -341,7 +358,7 @@ jobs:
           - Wi-Fi: corrige o erro `paused: unbound variable`, reforça handoff AP→cliente, mantém Rede Wi‑Fi 1/2 no painel e permite SSID manual;
           - DNS/rota: DNS efetivo por interface ativa e classificação Melhor opção/Bom/Ruim/Péssimo;
           - UI: feedback global de operações, exemplos genéricos/Radio ID, tradução PT/EN/ES ampliada e navegação pós-provisionamento sem retorno forçado ao wizard;
-          - APRS: localização somente mediante permissão do navegador, com fallback manual; toast global preservado;
+          - APRS: corrige envio/recebimento de mensagens APRS-IS com login verificado, fila persistente, ACK/REJ, retry limitado, deduplicação, diagnóstico de RX/TX/erro e pool regional sul-americano; localização assistida e toast global permanecem;
           - D-Star: configuração gerada no formato/seções nativos do F4FXL DStarGateway e status de link separado de processo ativo;
           - YSF: nome do refletor compatível com o catálogo do YSFGateway e runtime acompanha confirmação/falha por polls;
           - perfis: cada protocolo pode manter frequência/rede próprias e ser ativado transacionalmente;
@@ -355,7 +372,7 @@ jobs:
           Validação:
           - source tests, testes determinísticos 0.3.6 e validação VPS não substituem hardware;
           - build ARM64, XZ, SHA-256 e validação estrutural são gates da publicação;
-          - Wi-Fi real, D-Star RF↔rede, YSF RF↔rede, perfis, aliases DMR 01/02, displays e update no Raspberry Pi continuam requerendo HW PASS.
+          - Wi-Fi real, D-Star RF↔rede, YSF RF↔rede, perfis, aliases DMR 01/02, APRS envio/recebimento, displays e update no Raspberry Pi continuam requerendo HW PASS.
           EOF
 
       - name: Publish prerelease
