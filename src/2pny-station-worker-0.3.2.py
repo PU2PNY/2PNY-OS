@@ -211,7 +211,18 @@ def telemetry(previous):
     try:freq=float(Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq").read_text())/1000
     except Exception:pass
     mem={l.split(":")[0]:int(l.split()[1]) for l in Path("/proc/meminfo").read_text().splitlines()}
+    try:load1,load5,load15=os.getloadavg()
+    except Exception:load1=load5=load15=0.0
+    throttled_raw=None;throttled_active=None
+    try:
+        p=subprocess.run(["vcgencmd","get_throttled"],text=True,capture_output=True,timeout=1)
+        m=re.search(r"0x([0-9A-Fa-f]+)",p.stdout or "")
+        if m:
+            throttled_raw=int(m.group(1),16);throttled_active=bool(throttled_raw & 0xF)
+    except Exception:pass
     info={"cpu_percent":round(usage,1),"temperature":round(temp,1),"cpu_frequency_mhz":round(freq,0),
+          "load_1":round(load1,2),"load_5":round(load5,2),"load_15":round(load15,2),
+          "throttled_raw":throttled_raw,"throttled_active":throttled_active,
           "memory_used_mb":round((mem["MemTotal"]-mem["MemAvailable"])/1024),
           "memory_total_mb":round(mem["MemTotal"]/1024),"network":network_telemetry()}
     try:
