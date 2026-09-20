@@ -76,3 +76,32 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Imagem: `PU2PNY-OS-0.3.5-alpha-arm64.img.xz`.
 - SHA-256: `616d6089e2e699187e577104b070e757698d6f27a0917b5afb4d27ecaec1f5a9`.
 - Validação permanece **SW**; D-Star/YSF/Wi-Fi/Nextion e demais mudanças físicas ainda precisam novo ciclo HW.
+
+
+## 2026-09-20 — feedback HW da 0.3.5 e abertura da 0.3.6-alpha
+
+### Governança
+- Criado backup `backup/0.3.5-hw-feedback-20260920` no commit `98511695e64f0960f4918370c61b11e0f7ab6bb5`.
+- Criada branch de trabalho `pu2pny-os-0.3.6-alpha`.
+- DMR funcional da 0.3.5 permanece baseline e não pode regredir.
+- O usuário determinou que as novas funções deste feedback devem entrar **nesta própria versão corretiva**, e não ser adiadas por conveniência. Registrado como **REL-004**.
+
+### Feedback físico registrado — ainda não marcado como corrigido
+- AP e primeiro acesso abriram por `pu2pny.local/wizard`, porém o captive portal deve tentar abrir/oferecer automaticamente o painel quando o cliente suportar.
+- Handoff inicial AP→Wi‑Fi falhou e depois a rede apareceu conectada sem tempo de convergência claro.
+- Preparação de hardware foi aprovada; exemplos de indicativo/ID precisam ser genéricos e o rótulo deve usar Radio ID quando aplicável.
+- Tradução precisa ser integral ao idioma selecionado.
+- Segunda rede apresentou erro de script `paused: unbound variable`; configuração detalhada redirecionou indevidamente ao primeiro acesso.
+- Troca de DNS acumulou Google + Cloudflare em `DNS efetivo`; qualquer operação precisa feedback visual e retorno ao contexto.
+- Rota/diagnóstico devem ser compreensíveis para leigos e usar classificação Melhor/Bom/Ruim/Péssimo.
+- APRS precisa localização assistida por permissão e toast global de mensagem.
+- Displays precisam layout profissional por capacidade, preservando estados standby/RX/TX.
+- Timezone falhou com `Access denied`.
+- Manutenção exibiu runner interno sem Última execução/Próxima elegível.
+- Expert não apresentou Estado Ao Vivo e atalhos RF/Protocolo levaram à configuração básica.
+- Histórico/Última atividade precisam atalhos opcionais QRZ/RadioID quando URL válida.
+- D-Star mostrou conectado na UI, mas não houve tráfego RF↔rede e a troca de módulo no rádio não refletiu no painel; voz de conexão ausente.
+- YSF recebeu RF local, porém não encaminhou/recebeu tráfego da rede.
+- Perfis independentes por protocolo passam a ser requisito para RF/rede.
+- Update deve verificar repositório oficial, permitir instalação segura, backup opcional, rollback e downgrade.
+- Correções compartilhadas devem ser globais.
