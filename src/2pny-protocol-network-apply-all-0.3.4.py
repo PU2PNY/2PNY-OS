@@ -133,7 +133,10 @@ def mqtt_preflight():
         raise RuntimeError("Pré-verificação MQTT falhou antes de alterar o rádio: "+msg)
 
 # Do not touch a working RF state if its required local event bus is not ready.
-mqtt_preflight()
+try:
+    mqtt_preflight()
+except Exception as exc:
+    die(str(exc),4)
 
 # One RF protocol + one matching network at a time. RF settings are preserved.
 setsec(cp,"D-Star",{"Enable":"1" if proto=="DSTAR" else "0","Module":module if proto=="DSTAR" else cp.get("D-Star","Module",fallback="C")})
