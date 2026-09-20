@@ -2032,7 +2032,14 @@ func updateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		if json.NewDecoder(http.MaxBytesReader(w,r.Body,16<<10)).Decode(&in)!=nil { writeJSON(w,400,map[string]any{"error":"pedido de atualização inválido"});return }
 		var cmd *exec.Cmd
 		switch in.Action {
+		case "download":
+			cmd=exec.Command("/usr/local/sbin/2pny-update-manager","download",in.URL,in.SHA256,in.Version)
+		case "install-staged":
+			keep:="0";if in.KeepBackup { keep="1" }
+			cmd=exec.Command("/usr/local/sbin/2pny-update-manager","install-staged",in.SHA256,in.Version,keep)
 		case "install":
+			// Compatibility with older UI: the manager still stages and verifies
+			// before touching the live system.
 			keep:="0";if in.KeepBackup { keep="1" }
 			cmd=exec.Command("/usr/local/sbin/2pny-update-manager","install",in.URL,in.SHA256,in.Version,keep)
 		case "rollback": cmd=exec.Command("/usr/local/sbin/2pny-update-manager","rollback",in.Backup)
