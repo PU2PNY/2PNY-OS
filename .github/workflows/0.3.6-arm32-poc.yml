@@ -1,0 +1,34 @@
+name: Inspect PU2PNY ARM32 builder
+
+on:
+  push:
+    branches: [ exp/0.3.6-arm32-poc-20260920 ]
+    paths:
+      - '.github/workflows/0.3.6-arm32-poc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-builder:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+      - name: Restore builder and inspect architecture anchors
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          cd legacy-source/2pny-os
+          echo '=== builder/build-image.sh architecture anchors ==='
+          grep -nE 'arm64|armhf|GOARCH|GOARM|raspios|BASE|bookworm|ARCH|qemu' builder/build-image.sh || true
+          echo '=== builder tree ==='
+          find builder -maxdepth 2 -type f -print | sort
+          echo '=== relevant architecture references ==='
+          grep -RniE 'GOARCH|GOARM|arm64|armhf|raspios.*bookworm' builder src rootfs-overlay 2>/dev/null | head -n 300 || true
