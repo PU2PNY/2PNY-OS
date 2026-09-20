@@ -28,6 +28,8 @@ jobs:
           cd legacy-source/2pny-os
           echo '=== builder/build-image.sh architecture anchors ==='
           grep -nE 'arm64|armhf|GOARCH|GOARM|raspios|BASE|bookworm|ARCH|qemu' builder/build-image.sh || true
+          echo '=== full builder ==='
+          sed -n '1,220p' builder/build-image.sh
           echo '=== builder tree ==='
           find builder -maxdepth 2 -type f -print | sort
           echo '=== relevant architecture references ==='
