@@ -23,7 +23,7 @@ const (
 	configFile            = "/var/lib/2pny/config.json"
 	provisionedFile       = "/var/lib/2pny/provisioned"
 	listenAddr            = "0.0.0.0:80"
-	appVersion            = "0.3.4-alpha"
+	appVersion            = "0.3.5-alpha"
 	hardwareFile          = "/var/lib/2pny/hardware.json"
 	hardwareProbeFile     = "/var/lib/2pny/hardware-probe.json"
 	hardwareScanStateFile = "/run/2pny/hardware-scan-state.json"
@@ -1641,6 +1641,16 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 	if b, err := os.ReadFile(filepath.Join(dataDir, "network-radio.json")); err == nil {
 		_ = json.Unmarshal(b, &networkRuntime)
 	}
+	// Runtime gateway state (for example a DMR XLX module selected by TG4002)
+	// overrides only live fields. The saved preset remains untouched.
+	if b, err := os.ReadFile("/run/2pny/network-runtime.json"); err == nil {
+		var rt map[string]any
+		if json.Unmarshal(b, &rt) == nil {
+			for k, v := range rt {
+				networkRuntime[k] = v
+			}
+		}
+	}
 	if _, ok := networkRuntime["server_name"]; !ok && cfg.ServerName != "" {
 		networkRuntime["server_name"] = cfg.ServerName
 	}
@@ -1714,6 +1724,11 @@ func protocolStatusHandler(w http.ResponseWriter, r *http.Request) {
 		_ = json.Unmarshal(b, &cfg)
 	}
 	nr := readPublicJSON(filepath.Join(dataDir, "network-radio.json"))
+	if rt := readPublicJSON("/run/2pny/network-runtime.json"); len(rt) > 0 {
+		for k, v := range rt {
+			nr[k] = v
+		}
+	}
 	p := strings.ToUpper(cfg.Protocol)
 	active := false
 	gateway := ""
