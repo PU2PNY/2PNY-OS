@@ -27,6 +27,8 @@
 <div class="field hidden" id="dmrEssentials">
  <div class="formline"><div><label>Time Slot</label><select id="slot"><option value="2">TS2</option><option value="1">TS1</option></select></div>
  <div><label>Color Code</label><input id="cc" type="number" min="0" max="15" value="1"></div></div>
+ <div class="field" id="dmrAliasWrap"><label>Identificação do hotspot / rádio</label><select id="dmrEssid"><option value="">Sem sufixo / compatibilidade</option></select><small class="muted" id="dmrAliasHint">Rádio 1 usa 01, Rádio 2 usa 02. O Radio ID do seu rádio continua com 7 dígitos.</small></div>
+ <div class="field hidden" id="bmApiWrap"><label>BrandMeister API Key (opcional)</label><div class="formline"><div><input id="bmApiKey" type="password" autocomplete="new-password" placeholder="Cole a API Key do BrandMeister"></div><div class="actions"><button class="btn" id="bmApiSave" type="button">Salvar API Key</button><button class="btn danger" id="bmApiRemove" type="button">Remover API Key</button></div></div><small class="muted">A API Key é usada para recursos de gerenciamento BrandMeister e não substitui a Hotspot Security. O PU2PNY não pede API Secret.</small><p id="bmApiState" class="statusmsg"></p></div>
 </div>
 <details class="advanced">
  <summary>Avançado — endereço, porta e credenciais</summary>
@@ -68,6 +70,7 @@ var definitions={
  POCSAG:{label:'POCSAG / DAPNET',familyLabel:'Rede POCSAG',serverLabel:'Servidor',help:'Escolha o servidor DAPNET e informe a AuthKey em Avançado.',families:[['DAPNET','DAPNET']]}
 };
 var protocols=['DSTAR','DMR','YSF','P25','NXDN','POCSAG'],selected='DSTAR',catalog=[],cfg={},current={};
+for(var ri=1;ri<=99;ri++){var ro=document.createElement('option');ro.value=String(ri).padStart(2,'0');ro.textContent='Rádio '+ri+' ('+ro.value+')';PNY.q('dmrEssid').appendChild(ro)}
 
 function familyText(kind){var d=definitions[selected]||{},x=(d.families||[]).find(function(a){return a[0]===kind});return x?x[1]:kind}
 function fillModules(items,def){
@@ -109,8 +112,15 @@ function serverChanged(){
  PNY.q('dmrEssentials').classList.toggle('hidden',selected!=='DMR');
  var needPass=selected==='DMR' || selected==='POCSAG';
  PNY.q('passwordWrap').classList.toggle('hidden',!needPass);
+ var kind=PNY.q('family').value||x.kind||'';
+ PNY.q('bmApiWrap').classList.toggle('hidden',!(selected==='DMR'&&kind==='BrandMeister'));
+ if(selected==='DMR'){
+   var base=String(cfg.dmr_id||''),suffix=PNY.q('dmrEssid').value;
+   PNY.q('dmrAliasHint').textContent=(kind==='BrandMeister'&&/^\d{7}$/.test(base)&&suffix)?('ID efetivo BrandMeister: '+base+suffix+' · o rádio continua usando '+base+'. Use frequência diferente em cada hotspot.'):('Rádio 1 usa 01, Rádio 2 usa 02. O Radio ID do rádio permanece com 7 dígitos.');
+ }
  PNY.q('passwordLabel').textContent=x.password_label||(selected==='POCSAG'?'DAPNET AuthKey':'Senha / Hotspot Security');
  PNY.q('advancedHint').textContent=selected==='DSTAR'?'As portas de REF/DPlus, XRF/DExtra, DCS e XLX são gerenciadas pelo DStarGateway quando aplicável; por isso não exibimos porta 0 como se fosse uma configuração do usuário.':'Endereço e porta vieram da lista local. Edite apenas quando usar um servidor personalizado.'
+ if(selected==='DMR'&&kind==='BrandMeister')loadBmApi();
 }
 async function loadCatalog(refresh){
  PNY.q('result').textContent=refresh?'Atualizando lista pública...':'Carregando lista local...';
@@ -140,16 +150,33 @@ async function load(){
  PNY.q('stModule').textContent=current.module||cfg.xlx_module||'—';
  PNY.q('stGateway').textContent=current.gateway||'—';
  PNY.q('stAddress').textContent=current.address||cfg.server_address||'—';
+ PNY.q('dmrEssid').value=cfg.essid||'';
+ PNY.q('slot').value=cfg.dmr_slot||'2';PNY.q('cc').value=cfg.color_code==null?1:cfg.color_code;
  var p=String(current.protocol||cfg.protocol||'DSTAR').toUpperCase();if(!definitions[p])p='DSTAR';choose(p)
 }
 PNY.q('tabs').innerHTML=protocols.map(function(p){return '<button class="btn" data-p="'+p+'">'+definitions[p].label+'</button>'}).join('');
 PNY.q('tabs').querySelectorAll('button').forEach(function(b){b.onclick=function(){choose(b.dataset.p)}});
-PNY.q('family').onchange=renderServers;PNY.q('server').onchange=serverChanged;PNY.q('reload').onclick=function(){loadCatalog(true)};
+PNY.q('family').onchange=renderServers;PNY.q('server').onchange=serverChanged;PNY.q('dmrEssid').onchange=serverChanged;PNY.q('reload').onclick=function(){loadCatalog(true)};
+
+async function loadBmApi(){
+ if(selected!=='DMR'||PNY.q('family').value!=='BrandMeister')return;
+ try{var d=await PNY.getj('/api/brandmeister/api-key');PNY.q('bmApiState').textContent=d.configured?'API Key configurada. O valor não é exibido por segurança.':'API Key não configurada.';PNY.q('bmApiKey').placeholder=d.configured?'API Key já configurada — cole outra somente para substituir':'Cole a API Key do BrandMeister'}catch(e){PNY.q('bmApiState').textContent='Não foi possível consultar o estado da API Key.'}
+}
+PNY.q('bmApiSave').onclick=async function(){
+ var key=PNY.q('bmApiKey').value.trim();if(!key){PNY.q('bmApiState').textContent='Cole a API Key antes de salvar.';return}
+ var op=PNY.operation('Salvando API BrandMeister','Guardando a chave em armazenamento privado. O rádio não será reiniciado...');
+ try{var d=await PNY.getj('/api/brandmeister/api-key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',api_key:key})},12000);PNY.q('bmApiKey').value='';PNY.q('bmApiState').textContent=d.configured?'API Key configurada.':'API Key não configurada.';op.done('API Key salva sem reiniciar MMDVMHost ou DMRGateway.')}catch(e){PNY.q('bmApiState').textContent=e.message;op.error(e.message)}
+};
+PNY.q('bmApiRemove').onclick=async function(){
+ if(!confirm('Remover a API Key BrandMeister salva? Isto não altera a Hotspot Security.'))return;
+ var op=PNY.operation('Removendo API BrandMeister','Removendo somente a chave de gerenciamento...');
+ try{await PNY.getj('/api/brandmeister/api-key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remove'})},12000);PNY.q('bmApiKey').value='';PNY.q('bmApiState').textContent='API Key não configurada.';op.done('API Key removida sem reiniciar o rádio.')}catch(e){PNY.q('bmApiState').textContent=e.message;op.error(e.message)}
+};
 
 var profileCache={};
 function hzToMHz(v){return v?(Number(v)/1000000).toFixed(6).replace(/0+$/,'').replace(/\.$/,''):''}
 async function loadProfile(proto){
- try{var d=await PNY.getj('/api/protocol/profiles'),ps=d.profiles||{};profileCache=ps;var p=ps[proto]||{};if(!p.rx_hz){var c=cfg||{};if(String(c.protocol||'').toUpperCase()===proto)p={rx_hz:c.rx_hz,tx_hz:c.tx_hz,use_mode:c.use_mode}}PNY.q('profileMode').value=p.use_mode||'hotspot';PNY.q('profileRx').value=hzToMHz(p.rx_hz);PNY.q('profileTx').value=hzToMHz(p.tx_hz||p.rx_hz);syncProfileMode();PNY.q('profileResult').textContent=p.rx_hz?'Perfil salvo para '+definitions[proto].label+'.':'Configure e salve a frequência deste protocolo.'}catch(e){PNY.q('profileResult').textContent='Perfil ainda não disponível.'}
+ try{var d=await PNY.getj('/api/protocol/profiles'),ps=d.profiles||{};profileCache=ps;var p=ps[proto]||{};if(!p.rx_hz){var c=cfg||{};if(String(c.protocol||'').toUpperCase()===proto)p={rx_hz:c.rx_hz,tx_hz:c.tx_hz,use_mode:c.use_mode,essid:c.essid}}if(proto==='DMR'&&p.essid!==undefined)PNY.q('dmrEssid').value=p.essid||'';PNY.q('profileMode').value=p.use_mode||'hotspot';PNY.q('profileRx').value=hzToMHz(p.rx_hz);PNY.q('profileTx').value=hzToMHz(p.tx_hz||p.rx_hz);syncProfileMode();PNY.q('profileResult').textContent=p.rx_hz?'Perfil salvo para '+definitions[proto].label+'.':'Configure e salve a frequência deste protocolo.'}catch(e){PNY.q('profileResult').textContent='Perfil ainda não disponível.'}
 }
 function syncProfileMode(){PNY.q('profileTxWrap').classList.toggle('hidden',PNY.q('profileMode').value!=='repeater');if(PNY.q('profileMode').value!=='repeater')PNY.q('profileTx').value=PNY.q('profileRx').value}
 PNY.q('profileMode').onchange=syncProfileMode;PNY.q('profileRx').oninput=function(){if(PNY.q('profileMode').value!=='repeater')PNY.q('profileTx').value=PNY.q('profileRx').value};
@@ -158,7 +185,7 @@ function profileBody(){
  return {action:'save',protocol:selected,rx:PNY.q('profileRx').value,tx:PNY.q('profileTx').value,use_mode:PNY.q('profileMode').value,
   server_name:PNY.q('serverName').value.trim()||x.name||'',server_address:PNY.q('address').value.trim()||x.address||'',server_port:Number(PNY.q('port').value||x.port||0),
   network_kind:PNY.q('family').value||x.kind||'',module:PNY.q('moduleWrap').classList.contains('hidden')?'':PNY.q('module').value,
-  color_code:Number(PNY.q('cc').value||1),dmr_slot:PNY.q('slot').value,password:PNY.q('password').value}
+  color_code:Number(PNY.q('cc').value||1),dmr_slot:PNY.q('slot').value,essid:selected==='DMR'?PNY.q('dmrEssid').value:'',password:PNY.q('password').value}
 }
 PNY.q('saveProfile').onclick=async function(){var op=PNY.operation('Salvando perfil','Validando frequência e rede do protocolo...');try{await PNY.getj('/api/protocol/profiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(profileBody())},15000);PNY.q('profileResult').textContent='Perfil salvo.';op.done('Perfil salvo sem reiniciar o rádio.');loadProfile(selected)}catch(e){PNY.q('profileResult').textContent=e.message;op.error(e.message)}};
 PNY.q('activateProfile').onclick=async function(){var op=PNY.operation('Ativando perfil '+definitions[selected].label,'Aplicando RF e rede de forma transacional...');try{await PNY.getj('/api/protocol/profiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'activate',protocol:selected})},70000);PNY.q('profileResult').textContent='Perfil ativado.';op.done('Perfil aplicado. RF e gateway validados localmente.');setTimeout(load,1000)}catch(e){PNY.q('profileResult').textContent=e.message;op.error(e.message)}};
@@ -170,7 +197,7 @@ PNY.q('save').onclick=async function(){
   server_port:Number(PNY.q('port').value||x.port||0),
   network_kind:PNY.q('family').value||x.kind||'',
   module:PNY.q('moduleWrap').classList.contains('hidden')?'':PNY.q('module').value,
-  color_code:Number(PNY.q('cc').value||1),dmr_slot:PNY.q('slot').value,password:PNY.q('password').value
+  color_code:Number(PNY.q('cc').value||1),dmr_slot:PNY.q('slot').value,essid:selected==='DMR'?PNY.q('dmrEssid').value:'',password:PNY.q('password').value
  };
  PNY.q('save').disabled=true;var op=PNY.operation('Aplicando protocolo','Validando gateway, MMDVMHost e rede antes de alterar...');PNY.q('result').textContent='Validando e aplicando somente a mudança necessária...';
  try{
