@@ -135,7 +135,14 @@ echo '[11/15] dedicated pages and APRS'
 for page in internet hotspot protocols history aprs display system expert; do test -s "$ROOT/usr/share/2pny/$page.html"; done
 grep -Fq 'traceroute' "$ROOT/usr/local/sbin/2pny-netdiag"
 grep -Fq 'APRS-IS' "$ROOT/usr/share/2pny/aprs.html"
-grep -Fq 'brazil.aprs2.net' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'Login APRS-IS' "$ROOT/usr/share/2pny/aprs.html"
+grep -Fq 'outboxPending' "$ROOT/usr/share/2pny/aprs.html"
+grep -Fq 'parse_logresp' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'retry_unacked' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'login_unverified' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'TCP_NODELAY' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'soam.aprs2.net' "$ROOT/usr/local/sbin/2pny-aprs"
+grep -Fq 'soam.aprs2.net' "$ROOT/usr/local/sbin/2pny-server-catalog"
 grep -Fq 'Google Time' "$ROOT/usr/share/2pny/system.html"
 
 echo '[12/15] no leaked user/runtime state'
@@ -269,6 +276,9 @@ grep -Fq 'Gerenciada automaticamente' "$ROOT/usr/share/2pny/protocols.html"
 grep -Fq 'quickProfiles' "$ROOT/usr/share/2pny/hotspot.html"
 ! grep -Fq '/wizard?step=3' "$ROOT/usr/share/2pny/hotspot.html"
 grep -Fq 'navigator.geolocation' "$ROOT/usr/share/2pny/aprs.html"
+grep -Fq 'Mensagem preservada na fila' "$ROOT/usr/share/2pny/aprs.html"
+grep -Fq 'queued_for_send' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'queued_for_send'
+grep -Fq 'soam.aprs2.net' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'soam.aprs2.net'
 grep -Fq 'qrz.com/db/' "$ROOT/usr/share/2pny/history.html"
 grep -Fq 'radioid.net/api/dmr/user/' "$ROOT/usr/share/2pny/history.html"
 grep -Fq 'qrz.com/db/' "$ROOT/usr/share/2pny/dashboard.html"
