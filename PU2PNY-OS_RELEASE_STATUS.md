@@ -1,9 +1,9 @@
 # PU2PNY-OS — RELEASE STATUS
 
-**Branch de trabalho:** `pu2pny-os-0.3.4-alpha`  
-**Base preservada:** `pu2pny-os-0.3.3-alpha`  
-**Backup criado antes das mudanças:** `backup/0.3.3-hw-feedback-20260919`  
-**Data do último feedback físico incorporado:** 2026-09-19  
+**Branch de trabalho:** `pu2pny-os-0.3.5-alpha`  
+**Base preservada:** `pu2pny-os-0.3.4-alpha`  
+**Backup criado antes das mudanças:** `backup/0.3.4-hw-feedback-20260920`  
+**Data do último feedback físico incorporado:** 2026-09-20  
 **Estado global:** ALPHA / correção. **Não PROD.**
 
 ## Baseline que não pode regredir
@@ -106,3 +106,26 @@ A causa raiz do erro observado ao trocar protocolos permanece classificada como 
 
 ### Estado da 0.3.5-alpha
 Branch criada a partir da 0.3.4-alpha publicada, com backup `backup/0.3.4-hw-feedback-20260920`. **Ainda não liberar imagem** até Rede/Wizard → DMR → D-Star → YSF → UI/Display/Update passarem pelos gates SW/VPS aplicáveis.
+
+
+## Build 0.3.5-alpha publicado
+
+**Estado do artefato:** SW PASS / Alpha para teste físico. **Não PROD.**
+
+- GitHub Actions run `35513524374`: source PASS.
+- Overlay 0.3.4 restaurado antes do overlay 0.3.5: PASS.
+- Validação staged: PASS.
+- Build ARM64: PASS.
+- Normalização + SHA-256: PASS.
+- Validação estrutural da imagem: PASS.
+- Publicação da prerelease `v0.3.5-alpha`: PASS.
+- Imagem: `PU2PNY-OS-0.3.5-alpha-arm64.img.xz`.
+- Tamanho comprimido: 579582048 bytes.
+- SHA-256 da imagem: `616d6089e2e699187e577104b070e757698d6f27a0917b5afb4d27ecaec1f5a9`.
+- Commit do artefato: `77eb8322b66944f703273f9e8263ec39952d4d5d`.
+
+### O que o CI comprova
+Código Go/Python/Bash/JS válido nos gates definidos, overlay completo, build ARM64, integridade XZ, checksum, montagem/validação estrutural e publicação.
+
+### O que continua exigindo HW
+Wi-Fi pós-save/reboot, troca entre duas redes, mDNS após handoff, DMR módulo B/C no painel em tempo real, D-Star, YSF, Nextion PU2PNY Moderno, contagem TOT 10→0, APRS toast e atualização/manutenção no Raspberry Pi real. Nenhum desses itens foi promovido automaticamente para HW PASS por causa do CI.
