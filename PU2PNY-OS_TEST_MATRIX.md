@@ -55,3 +55,24 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-SW-034-007 | imagem ARM64 | xz íntegro, SHA-256, montagem e APIs 0.3.4 | PASS | SW |
 
 **Regra:** PASS nesses casos permite distribuir somente uma **imagem alpha para teste**. Não converte TEST-NET/PROTO/DISPLAY de HW para PASS.
+
+## Casos adicionados para 0.3.5-alpha
+
+| ID | Caso de teste | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|
+| TEST-WIZ-003 / WIZ-003 | etapa 100% válida | contador 5 s e avanço automático; botão manual disponível | PENDENTE | SW/HW |
+| TEST-NET-009 / NET-009 | salvar 2 Wi-Fi e alternar | troca rápida, associação+IPv4, rollback sem refazer wizard | PENDENTE | HW |
+| TEST-NET-010 / NET-010 | scan de canais | canal/freq/sinal e ocupação sem quebrar AP/Ethernet | PENDENTE | HW |
+| TEST-NET-011 / NET-011 | rota ativa | rótulo Ótima/Boa/Ruim + gateway/destino/hops coerentes | PENDENTE | SW/HW |
+| TEST-PROTO-007 / PROTO-007 | XLX: trocar TG suportado e falar | link muda e áudio RF→XLX passa; TG6 continua funcionando | FAIL atual | HW |
+| TEST-LIVE-006 / LIVE-006 | Ao Vivo/Histórico | tabela rica compartilhada, sem dados inventados | PENDENTE | SW/HW |
+| TEST-LIVE-007 / LIVE-007 | standby | radar leve e sem "Aguardando" duplicado | PENDENTE | SW/HW |
+| TEST-APRS-002 / APRS-002 | mensagem recebida | toast 5 s clicável → APRS | PENDENTE | SW/HW |
+| TEST-DISPLAY-007 / DISPLAY-007 | layout PU2PNY | opção própria sem gravar HMI/TFT | PENDENTE | SW/HW |
+| TEST-DISPLAY-008 / DISPLAY-008 | splash/RX/TX | conteúdo moderno com identidade e fallback limpo | PENDENTE | HW |
+| TEST-RF-011 / RF-011 | TX chega a 170 s | contagem 10→0 em web/display e corte nativo aos 180 s | PENDENTE | HW |
+| TEST-UI-006 / UI-006 | timezone | relógio, timezone atual e seletor coerentes | PENDENTE | SW/HW |
+| TEST-PERF-002 / PERF-002 | temperatura/idle | CPU/load/freq/throttling observáveis; sem polling agressivo | PENDENTE | HW |
+| TEST-UPDATE-001 / UPDATE-001 | atualização falha/interrompe | nunca congela progresso; preserva versão e informa rollback | PENDENTE | SW/VPS/HW |
+| TEST-UPDATE-002 / UPDATE-002 | manutenção | manual/auto, baixa prioridade, sem full-upgrade/RF mutation | PENDENTE | SW/VPS |
+| TEST-UI-005 / UI-005 | Trocar rede após provisionar | retorna ao painel sem repetir HW/RF/conclusão | FAIL atual | HW |
