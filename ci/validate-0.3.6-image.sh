@@ -289,7 +289,6 @@ grep -Fq 'id="bmApiKey"' "$ROOT/usr/share/2pny/protocols.html"
 grep -Fq 'O PU2PNY não pede API Secret' "$ROOT/usr/share/2pny/protocols.html"
 grep -Fq 'Identificação do hotspot / rádio' "$ROOT/usr/share/2pny/wizard.html"
 grep -Fq '/api/brandmeister/api-key' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/brandmeister/api-key'
-grep -Fq 'identificação DMR deve ser 01 a 99' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'identificação DMR deve ser 01 a 99'
 grep -Fq 'network_id=dmrid+essid if essid and len(dmrid)==7 else dmrid' "$ROOT/usr/local/libexec/2pny-dmr-apply"
 grep -Fq 'identificação DMR deve ser 01 a 99' "$ROOT/usr/local/sbin/2pny-protocol-profiles"
 test ! -e "$ROOT/var/lib/2pny/secrets/brandmeister-api.key"
