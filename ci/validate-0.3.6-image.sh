@@ -283,6 +283,16 @@ grep -Fq 'function operation' "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
 grep -Fq 'MutationObserver' "$ROOT/usr/share/2pny/ui-language.js"
 grep -Fq 'RF>NET' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'NET>RF' "$ROOT/usr/local/sbin/2pny-display-core"
+# 0.3.6: BrandMeister personal-hotspot aliases and API-key isolation.
+grep -Fq 'id="dmrEssid"' "$ROOT/usr/share/2pny/protocols.html"
+grep -Fq 'id="bmApiKey"' "$ROOT/usr/share/2pny/protocols.html"
+grep -Fq 'O PU2PNY não pede API Secret' "$ROOT/usr/share/2pny/protocols.html"
+grep -Fq 'Identificação do hotspot / rádio' "$ROOT/usr/share/2pny/wizard.html"
+grep -Fq '/api/brandmeister/api-key' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/brandmeister/api-key'
+grep -Fq 'identificação DMR deve ser 01 a 99' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'identificação DMR deve ser 01 a 99'
+grep -Fq 'network_id=dmrid+essid if essid and len(dmrid)==7 else dmrid' "$ROOT/usr/local/libexec/2pny-dmr-apply"
+grep -Fq 'identificação DMR deve ser 01 a 99' "$ROOT/usr/local/sbin/2pny-protocol-profiles"
+test ! -e "$ROOT/var/lib/2pny/secrets/brandmeister-api.key"
 # Captive portal/fallback endpoints remain present; automatic popup itself is client-controlled.
 for endpoint in '/generate_204' '/hotspot-detect.html' '/connecttest.txt' '/ncsi.txt'; do
   strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq "$endpoint"
