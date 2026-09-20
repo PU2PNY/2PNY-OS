@@ -165,3 +165,13 @@ A 0.3.6-alpha só pode ser publicada para teste físico depois que os novos caso
 - Hotspot Security continua sendo a credencial de conexão ao master BrandMeister; API Key não será usada como senha DMR.
 - O helper DMR fisicamente validado não deve ser reescrito para esta função: a implementação deve reutilizar o suporte ESSID/alias já existente e limitar a mudança ao contrato UI/backend/segredo.
 - Estes itens só podem ser marcados HW PASS depois de novo teste físico DMR com pelo menos `01` e `02`.
+
+### Implementação/evidência — alias DMR e API BrandMeister
+- Código da 0.3.6 implementa seleção `Rádio 1 (01)` … `Rádio 99 (99)` no wizard e na página Protocolos; o perfil DMR preserva o alias escolhido.
+- O helper DMR fisicamente aprovado da linha 0.2.9/0.3.5 **não foi reescrito**: o teste determinístico comprovou `7240000 + 01 → 724000001` e `7240000 + 02 → 724000002`, mantendo `Id=7240000` no MMDVMHost.
+- Backend rejeita alias fora de `01..99` antes do apply.
+- BrandMeister API Key ganhou endpoint dedicado `/api/brandmeister/api-key`, armazenamento privado `0600` e resposta somente configurada/não configurada. O handler não executa `systemctl` nem reinicia MMDVMHost/DMRGateway.
+- Hotspot Security permanece separada e obrigatória para a conexão BrandMeister.
+- Evidência VPS em `6c95904614064340d97917e71a361af8cc2d7d4c`: Go compile PASS, Python/JS/Bash PASS e **12/12 testes determinísticos PASS**.
+- Ainda não é HW PASS: Rádio 1/2 e API devem ser retestados no Raspberry Pi/MMDVM após a imagem ARM64 publicada.
+
