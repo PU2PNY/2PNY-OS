@@ -110,7 +110,7 @@ class T(unittest.TestCase):
         ini=files["p25/P25Gateway.ini"];host=files["mmdvm/MMDVM-Host.ini"]
         self.assertIn("[General]",ini);self.assertIn("[Network]",ini)
         self.assertIn("RptPort=32010",ini);self.assertIn("LocalPort=42020",ini)
-        self.assertIn("Static=25",ini)
+        self.assertIn("Static=724",ini)
         self.assertIn("Enable = 1",host.replace("Enable=1","Enable = 1"))
         self.assertIn("NETWORK_APPLY_OK protocol=P25",out)
 
@@ -200,6 +200,7 @@ class T(unittest.TestCase):
         self.assertIn("rollback",s)
         self.assertIn('cmd=="download"',s);self.assertIn('cmd=="install-staged"',s)
         self.assertIn("progress_percent",s)
+        self.assertLess(s.index('if cmd=="status"'),s.index("fcntl.flock"))
         ui=(ROOT/"src/system-0.3.6.html").read_text()
         self.assertIn("Baixar atualização",ui);self.assertIn("100% completo",ui);self.assertIn("regravar o SD",ui)
 
