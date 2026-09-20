@@ -43,3 +43,10 @@ Nenhum item acima é marcado como "corrigido" neste changelog. A implementação
 
 ### Evidência
 Neste ponto os itens acima estão **implementados em código**. Não são HW PASS até nova instalação/teste no Raspberry Pi + MMDVM + Nextion. DMR permanece baseline de regressão obrigatória.
+
+### Build e publicação 0.3.4-alpha
+- GitHub Actions concluiu validação de fonte, build ARM64, normalização, checksum e validação estrutural final sem erro.
+- Artefato publicado como prerelease `v0.3.4-alpha`.
+- Imagem: `PU2PNY-OS-0.3.4-alpha-arm64.img.xz`.
+- SHA-256 da imagem: `4bc808da8f4c3fc259dd72a66a08e68e1a704b5cf13f754692c9864b40282e2c`.
+- Nível de validação permanece **SW** até novo ciclo físico. DMR/D-Star/YSF/Nextion/Wi-Fi não foram promovidos a HW PASS por causa do CI.
