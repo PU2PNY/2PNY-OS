@@ -23,7 +23,7 @@ const (
 	configFile            = "/var/lib/2pny/config.json"
 	provisionedFile       = "/var/lib/2pny/provisioned"
 	listenAddr            = "0.0.0.0:80"
-	appVersion            = "0.3.5-alpha"
+	appVersion            = "0.3.4-alpha"
 	hardwareFile          = "/var/lib/2pny/hardware.json"
 	hardwareProbeFile     = "/var/lib/2pny/hardware-probe.json"
 	hardwareScanStateFile = "/run/2pny/hardware-scan-state.json"
@@ -688,958 +688,38 @@ func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snap := connectivitySnapshot()
-	writeNetworkConnectState("connecting", "Validando a rede Wi-Fi antes de reiniciar...", in.SSID)
-	keepAP := "0"
-	if in.KeepAP {
-		keepAP = "1"
+	out, err := exec.Command("/usr/local/sbin/2pny-network-switch", "stage", in.SSID, in.Password, in.BSSID).CombinedOutput()
+	msg := strings.TrimSpace(string(out))
+	if err != nil {
+		if msg == "" {
+			msg = "não foi possível salvar o perfil Wi-Fi"
+		}
+		writeNetworkConnectState("error", msg, in.SSID)
+		writeJSON(w, http.StatusBadGateway, map[string]any{"ok": false, "error": msg})
+		return
 	}
-	// Return the HTTP response while the setup AP is still alive. The helper
-	// then performs the real association transactionally, restores the old
-	// link/AP on failure, and only after a proven association do we reboot to
-	// verify that the saved profile survives a normal boot.
-	go func(ssid, password, bssid, keep string) {
-		time.Sleep(900 * time.Millisecond)
-		out, err := exec.Command("/usr/local/sbin/2pny-network-switch", "connect", ssid, password, keep, bssid).CombinedOutput()
-		msg := strings.TrimSpace(string(out))
-		if err != nil {
-			if msg == "" {
-				msg = "não foi possível concluir a associação Wi-Fi"
-			}
-			writeNetworkConnectState("error", msg, ssid)
-			invalidateConnectivityCache()
-			return
-		}
-		invalidateConnectivityCache()
-		c := connectivitySnapshot()
-		if !c.WiFi || (ssid != "" && c.WiFiSSID != ssid) {
-			writeNetworkConnectState("error", "O rádio não permaneceu associado à rede selecionada. A conexão anterior/AP foi preservada.", ssid)
-			return
-		}
-		_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
-		writeNetworkConnectState("connected", "Wi-Fi validado. Reiniciando para confirmar o perfil salvo...", ssid)
-		time.Sleep(1800 * time.Millisecond)
-		writeNetworkConnectState("rebooting", "Reiniciando. O PU2PNY voltará pela rede validada; se falhar, o AP de recuperação retorna.", ssid)
+	writeNetworkConnectState("saved", "Rede salva. Reiniciando o PU2PNY para entrar no Wi-Fi...", in.SSID)
+	snap := connectivitySnapshot()
+
+	time.AfterFunc(2500*time.Millisecond, func() {
+		writeNetworkConnectState("rebooting", "Reiniciando. Depois do boot, o PU2PNY tentará primeiro a rede Wi-Fi salva...", in.SSID)
 		if err := exec.Command("systemctl", "reboot").Run(); err != nil {
-			log.Printf("validated wifi but reboot failed: %v", err)
-			writeNetworkConnectState("error", "O Wi-Fi foi validado, mas o reinício automático falhou. Reinicie o hotspot com segurança.", ssid)
+			log.Printf("wifi staged but reboot failed: %v", err)
+			writeNetworkConnectState("error", "A rede foi salva, mas o reinício automático falhou. Reinicie o hotspot com segurança.", in.SSID)
 		}
-	}(in.SSID, in.Password, in.BSSID, keep)
+	})
 
 	writeJSON(w, http.StatusAccepted, map[string]any{
 		"ok":            true,
-		"state":         "connecting",
+		"state":         "saved",
 		"ssid":          in.SSID,
 		"will_reboot":   true,
-		"message":       "Validando a rede. O PU2PNY só reinicia depois de confirmar associação e IP.",
+		"message":       "Rede salva. O hotspot reiniciará e tentará conectar automaticamente.",
 		"reconnect_url": "http://pu2pny.local/wizard",
 		"resume_urls":   lanResumeURLs(snap.IPv4),
 		"setup_url":     "http://10.43.0.1/wizard",
-		"eta_seconds":   75,
+		"eta_seconds":   90,
 	})
-}
-
-func wifiProfilesHandler(w http.ResponseWriter, r *http.Request) {
-	statePath := filepath.Join(dataDir, "wifi-profile-state.json")
-	readState := func() map[string]any {
-		st := readPublicJSON(statePath)
-		if len(st) == 0 {
-			st = map[string]any{"state": "idle"}
-		}
-		return st
-	}
-	writeState := func(state, message string) {
-		b, _ := json.Marshal(map[string]any{"state": state, "message": message, "updated": time.Now().UTC().Format(time.RFC3339)})
-		_ = os.WriteFile(statePath, b, 0600)
-	}
-	if r.Method == http.MethodGet {
-		out, err := exec.Command("/usr/local/sbin/2pny-wifi-profiles", "list-json").CombinedOutput()
-		if err != nil {
-			writeJSON(w, 503, map[string]any{"error": strings.TrimSpace(string(out)), "operation": readState()})
-			return
-		}
-		var obj map[string]any
-		if json.Unmarshal(out, &obj) != nil {
-			writeJSON(w, 503, map[string]any{"error": "estado Wi-Fi inválido", "operation": readState()})
-			return
-		}
-		obj["operation"] = readState()
-		writeJSON(w, 200, obj)
-		return
-	}
-	if r.Method != http.MethodPost || !sameOrigin(r) {
-		http.Error(w, "request rejected", 403)
-		return
-	}
-	var in struct {
-		Action   string `json:"action"`
-		SSID     string `json:"ssid"`
-		Password string `json:"password"`
-		BSSID    string `json:"bssid"`
-	}
-	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&in) != nil {
-		writeJSON(w, 400, map[string]any{"error": "dados Wi-Fi inválidos"})
-		return
-	}
-	in.SSID = strings.TrimSpace(in.SSID)
-	in.BSSID = strings.TrimSpace(in.BSSID)
-	switch in.Action {
-	case "save-secondary":
-		if in.SSID == "" || len(in.SSID) > 64 || len(in.Password) > 128 {
-			writeJSON(w, 400, map[string]any{"error": "SSID/senha inválidos"})
-			return
-		}
-		if in.BSSID != "" && !regexp.MustCompile(`(?i)^([0-9a-f]{2}:){5}[0-9a-f]{2}package main
-
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"log"
-	"net"
-	"net/http"
-	"net/url"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"regexp"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
-)
-
-const (
-	dataDir               = "/var/lib/2pny"
-	configFile            = "/var/lib/2pny/config.json"
-	provisionedFile       = "/var/lib/2pny/provisioned"
-	listenAddr            = "0.0.0.0:80"
-	appVersion            = "0.3.5-alpha"
-	hardwareFile          = "/var/lib/2pny/hardware.json"
-	hardwareProbeFile     = "/var/lib/2pny/hardware-probe.json"
-	hardwareScanStateFile = "/run/2pny/hardware-scan-state.json"
-	rfApplyStateFile      = "/var/lib/2pny/rf-apply-state.json"
-	wizardFile            = "/usr/share/2pny/wizard.html"
-	dashboardFile         = "/usr/share/2pny/dashboard.html"
-	hotspotFile           = "/usr/share/2pny/hotspot.html"
-	displayFile           = "/usr/share/2pny/display.html"
-	internetFile          = "/usr/share/2pny/internet.html"
-	protocolsFile         = "/usr/share/2pny/protocols.html"
-	historyFile           = "/usr/share/2pny/history.html"
-	aprsFile              = "/usr/share/2pny/aprs.html"
-	systemFile            = "/usr/share/2pny/system.html"
-	expertFile            = "/usr/share/2pny/expert.html"
-	wifiScanStateFile     = "/var/lib/2pny/wifi-scan.json"
-	wifiCountryFile       = "/var/lib/2pny/wifi-country"
-	displayOverrideFile   = "/var/lib/2pny/display-override.json"
-)
-
-type Config struct {
-	Callsign        string `json:"callsign"`
-	DMRID           string `json:"dmr_id"`
-	WiFiSSID        string `json:"wifi_ssid,omitempty"`
-	UseMode         string `json:"use_mode"`
-	RXHz            int64  `json:"rx_hz"`
-	TXHz            int64  `json:"tx_hz"`
-	RXOffsetHz      int64  `json:"rx_offset_hz"`
-	TXOffsetHz      int64  `json:"tx_offset_hz"`
-	Protocol        string `json:"protocol"`
-	Operation       string `json:"operation"`
-	ServerName      string `json:"server_name,omitempty"`
-	ServerAddress   string `json:"server_address,omitempty"`
-	ServerPort      int    `json:"server_port,omitempty"`
-	NetworkKind     string `json:"network_kind,omitempty"`
-	ColorCode       int    `json:"color_code,omitempty"`
-	DMRSlot         string `json:"dmr_slot,omitempty"`
-	XLXModule       string `json:"xlx_module,omitempty"`
-	ESSID           string `json:"essid,omitempty"`
-	BMAPIConfigured bool   `json:"bm_api_configured,omitempty"`
-	NetworkState    string `json:"network_state,omitempty"`
-	CreatedAt       string `json:"created_at"`
-}
-
-type Status struct {
-	Name        string   `json:"name"`
-	Version     string   `json:"version"`
-	Provisioned bool     `json:"provisioned"`
-	Ethernet    bool     `json:"ethernet"`
-	WiFi        bool     `json:"wifi"`
-	IPv4        []string `json:"ipv4"`
-}
-
-type liveEvent struct {
-	id   uint64
-	data []byte
-}
-
-type liveStateHub struct {
-	mu          sync.RWMutex
-	sequence    uint64
-	snapshot    []byte
-	subscribers map[chan liveEvent]struct{}
-}
-
-var liveHub = &liveStateHub{subscribers: make(map[chan liveEvent]struct{})}
-var hostfilesUpdateMu sync.Mutex
-var hostfilesUpdating bool
-
-func startHostfilesUpdate() bool {
-	hostfilesUpdateMu.Lock()
-	if hostfilesUpdating {
-		hostfilesUpdateMu.Unlock()
-		return false
-	}
-	hostfilesUpdating = true
-	hostfilesUpdateMu.Unlock()
-	go func() {
-		out, err := exec.Command("/usr/local/sbin/2pny-hostfiles-update").CombinedOutput()
-		if err != nil {
-			log.Printf("hostfiles update failed: %v: %s", err, strings.TrimSpace(string(out)))
-		}
-		hostfilesUpdateMu.Lock()
-		hostfilesUpdating = false
-		hostfilesUpdateMu.Unlock()
-	}()
-	return true
-}
-
-func isHostfilesUpdating() bool {
-	hostfilesUpdateMu.Lock()
-	defer hostfilesUpdateMu.Unlock()
-	return hostfilesUpdating
-}
-
-func (h *liveStateHub) publish(data []byte) {
-	if len(data) == 0 || !json.Valid(data) {
-		return
-	}
-	h.mu.Lock()
-	if bytes.Equal(h.snapshot, data) {
-		h.mu.Unlock()
-		return
-	}
-	h.sequence++
-	h.snapshot = append(h.snapshot[:0], data...)
-	event := liveEvent{id: h.sequence, data: append([]byte(nil), data...)}
-	for ch := range h.subscribers {
-		select {
-		case ch <- event:
-		default:
-			select {
-			case <-ch:
-			default:
-			}
-			select {
-			case ch <- event:
-			default:
-			}
-		}
-	}
-	h.mu.Unlock()
-}
-
-func (h *liveStateHub) current() liveEvent {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	return liveEvent{id: h.sequence, data: append([]byte(nil), h.snapshot...)}
-}
-
-func watchLiveState(path string) {
-	var lastMod time.Time
-	var lastSize int64 = -1
-	for {
-		if stat, err := os.Stat(path); err == nil && (stat.ModTime() != lastMod || stat.Size() != lastSize) {
-			if data, err := os.ReadFile(path); err == nil {
-				liveHub.publish(data)
-				lastMod, lastSize = stat.ModTime(), stat.Size()
-			}
-		}
-		time.Sleep(80 * time.Millisecond)
-	}
-}
-
-type ConnectivityStatus struct {
-	Internet          bool     `json:"internet"`
-	InternetLatencyMS int64    `json:"internet_latency_ms,omitempty"`
-	InternetQuality   string   `json:"internet_quality"`
-	DefaultInterface  string   `json:"default_interface,omitempty"`
-	Ethernet          bool     `json:"ethernet"`
-	EthernetInterface string   `json:"ethernet_interface,omitempty"`
-	WiFi              bool     `json:"wifi"`
-	WiFiSSID          string   `json:"wifi_ssid"`
-	WiFiInterfaces    []string `json:"wifi_interfaces"`
-	WiFiCount         int      `json:"wifi_count"`
-	ClientInterface   string   `json:"client_interface,omitempty"`
-	APActive          bool     `json:"ap_active"`
-	APInterface       string   `json:"ap_interface,omitempty"`
-	APSSID            string   `json:"ap_ssid"`
-	IPv4              []string `json:"ipv4"`
-}
-
-type RFApplyState struct {
-	State   string `json:"state"`
-	Message string `json:"message"`
-	Updated string `json:"updated"`
-}
-
-var (
-	callsignRx          = regexp.MustCompile(`^[A-Z0-9/-]{3,16}$`)
-	dmrRx               = regexp.MustCompile(`^[0-9]{6,9}$`)
-	applyMu             sync.Mutex
-	hardwareScanMu      sync.Mutex
-	hardwareScanning    bool
-	wifiScanMu          sync.Mutex
-	wifiScanning        bool
-	connectivityCacheMu sync.Mutex
-	connectivityCache   ConnectivityStatus
-	connectivityCacheAt time.Time
-	liveCacheMu         sync.Mutex
-	liveCache           []byte
-	liveCacheAt         time.Time
-	cpuSampleMu         sync.Mutex
-	cpuPrevTotal        uint64
-	cpuPrevIdle         uint64
-)
-
-func fileExists(p string) bool { _, e := os.Stat(p); return e == nil }
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func interfaceUp(name string) bool {
-	b, err := os.ReadFile(filepath.Join("/sys/class/net", name, "operstate"))
-	return err == nil && strings.TrimSpace(string(b)) == "up"
-}
-
-func ipv4Addresses() []string {
-	var out []string
-	ifaces, _ := net.Interfaces()
-	for _, i := range ifaces {
-		addrs, _ := i.Addrs()
-		for _, a := range addrs {
-			if ipnet, ok := a.(*net.IPNet); ok && ipnet.IP.To4() != nil && !ipnet.IP.IsLoopback() {
-				out = append(out, ipnet.IP.String())
-			}
-		}
-	}
-	return out
-}
-
-func lanResumeURLs(ips []string) []string {
-	seen := map[string]bool{}
-	out := []string{"http://pu2pny.local"}
-	seen[out[0]] = true
-	for _, raw := range ips {
-		ip := net.ParseIP(strings.TrimSpace(raw))
-		if ip == nil || ip.To4() == nil || ip.IsLoopback() || ip.IsLinkLocalUnicast() {
-			continue
-		}
-		v := ip.String()
-		if strings.HasPrefix(v, "10.43.0.") {
-			continue
-		}
-		u := "http://" + v
-		if !seen[u] {
-			seen[u] = true
-			out = append(out, u)
-		}
-	}
-	return out
-}
-
-func wifiInterfaces() []string {
-	entries, _ := os.ReadDir("/sys/class/net")
-	var out []string
-	for _, e := range entries {
-		name := e.Name()
-		if fileExists(filepath.Join("/sys/class/net", name, "wireless")) {
-			out = append(out, name)
-		}
-	}
-	return out
-}
-
-func currentWiFiSSID() string {
-	out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SSID", "dev", "wifi", "--rescan", "no").Output()
-	if err != nil {
-		return ""
-	}
-	for _, line := range strings.Split(string(out), "\n") {
-		if strings.HasPrefix(line, "yes:") {
-			return strings.TrimSpace(strings.TrimPrefix(line, "yes:"))
-		}
-	}
-	return ""
-}
-
-func ethernetInterface() string {
-	entries, _ := os.ReadDir("/sys/class/net")
-	for _, e := range entries {
-		n := e.Name()
-		if n == "lo" {
-			continue
-		}
-		if strings.HasPrefix(n, "eth") || strings.HasPrefix(n, "en") {
-			return n
-		}
-	}
-	return ""
-}
-
-func readRunFile(name string) string {
-	b, err := os.ReadFile(filepath.Join("/run/2pny", name))
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(b))
-}
-
-func defaultRouteInterface() string {
-	b, err := exec.Command("ip", "-4", "route", "show", "default").Output()
-	if err != nil {
-		return ""
-	}
-	fields := strings.Fields(string(b))
-	for i := 0; i+1 < len(fields); i++ {
-		if fields[i] == "dev" {
-			return fields[i+1]
-		}
-	}
-	return ""
-}
-
-func internetProbe() (bool, int64, string) {
-	best := int64(0)
-	for _, addr := range []string{"1.1.1.1:443", "8.8.8.8:53"} {
-		started := time.Now()
-		conn, err := net.DialTimeout("tcp", addr, 1200*time.Millisecond)
-		if err != nil {
-			continue
-		}
-		_ = conn.Close()
-		ms := time.Since(started).Milliseconds()
-		if ms < 1 {
-			ms = 1
-		}
-		if best == 0 || ms < best {
-			best = ms
-		}
-	}
-	if best == 0 {
-		return false, 0, "Offline"
-	}
-	if best < 80 {
-		return true, best, "Ótimo"
-	}
-	if best < 160 {
-		return true, best, "Bom"
-	}
-	return true, best, "Ruim"
-}
-
-func apActive() bool {
-	// Prefer the process/runtime truth written by network-core.  ap-control can
-	// reflect desired state while hostapd is still actually broadcasting.
-	runtimeCheck := exec.Command("sh", "-c",
-		`test -s /run/2pny/hostapd.pid && kill -0 "$(cat /run/2pny/hostapd.pid)" 2>/dev/null && grep -qx 'hostapd=active' /run/2pny/network-status.txt`)
-	if runtimeCheck.Run() == nil {
-		return true
-	}
-	out, err := exec.Command("/usr/local/sbin/2pny-ap-control", "status").Output()
-	return err == nil && strings.TrimSpace(string(out)) == "active"
-}
-
-func connectivitySnapshot() ConnectivityStatus {
-	wifis := wifiInterfaces()
-	eth := ethernetInterface()
-	client := readRunFile("uplink-iface")
-	apif := readRunFile("ap-iface")
-	ssid := currentWiFiSSID()
-	wifiUp := ssid != ""
-	internet, latency, quality := internetProbe()
-	return ConnectivityStatus{
-		Internet:          internet,
-		InternetLatencyMS: latency,
-		InternetQuality:   quality,
-		DefaultInterface:  defaultRouteInterface(),
-		Ethernet:          eth != "" && interfaceUp(eth),
-		EthernetInterface: eth,
-		WiFi:              wifiUp,
-		WiFiSSID:          ssid,
-		WiFiInterfaces:    wifis,
-		WiFiCount:         len(wifis),
-		ClientInterface:   client,
-		APActive:          apActive(),
-		APInterface:       apif,
-		APSSID:            "pu2pny",
-		IPv4:              ipv4Addresses(),
-	}
-}
-
-func cachedConnectivitySnapshot() ConnectivityStatus {
-	connectivityCacheMu.Lock()
-	defer connectivityCacheMu.Unlock()
-	if !connectivityCacheAt.IsZero() && time.Since(connectivityCacheAt) < 15*time.Second {
-		return connectivityCache
-	}
-	connectivityCache = connectivitySnapshot()
-	connectivityCacheAt = time.Now()
-	return connectivityCache
-}
-
-func invalidateConnectivityCache() {
-	connectivityCacheMu.Lock()
-	connectivityCacheAt = time.Time{}
-	connectivityCache = ConnectivityStatus{}
-	connectivityCacheMu.Unlock()
-}
-
-func cpuSample() (uint64, uint64) {
-	b, err := os.ReadFile("/proc/stat")
-	if err != nil {
-		return 0, 0
-	}
-	line := strings.SplitN(string(b), "\n", 2)[0]
-	f := strings.Fields(line)
-	if len(f) < 5 || f[0] != "cpu" {
-		return 0, 0
-	}
-	var vals []uint64
-	for _, x := range f[1:] {
-		n, e := strconv.ParseUint(x, 10, 64)
-		if e != nil {
-			n = 0
-		}
-		vals = append(vals, n)
-	}
-	var total uint64
-	for _, n := range vals {
-		total += n
-	}
-	idle := vals[3]
-	if len(vals) > 4 {
-		idle += vals[4]
-	}
-	return total, idle
-}
-
-func fallbackTelemetry() map[string]any {
-	total, idle := cpuSample()
-	cpu := 0.0
-	cpuSampleMu.Lock()
-	if cpuPrevTotal > 0 && total > cpuPrevTotal {
-		dt := total - cpuPrevTotal
-		di := idle - cpuPrevIdle
-		if dt > 0 && di <= dt {
-			cpu = 100 * (1 - float64(di)/float64(dt))
-		}
-	}
-	cpuPrevTotal, cpuPrevIdle = total, idle
-	cpuSampleMu.Unlock()
-	cpu = float64(int(cpu*10+0.5)) / 10
-	temp := -1.0
-	if b, e := os.ReadFile("/sys/class/thermal/thermal_zone0/temp"); e == nil {
-		if n, e2 := strconv.ParseFloat(strings.TrimSpace(string(b)), 64); e2 == nil {
-			temp = float64(int((n/1000)*10+0.5)) / 10
-		}
-	}
-	memUsed := int64(0)
-	memTotal := int64(0)
-	if b, e := os.ReadFile("/proc/meminfo"); e == nil {
-		vals := map[string]int64{}
-		for _, ln := range strings.Split(string(b), "\n") {
-			ff := strings.Fields(ln)
-			if len(ff) >= 2 {
-				n, _ := strconv.ParseInt(ff[1], 10, 64)
-				vals[strings.TrimSuffix(ff[0], ":")] = n
-			}
-		}
-		memTotal = vals["MemTotal"] / 1024
-		memUsed = (vals["MemTotal"] - vals["MemAvailable"]) / 1024
-	}
-	return map[string]any{"cpu_percent": cpu, "temperature": temp, "memory_used_mb": memUsed, "memory_total_mb": memTotal}
-}
-
-func mergedTelemetry() map[string]any {
-	t := readPublicJSON("/run/2pny/telemetry.json")
-	f := fallbackTelemetry()
-	for k, v := range f {
-		if old, ok := t[k]; !ok || old == nil || old == "" {
-			t[k] = v
-		}
-	}
-	return t
-}
-
-func statusHandler(w http.ResponseWriter, r *http.Request) {
-	c := cachedConnectivitySnapshot()
-	writeJSON(w, http.StatusOK, Status{
-		Name:        "PU2PNY-OS",
-		Version:     appVersion,
-		Provisioned: fileExists(provisionedFile),
-		Ethernet:    c.Ethernet,
-		WiFi:        c.WiFi,
-		IPv4:        c.IPv4,
-	})
-}
-
-func connectivityHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "GET required", http.StatusMethodNotAllowed)
-		return
-	}
-	writeJSON(w, http.StatusOK, cachedConnectivitySnapshot())
-}
-
-func preferredClientWiFi() string {
-	iface := readRunFile("uplink-iface")
-	if iface != "" && fileExists(filepath.Join("/sys/class/net", iface)) {
-		return iface
-	}
-	apif := readRunFile("ap-iface")
-	for _, w := range wifiInterfaces() {
-		if w != apif {
-			return w
-		}
-	}
-	if apif != "" && fileExists(filepath.Join("/sys/class/net", apif)) {
-		return apif
-	}
-	return ""
-}
-
-func writeWiFiScanState(state, message string, networks any) {
-	_ = os.MkdirAll(dataDir, 0750)
-	payload := map[string]any{
-		"state":   state,
-		"message": message,
-		"updated": time.Now().UTC().Format(time.RFC3339),
-	}
-	if networks != nil {
-		payload["networks"] = networks
-	}
-	b, _ := json.Marshal(payload)
-	_ = os.WriteFile(wifiScanStateFile, b, 0600)
-}
-
-func readWiFiScanState() map[string]any {
-	st := map[string]any{"state": "idle", "networks": []any{}}
-	if b, err := os.ReadFile(wifiScanStateFile); err == nil {
-		_ = json.Unmarshal(b, &st)
-	}
-	return st
-}
-
-func startWiFiScan() {
-	wifiScanMu.Lock()
-	if wifiScanning {
-		wifiScanMu.Unlock()
-		return
-	}
-	wifiScanning = true
-	wifiScanMu.Unlock()
-	writeWiFiScanState("scanning", "Buscando redes Wi-Fi próximas...", nil)
-	go func() {
-		defer func() {
-			wifiScanMu.Lock()
-			wifiScanning = false
-			wifiScanMu.Unlock()
-		}()
-		// Give the HTTP response time to leave before a single-radio AP is paused.
-		time.Sleep(900 * time.Millisecond)
-		out, err := exec.Command("timeout", "-k", "3", "40", "/usr/local/sbin/2pny-network-switch", "scan-json").CombinedOutput()
-		if err != nil {
-			msg := strings.TrimSpace(string(out))
-			if msg == "" {
-				msg = "não foi possível buscar redes Wi-Fi"
-			}
-			writeWiFiScanState("error", msg, []any{})
-			return
-		}
-		var networks []map[string]any
-		if err := json.Unmarshal(out, &networks); err != nil {
-			writeWiFiScanState("error", "resposta inválida da busca de Wi-Fi", []any{})
-			return
-		}
-		writeWiFiScanState("ready", fmt.Sprintf("%d rede(s) encontrada(s)", len(networks)), networks)
-	}()
-}
-
-func wifiScanHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "GET required", http.StatusMethodNotAllowed)
-		return
-	}
-	st := readWiFiScanState()
-	if r.URL.Query().Get("refresh") == "1" || st["state"] == "idle" {
-		startWiFiScan()
-		st = readWiFiScanState()
-	}
-	writeJSON(w, http.StatusOK, st)
-}
-
-func networkCountryHandler(w http.ResponseWriter, r *http.Request) {
-	country := "BR"
-	if b, err := os.ReadFile(wifiCountryFile); err == nil {
-		value := strings.ToUpper(strings.TrimSpace(string(b)))
-		if regexp.MustCompile("^[A-Z]{2}$").MatchString(value) {
-			country = value
-		}
-	}
-	if r.Method == http.MethodGet {
-		writeJSON(w, http.StatusOK, map[string]any{"country": country})
-		return
-	}
-	if r.Method != http.MethodPost || !sameOrigin(r) {
-		http.Error(w, "request rejected", http.StatusForbidden)
-		return
-	}
-	var in struct {
-		Country string `json:"country"`
-	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024)).Decode(&in); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "país inválido"})
-		return
-	}
-	country = strings.ToUpper(strings.TrimSpace(in.Country))
-	if !regexp.MustCompile("^[A-Z]{2}$").MatchString(country) {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "use código ISO de duas letras"})
-		return
-	}
-	if err := os.WriteFile(wifiCountryFile, []byte(country+"\n"), 0600); err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": "não foi possível salvar o país"})
-		return
-	}
-	_ = exec.Command("iw", "reg", "set", country).Run()
-	writeWiFiScanState("idle", "País Wi-Fi atualizado; faça uma nova busca.", []any{})
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "country": country})
-}
-
-func writeNetworkConnectState(state, message, ssid string) {
-	_ = os.MkdirAll(dataDir, 0750)
-	b, _ := json.Marshal(map[string]any{
-		"state": state, "message": message, "ssid": ssid,
-		"updated": time.Now().UTC().Format(time.RFC3339),
-	})
-	_ = os.WriteFile(filepath.Join(dataDir, "network-connect.json"), b, 0600)
-}
-
-func networkConnectStatusHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "GET required", http.StatusMethodNotAllowed)
-		return
-	}
-	st := map[string]any{"state": "idle"}
-	if b, err := os.ReadFile(filepath.Join(dataDir, "network-connect.json")); err == nil {
-		_ = json.Unmarshal(b, &st)
-	}
-	c := connectivitySnapshot()
-	if state, _ := st["state"].(string); state == "connected" {
-		wanted, _ := st["ssid"].(string)
-		if !c.WiFi || (wanted != "" && c.WiFiSSID != wanted) {
-			st["state"] = "error"
-			st["message"] = "O perfil foi salvo, mas o rádio Wi-Fi não permaneceu conectado ao SSID solicitado. O cabo continua disponível; tente o Wi-Fi novamente."
-		}
-	}
-	st["connectivity"] = c
-	st["resume_url"] = "http://pu2pny.local/wizard"
-	st["resume_urls"] = lanResumeURLs(c.IPv4)
-	st["setup_url"] = "http://10.43.0.1/wizard"
-	st["eta_seconds"] = 75
-	writeJSON(w, http.StatusOK, st)
-}
-
-func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "POST required", http.StatusMethodNotAllowed)
-		return
-	}
-	var in struct {
-		SSID     string `json:"ssid"`
-		Password string `json:"password"`
-		BSSID    string `json:"bssid"`
-		KeepAP   bool   `json:"keep_ap"`
-	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&in); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "dados de rede inválidos"})
-		return
-	}
-	in.SSID = strings.TrimSpace(in.SSID)
-	in.BSSID = strings.TrimSpace(in.BSSID)
-	if in.SSID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "selecione uma rede Wi-Fi"})
-		return
-	}
-	if in.BSSID != "" && !regexp.MustCompile(`(?i)^([0-9a-f]{2}:){5}[0-9a-f]{2}$`).MatchString(in.BSSID) {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "BSSID inválido"})
-		return
-	}
-
-	snap := connectivitySnapshot()
-	writeNetworkConnectState("connecting", "Validando a rede Wi-Fi antes de reiniciar...", in.SSID)
-	keepAP := "0"
-	if in.KeepAP {
-		keepAP = "1"
-	}
-	// Return the HTTP response while the setup AP is still alive. The helper
-	// then performs the real association transactionally, restores the old
-	// link/AP on failure, and only after a proven association do we reboot to
-	// verify that the saved profile survives a normal boot.
-	go func(ssid, password, bssid, keep string) {
-		time.Sleep(900 * time.Millisecond)
-		out, err := exec.Command("/usr/local/sbin/2pny-network-switch", "connect", ssid, password, keep, bssid).CombinedOutput()
-		msg := strings.TrimSpace(string(out))
-		if err != nil {
-			if msg == "" {
-				msg = "não foi possível concluir a associação Wi-Fi"
-			}
-			writeNetworkConnectState("error", msg, ssid)
-			invalidateConnectivityCache()
-			return
-		}
-		invalidateConnectivityCache()
-		c := connectivitySnapshot()
-		if !c.WiFi || (ssid != "" && c.WiFiSSID != ssid) {
-			writeNetworkConnectState("error", "O rádio não permaneceu associado à rede selecionada. A conexão anterior/AP foi preservada.", ssid)
-			return
-		}
-		_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
-		writeNetworkConnectState("connected", "Wi-Fi validado. Reiniciando para confirmar o perfil salvo...", ssid)
-		time.Sleep(1800 * time.Millisecond)
-		writeNetworkConnectState("rebooting", "Reiniciando. O PU2PNY voltará pela rede validada; se falhar, o AP de recuperação retorna.", ssid)
-		if err := exec.Command("systemctl", "reboot").Run(); err != nil {
-			log.Printf("validated wifi but reboot failed: %v", err)
-			writeNetworkConnectState("error", "O Wi-Fi foi validado, mas o reinício automático falhou. Reinicie o hotspot com segurança.", ssid)
-		}
-	}(in.SSID, in.Password, in.BSSID, keep)
-
-	writeJSON(w, http.StatusAccepted, map[string]any{
-		"ok":            true,
-		"state":         "connecting",
-		"ssid":          in.SSID,
-		"will_reboot":   true,
-		"message":       "Validando a rede. O PU2PNY só reinicia depois de confirmar associação e IP.",
-		"reconnect_url": "http://pu2pny.local/wizard",
-		"resume_urls":   lanResumeURLs(snap.IPv4),
-		"setup_url":     "http://10.43.0.1/wizard",
-		"eta_seconds":   75,
-	})
-}
-
-).MatchString(in.BSSID) {
-			writeJSON(w, 400, map[string]any{"error": "BSSID inválido"})
-			return
-		}
-		out, err := exec.Command("/usr/local/sbin/2pny-wifi-profiles", "save-secondary", in.SSID, in.Password, in.BSSID).CombinedOutput()
-		if err != nil {
-			writeJSON(w, 503, map[string]any{"error": strings.TrimSpace(string(out))})
-			return
-		}
-		writeState("saved", "Segunda rede salva e pronta para uso.")
-		writeJSON(w, 200, map[string]any{"ok": true, "message": strings.TrimSpace(string(out))})
-	case "switch":
-		writeState("switching", "Trocando para a rede reserva. A anterior será restaurada automaticamente se a nova falhar.")
-		go func() {
-			time.Sleep(600 * time.Millisecond)
-			out, err := exec.Command("/usr/local/sbin/2pny-wifi-profiles", "switch").CombinedOutput()
-			invalidateConnectivityCache()
-			if err != nil {
-				writeState("error", strings.TrimSpace(string(out)))
-				return
-			}
-			_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
-			writeState("connected", strings.TrimSpace(string(out)))
-		}()
-		writeJSON(w, 202, map[string]any{"ok": true, "state": "switching"})
-	case "remove-secondary":
-		out, err := exec.Command("/usr/local/sbin/2pny-wifi-profiles", "remove-secondary").CombinedOutput()
-		if err != nil {
-			writeJSON(w, 503, map[string]any{"error": strings.TrimSpace(string(out))})
-			return
-		}
-		writeState("idle", "Segunda rede removida.")
-		writeJSON(w, 200, map[string]any{"ok": true})
-	default:
-		writeJSON(w, 400, map[string]any{"error": "ação Wi-Fi inválida"})
-	}
-}
-
-func networkDNSHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost || !sameOrigin(r) {
-		http.Error(w, "request rejected", 403)
-		return
-	}
-	var in struct{ Provider string `json:"provider"` }
-	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 2048)).Decode(&in) != nil {
-		writeJSON(w, 400, map[string]any{"error": "opção DNS inválida"})
-		return
-	}
-	provider := strings.ToLower(strings.TrimSpace(in.Provider))
-	servers := map[string]string{
-		"cloudflare": "1.1.1.1 1.0.0.1",
-		"google": "8.8.8.8 8.8.4.4",
-		"opendns": "208.67.222.222 208.67.220.220",
-		"automatic": "",
-	}
-	dns, ok := servers[provider]
-	if !ok {
-		writeJSON(w, 400, map[string]any{"error": "provedor DNS inválido"})
-		return
-	}
-	iface := defaultRouteInterface()
-	if iface == "" {
-		writeJSON(w, 409, map[string]any{"error": "não há rota ativa para alterar DNS"})
-		return
-	}
-	connOut, err := exec.Command("nmcli", "-g", "GENERAL.CONNECTION", "device", "show", iface).Output()
-	if err != nil {
-		writeJSON(w, 409, map[string]any{"error": "conexão ativa não identificada"})
-		return
-	}
-	conn := strings.TrimSpace(string(connOut))
-	if conn == "" || conn == "--" {
-		writeJSON(w, 409, map[string]any{"error": "perfil de rede ativo não identificado"})
-		return
-	}
-	get := func(key string) string {
-		out, _ := exec.Command("nmcli", "-g", key, "connection", "show", conn).Output()
-		return strings.TrimSpace(string(out))
-	}
-	oldIgnore, oldDNS := get("ipv4.ignore-auto-dns"), get("ipv4.dns")
-	backupDir := filepath.Join(dataDir, "backups", "network-dns")
-	_ = os.MkdirAll(backupDir, 0700)
-	raw, _ := json.Marshal(map[string]any{"connection": conn, "interface": iface, "ignore_auto_dns": oldIgnore, "dns": oldDNS, "created": time.Now().UTC().Format(time.RFC3339)})
-	_ = os.WriteFile(filepath.Join(backupDir, time.Now().UTC().Format("20060102T150405Z")+".json"), raw, 0600)
-	apply := func(ignore, value string) error {
-		args := []string{"connection", "modify", conn, "ipv4.ignore-auto-dns", ignore, "ipv4.dns", value}
-		if out, e := exec.Command("nmcli", args...).CombinedOutput(); e != nil {
-			return fmt.Errorf("%s", strings.TrimSpace(string(out)))
-		}
-		if out, e := exec.Command("nmcli", "device", "reapply", iface).CombinedOutput(); e != nil {
-			return fmt.Errorf("%s", strings.TrimSpace(string(out)))
-		}
-		_ = exec.Command("resolvectl", "flush-caches").Run()
-		return nil
-	}
-	ignore := "yes"
-	if provider == "automatic" {
-		ignore = "no"
-	}
-	if err := apply(ignore, dns); err != nil {
-		writeJSON(w, 503, map[string]any{"error": "não foi possível aplicar DNS: " + err.Error()})
-		return
-	}
-	test := exec.Command("timeout", "-k", "1", "4", "getent", "ahostsv4", "example.com").Run()
-	if test != nil {
-		_ = apply(oldIgnore, oldDNS)
-		writeJSON(w, 503, map[string]any{"error": "o DNS novo não resolveu nomes; configuração anterior restaurada"})
-		return
-	}
-	writeJSON(w, 200, map[string]any{"ok": true, "provider": provider, "servers": dns, "interface": iface})
 }
 
 func maintenanceHandler(w http.ResponseWriter, r *http.Request) {
@@ -1658,37 +738,22 @@ func maintenanceHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, st)
 	case http.MethodPost:
 		var in struct {
-			Enabled *bool  `json:"enabled"`
-			Action  string `json:"action"`
+			Enabled bool `json:"enabled"`
 		}
 		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&in); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "opção inválida"})
 			return
 		}
-		action := strings.ToLower(strings.TrimSpace(in.Action))
-		if action == "" && in.Enabled != nil {
-			if *in.Enabled { action = "enable" } else { action = "disable" }
+		action := "disable"
+		if in.Enabled {
+			action = "enable"
 		}
-		switch action {
-		case "enable", "disable":
-			out, err := exec.Command("/usr/local/sbin/2pny-auto-maintenance", action).CombinedOutput()
-			if err != nil {
-				writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": strings.TrimSpace(string(out))})
-				return
-			}
-			writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": action == "enable"})
-		case "run":
-			if err := exec.Command("systemctl", "start", "--no-block", "2pny-auto-maintenance.service").Run(); err != nil {
-				writeJSON(w, 500, map[string]any{"ok": false, "error": "não foi possível iniciar a manutenção"})
-				return
-			}
-			writeJSON(w, 202, map[string]any{"ok": true, "state": "running"})
-		case "force":
-			go func(){ _,_ = exec.Command("/usr/local/sbin/2pny-auto-maintenance", "force").CombinedOutput() }()
-			writeJSON(w, 202, map[string]any{"ok": true, "state": "running"})
-		default:
-			writeJSON(w, 400, map[string]any{"ok": false, "error": "ação de manutenção inválida"})
+		out, err := exec.Command("/usr/local/sbin/2pny-auto-maintenance", action).CombinedOutput()
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": strings.TrimSpace(string(out))})
+			return
 		}
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": in.Enabled})
 	default:
 		http.Error(w, "GET or POST required", http.StatusMethodNotAllowed)
 	}
@@ -1707,21 +772,8 @@ func networkRefreshHandler(w http.ResponseWriter, r *http.Request) {
 	// the user plugged an Ethernet cable in. The resident network core already
 	// watches carrier every three seconds.
 	invalidateConnectivityCache()
-	var c ConnectivityStatus
-	deadline := time.Now().Add(12 * time.Second)
-	for {
-		c = connectivitySnapshot()
-		if c.Internet || c.Ethernet || time.Now().After(deadline) {
-			break
-		}
-		time.Sleep(750 * time.Millisecond)
-		invalidateConnectivityCache()
-	}
-	if c.DefaultInterface != "" {
-		_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
-		invalidateConnectivityCache()
-		c = connectivitySnapshot()
-	}
+	time.Sleep(500 * time.Millisecond)
+	c := connectivitySnapshot()
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "connectivity": c})
 }
 
@@ -1769,7 +821,7 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 				enabled, _ = ov["enabled"].(bool)
 			}
 		}
-		layout := 9
+		layout := 2
 		if b, err := os.ReadFile(displayOverrideFile); err == nil {
 			var ov map[string]any
 			if json.Unmarshal(b, &ov) == nil {
@@ -1790,10 +842,10 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if in.Enabled {
 			if in.Layout == 0 {
-				in.Layout = 9
+				in.Layout = 2
 			}
-			if in.Layout != 9 && in.Layout != 2 && in.Layout != 3 {
-				writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "layout Nextion inválido"})
+			if in.Layout != 2 && in.Layout != 3 {
+				writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "layout Nextion deve ser ON7LDS (2) ou ON7LDS-DIY (3)"})
 				return
 			}
 			if _, err := detectedModemPort(); err != nil {
@@ -2589,16 +1641,6 @@ func dashboardDataHandler(w http.ResponseWriter, r *http.Request) {
 	if b, err := os.ReadFile(filepath.Join(dataDir, "network-radio.json")); err == nil {
 		_ = json.Unmarshal(b, &networkRuntime)
 	}
-	// Runtime gateway state (for example a DMR XLX module selected by TG4002)
-	// overrides only live fields. The saved preset remains untouched.
-	if b, err := os.ReadFile("/run/2pny/network-runtime.json"); err == nil {
-		var rt map[string]any
-		if json.Unmarshal(b, &rt) == nil {
-			for k, v := range rt {
-				networkRuntime[k] = v
-			}
-		}
-	}
 	if _, ok := networkRuntime["server_name"]; !ok && cfg.ServerName != "" {
 		networkRuntime["server_name"] = cfg.ServerName
 	}
@@ -2672,11 +1714,6 @@ func protocolStatusHandler(w http.ResponseWriter, r *http.Request) {
 		_ = json.Unmarshal(b, &cfg)
 	}
 	nr := readPublicJSON(filepath.Join(dataDir, "network-radio.json"))
-	if rt := readPublicJSON("/run/2pny/network-runtime.json"); len(rt) > 0 {
-		for k, v := range rt {
-			nr[k] = v
-		}
-	}
 	p := strings.ToUpper(cfg.Protocol)
 	active := false
 	gateway := ""
@@ -3281,8 +2318,6 @@ func main() {
 	http.HandleFunc("/api/network/connect", networkConnectHandler)
 	http.HandleFunc("/api/network/connect/status", networkConnectStatusHandler)
 	http.HandleFunc("/api/network/refresh", networkRefreshHandler)
-	http.HandleFunc("/api/network/wifi/profiles", wifiProfilesHandler)
-	http.HandleFunc("/api/network/dns", networkDNSHandler)
 	http.HandleFunc("/api/maintenance", maintenanceHandler)
 	http.HandleFunc("/api/hardware", hardwareHandler)
 	http.HandleFunc("/api/hardware/status", hardwareStatusHandler)
