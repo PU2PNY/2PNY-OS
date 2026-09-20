@@ -5,6 +5,8 @@ on:
     branches: [ exp/0.3.6-arm32-poc-20260920 ]
     paths:
       - '.github/workflows/0.3.6-arm32-poc.yml'
+      - 'ci/prepare-0.3.6-arm32-poc.py'
+      - 'ci/validate-0.3.6-image.sh'
   workflow_dispatch:
 
 permissions:
@@ -136,3 +138,53 @@ jobs:
             t="$(file -b "$f")"
             case "$t" in *ELF*) printf '%s :: %s\n' "$f" "$t";; esac
           done
+      - name: Build isolated ARM32 POC
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2 parted
+          python3 ci/prepare-0.3.6-arm32-poc.py legacy-source/2pny-os
+          cd legacy-source/2pny-os
+          grep -Fq 'ARCH="armhf"' builder/build-image.sh
+          grep -Fq 'GOARCH=arm GOARM=6' builder/build-image.sh
+          ! grep -Fq 'GOARCH=arm64' builder/build-image.sh
+          sudo -E VERSION='0.3.6-alpha' ./builder/build-image.sh
+          IMG='dist/2PNY-OS-0.3.6-alpha-armhf.img.xz'
+          test -s "$IMG"
+          xz -t "$IMG"
+          test "$(awk '{print $1}' "$IMG.sha256")" = "$(sha256sum "$IMG" | awk '{print $1}')"
+          bash "$GITHUB_WORKSPACE/ci/validate-0.3.6-image.sh" "$IMG" '0.3.6-alpha'
+      - name: Verify ARM32 binary architecture
+        run: |
+          set -Eeuo pipefail
+          cd legacy-source/2pny-os
+          IMG='dist/2PNY-OS-0.3.6-alpha-armhf.img.xz'
+          RAW='/tmp/pu2pny-arm32-poc.img'
+          ROOT='/mnt/pu2pny-arm32-poc'
+          xz -dc "$IMG" > "$RAW"
+          LOOP="$(sudo losetup --find --partscan --show "$RAW")"
+          cleanup(){ set +e; mountpoint -q "$ROOT" && sudo umount "$ROOT"; sudo losetup -d "$LOOP" 2>/dev/null || true; rm -f "$RAW"; }
+          trap cleanup EXIT
+          sudo mkdir -p "$ROOT"
+          sudo mount "${LOOP}p2" "$ROOT"
+          test "$(sudo chroot "$ROOT" /usr/bin/dpkg --print-architecture)" = 'armhf'
+          for b in 2pnyd MMDVM-Host DMRGateway dstargateway YSFGateway P25Gateway NXDNGateway DAPNETGateway; do
+            f="$ROOT/usr/local/bin/$b"; test -x "$f"
+            file "$f"
+            file -b "$f" | grep -Eq 'ELF 32-bit.*ARM'
+          done
+          echo 'ARM32_ARCHITECTURE_OK'
+      - name: Stage ARM32 POC artifact
+        run: |
+          set -Eeuo pipefail
+          mkdir -p arm32-artifact
+          cp legacy-source/2pny-os/dist/2PNY-OS-0.3.6-alpha-armhf.img.xz arm32-artifact/PU2PNY-OS-0.3.6-alpha-arm32-EXPERIMENTAL.img.xz
+          HASH="$(sha256sum arm32-artifact/PU2PNY-OS-0.3.6-alpha-arm32-EXPERIMENTAL.img.xz | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" 'PU2PNY-OS-0.3.6-alpha-arm32-EXPERIMENTAL.img.xz' > arm32-artifact/PU2PNY-OS-0.3.6-alpha-arm32-EXPERIMENTAL.img.xz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.6-arm32-experimental
+          path: arm32-artifact/*
+          compression-level: 0
+          retention-days: 7
+
