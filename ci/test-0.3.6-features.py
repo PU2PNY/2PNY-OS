@@ -43,7 +43,8 @@ class T(unittest.TestCase):
         self.assertIn("MutationObserver",lang)
         common=(ROOT/"src/ui-common-0.3.6.js").read_text()
         self.assertIn("function operation",common)
-        self.assertNotIn("100%",common.split("function operation",1)[1].split("function footer",1)[0])
+        segment=common.split("function operation",1)[1].split("function footer",1)[0]
+        self.assertNotIn("0%",segment);self.assertNotIn("50%",segment)
 
     def test_protocol_profile_contract(self):
         s=(ROOT/"src/2pny-protocol-profiles-0.3.6.py").read_text()
