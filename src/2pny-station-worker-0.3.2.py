@@ -160,6 +160,12 @@ def start_mqtt():
 
 def persist_end(db,event):
     if not event or not isinstance(event,dict) or event.get("event")!="end":return
+    event=dict(event)
+    if str(event.get("protocol") or "").upper()=="DMR" and not event.get("module"):
+        rt=read_json(NETWORK_RUNTIME,{})
+        if rt.get("module"):
+            event["module"]=rt.get("module")
+            event["module_tg"]=rt.get("module_tg")
     key=f'{event.get("started_unix_ms",0)}:{event.get("direction")}:{event.get("protocol")}:{event.get("slot","")}'
     db.execute("INSERT OR REPLACE INTO history(id,stamp,data) VALUES(?,?,?)",
                (key,event.get("ended_at",""),json.dumps(event,ensure_ascii=False)));db.commit()
@@ -222,10 +228,18 @@ def history_summary(db):
     for (raw,) in db.execute("SELECT data FROM history ORDER BY stamp DESC LIMIT 1000"):
         try: rows.append(json.loads(raw))
         except Exception: pass
+    cfg=read_json("/var/lib/2pny/config.json")
+    station_type="Repetidora" if str(cfg.get("use_mode") or "").lower()=="repeater" else "Hotspot"
     by_call={};by_proto={};by_target={};tx_count=rx_count=0;tx_seconds=rx_seconds=0.0
     for e in rows:
-        call=str(e.get("source") or "").strip().upper()
-        if not call: continue
+        rawcall=str(e.get("source") or "").strip().upper()
+        if not rawcall: continue
+        person={}
+        row=db.execute("SELECT data FROM contacts WHERE key=?",(rawcall,)).fetchone()
+        if row:
+            try: person=json.loads(row[0])
+            except Exception: person={}
+        call=str(person.get("callsign") or rawcall).strip().upper()
         proto=str(e.get("protocol") or "—").upper()
         target=str(e.get("target") or "—")
         dur=float(e.get("duration") or 0)
@@ -234,9 +248,15 @@ def history_summary(db):
         else: rx_count+=1;rx_seconds+=dur
         by_proto[proto]=by_proto.get(proto,0)+1
         by_target[target]=by_target.get(target,0)+1
-        g=by_call.setdefault(call,{"callsign":call,"count":0,"tx_count":0,"rx_count":0,"seconds":0.0,"last":e.get("ended_at") or e.get("started_at"),"last_protocol":proto,"last_target":target,"items":[]})
+        e=dict(e);e["operator"]=person;e["station_type"]=station_type
+        g=by_call.setdefault(call,{"callsign":call,"name":person.get("name") or "","city":person.get("city") or "",
+            "state":person.get("state") or "","country":person.get("country") or "","country_code":person.get("country_code") or "",
+            "photo":person.get("photo") or "","station_type":station_type,"count":0,"tx_count":0,"rx_count":0,"seconds":0.0,
+            "last":e.get("ended_at") or e.get("started_at"),"last_protocol":proto,"last_target":target,
+            "last_module":e.get("module") or "","items":[]})
         g["count"]+=1;g["seconds"]+=dur
         g["tx_count"]+=1 if direction=="RF" else 0;g["rx_count"]+=1 if direction!="RF" else 0
+        if not g.get("last_module") and e.get("module"):g["last_module"]=e.get("module")
         if len(g["items"])<60:g["items"].append(e)
     groups=sorted(by_call.values(),key=lambda x:x.get("last") or "",reverse=True)
     top_proto=max(by_proto,key=by_proto.get) if by_proto else None
