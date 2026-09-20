@@ -115,3 +115,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - A chave será armazenada em área privada e a API do PU2PNY só exporá o estado configurada/não configurada.
 - A Hotspot Security continua sendo a senha usada pelo DMRGateway para conectar ao master BrandMeister.
 - Backup anterior à alteração: `backup/0.3.6-pre-bm-suffix-api-20260920`.
+
+### Implementação 0.3.6 — alias DMR e API BrandMeister
+- Adicionado seletor `Rádio 1 (01)` … `Rádio 99 (99)` no primeiro acesso e em Protocolos.
+- O backend agora aplica/persiste ESSID DMR `01..99` e rejeita valores inválidos antes de alterar a rede.
+- Perfis DMR passaram a carregar o alias junto com frequência/rede.
+- Adicionado gerenciamento seguro da BrandMeister API Key por endpoint dedicado; valor nunca é retornado ao navegador depois de salvo.
+- API Key e Hotspot Security permanecem credenciais independentes; salvar/remover a API Key não reinicia o caminho DMR.
+- DMRGateway helper existente foi preservado. Testes VPS confirmaram os IDs efetivos de 9 dígitos para sufixos `01` e `02`.
+- Validação de fonte/VPS: 12 testes determinísticos PASS; build ARM64 e teste físico ainda são gates.
+
