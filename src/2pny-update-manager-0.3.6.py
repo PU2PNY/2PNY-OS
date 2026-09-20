@@ -48,9 +48,17 @@ def install(url,digest,version,keep):
     try:
         with tarfile.open(pkg,"r:gz") as tf:
             members=tf.getmembers()
-            bad=[m.name for m in members if m.isfile() and not safe_rel(m.name) and m.name!="manifest.json"]
-            if bad:die("Pacote contém caminho não autorizado")
-            if any(m.issym() or m.islnk() for m in members):die("Pacote contém links não permitidos")
+            for m in members:
+                name=str(m.name or "")
+                parts=Path(name).parts
+                if not name or name.startswith("/") or ".." in parts:
+                    die("Pacote contém caminho não autorizado")
+                if name!="manifest.json" and name!="payload" and not name.startswith("payload/"):
+                    die("Pacote contém caminho não autorizado")
+                if m.issym() or m.islnk() or m.isdev():
+                    die("Pacote contém tipo de arquivo não permitido")
+                if m.isfile() and name!="manifest.json" and not safe_rel(name):
+                    die("Pacote contém arquivo fora das áreas autorizadas")
             tf.extractall(work)
         manifest=json.loads((work/"manifest.json").read_text())
         files=manifest.get("files") or []
