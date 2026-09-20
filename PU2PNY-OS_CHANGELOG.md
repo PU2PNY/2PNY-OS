@@ -164,6 +164,6 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - O código existente já possui renderers OLED/LCD e autoaplicação do Display Core, mas permanece HW pendente.
 - Registrados ARCH-004, PERF-003 e REL-007 para uma imagem Raspberry Pi 32-bit paralela.
 - A imagem será distribuída como .img.xz para cartão SD, não como ISO de PC.
-- Estratégia inicial revisada após inspeção do builder: Raspberry Pi OS Lite Trixie 32-bit de 15/09/2026 + GOARCH=arm GOARM=6, mantendo ARM64 independente; Bookworm Legacy 32-bit será fallback de compatibilidade.
+- Inspeção da cadeia completa mostrou que os overlays fixam o builder final em Raspberry Pi OS Legacy Lite Bookworm 64-bit. A estratégia ARM32 foi corrigida para Bookworm Legacy Lite 32-bit de 15/09/2026 + GOARCH=arm GOARM=6; Trixie fica para avaliação posterior, evitando divergência desnecessária.
 - Pesquisa externa: Raspberry Pi OS 32-bit segue disponível; a edição Legacy 32-bit Bookworm cobre modelos antigos. MMDVM-Host/MMDVM-Display declaram suporte a Linux 32-bit.
 - Nenhuma afirmação de funcionamento ARM32/HW foi feita nesta etapa.
