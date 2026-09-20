@@ -193,8 +193,8 @@ Ações como "Trocar rede" no Hotspot/Internet devem abrir somente o módulo cor
 ### NET-011 — Qualidade da rota explicável
 A rota até o servidor deve classificar a medição observada como Ótima/Boa/Ruim com critérios visíveis, identificar gateway/local, destino final e número de hops. Hops sem ICMP não são automaticamente falha.
 
-### PROTO-007 — DMR: mudança de TG precisa transportar áudio
-No caminho DMR/XLX já validado, mudar para um TG de controle/destino não pode ficar apenas em estado "conectado". Quando o TG for suportado pelo preset, o gateway deve efetivamente encaminhar os frames de voz para o destino correto, preservando TG6 e o comportamento de link/unlink existente. Qualquer patch no DMRGateway exige regressão TX/RX DMR completa e rollback.
+### LIVE-008 — DMR: módulo XLX efetivo deve acompanhar TG de controle
+O caminho DMR/XLX RF→servidor e servidor→RF já validado não deve ser alterado para corrigir UI. Quando um TG de controle 4001..4026 selecionar o módulo A..Z, o estado em tempo real do painel deve refletir imediatamente o módulo efetivo (ex.: TG4002 → B, TG4003 → C), inclusive durante transmissões posteriores em TG6. O preset salvo pode permanecer no módulo inicial; o runtime deve ter precedência visual. TG4000 deve refletir desligado/desvinculado. Não reiniciar MMDVMHost/DMRGateway só para atualizar essa indicação.
 
 ### LIVE-006 — Tabela operacional rica
 Ao Vivo e Histórico devem compartilhar o mesmo modelo de colunas, inspirado no painel XLX026 já aprovado: número/bandeira, Status, Indicativo, Nome, Hotspot/Repetidora, Cidade, Protocolo, Módulo/TG, origem RF/Internet, Tempo TX/RX e horário. Coluna sem dado real mostra —; não inventar dados.
