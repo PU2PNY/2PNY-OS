@@ -142,25 +142,32 @@ class Nextion:
             if h>=300:cmds += [self.text(10,h-54,w-20,20,f"RX {rx:.6f}  TX {tx:.6f}",GRAY,0,1),
                                self.text(10,h-30,w-20,20,f"NET {qual}  {lat if lat is not None else '-'} ms",GREEN if qual not in ("poor","offline") else RED,0,1)]
         else:
-            # TX/RX identity card.  It is intentionally HMI-independent: the
-            # renderer uses vector/text commands so no TFT/HMI is overwritten.
-            # Dynamic operator photos require an explicitly compatible HMI.
+            # TX/RX identity card. Keep it HMI-independent: stock Nextion
+            # serial commands can display picture resources already compiled
+            # into the HMI, but not arbitrary caller JPEG/PNG files.  We never
+            # overwrite the user's TFT automatically, so use a clean avatar
+            # and reserve dynamic photos for an explicitly compatible HMI.
             avatar=source[:2].upper() if source else "ID"
-            cmds += self.flag(op.get("country_code"),w-54,48)
-            cmds += [f"cir 54,92,38,{CYAN}",f"cir 54,92,34,{BLACK}",
-                     self.text(20,77,68,30,avatar,CYAN,0,1),
-                     self.text(102,50,max(80,w-166),34,source,CYAN,0,0),
-                     self.text(102,86,max(80,w-114),27,name or "—",WHITE,0,0),
-                     self.text(102,116,max(80,w-114),21,(" · ".join([x for x in (city,country) if x])) or "Localização —",GRAY,0,0),
-                     self.text(12,146,w-24,23,f"{origin}  {duration}  {proto}",YELLOW if origin=="RF" else CYAN,0,0),
-                     self.text(12,172,w-24,23,f"Destino {target or '-'}"+(f"  Mód {module}" if module else ""),WHITE,0,0)]
-            if rfline:cmds += [self.text(12,198,w-24,21,rfline,WHITE,0,0)]
+            info_y=48
+            cmds += [f"fill 8,{info_y},88,92,{GRAY}",f"fill 10,{info_y+2},84,88,{BLACK}",
+                     f"cir 52,{info_y+39},29,{CYAN}",f"cir 52,{info_y+39},25,{BLACK}",
+                     self.text(20,info_y+25,64,28,avatar,CYAN,0,1)]
+            cmds += self.flag(op.get("country_code"),30,info_y+62)
+            cmds += [self.text(106,50,max(90,w-116),36,source,CYAN,0,0),
+                     self.text(106,86,max(90,w-116),28,name or "—",WHITE,0,0),
+                     self.text(106,116,max(90,w-116),22,(" · ".join([x for x in (city,country) if x])) or "Localização —",GRAY,0,0),
+                     f"line 10,143,{w-10},143,{GRAY}",
+                     self.text(12,149,w-24,24,f"{origin}  {duration}  {proto}",YELLOW if origin=="RF" else CYAN,0,0),
+                     self.text(12,177,w-24,23,f"{target or '-'}"+(f"  · Mód {module}" if module else ""),WHITE,0,0)]
+            if rfline:cmds += [self.text(12,202,w-24,20,rfline,WHITE,0,0)]
             if tot_left is not None:
-                cmds += [f"fill 0,{max(218,h-54)},{w},30,{RED}",
-                         self.text(0,max(220,h-52),w,26,f"TOT: corte em {tot_left} s",WHITE,0,1)]
+                cmds += [f"fill 0,{max(224,h-54)},{w},30,{RED}",
+                         self.text(0,max(226,h-52),w,26,f"TOT: corte em {tot_left} s",WHITE,0,1)]
             else:
-                cmds += [self.text(12,h-52,w-24,20,f"{uplink} {ip}  NET {qual}",GREEN if qual not in ("poor","offline") else RED,0,0),
-                         self.text(12,h-30,w-24,20,f"LAT {lat if lat is not None else '-'} ms  PER {loss if loss is not None else '-'}%",GRAY,0,0)]
+                net_color=GREEN if qual not in ("poor","offline") else RED
+                cmds += [f"line 10,{h-58},{w-10},{h-58},{GRAY}",
+                         self.text(12,h-54,w-24,21,f"{uplink} {ip}  NET {qual}",net_color,0,0),
+                         self.text(12,h-31,w-24,19,f"LAT {lat if lat is not None else '-'} ms  PER {loss if loss is not None else '-'}%",GRAY,0,0)]
         self.send(cmds)
 
 class I2CBase:
@@ -207,7 +214,8 @@ class OLED(I2CBase):
             if rv is not None:rf.append(f"R{rv}")
             place=" / ".join(x for x in (str(op.get("city") or ""),str(op.get("country") or "")) if x)
             ip=ns.get("default_ip") or "-"
-            lines=[f"{mode.upper()} {proto} {direction}",a.get("source") or "-",op.get("name") or "-",place or "Local -",a.get("target") or "-",f"{uplink} {ip}" if ip!="-" else (" ".join(rf) or "NET -")]
+            net=live.get("internet") or {};qual=str(net.get("quality") or "?").upper();lat=net.get("latency_ms")
+            lines=[f"{mode.upper()} {proto} {direction}",a.get("source") or "-",op.get("name") or "-",place or "Local -",a.get("target") or "-",f"{uplink} {ip} {qual[:4]}"+(f" {lat}ms" if lat is not None else "") if ip!="-" else (" ".join(rf) or "NET -")]
         self.show(lines)
 
 class LCD(I2CBase):
@@ -238,7 +246,8 @@ class LCD(I2CBase):
                 if rv is not None:rf.append(f"R{rv}")
                 ns=read_network_status();place=" / ".join(x for x in (str(op.get("city") or ""),str(op.get("country") or "")) if x)
                 who=((a.get("source") or "-")+" "+(op.get("name") or "")).strip()
-                net=f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"
+                internet=live.get("internet") or {};qual=str(internet.get("quality") or "?").upper()
+                net=f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'} {qual[:3]}"
                 lines=[f"{mode.upper()} {proto}",who,place or (a.get("target") or "-"),net]
         else:
             ns=read_network_status();lines=[f"{mode.upper()} {proto} {a.get('source') or 'PU2PNY'}",f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"]
