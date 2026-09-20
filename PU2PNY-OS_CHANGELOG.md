@@ -125,3 +125,10 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - DMRGateway helper existente foi preservado. Testes VPS confirmaram os IDs efetivos de 9 dígitos para sufixos `01` e `02`.
 - Validação de fonte/VPS: 12 testes determinísticos PASS; build ARM64 e teste físico ainda são gates.
 
+## 2026-09-20 — APRS: falha física de mensagens adicionada à 0.3.6
+
+- Novo feedback HW: mensagens APRS não foram enviadas nem recebidas.
+- Criado requisito **APRS-004** para transporte APRS-IS bidirecional real, login verificado, fila persistente, ACK/REJ, retry limitado, deduplicação e diagnóstico visível.
+- O estado anterior de `Mensagem enfileirada` deixa de ser evidência de envio.
+- Será preservado o baixo consumo: conexão única, sem polling externo pesado, histórico limitado e retries limitados.
+- Backup pré-correção: `backup/0.3.6-pre-aprs-msgfix-20260920`.
