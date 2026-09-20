@@ -325,3 +325,15 @@ O recurso de mensagens APRS deve realmente **enviar e receber** via APRS-IS. Nã
 - preservar histórico limitado, baixo consumo e poucas gravações em SD.
 
 A implementação deve usar porta APRS-IS bidirecional recomendada e servidores/pools atuais documentados; para América do Sul, preferir o pool regional oficial quando disponível, mantendo fallback configurável.
+
+## 13. Ajustes permanentes da 0.3.6 — validação física de 20/09/2026
+
+- **PROTO-012 — Compatibilidade D-Star com o binário fixado:** enquanto a imagem utilizar F4FXL DStarGateway `v20260323-612f388`, o gerador deve usar o schema dessa revisão (`[General]`, `[Repeater 1]`, `[IRCDDB 1]`, `[Hosts Files]` e níveis numéricos de log). É proibido misturar o schema atual da branch develop com esse binário. Alteração exige teste e rollback próprios.
+- **NET-016 — DNS efetivo e comparação dinâmica leve:** mostrar apenas resolvedores efetivos da interface da rota padrão, informar quando a comparação foi medida e refazer o teste em cache limitado (alvo atual: 180 s), sem aplicar automaticamente o DNS sugerido.
+- **NET-017 — Wi-Fi 1/2 configurável e handoff sem reboot obrigatório:** os dois perfis devem oferecer busca real, SSID manual e senha. A troca só é concluída após associação + IP; se validada, não reiniciar apenas para confirmar o perfil. Em falha, restaurar conexão anterior ou AP de recuperação.
+- **WIZ-006 — Idioma no primeiro provisionamento real:** a seleção de idioma deve reaparecer em hotspot não provisionado mesmo quando o navegador traz `localStorage` de uma instalação antiga.
+- **APRS-005 — Operação assistida e resposta direta:** a página APRS deve explicar o bloqueio de geolocalização em HTTP, manter preenchimento manual, oferecer teste/ajuda sob demanda e permitir clicar no remetente para preencher automaticamente o destino da resposta.
+- **UI-012 — Identidade externa legível:** QRZ e RadioID devem aparecer também em Atividade recente. RadioID não deve abrir JSON bruto; a consulta oficial será apresentada em página legível, somente sob demanda.
+- **UPDATE-005 — Download verificado antes da instalação:** atualização deve baixar em segundo plano, exibir progresso real quando mensurável, atingir 100%, validar SHA-256 e somente então permitir instalação após confirmação explícita. Falha de rede antes de 100% não pode modificar o sistema. A confirmação deve alertar sobre alimentação, rollback e possibilidade de regravar o cartão em falha grave.
+- **DISPLAY-011 — TX/RX e telas compactas:** TX/RX deve priorizar indicativo, nome, cidade/país, protocolo, origem/destino e estado RF/rede. OLED/LCD compactos devem incluir identidade e contexto de rede/IP dentro do espaço disponível. Foto dinâmica em Nextion só pode ser habilitada com HMI explicitamente compatível; o sistema não deve sobrescrever HMI/TFT automaticamente.
+- **TEST-006 — P25 sem hardware disponível:** nesta etapa P25 só pode receber DOC/SW/VPS. Não declarar HW/PROD até teste com rádio P25 real.

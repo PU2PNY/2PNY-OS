@@ -204,3 +204,16 @@ A 0.3.6-alpha só pode ser publicada para teste físico depois que os novos caso
 - APRS: 6 testes determinísticos PASS; VPS resolveu `soam.aprs2.net` e recebeu greeting do servidor na porta 14580. Isso é evidência VPS de transporte, **não** substitui envio/recebimento HW real.
 - A imagem está liberada como **Alpha para teste físico**. DMR da 0.3.5 continua baseline; D-Star/YSF/Wi-Fi/APRS/perfis/displays/update permanecem HW pendente até confirmação no Raspberry Pi/MMDVM.
 
+## Checkpoint 0.3.6 hwfix2 — 20/09/2026
+
+Estado antes do CI final:
+
+- DMR: baseline preservada; nenhuma alteração no helper DMR fisicamente aprovado.
+- YSF: baseline preservada; nenhuma alteração funcional no gateway já validado pelo usuário.
+- D-Star: correção implementada para o schema do binário `612f388`; **SW pendente do workflow final e HW pendente de novo teste RF/rede**.
+- Wi-Fi/AP: handoff sem reboot obrigatório, busca dos dois perfis e DNS efetivo corrigidos; **SW pendente do workflow e HW pendente de novo teste de primeiro boot/handoff**.
+- APRS: motor bidirecional existente preservado; interface recebeu teste/ajuda, fallback correto de geolocalização e resposta por clique; **SW pendente e HW/APRS-IS real pendente**.
+- P25: configuração estática coberta por teste determinístico; **sem HW**.
+- Display: layout TX/RX e telas compactas ajustados sem sobrescrever HMI; foto dinâmica Nextion permanece condicionada a HMI compatível.
+- Update: download e instalação separados; instalação fica bloqueada até download 100% + SHA-256.
+- Release completa: **NÃO declarada PROD** até ARM64/estrutura/SHA concluírem e as pendências HW críticas forem repetidas no equipamento.

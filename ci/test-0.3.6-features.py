@@ -18,6 +18,8 @@ class T(unittest.TestCase):
         internet=(ROOT/"src/internet-0.3.6.html").read_text()
         self.assertIn("Rede Wi‑Fi 1 e Rede Wi‑Fi 2",internet)
         self.assertIn('id="wifiSecondManual"',internet)
+        self.assertIn('id="wifiPrimaryManual"',internet)
+        self.assertIn("dns_refresh_seconds", (ROOT/"src/2pny-netdiag-0.3.6.py").read_text())
         self.assertNotIn('/wizard?step=1&return=internet',internet)
         self.assertIn("Melhor opção",internet)
         self.assertIn("PNY.operation",internet)
@@ -30,10 +32,12 @@ class T(unittest.TestCase):
     def test_aprs_and_identity_links(self):
         aprs=(ROOT/"src/aprs-0.3.6.html").read_text()
         self.assertIn("navigator.geolocation",aprs);self.assertIn("Usar minha localização",aprs)
+        self.assertIn("window.isSecureContext",aprs);self.assertIn("replyCall",aprs);self.assertIn("status.aprs2.net",aprs)
         for name in ("history-0.3.6.html","dashboard-0.3.6.html"):
             s=(ROOT/"src"/name).read_text()
             self.assertIn("https://www.qrz.com/db/",s)
-            self.assertIn("https://radioid.net/api/dmr/user/",s)
+            self.assertIn("/radioid?callsign=",s)
+            self.assertNotIn('href="https://radioid.net/api/dmr/user/',s)
             self.assertIn('target="_blank"',s)
 
     def test_translation_and_global_operation_ui(self):
@@ -76,13 +80,20 @@ class T(unittest.TestCase):
             files={str(p.relative_to(state)):p.read_text(errors="ignore") for p in state.rglob("*") if p.is_file()}
             return files,out.getvalue()
 
-    def test_dstar_native_gateway_sections(self):
+    def test_dstar_pinned_612f388_schema(self):
         files,out=self._run_apply("DSTAR","XLX026","82.152.175.30",0,"D","XLX")
         ini=files["dstar/DStarGateway.ini"]
-        for section in ("[Gateway]","[ircddb_1]","[Repeater_1]","[HostsFiles]","[DPlus]","[DCS]","[XLX]","[DRats]","[Remote]"):
+        for section in ("[General]","[IRCDDB 1]","[Repeater 1]","[Hosts Files]","[Log]","[MQTT]","[D-Plus]","[DCS]","[XLX]","[D-Rats]","[Remote Commands]"):
             self.assertIn(section,ini)
-        self.assertIn("reflector=XLX026 D",ini)
-        self.assertIn("port=20011",ini)
+        self.assertIn("Callsign=PU2ABC",ini)
+        self.assertIn("Band=D",ini)
+        self.assertIn("Type=HB",ini)
+        self.assertIn("Reflector=XLX026 D",ini)
+        self.assertIn("Port=20011",ini)
+        self.assertIn("DisplayLevel=2",ini)
+        self.assertIn("MQTTLevel=0",ini)
+        self.assertNotIn("[Gateway]",ini)
+        self.assertNotIn("[Repeater_1]",ini)
         self.assertIn("NETWORK_APPLY_OK protocol=DSTAR",out)
 
     def test_ysf_selected_name_is_exactly_resolvable(self):
@@ -93,6 +104,15 @@ class T(unittest.TestCase):
         ini=files["ysf/YSFGateway.ini"]
         self.assertIn("Startup=BR-XLX026",ini)
         self.assertIn("NETWORK_APPLY_OK protocol=YSF",out)
+
+    def test_p25_static_configuration_without_claiming_hardware(self):
+        files,out=self._run_apply("P25","P25-724","198.51.100.10",42010,"","P25")
+        ini=files["p25/P25Gateway.ini"];host=files["mmdvm/MMDVM-Host.ini"]
+        self.assertIn("[General]",ini);self.assertIn("[Network]",ini)
+        self.assertIn("RptPort=32010",ini);self.assertIn("LocalPort=42020",ini)
+        self.assertIn("Static=724",ini)
+        self.assertIn("Enable = 1",host.replace("Enable=1","Enable = 1"))
+        self.assertIn("NETWORK_APPLY_OK protocol=P25",out)
 
     def test_runtime_link_evidence(self):
         src=(ROOT/"src/2pny-station-worker-0.3.6.py").read_text()
@@ -178,6 +198,11 @@ class T(unittest.TestCase):
         self.assertIn("sha256(pkg)",s)
         self.assertIn("issym()",s);self.assertIn("islnk()",s)
         self.assertIn("rollback",s)
+        self.assertIn('cmd=="download"',s);self.assertIn('cmd=="install-staged"',s)
+        self.assertIn("progress_percent",s)
+        self.assertLess(s.index('if cmd=="status"'),s.index("fcntl.flock"))
+        ui=(ROOT/"src/system-0.3.6.html").read_text()
+        self.assertIn("Baixar atualização",ui);self.assertIn("100% completo",ui);self.assertIn("regravar o SD",ui)
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
