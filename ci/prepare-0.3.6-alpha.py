@@ -111,9 +111,10 @@ assert 'parse_logresp' in aprs_client and 'TCP_NODELAY' in aprs_client
 assert 'login_unverified' in aprs_client and 'retry_unacked' in aprs_client
 assert 'soam.aprs2.net' in aprs_client
 assert '/wizard?step=1' not in expert and '/wizard?step=3' not in expert
-assert 'qrz.com/db/' in history and 'radioid.net/api/dmr/user/' in history
-assert 'qrz.com/db/' in dash and 'radioid.net/api/dmr/user/' in dash
+assert 'qrz.com/db/' in history and '/radioid?callsign=' in history
+assert 'qrz.com/db/' in dash and '/radioid?callsign=' in dash
 assert 'Ex.: PU2ABC' in wiz and 'Ex.: 7240000' in wiz and '>Radio ID<' in wiz
+assert 'Consulta RadioID' in radioid and '/api/contacts' in radioid and 'JSON bruto' in radioid
 assert 'function operation' in common
 assert 'MutationObserver' in lang and "'Melhor opção'" in lang
 assert 'RF>NET' in display and 'NET>RF' in display
