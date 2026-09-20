@@ -34,3 +34,32 @@ jobs:
           find builder -maxdepth 2 -type f -print | sort
           echo '=== relevant architecture references ==='
           grep -RniE 'GOARCH|GOARM|arm64|armhf|raspios.*bookworm' builder src rootfs-overlay 2>/dev/null | head -n 300 || true
+
+  probe-armhf-chroot:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - name: Probe Raspberry Pi OS Trixie armhf chroot
+        run: |
+          set -Eeuo pipefail
+          BASE='2026-09-15-raspios-trixie-armhf-lite.img.xz'
+          URL='https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2026-09-15/'"$BASE"
+          SHA='c766b3fb279b95c12cb4dd22d06f8eab31972c372675d05bd0ca95b060523a7f'
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux file
+          curl --fail --location --retry 4 --connect-timeout 20 -o "$BASE" "$URL"
+          echo "$SHA  $BASE" | sha256sum -c -
+          xz -dc "$BASE" > armhf.img
+          LOOP="$(sudo losetup --find --partscan --show armhf.img)"
+          cleanup(){ set +e; mountpoint -q mnt && sudo umount mnt; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          mkdir -p mnt
+          sudo mount "${LOOP}p2" mnt
+          echo '=== file architecture ==='
+          file mnt/bin/sh mnt/bin/bash
+          echo '=== dpkg architecture ==='
+          sudo chroot mnt /usr/bin/dpkg --print-architecture
+          echo '=== kernel/userland execution ==='
+          sudo chroot mnt /bin/uname -m
+          sudo chroot mnt /bin/true
+          echo 'ARMHF_CHROOT_OK'
