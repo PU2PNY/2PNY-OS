@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<title>PU2PNY-OS 0.3.5 — Assistente</title>
+<title>PU2PNY-OS 0.3.4 — Assistente</title>
 <script>(function(){var t=localStorage.getItem('pu2pny-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 <style>
 :root{color-scheme:dark;--bg:#070d14;--side:#0d1723;--card:#101b28;--card2:#142233;--line:#263b52;--text:#f4f8fc;--muted:#94abc4;--blue:#39adfa;--blue2:#168bd7;--green:#35d58d;--yellow:#f3c65d;--red:#ff6c7b;--shadow:0 18px 55px rgba(0,0,0,.28)}
@@ -17,12 +17,12 @@ html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;-
 <div class="languagewelcome" id="languageWelcome" hidden>
   <div class="languagebox">
     <div style="font-weight:950;color:var(--blue);margin-bottom:8px">PU2PNY-OS</div>
-    <h1 id="welcomeTitle">Bem-vindo / Welcome</h1>
-    <p id="welcomeText">Escolha o idioma / Choose your language</p>
+    <h1 id="welcomeTitle">Bem-vindo</h1>
+    <p id="welcomeText">Escolha o idioma para continuar a configuração.</p>
     <select id="welcomeLanguage" aria-label="Escolha o idioma">
       <option value="pt">Português</option><option value="en">English</option><option value="es">Español</option>
     </select>
-    <button class="btn primary" id="welcomeContinue" type="button">Continuar / Continue</button>
+    <button class="btn primary" id="welcomeContinue" type="button">Continuar</button>
   </div>
 </div>
 <div class="reconnect" id="reconnectOverlay" hidden>
@@ -312,7 +312,7 @@ function step(n){
 }
 async function getj(url,opt){let ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),15000);try{let r=await fetch(url,Object.assign({cache:'no-store',signal:ctl.signal},opt||{}));let j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Falha na operação');return j}finally{clearTimeout(timer)}}
 
-let lastConnectivity=null,reconnectCandidates=[],alreadyProvisioned=false,autoStepTimer=null,autoStepRemaining=0;
+let lastConnectivity=null,reconnectCandidates=[];
 function showConnectivity(c){
   lastConnectivity=c;
   (c.ipv4||[]).forEach(function(ip){if(ip&&String(ip).indexOf('10.43.0.')!==0){let u='http://'+ip;if(reconnectCandidates.indexOf(u)<0)reconnectCandidates.push(u)}});
@@ -384,7 +384,7 @@ function renderNetworks(a){
       let o=document.createElement('option');
       o.value=x.ssid;
       o.dataset.bssid=x.bssid||'';
-      o.textContent=x.ssid+(x.signal?' · '+x.signal+'%':'')+(x.channel?' · canal '+x.channel:'')+(x.frequency_mhz?' · '+x.frequency_mhz+' MHz':'')+(x.security?' · '+x.security:'');
+      o.textContent=x.ssid+(x.signal?' · '+x.signal+'%':'')+(x.frequency_mhz?' · '+x.frequency_mhz+' MHz':'')+(x.security?' · '+x.security:'');
       sel.appendChild(o)
     });
     hint.textContent=a.length+' rede(s) encontrada(s). Selecione uma e digite a senha.';
@@ -440,10 +440,7 @@ async function continueAfterReconnect(){
   let candidates=['http://pu2pny.local'].concat(reconnectCandidates);
   if(location.hostname!=='10.43.0.1')candidates.unshift(location.origin);
   for(let base of [...new Set(candidates)]){
-    if(await reachable(base)){
-      location.replace(base+(alreadyProvisioned?'/internet':'/wizard?step=2'));
-      return true
-    }
+    if(await reachable(base)){location.replace(base+'/wizard?step=2');return true}
   }
   return false
 }
@@ -509,8 +506,8 @@ q('refreshEthernet').onclick=async function(){
 };
 q('toHardware').onclick=function(){step(2);startHardware()};
 q('backInternet').onclick=function(){location.href='/wizard?step=1'};
-q('retryHardware').onclick=function(){clearAutoStep();startHardware()};
-q('toBasic').onclick=function(){clearAutoStep();if(alreadyProvisioned){location.href='/hotspot';return}step(3);loadCurrentConfig().then(()=>{if(!serverCatalog.length)loadServers(false)})};
+q('retryHardware').onclick=function(){startHardware()};
+q('toBasic').onclick=function(){step(3);loadCurrentConfig().then(()=>{if(!serverCatalog.length)loadServers(false)})};
 q('backHardware').onclick=function(){step(2)};
 for(let i=1;i<=4;i++){
   q('nav'+i).style.cursor='pointer';
@@ -526,24 +523,6 @@ function taskState(id,state,text){
   e.querySelector('em').textContent=text;
   e.querySelector('.circle').textContent=state==='done'?'✓':'•';
 }
-function clearAutoStep(){
-  if(autoStepTimer){clearInterval(autoStepTimer);autoStepTimer=null}
-  autoStepRemaining=0;
-}
-function scheduleHardwareAdvance(){
-  if(autoStepTimer)return;
-  autoStepRemaining=5;
-  q('toBasic').textContent='Ir para configuração básica agora · automático em 5 s →';
-  autoStepTimer=setInterval(function(){
-    autoStepRemaining--;
-    if(autoStepRemaining<=0){
-      clearAutoStep();q('toBasic').textContent='Ir para configuração básica →';
-      step(3);loadCurrentConfig().then(()=>{if(!serverCatalog.length)loadServers(false)});
-      return
-    }
-    q('toBasic').textContent='Ir para configuração básica agora · automático em '+autoStepRemaining+' s →';
-  },1000)
-}
 function hardwareSummary(s){
   let pi=s.raspberry&&s.raspberry.model?s.raspberry.model:'Raspberry Pi';
   let m=s.mmdvm||{},d=s.display||{};
@@ -558,10 +537,8 @@ function hardwareSummary(s){
     taskState('taskMmdvm','done','Concluído');
     taskState('taskDisplay',(d.detected||d.state==='mmdvm_display_candidate')?'done':'',d.detected?'Reconhecido':(d.state==='mmdvm_display_candidate'?'Configuração automática':'Não detectado'));
     taskState('taskReady','done','Concluído');
-    q('toBasic').disabled=false;
-    scheduleHardwareAdvance()
+    q('toBasic').disabled=false
   }else{
-    clearAutoStep();
     q('sumStatus').textContent='Revise o modem';
     taskState('taskMmdvm','active','Não confirmado');
     taskState('taskDisplay','',d.detected?'Detectado':'Opcional');
@@ -830,9 +807,9 @@ function initLanguageWelcome(){
   ov.hidden=false;sel.value=localStorage.getItem('pu2pny-language')||'pt';
   function copy(){
     let v=sel.value,dict={
-      pt:['Bem-vindo / Welcome','Escolha o idioma / Choose your language','Continuar / Continue'],
-      en:['Bem-vindo / Welcome','Escolha o idioma / Choose your language','Continuar / Continue'],
-      es:['Bienvenido / Welcome','Elija el idioma / Choose your language','Continuar / Continue']
+      pt:['Bem-vindo','Escolha o idioma para continuar a configuração.','Continuar'],
+      en:['Welcome','Choose your language to continue setup.','Continue'],
+      es:['Bienvenido','Elija el idioma para continuar la configuración.','Continuar']
     },t=dict[v]||dict.pt;
     q('welcomeTitle').textContent=t[0];q('welcomeText').textContent=t[1];btn.textContent=t[2]
   }
@@ -845,21 +822,17 @@ function initLanguageWelcome(){
 }
 async function boot(){
   initLanguageWelcome();
-  try{let vs=await getj('/api/status');alreadyProvisioned=!!vs.provisioned;if(q('versionBadge'))q('versionBadge').textContent=vs.version||'PU2PNY-OS'}catch(_){}
+  try{let vs=await getj('/api/status');if(q('versionBadge'))q('versionBadge').textContent=vs.version||'PU2PNY-OS'}catch(_){}
   await pollConnectivity();
   await loadMaintenance();
   const params=new URLSearchParams(location.search);
   const requested=Number(params.get('step')||0);
   let st={};
   try{st=await getj('/api/status')}catch(e){}
-  alreadyProvisioned=!!st.provisioned;
   if(st.provisioned)await loadCurrentConfig();
   if(requested>=1&&requested<=3){
     step(requested);
-    if(requested===1){
-      if(alreadyProvisioned){q('toHardware').textContent='Voltar para Internet →';q('toHardware').onclick=function(){location.href='/internet'}}
-      loadWiFiCountry().then(loadWifi)
-    }
+    if(requested===1)loadWiFiCountry().then(loadWifi);
     if(requested===2)startHardware();
   }else if(st.provisioned){
     await loadConclusion();step(4);
