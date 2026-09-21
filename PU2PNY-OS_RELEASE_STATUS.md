@@ -282,3 +282,10 @@ Estado antes do CI final:
 |---|---|---:|---|
 | NET-018 / UI-014 | FALHA | HW/browser | Wi-Fi 1 não mostrou claramente estado salvo/conectado; Wi-Fi 2 tentou conectar ao usar "Salvar"; sem Mostrar/Ocultar senha; erro bruto em inglês; troca/configuração ainda instáveis |
 | NET-017/018 | FALHA | HW | handoff deve ser rápido e transacional, mas ainda não há confirmação confiável de associação/IP nos dois perfis |
+
+## Função adicionada ao escopo 0.3.7-alpha — canais Wi-Fi
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| NET-019 — gráfico e recomendação de canal Wi-Fi | PENDENTE | DOC | requisito registrado; implementação/validação ainda necessárias |
+| TEST-NET-019A..019E | PENDENTE | SW/HW | gráfico 2,4/5 GHz, canal ativo, recomendação explicável e scan leve precisam passar pelos testes |
