@@ -90,7 +90,16 @@ grep -Fq 'nextion_mmdvm' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'SSD1306' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'class LCD' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'b"connect\xff\xff\xff"' "$ROOT/usr/local/sbin/2pny-hardware-probe"
-grep -Fq 'MMDVMHost is the authoritative writer' "$ROOT/usr/local/sbin/2pny-display-apply"
+# DISPLAY-016: two mutually-exclusive renderer modes. In Moderno V2,
+# MMDVMHost owns the modem transport while PU2PNY is the logical renderer;
+# in native mode MMDVMHost owns both. Gate the actual contract, not the
+# superseded 0.3.9 comment string.
+grep -Fq 'pu2pny-modern-v2' "$ROOT/usr/local/sbin/2pny-display-apply"
+grep -Fq 'mmdvmhost-native' "$ROOT/usr/local/sbin/2pny-display-apply"
+grep -Fq 'patch_modern_transport' "$ROOT/usr/local/sbin/2pny-display-apply"
+grep -Fq 'patch_native_nextion' "$ROOT/usr/local/sbin/2pny-display-apply"
+grep -Fq 'remove_option("General","Display")' "$ROOT/usr/local/sbin/2pny-display-apply"
+grep -Fq 'ctl("disable","--now",LEGACY);ctl("disable","--now",CORE)' "$ROOT/usr/local/sbin/2pny-display-apply"
 grep -Fq 'input=b"connect\xff\xff\xff"' "$ROOT/usr/local/sbin/2pny-nextion-autodetect"
 grep -Fq 'disable","--now",LEGACY' "$ROOT/usr/local/sbin/2pny-display-apply"
 
