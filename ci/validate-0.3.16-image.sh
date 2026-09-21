@@ -918,8 +918,8 @@ for unit in 2pny-timezone-apply.path 2pny-ssh-apply.path 2pny-operational-apply.
   test -s "$ROOT/etc/systemd/system/$unit"
   test -L "$ROOT/etc/systemd/system/multi-user.target.wants/$unit"
 done
-grep -Fq 'PathChanged=/run/2pny/timezone-request.json' "$ROOT/etc/systemd/system/2pny-timezone-apply.path"
-grep -Fq 'PathChanged=/run/2pny/ssh-request.json' "$ROOT/etc/systemd/system/2pny-ssh-apply.path"
+grep -Fq 'PathExists=/run/2pny/timezone-request.json' "$ROOT/etc/systemd/system/2pny-timezone-apply.path"
+grep -Fq 'PathExists=/run/2pny/ssh-request.json' "$ROOT/etc/systemd/system/2pny-ssh-apply.path"
 grep -Fq 'PathChanged=/run/2pny/operational-request.json' "$ROOT/etc/systemd/system/2pny-operational-apply.path"
 grep -Fq 'PathChanged=/run/2pny/display-apply-request.json' "$ROOT/etc/systemd/system/2pny-display-apply-request.path"
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.16-alpha'
