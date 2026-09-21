@@ -360,10 +360,13 @@ grep -Fq 'Potência RF do MMDVM' "$ROOT/usr/share/2pny/expert.html"
 grep -Fq '/api/rf/power' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/rf/power'
 test -x "$ROOT/usr/local/sbin/2pny-timezone-apply"
 test -x "$ROOT/usr/local/sbin/2pny-rflevel-apply"
+test -x "$ROOT/usr/local/sbin/2pny-ssh-apply"
 test -s "$ROOT/etc/systemd/system/2pny-timezone-apply.service"
 test -s "$ROOT/etc/systemd/system/2pny-rflevel-apply.service"
+test -s "$ROOT/etc/systemd/system/2pny-ssh-apply.service"
 grep -Fq 'WiresXCommandPassthrough=0' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'Reconnect=0' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'porta 20010' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'characterData:true' "$ROOT/usr/share/2pny/ui-language.js"
 grep -Fq 'effective_layout' "$ROOT/usr/local/sbin/2pny-display-apply"
 
