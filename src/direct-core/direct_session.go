@@ -222,8 +222,16 @@ func (c *core) call(to string) error {
 			c.st.Status = "connected"
 			c.st.Path = "Direct"
 			c.st.LatencyMS = d.Milliseconds()
+			c.lastPeerTraffic = time.Now()
 			c.writeState()
 			c.mu.Unlock()
+			if err := c.enterRadio(localProto); err != nil {
+				_ = c.sendSecure(to, "hangup", []byte("radio-setup-failed"), false)
+				c.mu.Lock()
+				c.st.Status = "error"; c.st.Path = "Offline"; c.st.LastError = err.Error(); c.writeState()
+				c.mu.Unlock()
+				return err
+			}
 			return nil
 		case <-time.After(1800 * time.Millisecond):
 		}
@@ -235,8 +243,16 @@ func (c *core) call(to string) error {
 			c.st.Status = "connected"
 			c.st.Path = "Relay"
 			c.st.LatencyMS = d.Milliseconds()
+			c.lastPeerTraffic = time.Now()
 			c.writeState()
 			c.mu.Unlock()
+			if err := c.enterRadio(localProto); err != nil {
+				_ = c.sendSecure(to, "hangup", []byte("radio-setup-failed"), true)
+				c.mu.Lock()
+				c.st.Status = "error"; c.st.Path = "Offline"; c.st.LastError = err.Error(); c.writeState()
+				c.mu.Unlock()
+				return err
+			}
 			return nil
 	case <-time.After(2200 * time.Millisecond):
 			c.mu.Lock()
