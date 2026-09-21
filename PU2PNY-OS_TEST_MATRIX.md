@@ -316,3 +316,17 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-RF-014A | RF-014 | BER local alto | TXOffset permanece inalterado durante autoajuste baseado apenas no BER do hotspot | PENDENTE | SW/HW |
 | TEST-UI-020A | UI-020 | autoajuste falha/não pode iniciar | toast global orienta usuário e clique abre Expert diretamente na Calibração RF | PENDENTE | SW/HW |
 | TEST-UI-020B | UI-020 | ajuste manual Expert | RXOffset/TXOffset podem ser alterados com preflight, validação e rollback; valor antigo permanece recuperável | PENDENTE | HW |
+
+## Casos adicionados — Ao Vivo / Sinal e qualidade
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-LIVE-013A | LIVE-013 | RX originado em RF com RSSI real | S-meter/RSSI acompanha evento em tempo real e mostra dBm + BER reais | PENDENTE | HW |
+| TEST-LIVE-013B | LIVE-013 | RX RF sem RSSI | medidor mostra indisponível; nenhuma barra/valor é inventado | PENDENTE | SW/HW |
+| TEST-LIVE-013C | LIVE-013 / NET-010 | uplink Wi-Fi | indicador mostra sinal da conexão ativa + Ótimo/Bom/Ruim sem iniciar scan | PENDENTE | SW/HW |
+| TEST-LIVE-013D | LIVE-013 | uplink Ethernet | indicador mostra Ethernet/Link ativo e não apresenta qualidade Wi-Fi falsa | PENDENTE | SW/HW |
+| TEST-LIVE-013E | LIVE-013 / NET-011 | Internet | qualidade reutiliza latência/perda/jitter cacheados e não dispara MTR em loop | PENDENTE | SW/HW |
+| TEST-LIVE-014A | LIVE-014 | RF → Internet | bloco mostra RX, identidade, destino, RX freq, duração, RSSI/BER e gateway quando reais | PENDENTE | HW |
+| TEST-LIVE-014B | LIVE-014 | Internet → RF | bloco mostra TX, identidade remota, destino, TX freq, duração e rede; sem RSSI/BER remoto falso | PENDENTE | HW |
+| TEST-LIVE-014C | LIVE-014 | Standby | mostra perfil/frequências/uplink/saúde resumida sem campos falsos | PENDENTE | SW/HW |
+| TEST-UI-021A | UI-021 | BER/Wi-Fi/Internet ruim | aviso clicável abre exatamente a área de diagnóstico/correção correspondente | PENDENTE | SW/HW |
