@@ -120,10 +120,11 @@ jobs:
             ci/test-0.3.12-regressions.py \
             ci/test-0.3.13-regressions.py \
             ci/test-0.3.14-regressions.py \
+            ci/test-0.3.15-regressions.py \
             ci/test-0.3.16-regressions.py \
             ci/test-0.3.7-features.py
           rm -rf src/__pycache__ ci/__pycache__
-          bash -n src/2pny-rf-apply-0.3.11 src/2pny-rf-apply-0.3.12 src/2pny-rf-apply-0.3.13 src/2pny-rf-apply-0.3.14 src/2pny-rf-apply-0.3.16 src/2pny-network-switch-0.3.6 src/2pny-network-core-0.3.5 src/2pny-wifi-profiles-0.3.6 src/2pny-auto-maintenance-0.3.6 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.6-image.sh ci/validate-0.3.8-image.sh ci/validate-0.3.9-image.sh ci/validate-0.3.10-image.sh ci/validate-0.3.11-image.sh ci/validate-0.3.12-image.sh ci/validate-0.3.13-image.sh ci/validate-0.3.14-image.sh ci/validate-0.3.15-image.sh ci/validate-0.3.16-image.sh src/2pny-network-switch-0.3.9 src/2pny-network-core-0.3.9 src/2pny-network-switch-0.3.16 src/2pny-network-core-0.3.16 src/2pny-direct-start-0.3.7 src/2pny-direct-recover-0.3.7 src/2pny-display-bootstrap-0.3.9 ci/test-0.3.7-direct.sh
+          bash -n src/2pny-rf-apply-0.3.11 src/2pny-rf-apply-0.3.12 src/2pny-rf-apply-0.3.13 src/2pny-rf-apply-0.3.14 src/2pny-rf-apply-0.3.15 src/2pny-network-switch-0.3.6 src/2pny-network-core-0.3.5 src/2pny-wifi-profiles-0.3.6 src/2pny-auto-maintenance-0.3.6 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.6-image.sh ci/validate-0.3.8-image.sh ci/validate-0.3.9-image.sh ci/validate-0.3.10-image.sh ci/validate-0.3.11-image.sh ci/validate-0.3.12-image.sh ci/validate-0.3.13-image.sh ci/validate-0.3.14-image.sh ci/validate-0.3.15-image.sh ci/validate-0.3.16-image.sh src/2pny-network-switch-0.3.9 src/2pny-network-core-0.3.9 src/2pny-network-switch-0.3.16 src/2pny-network-core-0.3.16 src/2pny-direct-start-0.3.7 src/2pny-direct-recover-0.3.7 src/2pny-display-bootstrap-0.3.9 ci/test-0.3.7-direct.sh
           python3 ci/test-0.2.9-live-core.py
           python3 ci/test-0.3.1-live-core.py
           python3 ci/test-0.3.6-features.py
@@ -292,7 +293,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.16-regressions.py"
           python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-display-status             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-protocol-profiles             rootfs-overlay/usr/local/sbin/2pny-update-manager             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect
           bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-network-core rootfs-overlay/usr/local/sbin/2pny-wifi-profiles rootfs-overlay/usr/local/sbin/2pny-auto-maintenance rootfs-overlay/usr/local/sbin/2pny-mdns-guard rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns rootfs-overlay/usr/local/sbin/2pny-mode-apply
-          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.15-alpha"' src/2pnyd/main.go
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.16-alpha"' src/2pnyd/main.go
           grep -Fq 'mqtt_preflight' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'wifi_profile_link_ok' rootfs-overlay/usr/local/sbin/2pny-network-core
           grep -Fq 'openActivity' rootfs-overlay/usr/share/2pny/dashboard.html
@@ -345,6 +346,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.12-regressions.py"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.13-regressions.py"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.14-regressions.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.15-regressions.py"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.16-regressions.py"
           bash "$GITHUB_WORKSPACE/ci/test-0.3.7-direct.sh"
           grep -Fq 'wifiChannelGraph' rootfs-overlay/usr/share/2pny/internet.html
@@ -354,6 +356,18 @@ jobs:
           grep -Fq 'WiresXCommandPassthrough=0' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'effective_layout' rootfs-overlay/usr/local/sbin/2pny-display-apply
           grep -Fq 'porta 20010' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          # 0.3.16 focused staged gates
+          grep -Fq 'connection.autoconnect-retries 3' rootfs-overlay/usr/local/sbin/2pny-network-switch
+          grep -Fq 'nmcli networking on' rootfs-overlay/usr/local/sbin/2pny-network-core
+          grep -Fq "rfMetrics=origin==='RF'" rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'waitProtocolConnection' rootfs-overlay/usr/share/2pny/hotspot.html
+          grep -Fq 'rotate.aprs2.net' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'Enviada · aguardando confirmação (ACK)' rootfs-overlay/usr/share/2pny/aprs.html
+          grep -Fq 'renderer="mmdvmhost-native"' rootfs-overlay/usr/local/sbin/2pny-display-apply
+          grep -Fq 'ReloadTimer=72' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'DStar_Hosts.json' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'PathExists=/run/2pny/timezone-request.json' rootfs-overlay/etc/systemd/system/2pny-timezone-apply.path
+          grep -Fq 'PathExists=/run/2pny/ssh-request.json' rootfs-overlay/etc/systemd/system/2pny-ssh-apply.path
           test -x rootfs-overlay/usr/local/sbin/2pny-timezone-apply
           test -x rootfs-overlay/usr/local/sbin/2pny-rflevel-apply
           test -x rootfs-overlay/usr/local/sbin/2pny-ssh-apply
@@ -412,23 +426,32 @@ jobs:
       - name: Write release notes
         run: |
           cat > RELEASE-NOTES.md <<'EOF'
-          PU2PNY-OS 0.3.16 Alpha — correção estritamente focal do bloqueio MQTT na Configuração Básica DMR.
+          PU2PNY-OS 0.3.16 Alpha — correções focais do ciclo de teste físico pós-0.3.15.
 
-          Evidência usada:
-          - 0.3.14 HW: MMDVM passou no teste básico, mas MQTT ainda bloqueou o avanço;
-          - 0.3.6/0.3.8: RF apply concluía com MMDVMHost ativo e MQTTLevel=0;
-          - 0.3.6/0.3.8: DMR delegava diretamente ao helper, que mantinha MQTTLevel=0 e validava MMDVMHost + DMRGateway.
+          Baseline preservada:
+          - todo componente não citado neste ciclo permanece herdado da 0.3.15;
+          - DMR TX/RX, RF bootstrap, onboarding aprovado, Histórico e demais recursos não foram redesenhados.
 
-          Alterações:
-          - RF apply termina com sucesso após o bootstrap MMDVM fisicamente comprovado; não inicia/preflight/habilita MQTT no primeiro provisionamento;
-          - dispatcher DMR volta a delegar diretamente ao helper DMR, sem preflight MQTT anterior;
-          - Mosquitto/preflight permanecem instalados para recursos posteriores que realmente habilitem MQTT;
-          - wizard, Wi-Fi, hardware detector, baud, frequências, offsets, TGIF, i18n, telas e demais protocolos não foram alterados;
-          - o avanço continua sendo o fluxo existente: backend grava provisioned/state=applied e então o wizard abre Conclusão.
+          Correções deste lote:
+          - Wi-Fi salvo: persistência/autoconnect confirmado e restauração de boot mais robusta;
+          - Internet: estado de Ethernet/Wi-Fi atualizado em poucos segundos e busca Wi-Fi 1/2 reiniciável;
+          - Ao Vivo: BER/RSSI/Sinal RF somente quando existe evento RF real;
+          - protocolos: mensagem de ativação permanece até evidência da rede, erro ou timeout diagnosticável;
+          - voz DMR/XLX: voz de conexão/status tem prioridade no mesmo slot sobre áudio NETWORK→RF;
+          - Direct: registro rendezvous renovado e janelas Direct/Relay ampliadas sem enfraquecer identidade;
+          - APRS-IS: pronto por padrão, soam.aprs2.net:14580 com fallback limitado para rotate.aprs2.net; mensagens distinguem waiting_ack de ACK confirmado;
+          - Nextion via modem: restaurado writer nativo MMDVMHost/Port=modem comprovado na 0.3.8;
+          - Sistema: fuso e SSH usam PathExists + request consumível; SSH aceita arquivo público .pub;
+          - D-Star: configuração alinhada ao DStarGateway embarcado, ReloadTimer correto e DStar_Hosts.json customizado.
 
-          Validação:
-          - source + regressões herdadas + gates focais 0.3.16 + ARM64 + XZ + SHA-256 + imagem montada;
-          - release permanece ALPHA/HW-TEST até teste físico confirmar o avanço da Configuração Básica.
+          Validação desta publicação:
+          - DOC/SW: source, regressões herdadas e gates focais;
+          - ARM64: build completo, XZ e SHA-256;
+          - imagem montada: validação estrutural dos componentes;
+          - DMRGateway: recompilado da mesma versão pinada com patch estreito de arbitragem de voz;
+          - HW: continua PENDENTE até novo teste físico em Raspberry Pi + MMDVM + Nextion.
+
+          Esta release permanece ALPHA/HW-TEST; nenhuma correção acima é declarada HW PASS antes do reteste.
           EOF
       - name: Publish prerelease
         uses: softprops/action-gh-release@v3
