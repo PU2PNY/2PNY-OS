@@ -18,6 +18,7 @@ hotspot=read("src/hotspot-0.3.10.html")
 display=read("src/display-0.3.10.html")
 expert=read("src/expert-0.3.10.html")
 catalog=json.loads(read("src/display-catalog-0.3.9.json"))
+udev=read("src/99-pu2pny-display-hotplug-0.3.9.rules")
 
 assert 'appVersion            = "0.3.10-alpha"' in main
 assert '/api/display/detection' in main and '/api/diagnostics' in main
@@ -41,4 +42,5 @@ assert '<iframe' not in hotspot.lower() and 'Perfis rápidos nativos · sem ifra
 assert 'rendererSelect' in display and 'modelSelect' in display and 'nextion-101-1024x600' in display
 assert 'Nunca automático' in display and '/api/display/detection' in display
 assert 'Diagnóstico operacional' in expert and '/api/diagnostics' in expert
+assert 'ACTION=="add|change"' not in udev and 'ACTION=="add"' in udev and 'ACTION=="change"' in udev
 print("TEST_0310_FEATURES_OK")
