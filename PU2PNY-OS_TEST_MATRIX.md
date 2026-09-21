@@ -433,3 +433,11 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-UI-017D | UI-017 / UI-016 | mudar timezone e observar cabeçalho | relógio ressincroniza com /api/system imediatamente, permanece em uma linha e não usa somente timezone do navegador | HW FAIL reportado / correção pendente | SW/HW/browser |
 | TEST-PROTO-015A | PROTO-015 | apply D-Star | confirma Enable/GatewayPort/LocalPort, MMDVMHost sobe antes do gateway e aguarda bridge local com timeout limitado | PENDENTE | SW/HW |
 | TEST-PROTO-015B | PROTO-015 | bridge não aparece de verdade | rollback restaura configuração/serviços anteriores e apresenta diagnóstico útil | PENDENTE | SW/HW |
+
+| TEST-DISPLAY-017A | DISPLAY-017 | boot com Nextion direta | `connect/comok` identifica model/baud sem gravar HMI, resultado persiste e painel recebe estado | PENDENTE | SW/HW |
+| TEST-DISPLAY-017B | DISPLAY-017 | MMDVMHost ativo + Nextion via MMDVM | detector não abre/rouba a serial do modem; reutiliza prova confirmada ou mantém candidato | PENDENTE | SW/HW |
+| TEST-DISPLAY-017C | DISPLAY-017 | OLED em 0x3C/0x3D sem metadata | sistema registra SSD1306/SH1106 candidato, sem inventar controlador | PENDENTE | SW/HW |
+| TEST-DISPLAY-017D | DISPLAY-017 | OLED com metadata kernel/DT | controlador e resolução são promovidos a confirmados | PENDENTE | SW/HW |
+| TEST-DISPLAY-017E | DISPLAY-017 | hotplug tty/DRM/input | evento dispara oneshot de detecção sem polling contínuo e sem reiniciar RF | PENDENTE | SW/HW |
+| TEST-DISPLAY-017F | DISPLAY-017 | catálogo TFT sem URL/SHA | provisionamento permanece `asset_unpublished`; nenhuma gravação é oferecida | PENDENTE | SW |
+| TEST-DISPLAY-017G | DISPLAY-017 | tentativa de flash sem confirmação | operação é rejeitada; nenhum byte TFT é enviado | PENDENTE | SW/HW |
