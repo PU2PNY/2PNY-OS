@@ -1168,3 +1168,16 @@ Escopo obrigatório:
 - permanecer Alpha/HW-TEST até novo teste físico de MMDVM, TGIF e idioma.
 
 **Complemento RF-018:** o preflight executado pelo serviço MMDVMHost sob usuário não privilegiado não pode transformar falha de persistência de diagnóstico em falha do rádio. Durante a Fase A, `MQTTLevel=0` deve permitir a prova da UART sem hard dependency de Mosquitto; na Fase B o CONNECT/CONNACK de PROTO-018 continua obrigatório antes da operação completa.
+
+## 2026-09-21 — identidade visual oficial
+
+### UI-029 — Logotipo oficial PU2PNY-OS
+O logotipo enviado pelo mantenedor em 2026-09-21 passa a ser a referência visual oficial do PU2PNY-OS para as próximas versões.
+
+Regras:
+- usar o logotipo oficial nas telas institucionais e pontos de identidade visual do sistema onde houver espaço adequado;
+- preservar legibilidade, proporção e contraste; não distorcer, esticar, recortar arbitrariamente nem substituir por arte genérica;
+- não introduzir o logotipo em telas críticas de configuração de forma que prejudique leitura, acessibilidade ou desempenho;
+- manter o sistema leve: assets devem ser otimizados e não causar carregamento pesado ou gravações extras;
+- a primeira adoção deve ocorrer em release posterior à 0.3.13-alpha, para não alterar o escopo de uma imagem já em validação;
+- futuras variações de tamanho devem derivar do mesmo logotipo oficial, mantendo identidade consistente entre web, Nextion/OLED e documentação quando aplicável.
