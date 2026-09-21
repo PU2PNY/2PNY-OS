@@ -2733,10 +2733,10 @@ func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 8192)
 	var in struct {
-		Enabled         bool    `json:"enabled"`
-		Latitude        float64 `json:"latitude"`
-		Longitude       float64 `json:"longitude"`
-		Server          string  `json:"server"`
+		Enabled         bool     `json:"enabled"`
+		Latitude        *float64 `json:"latitude"`
+		Longitude       *float64 `json:"longitude"`
+		Server          string   `json:"server"`
 		Port            int     `json:"port"`
 		IntervalSeconds int     `json:"interval_seconds"`
 		Comment         string  `json:"comment"`
@@ -2777,7 +2777,11 @@ func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Intervalo APRS deve ficar entre 300 e 86400 segundos", http.StatusBadRequest)
 		return
 	}
-	if in.Latitude < -90 || in.Latitude > 90 || in.Longitude < -180 || in.Longitude > 180 {
+	if (in.Latitude == nil) != (in.Longitude == nil) {
+		http.Error(w, "Informe latitude e longitude juntas ou deixe ambas vazias", http.StatusBadRequest)
+		return
+	}
+	if in.Latitude != nil && (*in.Latitude < -90 || *in.Latitude > 90 || *in.Longitude < -180 || *in.Longitude > 180) {
 		http.Error(w, "Latitude/longitude inválidas", http.StatusBadRequest)
 		return
 	}
@@ -2791,9 +2795,13 @@ func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	obj := map[string]any{
-		"enabled": in.Enabled, "callsign": cfg.Callsign, "latitude": in.Latitude, "longitude": in.Longitude,
+		"enabled": in.Enabled, "callsign": cfg.Callsign,
 		"server": in.Server, "port": in.Port, "interval_seconds": in.IntervalSeconds, "comment": in.Comment,
 		"symbol_table": in.SymbolTable, "symbol": in.Symbol, "ssid": in.SSID,
+	}
+	if in.Latitude != nil {
+		obj["latitude"] = *in.Latitude
+		obj["longitude"] = *in.Longitude
 	}
 	raw, _ := json.MarshalIndent(obj, "", "  ")
 	tmp := settingsPath + ".tmp"
