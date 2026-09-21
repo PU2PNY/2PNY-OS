@@ -186,3 +186,11 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrado PROTO-013 para aviso de conexão por voz após confirmação real em todos os protocolos tecnicamente capazes.
 - D-Star corrigido em software continua HW pendente; nenhuma afirmação de RF↔rede funcional foi promovida sem teste físico.
 - Nova imagem só pode sair após TEST-007.
+
+## 2026-09-20 — requisito permanente: tela genérica touch de 7"
+
+- Requisito **DISPLAY-014** adicionado: tela genérica touch de 7 polegadas deve funcionar como interface operacional PU2PNY, sem depender de terminal.
+- Escopo inicial: HDMI + USB touch e/ou DSI quando expostos pelo hardware/kernel, com detecção separada de vídeo e toque.
+- A interface deve usar o mesmo estado do Display Core/painel, ter operação touch adequada e não afetar RF/gateways se o display falhar.
+- Criados TEST-DISPLAY-014A..014D.
+- Estado atual: **DOC registrado / HW PENDENTE**. Não afirmar funcionamento físico até teste em tela real.
