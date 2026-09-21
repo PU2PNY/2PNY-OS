@@ -1,4 +1,8 @@
-# USB/UART/DRM/input hotplug only schedules a non-destructive detector.
-ACTION=="add|change", SUBSYSTEM=="tty", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
-ACTION=="add|change", SUBSYSTEM=="drm", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
-ACTION=="add|change", SUBSYSTEM=="input", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
+# PU2PNY non-destructive display hotplug.
+# udev ACTION matching uses one value per rule; keep add/change explicit.
+ACTION=="add", SUBSYSTEM=="tty", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
+ACTION=="change", SUBSYSTEM=="tty", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
+ACTION=="add", SUBSYSTEM=="drm", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
+ACTION=="change", SUBSYSTEM=="drm", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
+ACTION=="add", SUBSYSTEM=="input", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
+ACTION=="change", SUBSYSTEM=="input", TAG+="systemd", ENV{SYSTEMD_WANTS}+="2pny-display-detect.service"
