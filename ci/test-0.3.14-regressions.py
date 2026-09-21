@@ -78,6 +78,7 @@ class Proc:
         self.returncode=code;self.stdout=out;self.stderr=err
 calls=[]
 real_run=mod.subprocess.run
+real_geteuid=mod.os.geteuid
 try:
     def fake_run(args,**kwargs):
         calls.append(tuple(args))
@@ -85,6 +86,8 @@ try:
             return Proc(0,"ActiveState=active\nSubState=running\nResult=success\nExecMainStatus=0\n","")
         return Proc(0,"","")
     mod.subprocess.run=fake_run
+    # Source CI runs unprivileged; only the systemctl behavior is under test.
+    mod.os.geteuid=lambda:0
     ok,msg,snap=mod.ensure_service(1)
     assert ok and snap.get("ActiveState")=="active"
     assert ("systemctl","reset-failed","mosquitto.service") in calls
@@ -92,5 +95,6 @@ try:
     assert ("systemctl","start","mosquitto.service") in calls
 finally:
     mod.subprocess.run=real_run
+    mod.os.geteuid=real_geteuid
 
 print("TEST_0314_REGRESSIONS_OK")
