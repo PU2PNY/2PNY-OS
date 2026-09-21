@@ -1680,6 +1680,9 @@ func basicApplyHandler(w http.ResponseWriter, r *http.Request) {
 			writeRFApplyState("error", "Configuração aplicada, mas não foi possível finalizar o assistente.")
 			return
 		}
+		// APRS messaging is provisioned automatically; it remains position-silent
+		// until real coordinates are explicitly supplied.
+		_ = ensureAPRSDefaults()
 		_ = exec.Command("systemctl", "restart", "avahi-daemon.service").Run()
 		done := "RF e MMDVMHost configurados."
 		if networkState == "connecting" {
@@ -2681,11 +2684,40 @@ func stationSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"ok": true})
 }
 
+func ensureAPRSDefaults() map[string]any {
+	const settingsPath = "/var/lib/2pny/aprs-settings.json"
+	settings := readPublicJSON(settingsPath)
+	if len(settings) > 0 {
+		return settings
+	}
+	var cfg Config
+	if b, err := os.ReadFile(configFile); err != nil || json.Unmarshal(b, &cfg) != nil || strings.TrimSpace(cfg.Callsign) == "" {
+		return settings
+	}
+	// APRS-012: messaging is ready after onboarding without inventing a
+	// position. Latitude/longitude are deliberately absent until the operator
+	// supplies real coordinates.
+	settings = map[string]any{
+		"enabled": true, "callsign": strings.ToUpper(strings.TrimSpace(cfg.Callsign)),
+		"server": "soam.aprs2.net", "port": 14580, "ssid": 10,
+		"interval_seconds": 1800, "comment": "PU2PNY-OS hotspot",
+		"symbol_table": "/", "symbol": "r",
+	}
+	raw, _ := json.MarshalIndent(settings, "", "  ")
+	tmp := settingsPath + ".tmp"
+	if os.WriteFile(tmp, raw, 0600) == nil {
+		if os.Rename(tmp, settingsPath) == nil {
+			_ = exec.Command("systemctl", "restart", "2pny-aprs.service").Run()
+		}
+	}
+	return settings
+}
+
 func aprsSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	const settingsPath = "/var/lib/2pny/aprs-settings.json"
 	const statusPath = "/run/2pny/aprs-status.json"
 	if r.Method == http.MethodGet {
-		settings := readPublicJSON(settingsPath)
+		settings := ensureAPRSDefaults()
 		if _, ok := settings["callsign"]; !ok {
 			var cfg Config
 			if b, err := os.ReadFile(configFile); err == nil && json.Unmarshal(b, &cfg) == nil && cfg.Callsign != "" {
@@ -2808,10 +2840,10 @@ func aprsMessageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	settings := readPublicJSON("/var/lib/2pny/aprs-settings.json")
+	settings := ensureAPRSDefaults()
 	enabled, _ := settings["enabled"].(bool)
 	if !enabled {
-		writeJSON(w, http.StatusConflict, map[string]any{"error": "Ative e salve o APRS antes de enviar mensagens"})
+		writeJSON(w, http.StatusConflict, map[string]any{"error": "APRS-IS está desativado nas configurações. Ative-o para enviar mensagens."})
 		return
 	}
 
