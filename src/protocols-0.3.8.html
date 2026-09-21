@@ -154,7 +154,7 @@ async function load(){
  PNY.q('stAddress').textContent=current.address||cfg.server_address||'—';
  PNY.q('dmrEssid').value=cfg.essid||'';
  PNY.q('slot').value=cfg.dmr_slot||'2';PNY.q('cc').value=cfg.color_code==null?1:cfg.color_code;
- var p=String(current.protocol||cfg.protocol||'DSTAR').toUpperCase();if(!definitions[p])p='DSTAR';choose(p)
+ var requested=new URLSearchParams(location.search).get('protocol'),p=String(requested||current.protocol||cfg.protocol||'DSTAR').toUpperCase();if(!definitions[p])p='DSTAR';choose(p)
 }
 PNY.q('tabs').innerHTML=protocols.map(function(p){return '<button class="btn" data-p="'+p+'">'+definitions[p].label+'</button>'}).join('');
 PNY.q('tabs').querySelectorAll('button').forEach(function(b){b.onclick=function(){choose(b.dataset.p)}});
