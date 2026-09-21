@@ -575,3 +575,18 @@ Regras:
 - `America/Sao_Paulo` deve funcionar quando selecionado e disponível no sistema.
 
 A implementação não deve depender de o daemon web poder editar livremente `/etc`; usar helper/serviço de privilégio restrito ou mecanismo equivalente com superfície mínima.
+
+## 26. Cabeçalho global / Sistema — feedback físico 0.3.7 — 2026-09-20
+
+### UI-017 — Cabeçalho global estável e relógio sem quebra
+Todas as páginas operacionais devem usar o mesmo cabeçalho, com a mesma altura e distribuição dos controles na mesma largura de viewport.
+
+Regras:
+- o relógio do cabeçalho deve ser inicializado em todas as páginas que exibem `clockLocal`;
+- o relógio deve permanecer em uma única linha, com largura mínima suficiente e sem encolher até quebrar verticalmente;
+- seletor de idioma, relógio, tema e botão Expert/Básico não podem ser esmagados pela navegação;
+- em largura insuficiente, a navegação deve degradar de forma responsiva/rolável sem aumentar desnecessariamente a altura do cabeçalho;
+- a página Sistema não pode ter cabeçalho mais alto que Display/Ao Vivo nas mesmas condições;
+- a futura unificação Hotspot + Protocolos pode reduzir um item da navegação, mas UI-017 deve funcionar independentemente dessa mudança.
+
+Diagnóstico confirmado no código 0.3.7: `system-0.3.6.html` não chama `PNY.startClock()`, enquanto páginas como Display chamam; o placeholder `--:--:--` permanece e pode ser comprimido/quebrado pelo flex do cabeçalho.
