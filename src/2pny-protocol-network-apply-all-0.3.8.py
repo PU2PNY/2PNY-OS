@@ -544,6 +544,19 @@ Debug=0
     if not active(unit):
         detail=run("journalctl","-u",unit,"-n","24","--no-pager","-o","cat").stdout.strip()[-1800:]
         raise RuntimeError(unit+" did not remain active"+(": "+detail if detail else ""))
+    if proto=="DSTAR":
+        # DStarGateway must expose the local Homebrew UDP endpoint used by
+        # MMDVMHost. An active process alone is not a valid readiness signal.
+        deadline=time.time()+5
+        bridge_ok=False
+        while time.time()<deadline:
+            ss=run("ss","-lun").stdout
+            if re.search(r"(?m)\\b127\\.0\\.0\\.1:20010\\b|\\b0\\.0\\.0\\.0:20010\\b",ss):
+                bridge_ok=True;break
+            time.sleep(.4)
+        if not bridge_ok:
+            detail=run("journalctl","-u",unit,"-n","40","--no-pager","-o","cat").stdout.strip()[-2200:]
+            raise RuntimeError("DStarGateway ativo sem bridge UDP local na porta 20010"+(": "+detail if detail else ""))
     if proto=="YSF":
         # Prove the local UDP bridge is actually present.  A process that is
         # merely "active" is not sufficient evidence that RF<->gateway can flow.
