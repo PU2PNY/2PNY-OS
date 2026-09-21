@@ -967,3 +967,101 @@ Privilégio e desempenho:
 - hotplug por evento do kernel/udev, sem polling serial pesado;
 - lock contra detecções concorrentes;
 - MMDVMHost nunca deve perder a porta serial durante operação para uma varredura de display.
+
+## 35. Hardening priorizado após revisão 0.3.7 → 0.3.9 — 2026-09-21
+
+### PROTO-016 — Wait-for-bridge inteligente e evidência de health-check
+D-Star/YSF não podem executar rollback apenas porque o socket UDP ainda não apareceu no primeiro instante após o restart.
+
+Regras:
+- após aplicar o INI e confirmar MMDVMHost ativo, entrar no estado `waiting_bridge`;
+- consultar a porta local esperada em intervalos curtos e limitados, sem regex frágil;
+- D-Star: provar UDP local 20010 e contrato 20010/20011 do MMDVMHost;
+- YSF: provar UDP local 4200 e contrato configurado do MMDVMHost;
+- registrar tentativa, tempo transcorrido, serviço, porta e último estado em `/run/2pny/protocol-health.json`;
+- sucesso somente após socket local + serviço gateway ativo;
+- timeout real termina em rollback e deixa `last_rollback_reason` persistido para diagnóstico;
+- UI deve exibir “Aguardando bridge local” enquanto o estado for intermediário, sem declarar erro prematuramente.
+
+### BOOT-002 — Restore operacional transacional com retries controlados
+BOOT-001 passa a exigir máquina de restauração explícita:
+1. aguardar serial real do MMDVM;
+2. confirmar MQTT local;
+3. iniciar MMDVMHost;
+4. iniciar apenas o gateway salvo;
+5. executar o health-check do protocolo;
+6. confirmar estado operacional antes de marcar boot restaurado.
+
+Regras:
+- retries limitados com backoff curto;
+- falha nunca pode ser silenciosa;
+- salvar `/run/2pny/operational-result.json` e `/var/lib/2pny/last-boot-restore.json`;
+- o painel e a rede permanecem disponíveis em qualquer falha;
+- fallback DMR só pode ocorrer se existir perfil DMR previamente salvo e fisicamente validado, sem apagar o perfil originalmente selecionado; até existir essa prova o fallback automático fica bloqueado e o sistema permanece seguro/desconectado com diagnóstico.
+
+### PROTO-017 — MQTT preflight obrigatório em todos os caminhos de rádio
+Qualquer caminho que inicie/reinicie MMDVMHost ou troque protocolo deve executar o mesmo preflight local.
+
+Regras:
+- ler host/porta efetivos da seção MQTT do MMDVMHost;
+- testar endpoint com timeout/retry limitado;
+- erro amigável obrigatório: `MQTT não respondeu em HOST:PORT`;
+- detalhe técnico fica disponível no Expert/log;
+- nunca iniciar gateway após preflight MQTT falhar;
+- resultado atual deve estar disponível em `/run/2pny/mqtt-preflight.json`.
+
+### NET-022 — Máquina de estados de handoff Wi-Fi
+Conectar/trocar Wi-Fi só pode declarar sucesso após estados reais:
+`associating -> associated -> ipv4 -> route -> dns -> connected`.
+
+Regras:
+- SSID/BSSID associado real;
+- IPv4 global real;
+- rota padrão coerente;
+- DNS efetivo legível;
+- Internet é diagnóstico adicional, não requisito para rede local;
+- se qualquer estado obrigatório falhar, restaurar perfil anterior/AP conforme contexto;
+- não expor “conectado” enquanto só existe perfil salvo;
+- manter o fluxo físico já aprovado após abertura manual do captive portal como baseline.
+
+### UPDATE-006 — Update/manutenção transacional observável
+Download/instalação de componente deve ter:
+- origem oficial permitida;
+- SHA-256;
+- backup/ponto de retorno;
+- aplicação atômica;
+- validação pós-update;
+- rollback se a validação falhar;
+- `última execução`, `próxima elegível`, resultado e motivo de bloqueio persistidos de forma coerente.
+
+### LIVE-015 — Snapshot único para Web + display físico
+Ao Vivo, Histórico contextual e Display devem consumir o mesmo snapshot/evento normalizado para identidade, protocolo, direção, destino, módulo/TG, duração e localização.
+
+Regras:
+- Display não pode inventar conteúdo ausente no Live;
+- foto/bandeira só aparecem quando houver fonte real e capacidade do display;
+- Nextion com HMI compatível pode usar asset/foto previsto no HMI; sem HMI compatível usa avatar/indicativo, sem gravar imagem arbitrária;
+- bandeira pode ser vetorial/simbólica quando suportada e derivada de country_code real;
+- mudança de estado TX/RX/Standby deve convergir nos dois canais a partir do mesmo evento.
+
+### SEC-022 — Matriz explícita de privilégios
+Documentar e validar qual ação chama qual helper privilegiado. Nenhum endpoint web recebe sudo/root genérico.
+
+Cobertura mínima:
+timezone, SSH, operacional, RFLevel, display apply/detect/provision, update/rollback e qualquer flash TFT futuro.
+
+### UI-025 — Expert / Diagnóstico operacional
+Expert deve exibir, sem polling pesado:
+- portas UDP locais esperadas e observadas por protocolo;
+- estado do MMDVMHost e gateway;
+- resultado/horário do último health-check;
+- MQTT endpoint + último preflight;
+- writer atual do display (`pu2pny-display-core` ou `mmdvmhost-native`);
+- detecção/modelo/resolução do display;
+- último restore de boot;
+- último rollback e motivo exato;
+- estado Wi-Fi por etapa e DNS efetivo;
+- botão para atualizar diagnóstico sob demanda.
+
+### UI-023 — i18n reafirmado
+Mensagens dinâmicas dos novos estados (`waiting_bridge`, MQTT, restore, display detection/provisioning e rollback) devem usar códigos estáveis e tradução PT/EN/ES; detalhes técnicos brutos ficam no Expert.
