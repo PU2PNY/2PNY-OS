@@ -67,6 +67,7 @@ jobs:
             src/2pny-display-apply-0.3.8.py \
             src/2pny-timezone-apply-0.3.8.py \
             src/2pny-rflevel-apply-0.3.8.py \
+            src/2pny-ssh-apply-0.3.8.py \
             ci/prepare-0.3.8-alpha.py \
             ci/test-0.3.7-features.py
           rm -rf src/__pycache__ ci/__pycache__
@@ -270,8 +271,10 @@ jobs:
           grep -Fq 'Potência RF do MMDVM' rootfs-overlay/usr/share/2pny/expert.html
           grep -Fq 'WiresXCommandPassthrough=0' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'effective_layout' rootfs-overlay/usr/local/sbin/2pny-display-apply
+          grep -Fq 'porta 20010' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           test -x rootfs-overlay/usr/local/sbin/2pny-timezone-apply
           test -x rootfs-overlay/usr/local/sbin/2pny-rflevel-apply
+          test -x rootfs-overlay/usr/local/sbin/2pny-ssh-apply
       - name: Build ARM64 image
         working-directory: legacy-source/2pny-os
         run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
