@@ -574,3 +574,14 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Source/regressões, overlay herdado, staged source, build ARM64, XZ/checksum, validador estrutural, transferência e publicação: **SW PASS**.
 - Estado: **Alpha / HW-TEST**.
 - Ainda não promover RF-018, PROTO-019 ou UI-028 a HW PASS antes de novo teste físico.
+
+## 0.3.13-alpha — segundo resultado físico e abertura da 0.3.14 — 2026-09-21
+
+- **RF-018 Fase A: HW PASS.** A MMDVM passou no teste básico e MMDVMHost conseguiu assumir a UART com MQTT/display logging desativados.
+- **PROTO-018/Fase B MQTT: HW FAIL.** Mensagem observada: `A MMDVM passou no teste básico, mas o broker MQTT local não ficou pronto. A configuração anterior foi restaurada.`
+- A falha agora está isolada depois da prova real da MMDVM; não há evidência de problema de baud/UART nesta etapa.
+- **WIZ: HW FAIL associado:** após a falha MQTT o fluxo saiu da tela de Configuração Básica, comportamento que deve ser impedido.
+- TGIF e demais validações posteriores continuam **PENDENTES**, pois o apply não ultrapassou a Fase B MQTT.
+- Rollback criado: `backup/0.3.13-pre-0.3.14-20260921`.
+- Branch corretiva: `pu2pny-os-0.3.14-alpha`.
+- Escopo: broker MQTT/readiness + permanência do wizard na Configuração Básica. Wi-Fi aprovado e bootstrap MMDVM da 0.3.13 ficam congelados.
