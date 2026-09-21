@@ -175,7 +175,34 @@ test -s "$ROOT/etc/systemd/system/mosquitto.service"
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/mosquitto.service"
 test "$(readlink "$ROOT/etc/systemd/system/multi-user.target.wants/mosquitto.service")" = "../mosquitto.service"
 ! test -e "$ROOT/etc/mosquitto/conf.d/2pny-local.conf"
-! ss -H -ltn | awk '{print $4}' | grep -Eq '(^|:|\])1883
+# The CI runner must not already own TCP/1883 before the image broker test.
+! ss -H -ltn | awk '{print $4}' | grep -Eq '(^|:|\])1883$'
+chroot "$ROOT" /usr/sbin/mosquitto -c /etc/mosquitto/2pny-local.conf >/tmp/pu2pny-mosquitto-test.log 2>&1 & PID=$!
+MQTT_OK=0
+for _ in {1..40}; do
+  if python3 - <<'PYMQTT'
+import socket,sys
+try:
+    s=socket.create_connection(("127.0.0.1",1883),timeout=.35)
+    client=b"ci"
+    variable=b"\x00\x04MQTT\x04\x02\x00\x0a"
+    payload=len(client).to_bytes(2,"big")+client
+    body=variable+payload
+    s.sendall(bytes((0x10,len(body)))+body)
+    r=s.recv(4)
+    s.close()
+    sys.exit(0 if r==b"\x20\x02\x00\x00" else 1)
+except OSError:
+    sys.exit(1)
+PYMQTT
+  then MQTT_OK=1; break; fi
+  sleep .25
+done
+test "$MQTT_OK" = 1 || { cat /tmp/pu2pny-mosquitto-test.log; exit 1; }
+kill "$PID"; wait "$PID" 2>/dev/null || true; PID=""
+rm -f /tmp/pu2pny-mosquitto-test.log
+
+chroot "$ROOT" /usr/local/bin/2pnyd >/tmp/pu2pnyd-038.log 2>&1 & PID=$!
 OK=0
 for _ in {1..100}; do
   if curl -fsS http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then OK=1; break; fi
