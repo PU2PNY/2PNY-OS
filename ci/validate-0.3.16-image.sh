@@ -1077,7 +1077,7 @@ grep -Fq 'cp.set("General","Display","Nextion")' "$ROOT/usr/local/sbin/2pny-disp
 grep -Fq 'cp.set("Nextion","Port","modem")' "$ROOT/usr/local/sbin/2pny-display-apply"
 grep -Fq 'MMDVMHost nativo / ON7LDS' "$ROOT/usr/share/2pny/display.html"
 
-grep -Fq 'Band=B' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'Band=C' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'ReloadTimer=72' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 ! grep -Fq 'ReloadTime=72' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'DStar_Hosts.json' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
