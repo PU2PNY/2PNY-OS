@@ -230,3 +230,14 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-NET-019C | NET-019 | recomendação | sugere um canal com justificativa baseada em ocupação/sinal/sobreposição; não altera o roteador | PENDENTE | SW/HW |
 | TEST-NET-019D | NET-019 / PERF-001 | repetir análise | scan é manual/cacheado, não derruba Wi-Fi/AP e não cria polling pesado | PENDENTE | HW |
 | TEST-NET-019E | NET-019 | dados incompletos | não inventa largura/sinal/canal; mostra indisponível quando não houver evidência | PENDENTE | SW/HW |
+
+## Casos adicionados — perfis rápidos no Ao Vivo / configuração no Hotspot
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-LIVE-011A | LIVE-011 | abrir Ao Vivo | botões DMR/D-Star/YSF/etc. representam perfis e destacam o protocolo ativo | PENDENTE | SW/HW |
+| TEST-LIVE-011B | LIVE-011 | clicar perfil configurado | mostra progresso real, faz preflight/apply/rollback e atualiza Ao Vivo sem F5 | PENDENTE | SW/HW |
+| TEST-LIVE-011C | LIVE-011 | clicar perfil não configurado | não tenta aplicar; abre configuração correspondente | PENDENTE | SW/HW |
+| TEST-LIVE-011D | LIVE-011 | filtros de atividade | continuam disponíveis separadamente e funcionais após a mudança | PENDENTE | SW/HW |
+| TEST-PROTO-014A | PROTO-014 | página Hotspot | perfis permanecem visíveis e cada um oferece ação de configurar | PENDENTE | SW/HW |
+| TEST-PROTO-014B | PROTO-014 | configurar frequência/rede | abre contexto correto do protocolo sem refazer wizard e sem alterar outro perfil | PENDENTE | SW/HW |
