@@ -526,3 +526,23 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Branch corretiva: pu2pny-os-0.3.12-alpha.
 - Escopo congelado: não alterar frequências, offsets, DMRGateway, Direct, Histórico ou o fluxo AP→Wi-Fi já aprovado.
 - Estado da 0.3.12 neste ponto: DOC/SW em implementação; build ARM64 e HW ainda PENDENTES.
+## 0.3.12-alpha — publicação e primeiro lote de feedback físico — 2026-09-21
+
+- Run de publicação: `35620934999`.
+- Commit publicado: `567c8b4014540aa9e84fb184ab883ff09af65fed`.
+- Release: `v0.3.12-alpha`.
+- Artefato ARM64: `PU2PNY-OS-0.3.12-alpha-arm64.img.xz`.
+- SHA-256 do artefato publicado: `944bc588e74be10261105da90de77025a4dd20fed9cea7f7503f18981279962e`.
+- Source, build ARM64, XZ, checksum, validação estrutural e publicação: **SW PASS**.
+- Estado permanece **Alpha / HW-TEST**.
+
+### Resultado HW recebido
+- **NET/WIZ — HW PASS e baseline congelada:** reconhecimento do Wi-Fi, conexão automática e abertura direta do painel funcionaram na 0.3.12. Não alterar esse fluxo em correções de RF/TGIF/i18n.
+- **RF/WIZ — HW FAIL:** a etapa de configuração MMDVM continua gerando erro e bloqueando o avanço do wizard. O relato reafirma que a estrutura equivalente funcionava nas versões anteriores, com referência explícita à 0.3.6 e funcionamento até 0.3.8.
+- **UI/i18n — HW FAIL:** foi observada mistura de Português e Inglês na mesma interface apesar de Português estar selecionado.
+- **DMR/TGIF — HW FAIL reportado / causa ainda não isolada:** a Security Key foi informada, porém o hotspot não confirmou login na TGIF. A MMDVM recebe o RF do HT, mas isso não constitui prova de entrega à rede; painel/TGIF não refletiram a atividade.
+- A revisão de código confirma que a chave TGIF chega ao campo `Password=` do DMRGateway; portanto não há evidência para classificar a chave copiada como causa.
+- A revisão também confirma diferença estrutural relevante: a 0.3.6 provava primeiro MMDVMHost com `MQTTLevel=0`, `DisplayLevel=0` e redes desativadas; a 0.3.12 tornou MQTT parte da primeira ativação. Isso é uma regressão arquitetural plausível a eliminar por RF-018, sem afirmar ainda que seja a única causa física.
+- O helper DMR atual trata TGIF pelo perfil DMR genérico. A autenticação/roteamento TGIF será isolada sob PROTO-019 somente depois que o bootstrap RF passar, preservando o helper DMR anteriormente aprovado fora do escopo TGIF.
+- Branch de registro/diagnóstico deste lote: `test/0.3.12-hw-findings-20260921`.
+
