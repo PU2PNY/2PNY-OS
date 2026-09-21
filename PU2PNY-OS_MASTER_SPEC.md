@@ -1093,3 +1093,30 @@ Quando a MMDVM estiver realmente confirmada, a etapa Hardware recebe PASS, limpa
 ### UI-026 — Idioma selecionado cobre mensagens dinâmicas e erros
 Após escolher PT-BR, English ou Español, toda mensagem destinada ao operador deve permanecer no idioma selecionado: páginas, wizard, status, overlays, toasts, validações, erros do backend e mensagens de helpers. Texto bruto de upstream/log pode permanecer no idioma original somente em diagnóstico técnico explicitamente identificado; ele não pode vazar como mensagem normal da interface.
 
+## 2026-09-21 — correção 0.3.12 após regressão persistente da 0.3.11
+
+### RF-017 — Ownership único da UART MMDVM durante detecção e apply
+A detecção de hardware e a transição para MMDVMHost devem usar o mesmo lock local de ownership da UART.
+- o detector segura o lock somente durante a identificação;
+- o apply RF aguarda o detector terminar antes de iniciar/reiniciar MMDVMHost;
+- nenhum polling de painel pode abrir a UART quando MMDVMHost estiver ativo;
+- timeout de lock deve terminar com erro legível, sem alterar RF;
+- baud continua sendo o realmente confirmado pelo detector.
+
+### PROTO-018 — MQTT deve ser serviço real e validado em nível de protocolo
+O requisito PROTO-017 é endurecido: abrir TCP não é prova suficiente de MQTT.
+- a imagem deve conter o broker Mosquitto real, não somente a biblioteca cliente;
+- o listener do event bus local fica restrito a 127.0.0.1:1883;
+- o preflight deve executar MQTT CONNECT e exigir CONNACK de sucesso;
+- recusa de autenticação/protocolo/serviço deve falhar antes do gateway e ser registrada em mqtt-preflight.json;
+- MMDVMHost continua obedecendo o gate MQTT já aprovado; não mascarar falha como baud.
+
+### UI-027 — Pureza de idioma no onboarding
+Depois da escolha inicial, o wizard e mensagens normais devem permanecer integralmente em PT-BR, English ou Español.
+- conteúdo bilíngue é permitido somente na tela de escolha de idioma;
+- nomes próprios, protocolos e siglas técnicas podem permanecer canônicos;
+- mensagens dinâmicas de RF/MQTT/hardware devem ter tradução exata, sem depender apenas de substituição palavra a palavra;
+- logs técnicos brutos permanecem restritos ao Expert.
+
+### REL-005 — 0.3.12-alpha é correção independente da 0.3.11
+A 0.3.11 permanece preservada para rollback. A 0.3.12 deve passar source, regressões, build ARM64, XZ, SHA-256 e validação estrutural da imagem antes de ser publicada como Alpha/HW-TEST. Nenhum gate SW promove RF/DMR/MQTT para HW PASS.
