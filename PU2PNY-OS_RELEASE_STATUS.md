@@ -546,3 +546,14 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - O helper DMR atual trata TGIF pelo perfil DMR genérico. A autenticação/roteamento TGIF será isolada sob PROTO-019 somente depois que o bootstrap RF passar, preservando o helper DMR anteriormente aprovado fora do escopo TGIF.
 - Branch de registro/diagnóstico deste lote: `test/0.3.12-hw-findings-20260921`.
 
+## 0.3.13-alpha — implementação corretiva aberta — 2026-09-21
+
+- Branch: `pu2pny-os-0.3.13-alpha`.
+- Rollback: `backup/0.3.12-pre-0.3.13-20260921`.
+- **Baseline congelada:** reconhecimento do Wi-Fi, conexão automática e abertura direta do painel, todos com HW PASS na 0.3.12. Nenhum helper Wi-Fi foi substituído pelo overlay 0.3.13.
+- **RF-018 implementado em fonte:** MMDVMHost passa primeiro por bootstrap mínimo com `MQTTLevel=0` e `DisplayLevel=0`; só após confirmar a UART o sistema valida MQTT por CONNECT/CONNACK, habilita MQTT/display e reinicia o host de forma transacional.
+- Revisão encontrou um defeito concreto capaz de bloquear a 0.3.12: `ExecStartPre` era executado como usuário `mmdvm` e o preflight tentava persistir diagnóstico em `/run/2pny`. A 0.3.13 usa preflight não persistente no service e a persistência root continua disponível no apply. Isso ainda exige novo HW para provar que era a causa do bloqueio físico.
+- **PROTO-019 implementado em fonte:** TGIF usa perfil explícito compatível com o DMRGateway embarcado, preserva a Security Key, distingue `secured`/legado e não grava a chave no estado público.
+- **UI-028 implementado no wizard:** rótulos operacionais têm base PT consistente e catálogo exato PT/EN/ES; conteúdo normal fica oculto brevemente até o idioma selecionado ser aplicado, mantendo a tela inicial de idioma como única superfície intencionalmente multilíngue.
+- Direct, Histórico, frequências, offsets e caminhos DMR não-TGIF permanecem preservados.
+- Estado atual: **fonte implementada; CI/ARM64/XZ/SHA/validação final PENDENTES; HW PENDENTE**.
