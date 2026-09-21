@@ -277,3 +277,10 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-LIVE-012D | LIVE-012 / DATA-001 | campo não disponível | UI omite ou mostra `—`; não inventa cidade, gateway, RSSI, BER, TG ou módulo | PENDENTE | SW |
 | TEST-LIVE-012E | LIVE-012 | QRZ/RadioID | atalhos aparecem somente para identificadores válidos e não abrem JSON bruto | PENDENTE | SW/HW |
 | TEST-LIVE-012F | LIVE-012 / PERF-001 | atualização contínua | Ao Vivo atualiza pelo Event Bus sem polling externo pesado; Histórico usa cache/intervalo leve | PENDENTE | SW/HW |
+
+## Feedback físico 0.3.7-alpha — Sistema / fuso horário
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-UI-016-TZ | UI-016 / UI-006 | selecionar America/Sao_Paulo e aplicar | fuso muda pelo painel, estado é relido/confirmado e relógio atualiza sem terminal/F5 | **FAIL** — operação bloqueada por permissão (`Access denied`) | HW/browser |
+| TEST-UI-016-TZ-ROLLBACK | UI-016 | falha de privilégio/aplicação | fuso anterior permanece ativo; mensagem amigável; RF/gateways inalterados | PENDENTE | SW/HW |
