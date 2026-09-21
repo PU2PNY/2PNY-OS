@@ -292,3 +292,15 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-UI-017A | UI-017 | abrir Sistema na mesma largura de Display | cabeçalho mantém mesma altura; relógio aparece em uma linha e controles não são esmagados | **FAIL** — relógio foi comprimido/quebrado e cabeçalho ficou mais alto | HW/browser |
 | TEST-UI-017B | UI-017 | navegar entre todas as páginas desktop | cabeçalho permanece dimensionalmente estável sem saltos de altura | PENDENTE | SW/HW |
 | TEST-UI-017C | UI-017 / UI-002 | viewport tablet/mobile | menu e ferramentas degradam responsivamente sem sobreposição ou relógio vertical | PENDENTE | SW/HW |
+
+## Feedback físico 0.3.7-alpha — Expert
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-UI-018A | UI-018 | transmissão RF/Internet com Expert aberto | Estado Ao Vivo muda pelo Event Bus/SSE praticamente em tempo real | **FAIL** — implementação atual recarrega a cada 15 s | HW/browser + DOC |
+| TEST-UI-018B | UI-018 / PERF-001 | dashboard Expert aberto 30 min | CPU/temp/RAM/rede atualizam com gráficos leves sem MTR/scan pesado e sem escrita contínua em SD | PENDENTE | SW/HW |
+| TEST-UI-018C | UI-018 | hardware | cards/gráficos mostram dados reais disponíveis e detalhes técnicos ficam recolhidos | PENDENTE | SW/HW |
+| TEST-UI-019A | UI-019 | Resumo operacional | substitui "Configuração pública" e mostra RF/protocolo/rede/display/timezone sem qualquer segredo | PENDENTE | SW/HW |
+| TEST-SEC-021A | SEC-021 | chave vazia/inválida | explica o problema e o formato esperado antes de tentar habilitar SSH | **FAIL UX** — exibiu apenas "Chave pública SSH inválida" | HW/browser |
+| TEST-SEC-021B | SEC-021 | chave pública OpenSSH válida | cria/configura radioexpert, valida sshd, inicia ssh.service e confirma estado/IP/porta na UI | PENDENTE | HW |
+| TEST-SEC-021C | SEC-021 | desativar SSH | serviço para e UI confirma estado desativado | PENDENTE | HW |
