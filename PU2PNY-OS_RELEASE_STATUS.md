@@ -585,3 +585,12 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Rollback criado: `backup/0.3.13-pre-0.3.14-20260921`.
 - Branch corretiva: `pu2pny-os-0.3.14-alpha`.
 - Escopo: broker MQTT/readiness + permanência do wizard na Configuração Básica. Wi-Fi aprovado e bootstrap MMDVM da 0.3.13 ficam congelados.
+
+## 0.3.14-alpha — feedback HW e abertura da 0.3.15 — 2026-09-21
+- **HW PASS preservado:** MMDVM passa no teste básico/UART.
+- **HW FAIL:** o primeiro provisionamento continua bloqueado pelo broker MQTT e não chega à Conclusão.
+- Comparação GitHub 0.3.6/0.3.8 mostrou que o fluxo funcional encerrava o RF apply logo após MMDVMHost ativo com `MQTTLevel=0`; no DMR, o helper também operava com `MQTTLevel=0` e sem preflight MQTT.
+- A 0.3.14 introduziu dois gates que não existiam nesse caminho comprovado: Fase B MQTT dentro do RF apply e preflight MQTT antes de delegar DMR.
+- Branch corretiva: `pu2pny-os-0.3.15-alpha`.
+- Rollback: `backup/0.3.14-pre-0.3.15-20260921`.
+- Escopo congelado: somente remover esses dois bloqueios MQTT do primeiro provisionamento DMR. Demais módulos permanecem inalterados.
