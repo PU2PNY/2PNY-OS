@@ -35,6 +35,7 @@ for src,dst in (
     ("src/2pny-display-core-0.3.7.py","rootfs-overlay/usr/local/sbin/2pny-display-core"),
     ("src/2pny-protocol-network-apply-all-0.3.7.py","rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply"),
     ("src/2pny-direct-start-0.3.7","rootfs-overlay/usr/local/sbin/2pny-direct-start"),
+    ("src/2pny-direct-recover-0.3.7","rootfs-overlay/usr/local/sbin/2pny-direct-recover"),
     ("src/2pny-direct-core-0.3.7.service","rootfs-overlay/etc/systemd/system/2pny-direct.service"),
 ):
     install(src,dst,0o755 if not src.endswith(".service") else 0o644)
@@ -43,10 +44,10 @@ for src,dst in (
 # image runner. No CGO/native dependency is needed.
 direct_dir=root/"src/direct-core"
 direct_dir.mkdir(parents=True,exist_ok=True)
-for name in ("direct_types.go","direct_session.go","direct_transport.go","direct_main.go"):
+for name in ("direct_types.go","direct_session.go","direct_transport.go","direct_radio.go","direct_main.go"):
     shutil.copy2(repo/"src/direct-core"/name,direct_dir/name)
-subprocess.run(["gofmt","-w",*(str(direct_dir/n) for n in ("direct_types.go","direct_session.go","direct_transport.go","direct_main.go"))],check=True)
-subprocess.run(["go","test",*(str(direct_dir/n) for n in ("direct_types.go","direct_session.go","direct_transport.go","direct_main.go"))],check=True)
+subprocess.run(["gofmt","-w",*(str(direct_dir/n) for n in ("direct_types.go","direct_session.go","direct_transport.go","direct_radio.go","direct_main.go"))],check=True)
+subprocess.run(["go","test",*(str(direct_dir/n) for n in ("direct_types.go","direct_session.go","direct_transport.go","direct_radio.go","direct_main.go"))],check=True)
 target=root/"rootfs-overlay/usr/local/bin/2pny-direct-core"
 target.parent.mkdir(parents=True,exist_ok=True)
 env=os.environ.copy();env.update({"GOOS":"linux","GOARCH":"arm64","CGO_ENABLED":"0"})
@@ -90,7 +91,7 @@ builder.write_text(s)
 subprocess.run(["python3","-m","py_compile",
     str(root/"rootfs-overlay/usr/local/sbin/2pny-display-core"),
     str(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply")],check=True)
-subprocess.run(["bash","-n",str(root/"rootfs-overlay/usr/local/sbin/2pny-direct-start")],check=True)
+subprocess.run(["bash","-n",str(root/"rootfs-overlay/usr/local/sbin/2pny-direct-start"),str(root/"rootfs-overlay/usr/local/sbin/2pny-direct-recover")],check=True)
 main=(root/"src/2pnyd/main.go").read_text()
 direct=(root/"rootfs-overlay/usr/share/2pny/direct.html").read_text()
 display=(root/"rootfs-overlay/usr/local/sbin/2pny-display-core").read_text()
