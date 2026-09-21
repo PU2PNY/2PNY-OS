@@ -447,3 +447,13 @@ Os casos BOOT/D-Star/YSF/Nextion/rede/UI que dependem de Raspberry Pi + MMDVM/di
 - Escopo da correção: somente captive portal do primeiro acesso. Não modificar scan Wi-Fi, handoff, retorno da página, detecção de hardware, RF/DMR ou navegação posterior que foram aprovados neste teste.
 - Ponto de retorno criado antes da correção: `backup/0.3.9-pre-captive-fix-20260921`.
 - A correção deve remover a dependência de DHCP Option 114 com URL HTTP local e impedir Internet transparente no AP enquanto o sistema ainda estiver não provisionado.
+
+## Feedback físico 0.3.9 — D-Star / Hotspot — 2026-09-21
+
+- **D-Star: HW FAIL no apply atual.** RF foi validada; DStarGateway carregou a lista D-Plus e registrou o indicativo no auth.dstargateway.org, porém o helper declarou ausência da bridge UDP local 20010 e executou rollback.
+- Inspeção do código identificou defeito determinístico no validador `udp_listener()`: em `ss -H -lun`, o helper consultava `cols[4]` (peer/remoto) em vez de `cols[3]` (endereço local). Isso pode produzir falso negativo para D-Star/20010 e YSF/4200.
+- As portas/configuração não serão trocadas por tentativa; a correção é limitada ao detector, mantendo rollback e DMR baseline.
+- **UI:** Hotspot/Protocolos via iframe foi rejeitada no teste visual. A decisão é manter a página unificada conforme PROTO-014, porém reconstruí-la nativamente sob UI-024, usando Direct como referência visual.
+- **Baseline congelada:** página Direct aprovada visualmente; Histórico aprovado e não deve ser modificado.
+- **UX:** ao clicar Salvar e continuar no D-Star, o aviso visual de salvando/carregando não apareceu como esperado. UI-008/TEST-UI-024C passa a cobrir esse fluxo.
+- Ponto de retorno antes desta intervenção: `backup/0.3.9-pre-dstar-hotspot-ui-20260921`.
