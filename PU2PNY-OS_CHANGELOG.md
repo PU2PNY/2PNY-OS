@@ -491,3 +491,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Nenhum código de DMR baseline, Wi-Fi aprovado, Direct ou Histórico foi alterado neste registro.
 - Criada branch de diagnóstico `test/0.3.12-hw-findings-20260921` antes de qualquer futura correção.
 
+## 2026-09-21 — abertura e implementação da 0.3.13-alpha
+
+- Criado rollback `backup/0.3.12-pre-0.3.13-20260921` e branch `pu2pny-os-0.3.13-alpha`.
+- O overlay corretivo não substitui os módulos Wi-Fi aprovados fisicamente na 0.3.12.
+- **RF-018:** restaurado o bootstrap mínimo comprovado da 0.3.6: primeira partida com MQTT/display logging desativados e todas as redes desativadas; somente depois da prova da UART entra a Fase B.
+- Identificado defeito concreto no caminho 0.3.12: o `ExecStartPre` de MMDVMHost roda como `mmdvm`, enquanto o preflight tentava escrever diagnóstico em `/run/2pny`. Na 0.3.13 o preflight do service usa `--no-publish --respect-log-level`, e o apply root continua responsável pelo diagnóstico persistente.
+- Removido `Requires=mosquitto.service` do bootstrap; Mosquitto permanece como `Wants` e continua obrigatório na Fase B operacional via CONNECT/CONNACK real.
+- **PROTO-019:** TGIF ganhou perfil separado baseado no contrato do DMRGateway embarcado, com `TGRewrite`/`SrcRewrite`, Security Key preservada, modo seguro/legado explícito e segredo ausente do JSON público.
+- **UI-028:** wizard recebeu base PT coerente para os rótulos reportados, traduções exatas PT/EN/ES e proteção contra exibir o idioma-base antes de a seleção ser aplicada.
+- DMR XLX/BrandMeister, Direct, Histórico, frequências e offsets permanecem fora do escopo da correção.
+- Adicionados prepare, testes de regressão e validador estrutural próprios da 0.3.13. Publicação continua bloqueada até ARM64 + XZ + SHA-256 + validação final.
