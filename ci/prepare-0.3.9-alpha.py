@@ -149,7 +149,10 @@ assert 'strings.TrimSuffix(service, ".service") + ".path"' in main
 assert 'exec.Command("systemctl", "start", service)' not in main
 assert 'effective_dns' in main
 assert 'if(!base){base=text;originals.set(node,base)}' in lang
-assert 'main.insertBefore(sec,top.nextSibling)' in ui
+# UI-024 retired the temporary iframe injection. 0.3.9 corrective source
+# must no longer require or reintroduce it.
+assert 'function enhanceHotspot(){ return }' in ui
+assert 'pny-protocol-frame' not in ui
 assert "var live=q('liveBox')" in ui
 
 # Preserve approved inherited areas: do not overlay DMR, Direct or History.
