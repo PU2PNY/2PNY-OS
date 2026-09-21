@@ -516,3 +516,13 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Estado atual: **DOC/SW em preparação; HW PENDENTE**. DMR/RF funcional anterior continua baseline obrigatória de regressão.
 - A 0.3.11 só poderá ser divulgada como imagem de teste após build ARM64, XZ, SHA-256 e validação estrutural completos. Nenhuma correção acima é HW PASS antes de novo teste físico.
 
+## 0.3.11-alpha — feedback físico e abertura da 0.3.12 — 2026-09-21
+
+- **HW FAIL:** após a configuração básica, MMDVMHost ainda não iniciou e o rollback preservou a configuração anterior; o wizard não pôde concluir porque /api/rf não chegou a applied.
+- O erro não será atribuído ao baud sem evidência. O baud detectado continua obrigatório.
+- Revisão do código mostrou duas lacunas objetivas: o preflight MQTT 0.3.11 provava somente abertura TCP, não CONNECT/CONNACK; e o validador da imagem não provava a presença do executável do broker Mosquitto.
+- A detecção MMDVM também não compartilhava o mesmo lock de UART usado pela transição RF.
+- Rollback criado: backup/0.3.11-pre-0.3.12-fix-20260921.
+- Branch corretiva: pu2pny-os-0.3.12-alpha.
+- Escopo congelado: não alterar frequências, offsets, DMRGateway, Direct, Histórico ou o fluxo AP→Wi-Fi já aprovado.
+- Estado da 0.3.12 neste ponto: DOC/SW em implementação; build ARM64 e HW ainda PENDENTES.
