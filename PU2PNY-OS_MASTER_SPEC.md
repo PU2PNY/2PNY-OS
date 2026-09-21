@@ -405,3 +405,16 @@ Critérios obrigatórios:
 - preservar modo claro/escuro, alto contraste, legibilidade e responsividade;
 - se o touch não for reconhecido, manter vídeo/painel utilizável e informar diagnóstico claro, sem derrubar RF, MMDVMHost ou gateways;
 - nenhuma tela genérica pode ser declarada suportada em hardware antes de teste HW real do modelo/conjunto correspondente.
+
+## 18. Atualização dinâmica de estado após operações — 2026-09-20
+
+### UI-013 — Atualização dinâmica após operação
+Quando uma operação do painel for concluída com sucesso — especialmente DNS, rede, protocolo, RF, display, update ou configuração equivalente — a mesma página deve atualizar automaticamente o estado efetivo retornado pelo backend, sem exigir F5, recarga manual ou repetição da operação.
+
+Para troca de DNS:
+- ao concluir a aplicação e validação, a mensagem de "atualizando/aplicando" deve ser substituída pelo resultado real;
+- o card "DNS efetivo" deve refletir imediatamente os resolvedores ativos da interface da rota padrão;
+- a seção de diagnóstico deve usar o mesmo estado atualizado;
+- nenhum valor antigo pode permanecer visível até refresh manual;
+- se a convergência do sistema ainda estiver em andamento, mostrar estado intermediário real e atualizar quando confirmado, com timeout e erro claro;
+- preservar NET-016: mostrar somente DNS efetivamente ativos e nunca inventar sucesso.
