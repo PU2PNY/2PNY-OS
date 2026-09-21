@@ -504,3 +504,15 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - SHA-256: `9bbbffe310401dbe4dffe10316a11fc8647465112070592275a45bee3d0c23ee`.
 - Source, overlays, staged source, ARM64, XZ, checksum, validação final, transferência e publicação: **SW PASS**.
 - Estado da release: **Alpha / HW-TEST**. D-Star, YSF, Nextion, captive popup e restore continuam pendentes de novo teste físico.
+
+## 2026-09-21 — ciclo corretivo 0.3.11-alpha aberto após teste HW da 0.3.10
+- Teste físico da 0.3.10 confirmou que a MMDVM foi identificada em `/dev/ttyAMA0` com baud detectado, porém o fluxo exibiu `MMDVMHost failed with detected baud 115200; rolling back` e não avançou como esperado.
+- A mensagem era genérica: o aplicador atribuía qualquer falha de inicialização do MMDVMHost ao baud detectado, sem provar que o baud era a causa.
+- A etapa Hardware também podia manter uma mensagem de erro transitória mesmo depois de a MMDVM já estar confirmada.
+- Foi confirmada mistura de idioma: mensagem técnica em inglês apareceu com a interface selecionada em português.
+- Rollback criado: `backup/0.3.10-hw-feedback-20260921`.
+- Branch corretiva: `pu2pny-os-0.3.11-alpha`.
+- Implementação em fonte: HW-003, RF-016, WIZ-006 e UI-026.
+- Estado atual: **DOC/SW em preparação; HW PENDENTE**. DMR/RF funcional anterior continua baseline obrigatória de regressão.
+- A 0.3.11 só poderá ser divulgada como imagem de teste após build ARM64, XZ, SHA-256 e validação estrutural completos. Nenhuma correção acima é HW PASS antes de novo teste físico.
+
