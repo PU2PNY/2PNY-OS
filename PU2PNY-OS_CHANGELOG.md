@@ -327,3 +327,14 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - A Nextion permaneceu em **Iniciando** depois do boot porque o operacional não foi restaurado.
 - Ao executar **Manutenção**, a rotina envia estado `maintenance` ao display e, no final, envia novamente `maintenance` com texto `Componentes prontos`; isso explica o display visualmente preso em Manutenção. Registrado **DISPLAY-015** para tornar esses estados transitórios e devolver a tela ao estado operacional real.
 - A correção 0.3.8 deve preservar DMR/RF já aprovados, usar inicialização idempotente dos serviços salvos, confirmar o resultado real e manter painel/rede disponíveis em caso de falha.
+
+## 2026-09-21 — imagem 0.3.8-alpha publicada para novo teste físico
+
+- A primeira tentativa após BOOT-001/NET-020/DISPLAY-015 gerou a imagem ARM64, porém o validador final bloqueou a publicação porque a página Direct havia perdido a orientação explícita sobre **CGNAT** exigida pelo gate P2P.
+- O gate não foi removido. A página Direct foi corrigida para explicar que o sistema tenta Direct primeiro e usa Relay próprio quando CGNAT/NAT restritivo impedir o caminho direto.
+- Novo build GitHub Actions run `35560842909` concluiu source, staged source, build ARM64, XZ, SHA-256, validação estrutural e publicação com **PASS**.
+- Prerelease: `v0.3.8-alpha`.
+- Target: `3876e50df5f02bea3a1f761c464db5797ab29742`.
+- Imagem: `PU2PNY-OS-0.3.8-alpha-arm64.img.xz`.
+- SHA-256: `1997b05612159e0d1178e6ab0ab2dc73f1404a8f2a9e7e909e00dfb126557510`.
+- A imagem está liberada somente como **Alpha/HW-TEST**. O novo ciclo deve começar por boot/religamento → Wi-Fi → MMDVM/DMR baseline → protocolo ativo → Nextion/manutenção, sem chamar essas correções de HW PASS antes do teste real.
