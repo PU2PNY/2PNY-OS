@@ -304,3 +304,11 @@ Estado antes do CI final:
 | P2P-007 | FALHA/PENDENTE | HW/browser | chamada sem peer pareado exibiu `HTTP 409`; fluxo precisa pré-condição e mensagens operacionais em português |
 | UI-015 | FALHA | HW/browser | página Direct abriu com layout/cabeçalho/menu quebrados |
 | P2P-006B | PENDENTE | HW | ainda não existe segundo hotspot 0.3.7 para validar RF A↔B; não classificar Direct/Relay como HW PASS |
+
+## Feedback físico 0.3.7-alpha — APRS/D-PRS
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| APRS-006 — assistente de login APRS-IS | FALHA | HW/browser | teste exibiu erro de login não confirmado sem explicar o que é o login ou indicar a etapa exata que falhou |
+| APRS-002 — toast global 5 s | PENDENTE/NÃO IMPLEMENTADO GLOBALMENTE | DOC/SW/HW | código atual avisa dentro da página APRS; falta toast global clicável em qualquer página |
+| APRS-004 transporte bidirecional | HW PENDENTE | SW/VPS/HW | não promover a HW PASS até login verificado + envio + recebimento reais |
