@@ -298,3 +298,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Nenhuma correção automática pode mudar frequência nominal, simplex/duplex, modem, baud ou gateway.
 - DMR validado continua baseline obrigatória de regressão.
 
+## 2026-09-20 — Ao Vivo: S-meter e saúde da comunicação
+
+- Registrado **LIVE-013**: faixa `Saúde da comunicação` no Ao Vivo com Sinal RF, Wi-Fi/Uplink e Internet.
+- S-meter usa apenas RSSI real do MMDVM; sem RSSI, mostra indisponível. Escala S1..S9 não será inventada sem calibração/conversão confiável.
+- Wi-Fi usa o sinal da conexão já associada, sem rescan; Ethernet aparece como Link ativo.
+- Internet reutiliza NET-011 e diagnóstico cacheado de latência/perda/jitter, sem MTR contínuo.
+- Registrado **LIVE-014**: conteúdo do bloco principal muda entre RF→Internet, Internet→RF e Standby, mostrando apenas métricas pertinentes a cada direção.
+- Registrado **UI-021**: alertas acionáveis levam a BER/Expert, canais Wi-Fi, diagnóstico de Internet ou configuração de protocolo.
+- O código 0.3.7 já possui SSE de Ao Vivo e campos `rssi/rssi_avg/ber`; a nova UI deve reutilizar esse fluxo, sem polling RF adicional.
