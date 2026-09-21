@@ -1,8 +1,8 @@
 # PU2PNY-OS — RELEASE STATUS
 
-**Branch de trabalho:** `pu2pny-os-0.3.6-alpha`  
-**Base preservada:** `pu2pny-os-0.3.5-alpha`  
-**Backup criado antes das mudanças:** `backup/0.3.5-hw-feedback-20260920`  
+**Branch de trabalho:** `pu2pny-os-0.3.9-alpha`  
+**Base preservada:** `pu2pny-os-0.3.8-alpha`  
+**Backup criado antes das mudanças:** `backup/0.3.8-hw-feedback-20260921`  
 **Data do último feedback físico incorporado:** 2026-09-20  
 **Estado global:** ALPHA / correção. **Não PROD.**
 
@@ -392,3 +392,31 @@ Estado antes do CI final:
 - SHA-256 da imagem: `1997b05612159e0d1178e6ab0ab2dc73f1404a8f2a9e7e909e00dfb126557510`.
 
 **Classificação:** liberada como **Alpha para teste físico**. As correções BOOT-001, NET-020 e DISPLAY-015 estão em SW/estrutura PASS, mas continuam **HW PENDENTE** até repetição no Raspberry Pi + MMDVM + Nextion. D-Star, YSF bidirecional, APRS/D-PRS, Direct entre dois hotspots e demais pendências físicas não são promovidos a HW PASS por este build.
+
+## Estado corrente 0.3.9-alpha — 2026-09-21
+
+**Estado global:** ALPHA / correção. **Não PROD.**
+
+### Baseline preservada
+- AP→Wi-Fi da 0.3.8: HW PASS no cenário testado.
+- Wi-Fi reconectou após reboot.
+- DMR TX/RX anterior: baseline HW obrigatória.
+- Histórico: aprovado pelo usuário e congelado para regressão.
+- Direct: layout aprovado; P2P entre dois hotspots ainda HW PENDENTE.
+- APRS-IS: login verificado observado; mensagens/D-PRS continuam HW PENDENTE.
+
+### Bloqueadores que a 0.3.9 corrige em software
+- BOOT-001 restauração do último perfil.
+- PROTO-002/007/012 D-Star falso negativo UDP 20010.
+- PROTO-003/008 YSF falso negativo UDP 4200.
+- DISPLAY-001/013/015 estados/layout Nextion.
+- NET-012/017/018/019/020 captive portal, scan, gráfico e coerência do estado.
+- UI-013 DNS efetivo.
+- UI-018 Expert SSE em tempo real.
+- UI-016 timezone.
+- SEC-021 SSH.
+- UI-023 tradução.
+- LIVE-013/014 e PROTO-014 hierarquia visual/configuração.
+
+### Gate atual
+Fontes corretivas estão em `pu2pny-os-0.3.9-alpha`. Build ARM64, XZ, SHA-256, validação estrutural e publicação ainda devem concluir antes de existir imagem 0.3.9 para teste. Nenhum FAIL HW acima é promovido por CI.
