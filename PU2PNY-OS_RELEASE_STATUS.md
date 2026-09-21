@@ -376,3 +376,19 @@ Estado antes do CI final:
 | NET-020 — Wi-Fi pós-boot/estado real | **FALHA DE ESTADO UI** | HW/browser | Internet/rota estavam em `wlan0`, mas SSID e RSSI apareceram vazios; não há evidência suficiente para classificar o Wi-Fi como desconectado |
 | DISPLAY-015 — estados transitórios | **FALHA** | HW | Nextion ficou presa em `Iniciando` após boot e em `Manutenção` após execução manual |
 | Gate de release | **BLOQUEADO até nova correção SW + novo teste HW** | REL | 0.3.8 não pode ser tratada como pronta para novo ciclo enquanto boot operacional e display transitório não estiverem corrigidos no código/build |
+
+## Build/publicação 0.3.8-alpha — 2026-09-21
+
+- GitHub Actions run `35560842909`: **PASS**.
+- Source validation: **PASS**.
+- Staged source/regressões: **PASS**.
+- Build ARM64: **PASS**.
+- Normalização XZ + SHA-256: **PASS**.
+- Validação estrutural final: **PASS**.
+- Publicação da prerelease `v0.3.8-alpha`: **PASS**.
+- Target commit: `3876e50df5f02bea3a1f761c464db5797ab29742`.
+- Imagem: `PU2PNY-OS-0.3.8-alpha-arm64.img.xz`.
+- Tamanho: `591931160` bytes.
+- SHA-256 da imagem: `1997b05612159e0d1178e6ab0ab2dc73f1404a8f2a9e7e909e00dfb126557510`.
+
+**Classificação:** liberada como **Alpha para teste físico**. As correções BOOT-001, NET-020 e DISPLAY-015 estão em SW/estrutura PASS, mas continuam **HW PENDENTE** até repetição no Raspberry Pi + MMDVM + Nextion. D-Star, YSF bidirecional, APRS/D-PRS, Direct entre dois hotspots e demais pendências físicas não são promovidos a HW PASS por este build.
