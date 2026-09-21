@@ -376,3 +376,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 
 ### Estado
 As correções acima estão implementadas em fonte. Ainda não são HW PASS. Build ARM64, validação estrutural, SHA-256 e publicação são o próximo gate.
+
+## 2026-09-21 — 0.3.9-alpha publicada para HW-TEST
+
+- Run final GitHub Actions: `35569995279`.
+- Commit: `0b35a555a642ced6e13150e434072415e24175b5`.
+- Source/staged source/ARM64/XZ/SHA-256/validação estrutural da imagem: PASS.
+- Artefato: `PU2PNY-OS-0.3.9-alpha-arm64.img.xz`.
+- SHA-256: `09ea47002f60471e3359186717370861e0090bf03c5f5fb3e2dc32456261ec71`.
+- Prerelease: `v0.3.9-alpha`.
+- Nenhum requisito físico foi promovido para HW PASS sem novo teste no Raspberry Pi/MMDVM/display.
