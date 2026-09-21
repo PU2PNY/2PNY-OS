@@ -23,6 +23,9 @@ op=read("src/2pny-operational-apply-0.3.9.py")
 assert 'appVersion            = "0.3.9-alpha"' in main
 assert "def udp_listener(port)" in proto
 assert "udp_listener(20010)" in proto and "udp_listener(4200)" in proto
+assert "local=cols[3]" in proto and "local=cols[4]" not in proto
+assert "verify_host_bridge_config(proto)" in proto
+assert "deadline=time.time()+12" in proto
 assert r'(?m)\\b127\\.0\\.0\\.1:20010' not in proto
 assert r'(?m)\\b127\\.0\\.0\\.1:4200' not in proto
 assert 'for attempt in 1 2 3' in net
