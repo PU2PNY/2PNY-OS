@@ -426,3 +426,13 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Flash TFT será sempre confirmado pelo usuário e transacional; não haverá sobrescrita silenciosa.
 - MMDVMHost mantém ownership do modem durante operação; detector não pode roubar a serial.
 - Criado rollback `backup/0.3.9-pre-display-autoprovision-20260921`.
+
+## 2026-09-21 — prioridades concretas de hardening 0.3.9
+- Registrados PROTO-016, BOOT-002, PROTO-017, NET-022, UPDATE-006, LIVE-015, SEC-022 e UI-025.
+- D-Star/YSF passam a exigir estado intermediário waiting_bridge e evidência de health-check.
+- Restore passa a ter sequência explícita serial→MQTT→MMDVMHost→gateway→health.
+- MQTT preflight vira gate obrigatório, com endpoint/erro legível.
+- Wi-Fi deixa de resumir conexão em uma única flag e passa a estados associação→IPv4→rota→DNS.
+- Expert ganhará diagnóstico das portas UDP, writer do display, último rollback e restore.
+- Direct e Histórico permanecem congelados como baseline.
+- Criado rollback `backup/0.3.9-pre-stability-hardening-20260921`.
