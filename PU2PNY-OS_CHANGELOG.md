@@ -251,3 +251,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Geolocalização automática em HTTP continua com fallback manual; isso é limitação do contexto do navegador, não falha do motor APRS.
 
 - Registrado **APRS-007**: a área APRS / D-PRS não pode continuar com D-PRS apenas nominal. O código atual ainda contém `Sem DPRS`; D-PRS real via D-Star entra como requisito explícito e permanece HW PENDENTE até rádio compatível ser testado.
+
+## 2026-09-20 — Histórico e Últimas atividades com mais contexto
+
+- Registrado **LIVE-012** para enriquecer Histórico e Ao Vivo/Últimas atividades com direção RF↔Internet, identidade, localização quando conhecida, protocolo, destino, servidor/refletor, módulo/TG, slot/CC, horário, duração, contagem e tempo acumulado.
+- BER/RSSI continuam exclusivos de telemetria RF real; tráfego recebido pela Internet não ganha métricas falsas.
+- Direct/Relay/Gateway podem aparecer como origem lógica somente quando confirmados pelo runtime.
+- IP remoto não será mostrado por padrão; diagnóstico de rede fica no Expert.
+- Registrado **DATA-001** para manter um único evento normalizado usado pelas duas telas.
+- A implementação atual já possui vários desses campos (direção, identidade, cidade/país, protocolo, módulo/TG, duração, QRZ/RadioID), mas o requisito novo exige ampliar e padronizar o contexto sem inventar dados.
