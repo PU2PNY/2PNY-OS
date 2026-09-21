@@ -417,3 +417,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - UI-017 foi reafirmado após novo teste: o relógio continua visualmente incorreto/inalterado. O cabeçalho deverá sincronizar com o horário/fuso do PU2PNY via backend e impedir quebra vertical.
 - Registrado **PROTO-015**: D-Star/YSF ganham verificação do INI efetivo e janela de readiness após a ordem MMDVMHost → gateway, mantendo rollback.
 - Criado rollback `backup/0.3.9-pre-nextion-clock-20260921`.
+
+## 2026-09-21 — DISPLAY-017 auto-detection + auto-provisioning
+- Adicionado requisito para detecção no boot, painel e hotplug.
+- Definida prioridade USB/UART/I2C/SPI/DRM-touch.
+- Nextion deve usar `connect/comok`; OLED 0x3C/0x3D só recebe identificação exata quando houver prova suficiente.
+- Catálogo de TFT passa a exigir URL + SHA-256 reais; campos desconhecidos permanecem nulos/unpublished.
+- Flash TFT será sempre confirmado pelo usuário e transacional; não haverá sobrescrita silenciosa.
+- MMDVMHost mantém ownership do modem durante operação; detector não pode roubar a serial.
+- Criado rollback `backup/0.3.9-pre-display-autoprovision-20260921`.
