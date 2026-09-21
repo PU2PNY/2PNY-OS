@@ -203,3 +203,9 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
 |---|---|---|---|---|---|
 | TEST-HW-037-NEXTION-READY | DISPLAY-001/002/013 | Boot/wizard concluído sem abrir menu Display | Nextion sai de "Pronto" e acompanha automaticamente o runtime/Standby, sem depender de configuração manual no menu Display | **FAIL** — permaneceu travada em "Pronto" | HW |
+
+## Feedback físico 0.3.7-alpha — atualização dinâmica de DNS
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-UI-013-DNS | UI-013 / NET-016 | trocar DNS e aguardar conclusão | mensagem de aplicação termina e "DNS efetivo" + diagnóstico mudam automaticamente para o estado confirmado, sem F5 | **FAIL** — foi necessário atualizar a página, inclusive duas vezes em uma tentativa | HW/browser |
