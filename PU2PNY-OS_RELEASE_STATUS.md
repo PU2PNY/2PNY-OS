@@ -485,3 +485,12 @@ Ordem de execução aprovada neste ciclo:
 6. UPDATE-006, LIVE-015, SEC-022, UI-025 e i18n dinâmico.
 
 Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseline aprovada e não entram em refatoração desnecessária.
+
+## 0.3.10-alpha — ciclo de imagem aberto — 2026-09-21
+
+- Branch ativa: `pu2pny-os-0.3.10-alpha`.
+- Base: estado corretivo acumulado da `pu2pny-os-0.3.9-alpha`.
+- Rollback da abertura: `backup/0.3.9-pre-0.3.10-image-20260921`.
+- Objetivo: consolidar na imagem as correções já registradas de captive inicial, D-Star/YSF, Hotspot sem iframe, wizard, Nextion/Display, relógio, restore/MQTT, Wi-Fi por estados e diagnóstico Expert.
+- Histórico e Direct permanecem baselines preservadas.
+- Estado atual: implementação em fonte; CI/ARM64/SHA/validação final ainda PENDENTES. Não divulgar link de imagem até esses gates passarem.
