@@ -350,3 +350,11 @@ Estado antes do CI final:
 | RF-013 — autoajuste BER/RXOffset | PENDENTE | DOC/HW | requisito registrado; ainda não implementado/validado em hardware |
 | RF-014 — proteção TXOffset | PENDENTE | DOC/HW | TXOffset não será alterado automaticamente sem feedback confiável do receptor |
 | UI-020 — Calibração RF no Expert | PENDENTE | DOC/SW/HW | gráfico BER, autoajuste RX, manual RX/TX, rollback e toast de falha precisam implementação e teste |
+
+## Função adicionada ao escopo 0.3.7-alpha — Ao Vivo / saúde da comunicação
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| LIVE-013 — RF/Wi-Fi/Internet | PENDENTE | DOC/SW/HW | SSE e RSSI/BER já existem parcialmente; falta S-meter seguro, sinal do Wi-Fi ativo e indicadores integrados |
+| LIVE-014 — RX/TX contextual | PENDENTE | DOC/SW/HW | conteúdo deve adaptar-se à direção real sem inventar RSSI/BER de tráfego vindo da Internet |
+| UI-021 — sugestões acionáveis | PENDENTE | DOC/SW/HW | atalhos contextuais para BER, Wi-Fi, Internet e protocolo precisam implementação/validação |
