@@ -1013,7 +1013,13 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "renderer de display inválido"})
 			return
 		}
-		if in.Renderer == "pu2pny-modern-v2" {
+		if in.Enabled {
+			// DISPLAY-018: this endpoint controls Nextion through the modem.
+			// Hardware validation regressed with the MQTT/vector bridge, so the
+			// proven MMDVMHost-native writer is authoritative here.
+			in.Renderer = "mmdvmhost-native"
+			if in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }
+		} else if in.Renderer == "pu2pny-modern-v2" {
 			in.Layout = 9
 		} else if in.Layout != 2 && in.Layout != 3 {
 			in.Layout = 2
