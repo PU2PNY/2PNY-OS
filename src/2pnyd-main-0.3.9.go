@@ -837,13 +837,32 @@ func networkDNSHandler(w http.ResponseWriter, r *http.Request) {
 	ignore:="yes"; if provider=="automatic" { ignore="no" }
 	if err:=apply(ignore,dns); err!=nil { writeJSON(w,503,map[string]any{"error":"não foi possível aplicar DNS: "+err.Error()}); return }
 	if exec.Command("timeout","-k","1","4","getent","ahostsv4","example.com").Run()!=nil { _=apply(oldIgnore,oldDNS); writeJSON(w,503,map[string]any{"error":"o DNS novo não resolveu nomes; configuração anterior restaurada"}); return }
-	effective:=[]string{}
-	if out,e:=exec.Command("resolvectl","dns",iface).Output(); e==nil {
-		seen:=map[string]bool{}
-		for _,field:=range strings.Fields(string(out)) {
-			ip:=strings.Trim(field,"[](),")
-			if net.ParseIP(ip)!=nil && !seen[ip] { seen[ip]=true; effective=append(effective,ip) }
+	readEffective:=func() []string {
+		effective:=[]string{}
+		if out,e:=exec.Command("resolvectl","dns",iface).Output(); e==nil {
+			seen:=map[string]bool{}
+			for _,field:=range strings.Fields(string(out)) {
+				ip:=strings.Trim(field,"[](),")
+				if net.ParseIP(ip)!=nil && !seen[ip] { seen[ip]=true; effective=append(effective,ip) }
+			}
 		}
+		return effective
+	}
+	expected:=strings.Fields(dns);effective:=[]string{};confirmed:=false;deadline:=time.Now().Add(6*time.Second)
+	for time.Now().Before(deadline) {
+		effective=readEffective()
+		if provider=="automatic" {
+			confirmed=len(effective)>0
+		} else {
+			for _,want:=range expected { for _,got:=range effective { if got==want { confirmed=true;break } }; if confirmed { break } }
+		}
+		if confirmed { break }
+		time.Sleep(250*time.Millisecond)
+	}
+	if !confirmed {
+		_ = apply(oldIgnore,oldDNS)
+		writeJSON(w,503,map[string]any{"error":"o DNS solicitado não apareceu como efetivo; configuração anterior restaurada"})
+		return
 	}
 	invalidateConnectivityCache()
 	writeJSON(w,200,map[string]any{"ok":true,"provider":provider,"servers":dns,"effective_dns":effective,"interface":iface})
