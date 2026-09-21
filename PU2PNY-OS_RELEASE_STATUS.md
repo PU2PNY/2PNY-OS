@@ -314,3 +314,10 @@ Estado antes do CI final:
 | APRS-004 transporte bidirecional | HW PENDENTE | SW/VPS/HW | não promover a HW PASS até login verificado + envio + recebimento reais |
 
 | APRS-007 — D-PRS | PENDENTE | DOC/HW | código atual ainda indica `Sem DPRS`; funcionalidade precisa implementação e teste físico D-Star/GPS antes de qualquer HW PASS |
+
+## Função adicionada ao escopo 0.3.7-alpha — Histórico/Ao Vivo enriquecidos
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| LIVE-012 / DATA-001 | PARCIAL/PENDENTE | DOC/SW/HW | UI atual já mostra parte da identidade/direção/módulo/TG/QRZ-RID; falta padronizar e ampliar servidor/rede, contexto Internet, contagem/tempo acumulado e origem lógica sem dados inventados |
+| TEST-LIVE-012A..F | PENDENTE | SW/HW | precisam implementação completa e validação com eventos RF e Internet reais |
