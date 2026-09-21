@@ -523,3 +523,11 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0313-C | REL-006 | XZ + SHA-256 | arquivo compactado passa `xz -t` e checksum é confirmado | PENDENTE CI | SW |
 | TEST-REL-0313-D | REL-006 | imagem montada | MMDVM bootstrap, MQTT, TGIF, i18n e baselines herdadas são comprovados estruturalmente | PENDENTE CI | SW |
 | TEST-REL-0313-E | REL-006 | Raspberry Pi + MMDVM | Wi-Fi regressão, avanço MMDVM, TGIF login/TX-RX e idioma integral | PENDENTE | HW |
+
+## Identidade visual oficial
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-UI-029A | UI-029 | exibir logotipo oficial em telas suportadas | proporção preservada, contraste adequado e nenhuma distorção/corte indevido | PENDENTE próximo ciclo | SW/HW |
+| TEST-UI-029B | UI-029/PERF-* | medir impacto do asset | sem regressão perceptível de carregamento, CPU/RAM ou escrita em SD | PENDENTE próximo ciclo | SW/HW |
+| TEST-UI-029C | UI-029/DISPLAY-* | adaptar identidade para displays menores | usa derivação legível do mesmo logotipo sem prejudicar dados operacionais | PENDENTE próximo ciclo | SW/HW |
