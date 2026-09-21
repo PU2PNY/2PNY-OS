@@ -51,7 +51,7 @@ subprocess.run(["go","test",*(str(direct_dir/n) for n in ("direct_types.go","dir
 target=root/"rootfs-overlay/usr/local/bin/2pny-direct-core"
 target.parent.mkdir(parents=True,exist_ok=True)
 env=os.environ.copy();env.update({"GOOS":"linux","GOARCH":"arm64","CGO_ENABLED":"0"})
-subprocess.run(["go","build","-trimpath","-o",str(target),*(str(direct_dir/n) for n in ("direct_types.go","direct_session.go","direct_transport.go","direct_main.go"))],check=True,env=env)
+subprocess.run(["go","build","-trimpath","-o",str(target),*(str(direct_dir/n) for n in ("direct_types.go","direct_session.go","direct_transport.go","direct_radio.go","direct_main.go"))],check=True,env=env)
 os.chmod(target,0o755)
 
 # Enable Direct service. Before provisioning ConditionPathExists prevents it
