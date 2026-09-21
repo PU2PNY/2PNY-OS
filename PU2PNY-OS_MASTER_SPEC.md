@@ -456,3 +456,23 @@ Requisitos:
 - dados sem evidência devem aparecer como indisponíveis, nunca inventados.
 
 A recomendação deve priorizar estabilidade e qualidade real, não apenas o menor número de redes encontradas.
+
+## 21. Perfis de protocolo no Ao Vivo e configuração no Hotspot — 2026-09-20
+
+### LIVE-011 — Perfis rápidos de protocolo no Ao Vivo
+Na página **Ao Vivo**, a faixa hoje usada como filtros por protocolo deve passar a apresentar os perfis rápidos dos protocolos configurados, mantendo rótulos claros como DMR, D-Star, YSF/C4FM, P25, NXDN e POCSAG conforme suportados.
+
+Regras:
+- o protocolo/perfil ativo deve ficar visualmente destacado;
+- cada botão deve mostrar, quando disponível, protocolo + frequência e estado configurado/não configurado;
+- clicar em um perfil configurado deve iniciar a troca transacional já existente, com preflight, tela de progresso real, confirmação de sucesso e rollback em falha;
+- perfil não configurado não pode fingir troca: deve direcionar para sua configuração;
+- a troca não pode reiniciar serviços desnecessários nem alterar o caminho DMR validado fora do escopo requerido;
+- o estado da página Ao Vivo deve atualizar automaticamente após a troca, sem F5.
+
+Os filtros de atividade por protocolo **não podem ser removidos**: devem permanecer disponíveis em controle separado/compacto, porque filtragem e troca de perfil são funções diferentes.
+
+### PROTO-014 — Hotspot como área de configuração dos perfis
+Na página **Hotspot**, os perfis rápidos dos protocolos devem permanecer, porém sua ação principal passa a ser **Configurar** o perfil selecionado, e não duplicar a função de troca rápida do Ao Vivo.
+
+Cada perfil deve permitir abrir a configuração correspondente de RF/rede/frequência/servidor/TG/módulo conforme o protocolo. A página Hotspot continua sendo a referência para configuração; a página Ao Vivo passa a ser a referência para troca operacional rápida.
