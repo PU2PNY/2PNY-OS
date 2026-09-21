@@ -112,6 +112,8 @@ type core struct {
 	lastPeerTraffic time.Time
 }
 
+var protocolOverride string
+
 var callRE = regexp.MustCompile(`^[A-Z0-9]{3,8}(?:-[A-Z0-9]{1,2})?$`)
 
 func b64(b []byte) string            { return base64.RawStdEncoding.EncodeToString(b) }
@@ -194,6 +196,7 @@ func verifyCtrl(m ctrl, pub ed25519.PublicKey) bool {
 }
 
 func currentProtocol() string {
+	if protocolOverride != "" { return protocolOverride }
 	b, err := os.ReadFile("/var/lib/2pny/config.json")
 	if err != nil { return "" }
 	var v struct { Protocol string `json:"protocol"` }
