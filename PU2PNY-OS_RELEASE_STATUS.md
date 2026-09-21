@@ -438,3 +438,12 @@ Fontes corretivas estão em `pu2pny-os-0.3.9-alpha`. Build ARM64, XZ, SHA-256, v
 - SHA-256: `09ea47002f60471e3359186717370861e0090bf03c5f5fb3e2dc32456261ec71`.
 
 Os casos BOOT/D-Star/YSF/Nextion/rede/UI que dependem de Raspberry Pi + MMDVM/display real continuam PENDENTE/FAIL anterior até novo teste HW. O CI não os promove para HW PASS.
+
+
+## Feedback físico 0.3.9-alpha — primeiro acesso AP — 2026-09-21
+
+- **NET-021 / TEST-NET-021A: HW FAIL:** ao conectar ao AP `pu2pny`, a página de configuração não abriu automaticamente.
+- **Baseline congelada como HW PASS após abertura manual:** ao abrir `http://pu2pny.local/`, o sistema localizou automaticamente a rede Wi-Fi, aceitou senha e salvou, mostrou a mensagem de conexão, após o handoff a página abriu sozinha, reconheceu o hardware automaticamente e avançou para a página de configurações.
+- Escopo da correção: somente captive portal do primeiro acesso. Não modificar scan Wi-Fi, handoff, retorno da página, detecção de hardware, RF/DMR ou navegação posterior que foram aprovados neste teste.
+- Ponto de retorno criado antes da correção: `backup/0.3.9-pre-captive-fix-20260921`.
+- A correção deve remover a dependência de DHCP Option 114 com URL HTTP local e impedir Internet transparente no AP enquanto o sistema ainda estiver não provisionado.
