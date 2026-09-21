@@ -509,3 +509,17 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-PROTO-019C | PROTO-019 | transmitir HT após gateway TGIF ativo | RF local, gateway local e evidência de rede são estados separados; só declarar conectado/entregue com evidência do master | **FAIL HW atual / causa não isolada** | HW |
 | TEST-I18N-004 | UI-028 | PT/EN/ES com mensagens estáticas, dinâmicas e erros | toda mensagem usa chave estável e nasce no idioma selecionado; bruto somente no Expert | PENDENTE correção/SW/HW | SW/HW |
 
+## Casos corretivos 0.3.13-alpha — 2026-09-21
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-RF-018C | RF-018 | service MMDVMHost executa preflight como usuário `mmdvm` durante bootstrap | com MQTTLevel=0 o preflight não exige broker nem tenta persistir diagnóstico; MMDVMHost pode provar UART | PENDENTE CI/HW | SW/HW |
+| TEST-RF-018D | RF-018/PROTO-018 | bootstrap UART passa e MQTT falha depois | diagnóstico identifica MQTT, rollback restaura estado anterior e não acusa baud/MMDVM | PENDENTE CI/HW | SW/HW |
+| TEST-PROTO-019D | PROTO-019 | gerar perfil TGIF com Security Key | TGRewrite/SrcRewrite do DMRGateway embarcado são gerados, chave permanece somente no arquivo privado e estado público registra apenas modo de autenticação | PENDENTE CI/HW | SW/HW |
+| TEST-I18N-005 | UI-028 | abrir wizard em PT/EN/ES | fora do seletor inicial, conteúdo operacional só aparece depois de aplicar o idioma e não mistura rótulos conhecidos | PENDENTE CI/HW | SW/HW |
+| TEST-NET-0313-REG | NET-002/NET-021/NET-022 | regressão do onboarding aprovado | overlay 0.3.13 não substitui helpers Wi-Fi; comportamento aprovado da 0.3.12 é preservado | PENDENTE CI / baseline HW 0.3.12 | SW/HW |
+| TEST-REL-0313-A | REL-006 | source + regressões | Go/Python/Bash/JS e testes 0.3.13 passam junto com regressões herdadas | PENDENTE CI | SW |
+| TEST-REL-0313-B | REL-006 | build ARM64 | imagem ARM64 é gerada com overlay 0.3.13 após toda cadeia herdada | PENDENTE CI | SW |
+| TEST-REL-0313-C | REL-006 | XZ + SHA-256 | arquivo compactado passa `xz -t` e checksum é confirmado | PENDENTE CI | SW |
+| TEST-REL-0313-D | REL-006 | imagem montada | MMDVM bootstrap, MQTT, TGIF, i18n e baselines herdadas são comprovados estruturalmente | PENDENTE CI | SW |
+| TEST-REL-0313-E | REL-006 | Raspberry Pi + MMDVM | Wi-Fi regressão, avanço MMDVM, TGIF login/TX-RX e idioma integral | PENDENTE | HW |
