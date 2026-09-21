@@ -389,3 +389,19 @@ Quando uma conexão de rede de protocolo for confirmada por evidência real do g
 
 ### TEST-007 — Gate de nova imagem
 Antes de divulgar a 0.3.7-alpha: source tests, regressões 0.3.6, testes Direct/Display/Voice, build ARM64, XZ, SHA-256 e validação estrutural precisam passar. D-Star/YSF/Direct/Displays permanecem HW PENDENTE onde ainda não houver equipamento real testado.
+
+## 17. Tela genérica touch de 7 polegadas — 2026-09-20
+
+### DISPLAY-014 — Tela genérica touch de 7 polegadas
+O PU2PNY-OS deve suportar tela genérica touch de 7 polegadas compatível com Raspberry Pi sem exigir terminal para operação normal. O suporte deve ser orientado por capacidade real, sem presumir fabricante ou controlador.
+
+Critérios obrigatórios:
+- suportar, quando o hardware/kernel realmente expuser, telas 7" por HDMI + USB touch e/ou DSI;
+- detectar separadamente vídeo e dispositivo de toque; não marcar touch como funcional apenas porque existe framebuffer/DRM;
+- usar DRM/KMS/framebuffer e entrada evdev/libinput ou equivalentes disponíveis no sistema, evitando driver proprietário quando não necessário;
+- iniciar automaticamente uma interface PU2PNY própria em modo tela cheia/kiosk adequada a 7", com botões e alvos de toque dimensionados para uso sem mouse/teclado;
+- consumir o mesmo estado normalizado do painel/Display Core para Standby, RX, TX, protocolo, TG/módulo/refletor, rede, alertas e métricas reais;
+- permitir operação essencial pelo toque: Ao Vivo, Hotspot/Protocolos unificados, troca segura de perfil/protocolo, RF permitido pela política, Internet, Display e Sistema;
+- preservar modo claro/escuro, alto contraste, legibilidade e responsividade;
+- se o touch não for reconhecido, manter vídeo/painel utilizável e informar diagnóstico claro, sem derrubar RF, MMDVMHost ou gateways;
+- nenhuma tela genérica pode ser declarada suportada em hardware antes de teste HW real do modelo/conjunto correspondente.
