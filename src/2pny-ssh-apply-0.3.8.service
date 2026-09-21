@@ -1,0 +1,15 @@
+[Unit]
+Description=PU2PNY privileged SSH Expert apply
+After=systemd-user-sessions.service
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/sbin/2pny-ssh-apply
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=no
+ProtectSystem=full
+ReadWritePaths=/run/2pny /etc/ssh /etc/passwd /etc/shadow /etc/group /etc/gshadow /home /var/log
