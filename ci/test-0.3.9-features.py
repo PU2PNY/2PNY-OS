@@ -13,6 +13,7 @@ netcore=read("src/2pny-network-core-0.3.9")
 internet=read("src/internet-0.3.9.html")
 ui=read("src/ui-common-0.3.9.js")
 expert=read("src/expert-0.3.9.html")
+hotspot=read("src/hotspot-0.3.9.html")
 display_status=read("src/2pny-display-status-0.3.9.py")
 display_apply=read("src/2pny-display-apply-0.3.9.py")
 lang=read("src/ui-language-0.3.9.js")
@@ -39,7 +40,12 @@ assert "5 GHz" in internet and "2,4 GHz" in internet and "bandgraph" in internet
 assert "effective_dns" in internet
 assert "addEventListener('live'" in ui and "addEventListener('live'" in expert
 assert "var live=q('liveBox')" in ui
-assert "main.insertBefore(sec,top.nextSibling)" in ui
+# UI-024 supersedes the temporary iframe integration from early 0.3.9.
+# The corrective source must now keep Hotspot/Protocolos native.
+assert "function enhanceHotspot(){ return }" in ui
+assert "pny-protocol-frame" not in ui
+assert "<iframe" not in hotspot.lower()
+assert "Perfis rápidos nativos · sem iframe" in hotspot
 assert "mmdvmhost-authoritative" in display_status
 assert '"error": (0, "Erro / Error")' in display_status
 assert 'não confirmou o layout Nextion solicitado' in display_apply
