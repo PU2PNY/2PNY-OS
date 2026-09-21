@@ -1,0 +1,23 @@
+[Unit]
+Description=PU2PNY Direct secure peer transport
+After=network-online.target 2pnyd.service
+Wants=network-online.target
+ConditionPathExists=/var/lib/2pny/config.json
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/2pny-direct-start
+Restart=on-failure
+RestartSec=5
+User=root
+Group=root
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/2pny/direct /run/2pny
+MemoryMax=96M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target
