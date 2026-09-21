@@ -495,3 +495,17 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0312-C | REL-005 | XZ + SHA-256 | arquivo compactado íntegro e checksum gerado | PENDENTE CI | SW |
 | TEST-REL-0312-D | REL-005 | imagem montada | broker, config MQTT, MMDVM lock, wizard/i18n e baselines herdadas presentes | PENDENTE CI | SW |
 | TEST-REL-0312-E | REL-005 | Raspberry Pi + MMDVM + display | onboarding, MMDVMHost, DMR regressão, reboot e Nextion | PENDENTE | HW |
+## Feedback físico 0.3.12-alpha — lote 1 — 2026-09-21
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-NET-021C-0312 | NET-002/NET-021/NET-022 | onboarding da 0.3.12 após seleção da rede | Wi-Fi reconhecido, conexão automática confirmada e painel aberto automaticamente | **PASS HW — baseline congelada** | HW |
+| TEST-WIZ-011 | RF-016/WIZ-006 | Salvar e continuar com MMDVM real detectada | MMDVMHost fica ativo, /api/rf chega a applied e wizard conclui | **FAIL HW — bloqueia no módulo MMDVM** | HW |
+| TEST-I18N-003 | UI-026/UI-027 | operar a 0.3.12 em Português | nenhuma mensagem normal em Inglês fora do seletor inicial | **FAIL HW — mistura PT/EN observada** | HW/browser |
+| TEST-RF-018A | RF-018 | bootstrap mínimo com MMDVM real detectada | com redes/protocolos desativados e sem MQTT/display como pré-condição do bootstrap, MMDVMHost assume a UART e permanece ativo | PENDENTE correção/HW | SW/HW |
+| TEST-RF-018B | RF-018/PROTO-018 | ativar Fase B após bootstrap PASS | MQTT/display/protocolo são aplicados transacionalmente; falha identifica a dependência e faz rollback sem acusar baud/MMDVM sem evidência | PENDENTE correção/HW | SW/HW |
+| TEST-PROTO-019A | PROTO-019 | TGIF com Security Key fornecida | chave chega intacta ao DMRGateway sem aparecer em logs/UI; configuração segura não cai silenciosamente para legado | PENDENTE correção/SW/HW | SW/HW |
+| TEST-PROTO-019B | PROTO-019 | TGIF + ESSID 01..99 | Network ID efetivo e ESSID seguem a regra DMR e a mesma Security Key é usada | PENDENTE correção/SW/HW | SW/HW |
+| TEST-PROTO-019C | PROTO-019 | transmitir HT após gateway TGIF ativo | RF local, gateway local e evidência de rede são estados separados; só declarar conectado/entregue com evidência do master | **FAIL HW atual / causa não isolada** | HW |
+| TEST-I18N-004 | UI-028 | PT/EN/ES com mensagens estáticas, dinâmicas e erros | toda mensagem usa chave estável e nasce no idioma selecionado; bruto somente no Expert | PENDENTE correção/SW/HW | SW/HW |
+
