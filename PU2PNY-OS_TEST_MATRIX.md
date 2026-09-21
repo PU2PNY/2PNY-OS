@@ -304,3 +304,15 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-SEC-021A | SEC-021 | chave vazia/inválida | explica o problema e o formato esperado antes de tentar habilitar SSH | **FAIL UX** — exibiu apenas "Chave pública SSH inválida" | HW/browser |
 | TEST-SEC-021B | SEC-021 | chave pública OpenSSH válida | cria/configura radioexpert, valida sshd, inicia ssh.service e confirma estado/IP/porta na UI | PENDENTE | HW |
 | TEST-SEC-021C | SEC-021 | desativar SSH | serviço para e UI confirma estado desativado | PENDENTE | HW |
+
+## Casos adicionados — BER / calibração assistida
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-RF-011A | RF-011 | BER RF alto sustentado com sinal estável | sistema reconhece condição somente após múltiplas amostras válidas e oferece/inicia calibração protegida | PENDENTE | SW/HW |
+| TEST-RF-011B | RF-011 | autoajuste RXOffset | testa offsets limitados, mede BER, aplica somente melhora consistente e registra valor anterior | PENDENTE | HW |
+| TEST-RF-011C | RF-011 | nenhuma melhora | restaura RXOffset original automaticamente e informa falha segura | PENDENTE | HW |
+| TEST-RF-011D | RF-011 / REL-001 | DMR após ajuste | TX/RX DMR continua funcional; sem regressão de frequência/modem/gateway | PENDENTE | HW |
+| TEST-RF-012A | RF-012 | BER local alto | TXOffset permanece inalterado durante autoajuste baseado apenas no BER do hotspot | PENDENTE | SW/HW |
+| TEST-UI-020A | UI-020 | autoajuste falha/não pode iniciar | toast global orienta usuário e clique abre Expert diretamente na Calibração RF | PENDENTE | SW/HW |
+| TEST-UI-020B | UI-020 | ajuste manual Expert | RXOffset/TXOffset podem ser alterados com preflight, validação e rollback; valor antigo permanece recuperável | PENDENTE | HW |
