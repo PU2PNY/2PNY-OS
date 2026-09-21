@@ -481,3 +481,17 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-RF-016 | ativar MMDVMHost após detecção | HW | salvar RF/perfil com MMDVM detectada | usa porta/baud detectados, preflight MQTT, lock contra display, serviço permanece ativo; falha faz rollback com causa real | PENDENTE |
 | TEST-I18N-002 | idioma integral em mensagens dinâmicas/erros | SW/HW | selecionar PT/EN/ES e disparar status/erros conhecidos | nenhuma mensagem normal aparece em idioma diferente do selecionado; logs brutos só em diagnóstico técnico | PENDENTE |
 
+## Casos corretivos 0.3.12-alpha — 2026-09-21
+
+| ID | Requisito | Caso | Resultado esperado | Estado inicial | Nível |
+|---|---|---|---|---|---|
+| TEST-RF-017A | RF-017 | detector e RF apply concorrentes | ambos usam /run/2pny/mmdvm-serial.lock; MMDVMHost só assume a UART após o detector liberar | PENDENTE CI/HW | SW/HW |
+| TEST-PROTO-018A | PROTO-018 | inspecionar imagem final | /usr/sbin/mosquitto existe e listener PU2PNY está restrito a 127.0.0.1:1883 | PENDENTE CI | SW |
+| TEST-PROTO-018B | PROTO-018 | broker simulado aceita/rejeita CONNECT | preflight só retorna PASS após CONNACK=0 e rejeita CONNACK de erro | PENDENTE CI | SW |
+| TEST-WIZ-011 | RF-016/WIZ-006 | Salvar e continuar após MMDVM real detectada | MMDVMHost fica ativo, /api/rf chega a applied e wizard abre Conclusão sem clique repetido | PENDENTE HW | HW |
+| TEST-I18N-003 | UI-026/UI-027 | repetir onboarding em PT/EN/ES | fora do seletor inicial não há frase operacional em idioma diferente; siglas/protocolos são exceção | PENDENTE SW/HW | SW/HW |
+| TEST-REL-0312-A | REL-005 | source + regressões | sintaxe, handshake MQTT simulado, locks e traduções passam | PENDENTE CI | SW |
+| TEST-REL-0312-B | REL-005 | build ARM64 | imagem ARM64 gerada preservando baseline | PENDENTE CI | SW |
+| TEST-REL-0312-C | REL-005 | XZ + SHA-256 | arquivo compactado íntegro e checksum gerado | PENDENTE CI | SW |
+| TEST-REL-0312-D | REL-005 | imagem montada | broker, config MQTT, MMDVM lock, wizard/i18n e baselines herdadas presentes | PENDENTE CI | SW |
+| TEST-REL-0312-E | REL-005 | Raspberry Pi + MMDVM + display | onboarding, MMDVMHost, DMR regressão, reboot e Nextion | PENDENTE | HW |
