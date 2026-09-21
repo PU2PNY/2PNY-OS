@@ -223,7 +223,21 @@ start_eth(){
 generate_ap_dns(){
   sed "s/@IFACE@/$AP_WIFI/g" /usr/share/2pny/network/dnsmasq-ap.template >"$RUN/dnsmasq-ap.conf"
   echo "address=/pu2pny.local/$SETUP_IP" >>"$RUN/dnsmasq-ap.conf"
-  grep -q '^dhcp-option-force=114,' "$RUN/dnsmasq-ap.conf" 2>/dev/null || echo "dhcp-option-force=114,http://$SETUP_IP/captive-api" >>"$RUN/dnsmasq-ap.conf"
+  # RFC 8908/8910 captive API discovery requires an authenticated HTTPS API.
+  # PU2PNY's offline setup portal is HTTP, so never advertise an invalid
+  # DHCP Captive-Portal API URI. Legacy HTTP probes remain the compatibility path.
+  sed -i '/^dhcp-option-force=114,/d' "$RUN/dnsmasq-ap.conf" 2>/dev/null || true
+
+  # First access must remain truly captive. If an Ethernet/other uplink exists,
+  # transparently forwarding Internet would let NCSI/Android probes succeed and
+  # suppress the portal prompt. Until onboarding is complete, resolve all names
+  # to the local setup server and do not expose upstream DNS.
+  if test ! -f "$STATE/provisioned"; then
+    { echo "address=/#/$SETUP_IP"; echo 'no-resolv'; echo 'no-hosts'; } >>"$RUN/dnsmasq-ap.conf"
+    AP_ONLINE=0
+    return 0
+  fi
+
   outif="$(default_iface)"
   if test -n "$outif" && test "$outif" != "$AP_WIFI"; then
     { echo 'server=1.1.1.1'; echo 'server=8.8.8.8'; } >>"$RUN/dnsmasq-ap.conf"
@@ -266,6 +280,8 @@ start_ap(){
 }
 enable_ap_forwarding(){
   test -n "$AP_WIFI" || return 0
+  # Never make the unprovisioned setup AP look like normal Internet access.
+  test -f "$STATE/provisioned" || return 0
   outif="$(default_iface)"
   test -n "$outif" || return 0
   test "$outif" = "$AP_WIFI" && return 0
