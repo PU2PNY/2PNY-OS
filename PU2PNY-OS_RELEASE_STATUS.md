@@ -563,3 +563,14 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Requisito registrado como **UI-029**.
 - A 0.3.13-alpha em build não será alterada por esta decisão, evitando mudança fora do escopo corretivo MMDVM/TGIF/i18n.
 - A integração visual entra no próximo ciclo, com asset otimizado e testes de legibilidade/desempenho.
+
+## 0.3.13-alpha — publicada para teste físico — 2026-09-21
+
+- Run final: `35631645881`.
+- Commit construído/publicado: `f00aba3d556ab6ee0bb48ba79ea5a591ace11d81`.
+- Release: `v0.3.13-alpha`.
+- Artefato: `PU2PNY-OS-0.3.13-alpha-arm64.img.xz`.
+- SHA-256 da imagem: `1cb0f862c09825b25394cf0cfbb6812d7e24c04a5034cab9940bc90763db67ec`.
+- Source/regressões, overlay herdado, staged source, build ARM64, XZ/checksum, validador estrutural, transferência e publicação: **SW PASS**.
+- Estado: **Alpha / HW-TEST**.
+- Ainda não promover RF-018, PROTO-019 ou UI-028 a HW PASS antes de novo teste físico.
