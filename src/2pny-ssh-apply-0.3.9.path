@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY watch SSH Expert requests
+
+[Path]
+PathChanged=/run/2pny/ssh-request.json
+Unit=2pny-ssh-apply.service
+
+[Install]
+WantedBy=multi-user.target
