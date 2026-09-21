@@ -349,20 +349,19 @@ PidFile=
 User=
 """
         atomic(d/"DStarGateway.ini",ini)
-        # PROTO-023: the pinned gateway consumes its own host schema. Preserve
-        # the complete cache including DStar_Hosts.json, and inject the
-        # operator-selected reflector into the custom directory so activation
-        # never depends on a stale public list.
-        for src in ("DStar_Hosts.json","DPlus_Hosts.txt","DExtra_Hosts.txt","DCS_Hosts.txt","XLXHosts.txt","XLX_Hosts.txt"):
-            srcp=STATE/"hosts"/src
-            if srcp.exists():shutil.copy2(srcp,d/src)
+        # PROTO-023: this pinned F4FXL gateway reads DStar_Hosts.json from
+        # both HostsFiles and CustomHostsfiles. Preserve the cache and write the
+        # selected reflector in that exact schema. XLX links use the DCS
+        # transport internally, so XLX entries are reflector_type "DCS".
+        srcp=STATE/"hosts"/"DStar_Hosts.json"
+        if srcp.exists():shutil.copy2(srcp,d/"DStar_Hosts.json")
         if address:
             host_name=normalized[:6] if len(normalized)>=6 else normalized
-            if host_name.startswith("REF"): custom_name="DPlus_Hosts.txt"
-            elif host_name.startswith("DCS"): custom_name="DCS_Hosts.txt"
-            elif host_name.startswith("XRF"): custom_name="DExtra_Hosts.txt"
-            else: custom_name="XLX_Hosts.txt"
-            atomic(custom/custom_name,f"{host_name} {address}\n",0o644)
+            if host_name.startswith("REF"): reflector_type="REF"
+            elif host_name.startswith("XRF"): reflector_type="XRF"
+            else: reflector_type="DCS"
+            custom_hosts={"reflectors":[{"name":host_name,"reflector_type":reflector_type,"ipv4":address}]}
+            atomic(custom/"DStar_Hosts.json",json.dumps(custom_hosts,ensure_ascii=False,indent=2)+"\n",0o644)
 
     elif proto=="YSF":
         d=STATE/"ysf";d.mkdir(parents=True,exist_ok=True)
