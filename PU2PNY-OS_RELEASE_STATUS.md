@@ -494,3 +494,13 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Objetivo: consolidar na imagem as correções já registradas de captive inicial, D-Star/YSF, Hotspot sem iframe, wizard, Nextion/Display, relógio, restore/MQTT, Wi-Fi por estados e diagnóstico Expert.
 - Histórico e Direct permanecem baselines preservadas.
 - Estado atual: implementação em fonte; CI/ARM64/SHA/validação final ainda PENDENTES. Não divulgar link de imagem até esses gates passarem.
+
+## 0.3.10-alpha publicada — 2026-09-21
+
+- Run final: `35600972295`.
+- Commit validado/publicado: `ad3e09f8c29d85abfb891e7c5e4f05423df4fd9c`.
+- Release: `v0.3.10-alpha`.
+- Artefato: `PU2PNY-OS-0.3.10-alpha-arm64.img.xz`.
+- SHA-256: `9bbbffe310401dbe4dffe10316a11fc8647465112070592275a45bee3d0c23ee`.
+- Source, overlays, staged source, ARM64, XZ, checksum, validação final, transferência e publicação: **SW PASS**.
+- Estado da release: **Alpha / HW-TEST**. D-Star, YSF, Nextion, captive popup e restore continuam pendentes de novo teste físico.
