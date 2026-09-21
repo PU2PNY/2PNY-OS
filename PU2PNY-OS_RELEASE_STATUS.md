@@ -594,3 +594,13 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Branch corretiva: `pu2pny-os-0.3.15-alpha`.
 - Rollback: `backup/0.3.14-pre-0.3.15-20260921`.
 - Escopo congelado: somente remover esses dois bloqueios MQTT do primeiro provisionamento DMR. Demais módulos permanecem inalterados.
+
+## 0.3.15-alpha publicada — 2026-09-21
+- GitHub Actions run final: `35647296002` — **success**.
+- Commit validado/publicado: `820ae691a49ee49ebc4974b9345b75aa1f875d75`.
+- Release: `v0.3.15-alpha` — prerelease / Alpha / HW-TEST.
+- Artefato: `PU2PNY-OS-0.3.15-alpha-arm64.img.xz`.
+- SHA-256: `4caea4a281c67cd8c5a15ba134e6720dbf4adb7a675a4395052ff13be10bb690`.
+- Source, regressões, overlay, staged source, build ARM64, XZ, SHA-256, validação estrutural da imagem, transferência e publicação: **SW PASS**.
+- Correção focal: onboarding DMR não é mais bloqueado por MQTT quando MMDVMHost/DMRGateway operam com `MQTTLevel=0`.
+- **HW PENDENTE:** confirmar em Raspberry Pi + MMDVM que Configuração Básica avança para Conclusão e dashboard.
