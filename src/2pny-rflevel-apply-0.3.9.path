@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY watch RFLevel requests
+
+[Path]
+PathChanged=/run/2pny/rflevel-request.json
+Unit=2pny-rflevel-apply.service
+
+[Install]
+WantedBy=multi-user.target
