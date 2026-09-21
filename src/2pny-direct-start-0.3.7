@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+CFG=/var/lib/2pny/config.json
+SET=/var/lib/2pny/direct-settings.json
+CALLSIGN="$(python3 - "$CFG" <<'PY'
+import json,sys
+try: print(str(json.load(open(sys.argv[1])).get('callsign') or '').strip().upper())
+except Exception: print('')
+PY
+)"
+if [[ -z "$CALLSIGN" ]]; then echo 'PU2PNY Direct: indicativo ainda não configurado'; exit 0; fi
+SERVER="$(python3 - "$SET" <<'PY'
+import json,sys
+try: print(str(json.load(open(sys.argv[1])).get('server') or 'xlx026.net:43070').strip())
+except Exception: print('xlx026.net:43070')
+PY
+)"
+exec /usr/local/bin/2pny-direct-core --callsign "$CALLSIGN" --server "$SERVER" --state-dir /var/lib/2pny/direct --api 127.0.0.1:43071
