@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "catalog_version": "0.3.9-alpha",
+  "asset_repository": "PU2PNY/2PNY-Display-Assets",
+  "policy": {
+    "auto_detect": true,
+    "auto_download": false,
+    "flash_requires_explicit_confirmation": true,
+    "require_sha256": true,
+    "silent_tft_overwrite": false
+  },
+  "profiles": [
+    {"id":"nextion-24-320x240","family":"nextion","model_regex":"^(NX|TJC).*3224.*024","size_inch":"2.4","resolution":"320x240","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"nextion-28-320x240","family":"nextion","model_regex":"^(NX|TJC).*3224.*028","size_inch":"2.8","resolution":"320x240","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"nextion-32-400x240","family":"nextion","model_regex":"^(NX|TJC).*4024.*032","size_inch":"3.2","resolution":"400x240","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"nextion-35-480x320","family":"nextion","model_regex":"^(NX|TJC|ONX).*4832.*035|^ONX3248G035$","size_inch":"3.5","resolution":"480x320","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"nextion-43-480x272","family":"nextion","model_regex":"^(NX|TJC).*4827.*043","size_inch":"4.3","resolution":"480x272","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"nextion-50-800x480","family":"nextion","model_regex":"^(NX|TJC).*8048.*050","size_inch":"5.0","resolution":"800x480","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"nextion-70-800x480","family":"nextion","model_regex":"^(NX|TJC).*8048.*070","size_inch":"7.0","resolution":"800x480","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"nextion-101-1024x600","family":"nextion","model_regex":"^(NX|TJC).*1060.*101","size_inch":"10.1","resolution":"1024x600","renderer":"pu2pny-modern-v2","tft":{"version":null,"filename":null,"sha256":null,"url":null,"status":"unpublished"}},
+    {"id":"oled-128x64","family":"oled","model_regex":"(SSD1306|SH1106)","resolution":"128x64","renderer":"pu2pny-modern-v2-compact"}
+  ]
+}
