@@ -344,3 +344,10 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-UI-023-ES | UI-023 | navegar por todas as páginas em Español | 100% dos textos operacionais em ES, sem PT/EN misturado | PENDENTE | SW/HW |
 | TEST-UI-023-DYN | UI-023 | erros/modais/toasts/estados dinâmicos | mensagem amigável acompanha idioma; texto técnico bruto só no Expert/log | PENDENTE | SW/HW |
 | TEST-UI-023-CI | UI-023 | build/catalog completeness | build falha se uma chave usada não existir em PT/EN/ES ou se texto operacional novo escapar do catálogo | PENDENTE | SW |
+
+## Encerramento do ciclo físico 0.3.7-alpha — YSF/C4FM
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-PROTO-003-R1 | PROTO-003 / PROTO-008 | YSF inicialmente funcional e posteriormente retestado na mesma instalação | RF→rede e rede→RF permanecem funcionais após uso/trocas/configurações realizadas no ciclo | **FAIL / REGRESSÃO** — RF do rádio chega ao hotspot, mas não segue para a rede; tráfego da rede também não chega ao rádio | HW |
+| TEST-PROTO-003-R2 | PROTO-003 / PROTO-008 | mesmo rádio/hardware em outro sistema | comparação deve ajudar a separar hardware de software | **OUTRO SISTEMA FUNCIONOU**, reduzindo a hipótese de defeito físico geral; não identifica sozinho a causa raiz no PU2PNY | HW comparativo |
