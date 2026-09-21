@@ -1,0 +1,259 @@
+#!/bin/bash
+set -euo pipefail
+
+CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini
+STATE=/var/lib/2pny
+BACKUPS="$STATE/backups/rf"
+LOCK=/run/2pny-rf-apply.lock
+DISPLAY_LOCK=/run/2pny/display-detect.lock
+SERIAL_LOCK=/run/2pny/mmdvm-serial.lock
+SERVICE=2pny-mmdvmhost.service
+
+usage(){
+  echo "uso: 2pny-rf-apply RX_HZ TX_HZ RX_OFFSET_HZ TX_OFFSET_HZ DUPLEX MODEM_PORT CALLSIGN DMR_ID" >&2
+  exit 2
+}
+[[ $EUID -eq 0 ]] || { echo "permissão administrativa interna necessária" >&2; exit 1; }
+[[ $# -eq 8 ]] || usage
+
+RX="$1"; TX="$2"; RXOFF="$3"; TXOFF="$4"; DUPLEX="$5"; PORT="$6"; CALLSIGN="${7^^}"; DMRID="$8"
+is_uint(){ [[ "$1" =~ ^[0-9]+$ ]]; }
+is_int(){ [[ "$1" =~ ^-?[0-9]+$ ]]; }
+
+is_uint "$RX" && is_uint "$TX" && is_int "$RXOFF" && is_int "$TXOFF" && is_uint "$DMRID" || { echo "valor numérico de RF inválido" >&2; exit 2; }
+(( RX >= 100000000 && RX <= 1000000000 )) || { echo "frequência RX fora do limite de segurança do hardware (100 MHz..1 GHz)" >&2; exit 2; }
+(( TX >= 100000000 && TX <= 1000000000 )) || { echo "frequência TX fora do limite de segurança do hardware (100 MHz..1 GHz)" >&2; exit 2; }
+(( RXOFF >= -10000000 && RXOFF <= 10000000 )) || { echo "RX Offset fora do limite de ±10 MHz" >&2; exit 2; }
+(( TXOFF >= -10000000 && TXOFF <= 10000000 )) || { echo "TX Offset fora do limite de ±10 MHz" >&2; exit 2; }
+[[ "$DUPLEX" == 0 || "$DUPLEX" == 1 ]] || { echo "duplex inválido" >&2; exit 2; }
+[[ "$CALLSIGN" =~ ^[A-Z0-9/-]{3,16}$ ]] || { echo "indicativo inválido" >&2; exit 2; }
+(( DMRID >= 1 && DMRID <= 999999999 )) || { echo "DMR ID inválido" >&2; exit 2; }
+case "$PORT" in
+  /dev/serial0|/dev/ttyAMA[0-9]*|/dev/ttyS[0-9]*|/dev/ttyACM[0-9]*|/dev/ttyUSB[0-9]*|/dev/serial/by-id/*) ;;
+  *) echo "porta do modem não suportada" >&2; exit 2 ;;
+esac
+[[ -e "$PORT" ]] || { echo "porta do modem não existe: $PORT" >&2; exit 2; }
+[[ -r "$STATE/hardware-probe.json" ]] || { echo "MMDVM ainda não foi identificada; a configuração RF não será aplicada" >&2; exit 3; }
+
+MODEM_BAUD="$(python3 - "$STATE/hardware-probe.json" "$PORT" <<'PY'
+import json,os,sys
+path,requested=sys.argv[1:3]
+try: data=json.load(open(path))
+except Exception: raise SystemExit("estado de detecção de hardware inválido")
+m=data.get("mmdvm") or {}
+if not m.get("detected"): raise SystemExit("MMDVM ainda não foi identificada; a configuração RF não será aplicada")
+detected=str(m.get("port") or "").strip()
+if not detected: raise SystemExit("MMDVM detectada sem porta serial utilizável")
+if os.path.realpath(detected)!=os.path.realpath(requested):
+    raise SystemExit(f"a porta solicitada não corresponde à MMDVM detectada: {requested} != {detected}")
+try: baud=int(m.get("baud") or 0)
+except Exception: baud=0
+if baud not in (115200,460800):
+    raise SystemExit(f"baud da MMDVM detectada não suportado ou desconhecido: {baud}")
+print(baud)
+PY
+)" || { echo "falha ao validar a detecção da MMDVM" >&2; exit 3; }
+
+mkdir -p /run/2pny "$STATE" "$BACKUPS" "$(dirname "$CONFIG")"
+install -d -m 0750 -o root -g mmdvm "$STATE" "$(dirname "$CONFIG")"
+exec 9>"$LOCK"; flock -x 9
+# Não disputar a UART com a detecção de display.
+exec 8>"$DISPLAY_LOCK"
+if ! flock -w 8 8; then
+  echo "A detecção de display ainda está usando a porta da MMDVM; tente novamente em alguns segundos." >&2
+  exit 3
+fi
+# RF-017: serialize the transition from identification to MMDVMHost ownership.
+exec 7>"$SERIAL_LOCK"
+if ! flock -w 15 7; then
+  echo "A MMDVM ainda está sendo verificada; aguarde alguns segundos e tente novamente." >&2
+  exit 3
+fi
+# Allow the firmware UART to settle after the identification process closes it.
+sleep 0.25
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OLD=""; WAS_ACTIVE=0
+systemctl is-active --quiet "$SERVICE" && WAS_ACTIVE=1 || true
+if [[ -f "$CONFIG" ]]; then OLD="$BACKUPS/MMDVM-Host.ini.$STAMP"; cp -a "$CONFIG" "$OLD"; fi
+
+TMP="$(mktemp /run/2pny/.MMDVM-Host.ini.XXXXXX)"
+cleanup(){ rm -f "$TMP"; }
+trap cleanup EXIT
+cat >"$TMP" <<EOF
+[General]
+Callsign=$CALLSIGN
+Id=$DMRID
+Timeout=180
+Duplex=$DUPLEX
+RFModeHang=10
+NetModeHang=3
+Daemon=0
+
+[Log]
+MQTTLevel=1
+DisplayLevel=1
+
+[MQTT]
+Host=127.0.0.1
+Port=1883
+Keepalive=60
+Auth=0
+Name=host
+
+[CW Id]
+Enable=0
+
+[Modem]
+Protocol=uart
+UARTPort=$PORT
+UARTSpeed=$MODEM_BAUD
+RXFrequency=$RX
+TXFrequency=$TX
+TXInvert=0
+RXInvert=0
+PTTInvert=0
+TXDelay=100
+RXOffset=$RXOFF
+TXOffset=$TXOFF
+DMRDelay=0
+RXLevel=50
+TXLevel=50
+RXDCOffset=0
+TXDCOffset=0
+RFLevel=100
+UseCOSAsLockout=0
+Trace=0
+Debug=0
+
+[D-Star]
+Enable=0
+Module=C
+
+[DMR]
+Enable=0
+ColorCode=1
+DumpTAData=1
+
+[System Fusion]
+Enable=0
+
+[P25]
+Enable=0
+
+[NXDN]
+Enable=0
+
+[POCSAG]
+Enable=0
+
+[FM]
+Enable=0
+
+[D-Star Network]
+Enable=0
+
+[DMR Network]
+Enable=0
+GatewayAddress=127.0.0.1
+GatewayPort=62031
+LocalAddress=127.0.0.1
+LocalPort=62032
+Jitter=360
+Slot1=0
+Slot2=1
+Debug=0
+
+[System Fusion Network]
+Enable=0
+
+[P25 Network]
+Enable=0
+
+[NXDN Network]
+Enable=0
+
+[POCSAG Network]
+Enable=0
+
+[FM Network]
+Enable=0
+
+[Remote Control]
+Enable=0
+EOF
+
+chmod 0640 "$TMP"
+install -m 0640 -o root -g mmdvm "$TMP" "$CONFIG" 2>/dev/null || install -m 0640 "$TMP" "$CONFIG"
+rm -f "$TMP"; trap - EXIT
+printf '%s\n' "$STAMP" >"$STATE/rf-configured"
+printf '%s\n' "$MODEM_BAUD" >"$STATE/mmdvm-baud"
+
+rollback(){
+  rm -f "$STATE/rf-configured" "$STATE/mmdvm-baud"
+  if [[ -n "$OLD" && -f "$OLD" ]]; then
+    cp -a "$OLD" "$CONFIG"
+    if (( WAS_ACTIVE )); then systemctl restart "$SERVICE" >/dev/null 2>&1 || true
+    else systemctl stop "$SERVICE" >/dev/null 2>&1 || true
+    fi
+  else
+    rm -f "$CONFIG"
+    systemctl disable --now "$SERVICE" >/dev/null 2>&1 || true
+  fi
+}
+
+command -v 2pny-display-status >/dev/null 2>&1 && 2pny-display-status ready "Configuração RF preparada" >/dev/null 2>&1 || true
+
+# PROTO-017 / RF-016: MMDVMHost uses MQTT logging. Prove the local broker
+# before touching the radio engine instead of blaming every startup failure on
+# the detected baud.
+systemctl start mosquitto.service >/dev/null 2>&1 || true
+if command -v 2pny-mqtt-preflight >/dev/null 2>&1; then
+  if ! timeout 8 2pny-mqtt-preflight --quiet >/dev/null 2>&1; then
+    echo "O broker MQTT local não ficou pronto; a configuração anterior foi preservada." >&2
+    rollback
+    exit 4
+  fi
+fi
+
+record_failure(){
+  local reason="$1"
+  local log=""
+  log="$(journalctl -u "$SERVICE" -n 30 --no-pager -o cat 2>/dev/null | tail -c 3000 || true)"
+  python3 - "$STATE/last-rf-apply-error.json" "$MODEM_BAUD" "$PORT" "$reason" "$log" <<'PYERR' || true
+import json,os,sys,time
+path,baud,port,reason,log=sys.argv[1:6]
+obj={"baud":int(baud),"port":port,"reason":reason,"journal":log,
+     "updated":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())}
+tmp=path+".tmp"
+with open(tmp,"w") as f: json.dump(obj,f,ensure_ascii=False,indent=2);f.write("\n")
+os.chmod(tmp,0o600);os.replace(tmp,path)
+PYERR
+}
+
+start_host(){
+  local attempt
+  systemctl enable "$SERVICE" >/dev/null 2>&1 || return 1
+  for attempt in 1 2; do
+    systemctl reset-failed "$SERVICE" >/dev/null 2>&1 || true
+    systemctl restart "$SERVICE" >/dev/null 2>&1 || true
+    sleep 2
+    systemctl is-active --quiet "$SERVICE" && return 0
+    sleep 1
+  done
+  return 1
+}
+
+if ! start_host; then
+  record_failure "mmdvmhost_start_failed"
+  rollback
+  echo "MMDVMHost não iniciou; a configuração anterior foi restaurada. O diagnóstico técnico foi salvo no Expert." >&2
+  exit 4
+fi
+
+rm -f "$STATE/last-rf-apply-error.json"
+if command -v 2pny-display-apply >/dev/null 2>&1; then
+  2pny-display-apply >/dev/null 2>&1 || true
+fi
+
+printf 'RF_APPLY_OK rx=%s tx=%s rx_offset=%s tx_offset=%s duplex=%s port=%s baud=%s\n' "$RX" "$TX" "$RXOFF" "$TXOFF" "$DUPLEX" "$PORT" "$MODEM_BAUD"
+
