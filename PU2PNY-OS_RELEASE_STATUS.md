@@ -358,3 +358,11 @@ Estado antes do CI final:
 | LIVE-013 — RF/Wi-Fi/Internet | PENDENTE | DOC/SW/HW | SSE e RSSI/BER já existem parcialmente; falta S-meter seguro, sinal do Wi-Fi ativo e indicadores integrados |
 | LIVE-014 — RX/TX contextual | PENDENTE | DOC/SW/HW | conteúdo deve adaptar-se à direção real sem inventar RSSI/BER de tráfego vindo da Internet |
 | UI-021 — sugestões acionáveis | PENDENTE | DOC/SW/HW | atalhos contextuais para BER, Wi-Fi, Internet e protocolo precisam implementação/validação |
+
+## Feedback/escopo 0.3.7-alpha — potência RF e idiomas
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| RF-015 / UI-022 — potência MMDVM | PENDENTE | DOC/SW/HW | RFLevel é suportado por MMDVMHost/MMDVM_HS compatível, mas PU2PNY ainda não possui controle seguro implementado/validado |
+| UI-023 — PT/EN/ES integral | FALHA | HW/browser + DOC | teste em English mostrou mistura de idiomas; mecanismo atual deixa texto original quando não encontra tradução |
+| TEST-UI-023-CI | PENDENTE | SW | falta gate automático que impeça release com chaves/textos sem tradução completa |
