@@ -347,6 +347,6 @@ Estado antes do CI final:
 
 | Requisito | Estado | Nível | Resultado |
 |---|---|---:|---|
-| RF-011 — autoajuste BER/RXOffset | PENDENTE | DOC/HW | requisito registrado; ainda não implementado/validado em hardware |
-| RF-012 — proteção TXOffset | PENDENTE | DOC/HW | TXOffset não será alterado automaticamente sem feedback confiável do receptor |
+| RF-013 — autoajuste BER/RXOffset | PENDENTE | DOC/HW | requisito registrado; ainda não implementado/validado em hardware |
+| RF-014 — proteção TXOffset | PENDENTE | DOC/HW | TXOffset não será alterado automaticamente sem feedback confiável do receptor |
 | UI-020 — Calibração RF no Expert | PENDENTE | DOC/SW/HW | gráfico BER, autoajuste RX, manual RX/TX, rollback e toast de falha precisam implementação e teste |
