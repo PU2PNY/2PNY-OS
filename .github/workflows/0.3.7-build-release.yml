@@ -30,8 +30,10 @@ jobs:
       - name: Validate inherited 0.3.6 + 0.3.7 sources
         run: |
           set -euo pipefail
-          gofmt -w src/2pnyd-main-0.3.6.go
+          gofmt -w src/2pnyd-main-0.3.6.go src/2pnyd-main-0.3.7.go src/direct-core/*.go
           go test src/2pnyd-main-0.3.6.go
+          go test src/2pnyd-main-0.3.7.go
+          go test src/direct-core/*.go
           python3 -m py_compile \
             src/2pny-live-core-0.3.1.py \
             src/2pny-station-worker-0.3.6.py \
@@ -76,7 +78,8 @@ jobs:
             for(const m of h.matchAll(/<script>([\s\S]*?)<\/script>/g)) new Function(m[1]);
           }
           NODE
-          node --check src/ui-common-0.3.6.js\n          node --check src/ui-common-0.3.7.js
+          node --check src/ui-common-0.3.6.js
+          node --check src/ui-common-0.3.7.js
           node --check src/ui-language-0.3.6.js
           grep -Fq 'atomic(HOST,host_text,0o640,"mmdvm")' src/2pny-protocol-network-apply-all-0.3.6.py
           grep -Fq 'mqtt_preflight' src/2pny-protocol-network-apply-all-0.3.6.py
