@@ -116,6 +116,15 @@ func (c *core) handleSecure(raw []byte, addr *net.UDPAddr, relayed bool) {
 			default:
 			}
 		}
+	case "hangup":
+		c.mu.Lock()
+		c.st.Status = "idle"
+		c.st.Peer = ""
+		c.st.Path = "Offline"
+		c.st.LatencyMS = 0
+		c.st.LastError = ""
+		c.writeState()
+		c.mu.Unlock()
 	case "message":
 		log.Printf("Direct message from %s: %s", pkt.From, string(plain))
 	case "radio": // Transport envelope is ready; protocol adapters own RF integration.
