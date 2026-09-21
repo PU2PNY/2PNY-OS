@@ -392,3 +392,13 @@ Artefato publicado: `PU2PNY-OS-0.3.8-alpha-arm64.img.xz`. SHA-256: `1997b0561215
 | TEST-REL-039 | REL-003 | build ARM64 0.3.9, XZ, SHA-256 e validador final | **PENDENTE** até execução do workflow | SW |
 
 A 0.3.9 só promove os casos acima depois de nova evidência correspondente. PASS SW/CI não substitui os FAIL/PENDENTE HW.
+
+## Resultado de release 0.3.9-alpha — 2026-09-21
+
+| ID | Caso | Resultado | Nível |
+|---|---|---|---|
+| TEST-REL-039 | source + staged source + ARM64 + XZ + SHA-256 + imagem montada | **PASS** — GitHub Actions run `35569995279`, commit `0b35a555a642ced6e13150e434072415e24175b5` | SW |
+| TEST-REL-039-ASSET | `PU2PNY-OS-0.3.9-alpha-arm64.img.xz` | **PASS** — SHA-256 `09ea47002f60471e3359186717370861e0090bf03c5f5fb3e2dc32456261ec71` | SW |
+| TEST-HW-039 | boot restore, DMR regressão, D-Star, YSF, Nextion, Wi-Fi/DNS e UI em hardware | **PENDENTE** — exige novo teste físico | HW |
+
+A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
