@@ -756,3 +756,55 @@ A faixa de saúde pode mostrar somente avisos úteis e clicáveis:
 - gateway/protocolo offline → abrir configuração Hotspot/Protocolos unificada.
 
 Não exibir recomendações quando não houver evidência suficiente e não transformar o Ao Vivo em painel técnico poluído.
+
+## 30. Expert — potência MMDVM e internacionalização completa — 2026-09-20
+
+### RF-015 — Controle seguro de potência RFLevel no Expert
+O modo Expert deve permitir aumentar/reduzir o nível de potência de transmissão do MMDVM **somente quando o modem/firmware realmente suportar o parâmetro RFLevel**.
+
+Regras:
+- detectar a capacidade do modem antes de habilitar o controle;
+- usar o parâmetro `RFLevel` do MMDVMHost/MMDVM_HS quando suportado;
+- não apresentar RFLevel como watts/mW calibrados: é um nível de controle do modem, não medição absoluta de potência;
+- exibir valor atual e permitir ajuste dentro do intervalo aceito pelo firmware, com passos controlados;
+- antes de aplicar: snapshot da configuração ativa + rollback disponível;
+- não alterar potência durante TX ativo;
+- aplicar de forma transacional e confirmar que MMDVMHost permanece ativo;
+- se o serviço falhar ou o modem rejeitar a configuração, restaurar o valor anterior automaticamente;
+- não misturar potência RF com `TXLevel`/desvio de modulação; são parâmetros diferentes;
+- BER alto não autoriza aumento automático de potência;
+- ajuste deve ser global ao modem, salvo evidência futura de suporte real por protocolo;
+- registrar o valor efetivo no Resumo operacional/Expert.
+
+### UI-022 — Controle de potência no Expert
+Adicionar no bloco RF/MMDVM do Expert:
+- `Potência RF do MMDVM (RFLevel)`;
+- valor atual;
+- slider/controle numérico;
+- `Aplicar e testar`;
+- `Restaurar valor anterior`;
+- explicação simples: `Este controle altera o nível de saída RF do modem. Não representa watts medidos.`;
+- controle desabilitado com motivo quando o hardware não suportar RFLevel.
+
+### UI-023 — Internacionalização integral PT/EN/ES
+Quando o usuário selecionar Português, English ou Español, **100% do conteúdo operacional do sistema deve usar o idioma selecionado**, sem mistura de idiomas na mesma interface.
+
+Cobertura obrigatória:
+- wizard e primeiro acesso;
+- menu/cabeçalho/rodapé;
+- Ao Vivo, Internet, Hotspot/Protocolos, Direct, APRS/D-PRS, Histórico, Display, Sistema e Expert;
+- títulos, botões, labels, placeholders, tooltips, textos de ajuda e confirmações;
+- modais, toasts, estados transitórios e mensagens de sucesso/erro;
+- mensagens dinâmicas vindas do backend;
+- estados como conectado/desconectado, ótimo/bom/ruim, aguardando, aplicando etc.;
+- unidades e nomes técnicos universais podem permanecer como termos técnicos quando não houver tradução apropriada (ex.: BER, RSSI, MMDVM, DMR, D-Star, YSF, IP, DNS).
+
+Arquitetura:
+- substituir tradução frágil por comparação de texto literal por um catálogo central baseado em chaves estáveis;
+- nenhum novo texto visível ao usuário pode ser adicionado diretamente sem chave de tradução;
+- backend deve preferir retornar códigos/estados estáveis + detalhes técnicos, permitindo que a UI traduza a mensagem amigável;
+- mensagens técnicas brutas permanecem apenas em Expert/log, claramente separadas da mensagem traduzida;
+- fallback ausente deve ser detectado em teste/build, não silenciosamente exibir Português em English/Español;
+- mudança de idioma deve atualizar a página atual imediatamente sem F5 sempre que possível e persistir entre páginas/reboot do navegador.
+
+O mecanismo atual 0.3.7, baseado em dicionário de correspondência exata, deixa o texto original quando não encontra chave; por isso produz mistura de idiomas e deve ser substituído/endurecido.
