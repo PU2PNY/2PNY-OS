@@ -243,3 +243,14 @@ Estado antes do CI final:
 - Prerelease `v0.3.6-alpha` atualizada no commit `4ffbce890e839f51e6977836cf0b647fb3fe348e`.
 - Imagem ARM64 SHA-256: `8460357f780577abdd12cb5cf91288aad48d27d4c130a96c97d737f8d050a50c`.
 - Continua Alpha/SW para as correções deste ciclo; os gates HW continuam obrigatórios.
+
+## Abertura 0.3.7-alpha — Direct/P2P + Display Moderno V2 + voz — 2026-09-20
+
+- Backup de retorno: `backup/0.3.6-pre-direct-display-20260920`.
+- Branch: `pu2pny-os-0.3.7-alpha`.
+- REL-008 congela toda a funcionalidade/correção da 0.3.6 como baseline.
+- P2P-002..006 tornam PU2PNY Direct obrigatório nesta linha: chamada por indicativo/agenda, mesmo protocolo na fase 1, Direct→Relay sob CGNAT, identidade criptográfica e infraestrutura própria.
+- DISPLAY-013 exige renderer Moderno V2 gráfico onde o hardware permite; nenhum HMI/TFT é sobrescrito automaticamente.
+- PROTO-013 exige aviso de conexão por voz somente após confirmação real do gateway, sem derrubar RF em caso de falha.
+- D-Star: schema `v20260323-612f388` já está corrigido em SW, mas RF↔rede ainda precisa novo HW PASS.
+- Estado inicial: implementação 0.3.7 em andamento. Não há autorização para chamar Direct/D-Star/YSF/display de HW PASS sem teste físico.
