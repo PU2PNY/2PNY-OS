@@ -515,3 +515,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - SHA-256: `1cb0f862c09825b25394cf0cfbb6812d7e24c04a5034cab9940bc90763db67ec`.
 - O build aplicou toda a cadeia herdada e o overlay 0.3.13; staged source, regressões novas/herdadas e validador final passaram.
 - RF-018, PROTO-019 e UI-028 continuam aguardando validação física; a release permanece Alpha/HW-TEST.
+
+## 2026-09-21 — feedback HW 0.3.13 e abertura da 0.3.14-alpha
+- Confirmado **HW PASS** do bootstrap mínimo MMDVM da 0.3.13: a Fase A isolou e validou UART/MMDVM.
+- Confirmado **HW FAIL** na Fase B MQTT com a mensagem de broker local não pronto e rollback.
+- Confirmado problema de UX do wizard: em falha MQTT o usuário não deve sair da Configuração Básica.
+- Criados **PROTO-020**, **WIZ-007** e **REL-007**.
+- Criado rollback `backup/0.3.13-pre-0.3.14-20260921` e branch `pu2pny-os-0.3.14-alpha`.
+- Escopo 0.3.14: tornar o Mosquitto local determinístico, habilitado e validado por CONNECT/CONNACK com espera/retry limitados; manter etapa 3 em qualquer falha de apply.
+- Wi-Fi aprovado da 0.3.12, bootstrap MMDVM que passou na 0.3.13, Direct, Histórico, RF/baud/frequências e caminhos não relacionados permanecem congelados.
