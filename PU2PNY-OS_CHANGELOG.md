@@ -316,3 +316,14 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrado **UI-023** após teste físico/browser em English mostrar conteúdo ainda em Português.
 - Inspeção do i18n 0.3.7 confirmou a causa estrutural: a tradução usa correspondência exata de texto e, quando uma frase não existe no dicionário, retorna o texto original. Isso permite mistura silenciosa de idiomas.
 - A internacionalização passa a exigir catálogo central por chaves, cobertura PT/EN/ES de toda UI e mensagens dinâmicas, com teste automático de completude.
+
+## 2026-09-21 — feedback HW 0.3.7: boot não restaura operacional e Nextion fica em estado transitório
+
+- Após corte/retorno de alimentação, o painel voltou acessível, porém MMDVMHost e gateway apareceram parados e o protocolo salvo não reconectou sozinho.
+- Para voltar a operar foi necessário entrar em Protocolos e clicar em `Ativar perfil`; isso confirma uma regressão de restauração operacional de boot e não deve ser exigido do usuário final.
+- Registrado **BOOT-001**: sistema provisionado deve restaurar automaticamente o último perfil/protocolo após boot, exceto quando houver estado persistente de `Desligar operacional` solicitado pelo usuário.
+- O botão **Ligar operacional** também falhou silenciosamente no teste. Inspeção do backend mostrou que ele chama `systemctl start` e ignora o retorno dos serviços, respondendo sucesso genérico mesmo se MMDVMHost/gateway não permanecerem ativos.
+- A captura da página Internet mostra rota/default interface em `wlan0` e Internet online, mas SSID/RSSI vazios. Portanto não é correto concluir que o Wi-Fi falhou; o defeito comprovado é inconsistência da leitura/estado exibido. Registrado **NET-020**.
+- A Nextion permaneceu em **Iniciando** depois do boot porque o operacional não foi restaurado.
+- Ao executar **Manutenção**, a rotina envia estado `maintenance` ao display e, no final, envia novamente `maintenance` com texto `Componentes prontos`; isso explica o display visualmente preso em Manutenção. Registrado **DISPLAY-015** para tornar esses estados transitórios e devolver a tela ao estado operacional real.
+- A correção 0.3.8 deve preservar DMR/RF já aprovados, usar inicialização idempotente dos serviços salvos, confirmar o resultado real e manter painel/rede disponíveis em caso de falha.
