@@ -641,3 +641,54 @@ Regras:
 - a UI pode oferecer ajuda para criar/importar uma chave, mas nunca exibir ou armazenar chave privada do usuário no hotspot.
 
 O teste atual com `Chave pública SSH inválida` é classificado como falha de UX/preflight; o transporte SSH ainda precisa ser testado com uma chave pública válida antes de ser marcado como HW FAIL ou PASS.
+
+## 28. BER / calibração assistida — 2026-09-20
+
+### RF-011 — Diagnóstico e autoajuste seguro de BER/RXOffset
+O PU2PNY deve detectar BER RF persistentemente alto e tentar corrigir automaticamente o **RXOffset** quando houver evidência suficiente e o hardware suportar ajuste por offset.
+
+Regras de segurança:
+- atuar somente sobre eventos com BER RF real; tráfego Internet → RF não participa do cálculo;
+- não ajustar com uma única transmissão curta;
+- exigir amostras suficientes da mesma origem/protocolo e condições minimamente estáveis antes de iniciar qualquer tentativa;
+- registrar RXOffset atual e criar rollback antes de testar outro valor;
+- variar RXOffset em passos pequenos e limitados, compatíveis com a prática MMDVM_HS, avaliando BER real após cada passo;
+- nunca alterar frequência nominal, simplex/duplex, modem, baud ou gateway para tentar “corrigir BER”;
+- não executar varredura automática enquanto houver uma chamada/transmissão operacional que não seja a janela de calibração;
+- escolher novo offset somente se houver melhora consistente; se não houver melhoria confiável, restaurar exatamente o valor anterior;
+- limitar número de tentativas e duração para não causar caça contínua, CPU alta ou gravação excessiva;
+- manter DMR fisicamente validado como baseline e executar regressão após qualquer mudança de offset;
+- o ajuste automático deve ser cancelável e mostrar progresso/valor atual/resultado.
+
+O sistema pode usar detecção automática de BER alto como gatilho, mas a alteração RF só ocorre dentro do fluxo de calibração protegido.
+
+### RF-012 — TXOffset não pode ser inferido do BER local
+O BER observado pelo hotspot mede a qualidade da recepção do próprio MMDVM. Portanto, **TXOffset não deve ser autoajustado apenas a partir desse BER local**.
+
+TXOffset pode ser:
+- ajustado manualmente no Expert;
+- calibrado com MMDVMCal/equipamento de teste;
+- ou futuramente automatizado somente se existir feedback confiável do receptor remoto/rádio.
+
+Sem essa evidência, o PU2PNY deve preservar TXOffset e nunca “adivinhar” correção.
+
+### UI-020 — Assistente BER no Expert e alerta ao usuário
+O Expert deve incluir um bloco **Calibração RF / BER** com:
+- BER atual e histórico curto/mediana quando houver amostras válidas;
+- protocolo, origem e RSSI real associados às amostras;
+- RXOffset atual;
+- TXOffset atual;
+- botão **Tentar ajuste automático de RX**;
+- controles manuais de RXOffset e TXOffset com limites, validação, aplicar, testar e restaurar;
+- valor anterior sempre visível antes de salvar;
+- gráfico leve BER × tempo e, durante calibração, BER × RXOffset;
+- explicação simples do que está sendo ajustado.
+
+Se o sistema detectar BER persistentemente alto:
+1. tenta primeiro o fluxo automático seguro de RXOffset quando houver condições;
+2. se convergir, informa a melhora e mantém o novo valor;
+3. se não convergir ou não houver amostras confiáveis, não força alteração;
+4. mostra aviso global em português por alguns segundos: **“BER alto detectado. O ajuste automático não conseguiu corrigir com segurança. Clique para abrir a Calibração RF no Expert.”**
+5. clicar no aviso abre diretamente a seção de calibração no Expert.
+
+Nenhum aviso deve afirmar defeito de modem ou rádio sem evidência.
