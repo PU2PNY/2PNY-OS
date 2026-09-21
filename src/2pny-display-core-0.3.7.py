@@ -95,7 +95,8 @@ class Nextion:
         cmds=["cls 0",f"fill 0,0,{w},{h},{BLACK}",
               self.text(0,max(30,h//3-24),w,44,"PU2PNY",CYAN,0,1),
               self.text(0,max(80,h//3+26),w,28,"Iniciando / Starting",WHITE,0,1),
-              self.text(0,h-58,w,20,"MODERNO V2",CYAN,0,1),\n              self.text(0,h-34,w,20,"Digital Radio Operating System",GRAY,0,1)]
+              self.text(0,h-58,w,20,"MODERNO V2",CYAN,0,1),
+              self.text(0,h-34,w,20,"Digital Radio Operating System",GRAY,0,1)]
         self.send(cmds);self.first_render=False;self.last_page=("splash","")
 
     def render(self,live,cfg,tel):
