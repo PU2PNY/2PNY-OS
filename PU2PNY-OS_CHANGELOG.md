@@ -386,3 +386,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - SHA-256: `09ea47002f60471e3359186717370861e0090bf03c5f5fb3e2dc32456261ec71`.
 - Prerelease: `v0.3.9-alpha`.
 - Nenhum requisito físico foi promovido para HW PASS sem novo teste no Raspberry Pi/MMDVM/display.
+
+
+## 2026-09-21 — 0.3.9-alpha — captive portal inicial isolado
+
+- Teste físico confirmou que **somente o primeiro disparo automático do portal ao conectar no AP falhou**.
+- Depois da abertura manual de `http://pu2pny.local/`, o restante do onboarding foi aprovado integralmente: scan Wi-Fi automático, senha/salvar, feedback de conexão, handoff, reabertura automática da página, detecção de hardware e avanço para configuração.
+- Esses passos passam a ser baseline congelada e não devem ser alterados pela correção.
+- Criado backup `backup/0.3.9-pre-captive-fix-20260921`.
+- Registrado **NET-021**: durante o primeiro acesso não provisionado, o AP deve permanecer realmente cativo e não oferecer Internet transparente que faça o cliente considerar a rede online.
+- O uso atual de DHCP Option 114 com endpoint HTTP local será removido. A opção 114 só deve voltar quando existir API Captive Portal HTTPS válida conforme RFC 8908/8910.
+- A compatibilidade continuará usando probes HTTP conhecidos de Windows/Android/Apple/NetworkManager e fallback `10.43.0.1` / `pu2pny.local`.
