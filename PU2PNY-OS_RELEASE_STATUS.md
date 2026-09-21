@@ -261,3 +261,11 @@ Estado antes do CI final:
 |---|---|---:|---|
 | DISPLAY-014 — tela genérica touch 7" | PENDENTE | DOC/HW | requisito registrado; suporte físico ainda precisa implementação/validação no modelo real |
 | TEST-DISPLAY-014A..014D | PENDENTE | HW | vídeo, touch, estados runtime e falha isolada precisam teste em Raspberry + tela real |
+
+## Feedback físico 0.3.7-alpha — Nextion
+
+- **DISPLAY-001/002/013: HW FAIL observado.**
+- Durante o teste normal, antes de o usuário abrir o menu Display, a Nextion permaneceu travada em `Pronto` e não avançou para o estado operacional/runtime.
+- Isso prova uma falha do fluxo automático de inicialização/atualização do display; não deve ser atribuída a configuração manual do menu Display.
+- Causa raiz ainda não determinada. Não alterar HMI/TFT automaticamente e não tocar no caminho RF para diagnosticar este defeito.
+- Novo caso: `TEST-HW-037-NEXTION-READY`.
