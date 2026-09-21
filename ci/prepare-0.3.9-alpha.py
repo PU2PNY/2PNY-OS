@@ -81,10 +81,11 @@ for unit in (
 dns=root/"rootfs-overlay/etc/NetworkManager/dnsmasq-shared.d/2pny-captive.conf"
 dns.parent.mkdir(parents=True,exist_ok=True)
 dns.write_text("""# PU2PNY captive setup fallback
+# Keep this legacy interception path HTTP-only. Do not advertise the modern
+# Captive-Portal DHCP option until PU2PNY can provide a per-device HTTPS API.
 address=/#/10.43.0.1
 address=/pu2pny.local/10.43.0.1
 local=/pu2pny.local/
-dhcp-option-force=114,http://10.43.0.1/captive-api
 """)
 
 # Compile/syntax gates.
@@ -132,7 +133,10 @@ assert '"0.3.9-alpha"' in main
 assert 'udp_listener(20010)' in proto and 'udp_listener(4200)' in proto
 assert r'\\b127\\.0\\.0\\.1:20010' not in proto
 assert 'for attempt in 1 2 3' in net and 'merge_scan_json' in net
-assert 'dhcp-option-force=114,http://$SETUP_IP/captive-api' in netcore
+assert "sed -i '/^dhcp-option-force=114,/d'" in netcore
+assert 'if test ! -f "$STATE/provisioned"; then' in netcore
+assert 'test -f "$STATE/provisioned" || return 0' in netcore
+assert 'http://10.43.0.1/wizard?captive=1' in main
 assert '5 GHz' in internet and 'bandgraph' in internet and 'effective_dns' in internet
 assert "addEventListener('live'" in ui and "addEventListener('live'" in expert
 assert "mmdvmhost-authoritative" in display_status
@@ -155,5 +159,6 @@ assert (root/"rootfs-overlay/usr/share/2pny/history.html").exists()
 # No stale captive fallback may survive.
 assert "10.42.0.1" not in dns.read_text()
 assert "10.43.0.1" in dns.read_text()
+assert "dhcp-option-force=114," not in dns.read_text()
 
 print("PU2PNY-OS 0.3.9 corrective overlay applied")
