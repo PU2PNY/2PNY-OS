@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -38,7 +39,8 @@ const (
 	aprsFile              = "/usr/share/2pny/aprs.html"
 	systemFile            = "/usr/share/2pny/system.html"
 	expertFile            = "/usr/share/2pny/expert.html"
-	radioIDFile           = "/usr/share/2pny/radioid.html"\n\tdirectFile            = "/usr/share/2pny/direct.html"
+	radioIDFile           = "/usr/share/2pny/radioid.html"
+	directFile            = "/usr/share/2pny/direct.html"
 	wifiScanStateFile     = "/var/lib/2pny/wifi-scan.json"
 	wifiCountryFile       = "/var/lib/2pny/wifi-country"
 	displayOverrideFile   = "/var/lib/2pny/display-override.json"
@@ -2479,7 +2481,6 @@ func aprsMessageHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-
 func directProxyHandler(localPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodPost {
@@ -2551,7 +2552,8 @@ func main() {
 	http.HandleFunc("/aprs", pageHandler(aprsFile))
 	http.HandleFunc("/system", pageHandler(systemFile))
 	http.HandleFunc("/expert", pageHandler(expertFile))
-	http.HandleFunc("/radioid", pageHandler(radioIDFile))\n\thttp.HandleFunc("/direct", pageHandler(directFile))
+	http.HandleFunc("/radioid", pageHandler(radioIDFile))
+	http.HandleFunc("/direct", pageHandler(directFile))
 	http.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/dashboard", http.StatusFound) })
 	http.HandleFunc("/ui-language.js", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "/usr/share/2pny/ui-language.js") })
 	http.HandleFunc("/ui-0.3.0.css", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "/usr/share/2pny/ui-0.3.0.css") })
@@ -2587,7 +2589,13 @@ func main() {
 	http.HandleFunc("/api/live/events", liveEventsHandler)
 	http.HandleFunc("/api/station/settings", stationSettingsHandler)
 	http.HandleFunc("/api/aprs", aprsSettingsHandler)
-	http.HandleFunc("/api/aprs/message", aprsMessageHandler)\n\thttp.HandleFunc("/api/direct", directProxyHandler("/status"))\n\thttp.HandleFunc("/api/direct/peers", directProxyHandler("/peers"))\n\thttp.HandleFunc("/api/direct/pair", directProxyHandler("/pair"))\n\thttp.HandleFunc("/api/direct/unpair", directProxyHandler("/unpair"))\n\thttp.HandleFunc("/api/direct/call", directProxyHandler("/call"))\n\thttp.HandleFunc("/api/direct/hangup", directProxyHandler("/hangup"))
+	http.HandleFunc("/api/aprs/message", aprsMessageHandler)
+	http.HandleFunc("/api/direct", directProxyHandler("/status"))
+	http.HandleFunc("/api/direct/peers", directProxyHandler("/peers"))
+	http.HandleFunc("/api/direct/pair", directProxyHandler("/pair"))
+	http.HandleFunc("/api/direct/unpair", directProxyHandler("/unpair"))
+	http.HandleFunc("/api/direct/call", directProxyHandler("/call"))
+	http.HandleFunc("/api/direct/hangup", directProxyHandler("/hangup"))
 	http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, readPublicJSON("/run/2pny/contacts.json"))
 	})
