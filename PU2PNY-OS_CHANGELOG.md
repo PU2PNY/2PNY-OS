@@ -532,3 +532,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Registrados PROTO-021, WIZ-008 e REL-008.
 - Criados rollback `backup/0.3.14-pre-0.3.15-20260921` e branch `pu2pny-os-0.3.15-alpha`.
 - Escopo: remover somente esses gates no onboarding DMR, preservando todo restante.
+
+## 2026-09-21 — 0.3.15-alpha publicada
+- Removidos os dois bloqueios MQTT indevidos do primeiro provisionamento DMR: Fase B MQTT dentro do RF apply e preflight MQTT antes do helper DMR.
+- Mantido `MQTTLevel=0` no bootstrap MMDVM e no helper DMR, conforme semântica comprovada em 0.3.6/0.3.8.
+- Mosquitto e o preflight MQTT continuam presentes para recursos que realmente habilitem MQTT; não foram removidos do sistema.
+- Dois gates antigos do validador ainda exigiam o comportamento superado e bloquearam builds intermediários. Esses gates foram alinhados ao PROTO-021; nenhuma imagem desses builds foi publicada.
+- Run final `35647296002`: source, regressões, staged source, ARM64, XZ, SHA-256, validação final e publish em **success**.
+- Publicada `v0.3.15-alpha`, SHA-256 da imagem `4caea4a281c67cd8c5a15ba134e6720dbf4adb7a675a4395052ff13be10bb690`.
+- Release permanece **Alpha/HW-TEST** até o teste físico confirmar o avanço da Configuração Básica.
