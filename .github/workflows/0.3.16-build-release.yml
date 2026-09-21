@@ -1,0 +1,447 @@
+name: Build and release PU2PNY-OS 0.3.16 Alpha
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.16-alpha ]
+    paths:
+      - 'src/**'
+      - 'ci/**'
+      - '.github/workflows/0.3.16-build-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.16-alpha-release
+  cancel-in-progress: true
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Validate inherited chain + 0.3.10 corrective sources
+        run: |
+          set -euo pipefail
+          gofmt -w src/2pnyd-main-0.3.6.go src/2pnyd-main-0.3.7.go src/2pnyd-main-0.3.8.go src/2pnyd-main-0.3.9.go src/2pnyd-main-0.3.10.go src/2pnyd-main-0.3.11.go src/2pnyd-main-0.3.12.go src/2pnyd-main-0.3.13.go src/2pnyd-main-0.3.14.go src/2pnyd-main-0.3.15.go src/2pnyd-main-0.3.16.go src/direct-core/*.go
+          go test src/2pnyd-main-0.3.6.go
+          go test src/2pnyd-main-0.3.7.go
+          go test src/2pnyd-main-0.3.8.go
+          go test src/2pnyd-main-0.3.9.go
+          go test src/2pnyd-main-0.3.10.go
+          go test src/2pnyd-main-0.3.11.go
+          go test src/2pnyd-main-0.3.12.go
+          go test src/2pnyd-main-0.3.13.go
+          go test src/2pnyd-main-0.3.14.go
+          go test src/2pnyd-main-0.3.15.go
+          go test src/2pnyd-main-0.3.16.go
+          go test src/direct-core/*.go
+          python3 -m py_compile \
+            src/2pny-live-core-0.3.1.py \
+            src/2pny-station-worker-0.3.6.py \
+            src/2pny-display-core-0.3.6.py \
+            src/2pny-protocol-profiles-0.3.6.py \
+            src/2pny-update-manager-0.3.6.py \
+            src/2pny-display-status-0.3.5.py \
+            src/2pny-display-apply-0.3.1.py \
+            src/2pny-protocol-network-apply-0.3.0.py \
+            src/2pny-protocol-network-apply-all-0.3.6.py \
+            src/2pny-mqtt-preflight-0.3.4.py \
+            src/2pny-server-catalog-0.3.1.py \
+            src/2pny-aprs-0.3.0.py \
+            src/2pny-aprs-0.3.6.py \
+            src/2pny-netdiag-0.3.6.py \
+            src/2pny-nextion-autodetect-0.3.1.py \
+            ci/prepare-0.3.1-alpha.py \
+            ci/prepare-0.3.2-alpha.py \
+            ci/prepare-0.3.3-alpha.py \
+            ci/prepare-0.3.4-alpha.py \
+            ci/prepare-0.3.5-alpha.py \
+            ci/prepare-0.3.6-alpha.py \
+            ci/test-0.3.6-features.py \
+            ci/test-0.3.6-aprs.py \
+            src/2pny-display-core-0.3.7.py \
+            src/2pny-protocol-network-apply-all-0.3.7.py \
+            server/2pny-direct-server-0.3.7.py \
+            ci/prepare-0.3.7-alpha.py \
+            src/2pny-protocol-network-apply-all-0.3.8.py \
+            src/2pny-display-apply-0.3.8.py \
+            src/2pny-timezone-apply-0.3.8.py \
+            src/2pny-rflevel-apply-0.3.8.py \
+            src/2pny-ssh-apply-0.3.8.py \
+            ci/prepare-0.3.8-alpha.py \
+            src/2pny-protocol-network-apply-all-0.3.9.py \
+            src/2pny-display-apply-0.3.9.py \
+            src/2pny-display-status-0.3.9.py \
+            src/2pny-operational-apply-0.3.9.py \
+            src/2pny-timezone-apply-0.3.9.py \
+            src/2pny-ssh-apply-0.3.9.py \
+            src/2pny-display-apply-request-0.3.9.py \
+            src/2pny-protocol-network-apply-all-0.3.10.py \
+            src/2pny-mqtt-preflight-0.3.10.py \
+            src/2pny-operational-apply-0.3.10.py \
+            src/2pny-display-apply-0.3.10.py \
+            src/2pny-display-core-0.3.10.py \
+            src/2pny-display-detector-0.3.9.py \
+            src/2pny-hardware-probe-0.3.11.py \
+            src/2pny-hardware-probe-0.3.12.py \
+            src/2pny-mqtt-preflight-0.3.12.py \
+            src/2pny-mqtt-preflight-0.3.13.py \
+            src/2pny-mqtt-preflight-0.3.14.py \
+            src/2pny-operational-apply-0.3.14.py \
+            src/2pny-protocol-network-apply-all-0.3.14.py \
+            src/2pny-protocol-network-apply-all-0.3.16.py \
+            src/2pny-live-core-0.3.16.py \
+            src/2pny-aprs-0.3.16.py \
+            src/2pny-display-apply-0.3.16.py \
+            src/2pny-timezone-apply-0.3.16.py \
+            src/2pny-ssh-apply-0.3.16.py \
+            ci/patch-dmrgateway-voice-arbiter-0.3.16.py \
+            src/2pny-protocol-network-apply-0.3.13.py \
+            src/2pny-server-catalog-0.3.13.py \
+            ci/prepare-0.3.9-alpha.py \
+            ci/prepare-0.3.10-alpha.py \
+            ci/prepare-0.3.11-alpha.py \
+            ci/prepare-0.3.12-alpha.py \
+            ci/prepare-0.3.13-alpha.py \
+            ci/prepare-0.3.14-alpha.py \
+            ci/prepare-0.3.15-alpha.py \
+            ci/prepare-0.3.16-alpha.py \
+            ci/test-0.3.16-regressions.py \
+            ci/test-0.3.10-features.py \
+            ci/test-0.3.11-regressions.py \
+            ci/test-0.3.12-regressions.py \
+            ci/test-0.3.13-regressions.py \
+            ci/test-0.3.14-regressions.py \
+            ci/test-0.3.16-regressions.py \
+            ci/test-0.3.7-features.py
+          rm -rf src/__pycache__ ci/__pycache__
+          bash -n src/2pny-rf-apply-0.3.11 src/2pny-rf-apply-0.3.12 src/2pny-rf-apply-0.3.13 src/2pny-rf-apply-0.3.14 src/2pny-rf-apply-0.3.16 src/2pny-network-switch-0.3.6 src/2pny-network-core-0.3.5 src/2pny-wifi-profiles-0.3.6 src/2pny-auto-maintenance-0.3.6 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.6-image.sh ci/validate-0.3.8-image.sh ci/validate-0.3.9-image.sh ci/validate-0.3.10-image.sh ci/validate-0.3.11-image.sh ci/validate-0.3.12-image.sh ci/validate-0.3.13-image.sh ci/validate-0.3.14-image.sh ci/validate-0.3.15-image.sh ci/validate-0.3.16-image.sh src/2pny-network-switch-0.3.9 src/2pny-network-core-0.3.9 src/2pny-network-switch-0.3.16 src/2pny-network-core-0.3.16 src/2pny-direct-start-0.3.7 src/2pny-direct-recover-0.3.7 src/2pny-display-bootstrap-0.3.9 ci/test-0.3.7-direct.sh
+          python3 ci/test-0.2.9-live-core.py
+          python3 ci/test-0.3.1-live-core.py
+          python3 ci/test-0.3.6-features.py
+          python3 ci/test-0.3.6-aprs.py
+          python3 ci/test-0.3.7-features.py
+          python3 ci/test-0.3.9-features.py
+          python3 ci/test-0.3.10-features.py
+          python3 ci/test-0.3.11-regressions.py
+          python3 ci/test-0.3.12-regressions.py
+          python3 ci/test-0.3.13-regressions.py
+          python3 ci/test-0.3.14-regressions.py
+          python3 ci/test-0.3.15-regressions.py
+          python3 ci/test-0.3.16-regressions.py
+          bash ci/test-0.3.7-direct.sh
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const f of ['src/wizard-0.3.6.html','src/dashboard-0.3.6.html','src/history-0.3.6.html','src/system-0.3.6.html','src/radioid-0.3.6.html','src/internet-0.3.8.html','src/hotspot-0.3.8.html','src/protocols-0.3.8.html','src/aprs-0.3.8.html','src/display-0.3.8.html','src/direct-0.3.8.html','src/expert-0.3.8.html','src/internet-0.3.9.html','src/expert-0.3.9.html','src/system-0.3.9.html','src/display-0.3.9.html','src/wizard-0.3.10.html','src/hotspot-0.3.10.html','src/display-0.3.10.html','src/expert-0.3.10.html','src/wizard-0.3.11.html','src/wizard-0.3.12.html','src/wizard-0.3.13.html','src/wizard-0.3.14.html','src/dashboard-0.3.16.html','src/internet-0.3.16.html','src/hotspot-0.3.16.html','src/aprs-0.3.16.html','src/display-0.3.16.html','src/expert-0.3.16.html']){
+            const h=fs.readFileSync(f,'utf8');
+            for(const m of h.matchAll(/<script>([\s\S]*?)<\/script>/g)) new Function(m[1]);
+          }
+          NODE
+          node --check src/ui-common-0.3.6.js
+          node --check src/ui-common-0.3.7.js
+          node --check src/ui-common-0.3.8.js
+          node --check src/ui-language-0.3.6.js
+          node --check src/ui-language-0.3.8.js
+          node --check src/ui-common-0.3.9.js
+          node --check src/ui-language-0.3.9.js
+          node --check src/ui-common-0.3.10.js
+          node --check src/ui-language-0.3.11.js
+          node --check src/ui-language-0.3.12.js
+          node --check src/ui-language-0.3.13.js
+          node --check src/ui-language-0.3.14.js
+          grep -Fq 'atomic(HOST,host_text,0o640,"mmdvm")' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq 'mqtt_preflight' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq 'old_host_active' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq 'stage_wifi' src/2pny-network-switch-0.3.6
+          grep -Fq 'senha Wi-Fi não permaneceu gravada' src/2pny-network-switch-0.3.6
+          grep -Fq 'wifi_profile_link_ok' src/2pny-network-core-0.3.5
+          grep -Fq 'reconnectCandidates' src/wizard-0.3.6.html
+          grep -Fq 'id="languageWelcome"' src/wizard-0.3.6.html
+          grep -Fq 'serverCatalog=[]' src/wizard-0.3.6.html
+          grep -Fq 'id="activityGroups"' src/dashboard-0.3.6.html
+          grep -Fq 'openActivity' src/dashboard-0.3.6.html
+          grep -Fq 'dns_recommendation' src/2pny-netdiag-0.3.6.py
+          grep -Fq '2pny-dstargateway.service' src/2pny-station-worker-0.3.6.py
+          grep -Fq 'space_around_delimiters=False' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq 'network-runtime.json' src/2pny-station-worker-0.3.6.py
+          grep -Fq 'PU2PNY-WIFI-SECONDARY' src/2pny-wifi-profiles-0.3.6
+          grep -Fq '${paused:-0}' src/2pny-network-switch-0.3.6
+          grep -Fq 'Bem-vindo / Welcome' src/wizard-0.3.6.html
+          grep -Fq 'Módulo / TG' src/dashboard-0.3.6.html
+          grep -Fq 'Perfil do protocolo' src/protocols-0.3.6.html
+          grep -Fq 'id="dmrEssid"' src/protocols-0.3.6.html
+          grep -Fq 'id="bmApiKey"' src/protocols-0.3.6.html
+          grep -Fq 'O PU2PNY não pede API Secret' src/protocols-0.3.6.html
+          grep -Fq '/api/brandmeister/api-key' src/2pnyd-main-0.3.6.go
+          grep -Fq 'cfg.ESSID = in.ESSID' src/2pnyd-main-0.3.6.go
+          grep -Fq 'identificação DMR deve ser 01 a 99' src/2pny-protocol-profiles-0.3.6.py
+          grep -Fq '[General]' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq '[Repeater 1]' src/2pny-protocol-network-apply-all-0.3.6.py
+          grep -Fq 'Link has failed, polls lost' src/2pny-station-worker-0.3.6.py
+          grep -Fq 'ALLOWED_PREFIX' src/2pny-update-manager-0.3.6.py
+          grep -Fq 'navigator.geolocation' src/aprs-0.3.6.html
+          grep -Fq 'Login APRS-IS' src/aprs-0.3.6.html
+          grep -Fq 'parse_logresp' src/2pny-aprs-0.3.6.py
+          grep -Fq 'retry_unacked' src/2pny-aprs-0.3.6.py
+          grep -Fq 'soam.aprs2.net' src/2pny-aprs-0.3.6.py
+          grep -Fq 'soam.aprs2.net' src/2pny-server-catalog-0.3.1.py
+          grep -Fq 'PU2PNY Moderno' src/display-0.3.6.html
+          grep -Fq 'RF>NET' src/2pny-display-core-0.3.6.py
+          grep -Fq 'PU2PNY Moderno V2' src/2pny-display-core-0.3.7.py
+          grep -Fq 'audio_path="/usr/share/2pny/audio/dstar/"' src/2pny-protocol-network-apply-all-0.3.7.py
+          grep -Fq '/api/direct/call' src/2pnyd-main-0.3.7.go
+          grep -Fq 'radio:+' src/direct-core/direct_radio.go || grep -Fq '"radio:"+proto' src/direct-core/direct_radio.go
+  build-arm64:
+    needs: source
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    env:
+      VERSION: 0.3.16-alpha
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2 parted
+      - name: Restore baseline and apply PU2PNY modules
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-base-fix.sh \
+            ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-anchor-compat.sh \
+            ci/prepare-0.1.8-network-core.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh \
+            ci/prepare-0.1.9-pu2pny-hardware-ui.sh \
+            ci/prepare-0.1.9-network-pid-fix.sh \
+            ci/prepare-0.1.9-build-metadata-fix.sh \
+            ci/prepare-0.1.9-hotfix1-hardware-status.sh \
+            ci/prepare-0.2.0-onboarding.sh \
+            ci/prepare-0.2.1-network-ux.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+          python3 ci/prepare-0.2.2-stability.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.3-dashboard.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.4-network-display.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.5-protocol-network.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.7-radio-live.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.8-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.9-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.0-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.1-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.2-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.3-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.4-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.5-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.6-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.7-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.8-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.9-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.10-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.11-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.12-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.13-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.14-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.15-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.16-alpha.py legacy-source/2pny-os
+      - name: Validate staged source
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          gofmt -w src/2pnyd/main.go
+          go test ./...
+          python3 "$GITHUB_WORKSPACE/ci/test-0.2.7-regressions.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.2.9-live-core.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.6-aprs.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.16-regressions.py"
+          python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-display-status             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-protocol-profiles             rootfs-overlay/usr/local/sbin/2pny-update-manager             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect
+          bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-network-core rootfs-overlay/usr/local/sbin/2pny-wifi-profiles rootfs-overlay/usr/local/sbin/2pny-auto-maintenance rootfs-overlay/usr/local/sbin/2pny-mdns-guard rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns rootfs-overlay/usr/local/sbin/2pny-mode-apply
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.15-alpha"' src/2pnyd/main.go
+          grep -Fq 'mqtt_preflight' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'wifi_profile_link_ok' rootfs-overlay/usr/local/sbin/2pny-network-core
+          grep -Fq 'openActivity' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'id="languageWelcome"' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq '/api/live/events' src/2pnyd/main.go
+          grep -Fq '/api/protocol/apply' src/2pnyd/main.go
+          grep -Fq '/api/aprs/message' src/2pnyd/main.go
+          grep -Fq 'id="liveBox"' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'Rastreando sinais' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'location.replace' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq 'id="versionBadge"' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq "['/hotspot','Hotspot / Protocolos','hotspot']" rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
+          test -s rootfs-overlay/usr/share/2pny/hotspot.html
+          test -s rootfs-overlay/usr/share/2pny/display.html
+          grep -Fq 'Google Time' rootfs-overlay/usr/share/2pny/system.html
+          grep -Fq 'space_around_delimiters=False' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'network-runtime.json' rootfs-overlay/usr/local/sbin/2pny-station-worker
+          grep -Fq 'PU2PNY-WIFI-SECONDARY' rootfs-overlay/usr/local/sbin/2pny-wifi-profiles
+          grep -Fq 'Módulo / TG' rootfs-overlay/usr/share/2pny/dashboard.html
+          grep -Fq 'PU2PNY Moderno' rootfs-overlay/usr/share/2pny/display.html
+          grep -Fq 'Manutenção automática' rootfs-overlay/usr/share/2pny/system.html
+          grep -Fq 'Perfil do protocolo' rootfs-overlay/usr/share/2pny/protocols.html
+          grep -Fq '[General]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq '[Repeater 1]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'protocol-profiles.json' rootfs-overlay/usr/local/sbin/2pny-protocol-profiles
+          grep -Fq 'ALLOWED_PREFIX' rootfs-overlay/usr/local/sbin/2pny-update-manager
+          grep -Fq 'navigator.geolocation' rootfs-overlay/usr/share/2pny/aprs.html
+          grep -Fq 'Login APRS-IS' rootfs-overlay/usr/share/2pny/aprs.html
+          grep -Fq 'parse_logresp' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'retry_unacked' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'soam.aprs2.net' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'soam.aprs2.net' rootfs-overlay/usr/local/sbin/2pny-server-catalog
+          grep -Fq 'function operation' rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
+          grep -Fq 'id="dmrEssid"' rootfs-overlay/usr/share/2pny/protocols.html
+          grep -Fq 'id="bmApiKey"' rootfs-overlay/usr/share/2pny/protocols.html
+          grep -Fq 'O PU2PNY não pede API Secret' rootfs-overlay/usr/share/2pny/protocols.html
+          grep -Fq 'Identificação do hotspot / rádio' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq 'network_id=dmrid+essid if essid and len(dmrid)==7 else dmrid' rootfs-overlay/usr/local/libexec/2pny-dmr-apply
+          grep -Fq 'identificação DMR deve ser 01 a 99' rootfs-overlay/usr/local/sbin/2pny-protocol-profiles
+          grep -Fq '/api/brandmeister/api-key' src/2pnyd/main.go
+          grep -Fq '/api/direct/call' src/2pnyd/main.go
+          test -x rootfs-overlay/usr/local/bin/2pny-direct-core
+          test -x rootfs-overlay/usr/local/sbin/2pny-direct-recover
+          grep -Fq 'PU2PNY Moderno V2' rootfs-overlay/usr/local/sbin/2pny-display-core
+          grep -Fq 'audio_path="/usr/share/2pny/audio/dstar/"' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          "$GITHUB_WORKSPACE/legacy-source/2pny-os/rootfs-overlay/usr/local/bin/2pny-direct-core" --selftest | grep -Fq DIRECT_SELFTEST_OK
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.7-features.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.10-features.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.11-regressions.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.12-regressions.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.13-regressions.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.14-regressions.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.16-regressions.py"
+          bash "$GITHUB_WORKSPACE/ci/test-0.3.7-direct.sh"
+          grep -Fq 'wifiChannelGraph' rootfs-overlay/usr/share/2pny/internet.html
+          grep -Fq 'Pareie um PU2PNY antes de chamar' rootfs-overlay/usr/share/2pny/direct.html
+          grep -Fq 'Etapa 1/5' rootfs-overlay/usr/share/2pny/aprs.html
+          grep -Fq 'Potência RF do MMDVM' rootfs-overlay/usr/share/2pny/expert.html
+          grep -Fq 'WiresXCommandPassthrough=0' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'effective_layout' rootfs-overlay/usr/local/sbin/2pny-display-apply
+          grep -Fq 'porta 20010' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          test -x rootfs-overlay/usr/local/sbin/2pny-timezone-apply
+          test -x rootfs-overlay/usr/local/sbin/2pny-rflevel-apply
+          test -x rootfs-overlay/usr/local/sbin/2pny-ssh-apply
+      - name: Build ARM64 image
+        working-directory: legacy-source/2pny-os
+        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
+      - name: Normalize image and checksum
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
+          IMAGE="dist/PU2PNY-OS-$VERSION-arm64.img.xz"
+          test -n "$OLD"
+          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
+          sudo rm -f dist/*.img.xz.sha256
+          HASH="$(sudo sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" | sudo tee "$IMAGE.sha256" >/dev/null
+          sudo chown "$USER:$USER" "$IMAGE" "$IMAGE.sha256" dist/BUILD-INFO.txt
+          xz -t "$IMAGE"
+          test "$(sha256sum "$IMAGE" | awk '{print $1}')" = "$HASH"
+      - name: Validate final image
+        working-directory: legacy-source/2pny-os
+        run: bash "$GITHUB_WORKSPACE/ci/validate-0.3.16-image.sh" "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$VERSION"
+      - name: Stage validated artifact
+        working-directory: legacy-source/2pny-os
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/release-artifact"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
+          cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.16-arm64
+          path: release-artifact/*
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      VERSION: 0.3.16-alpha
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.16-arm64
+          path: release
+      - name: Verify transferred image
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.16 Alpha — correção estritamente focal do bloqueio MQTT na Configuração Básica DMR.
+
+          Evidência usada:
+          - 0.3.14 HW: MMDVM passou no teste básico, mas MQTT ainda bloqueou o avanço;
+          - 0.3.6/0.3.8: RF apply concluía com MMDVMHost ativo e MQTTLevel=0;
+          - 0.3.6/0.3.8: DMR delegava diretamente ao helper, que mantinha MQTTLevel=0 e validava MMDVMHost + DMRGateway.
+
+          Alterações:
+          - RF apply termina com sucesso após o bootstrap MMDVM fisicamente comprovado; não inicia/preflight/habilita MQTT no primeiro provisionamento;
+          - dispatcher DMR volta a delegar diretamente ao helper DMR, sem preflight MQTT anterior;
+          - Mosquitto/preflight permanecem instalados para recursos posteriores que realmente habilitem MQTT;
+          - wizard, Wi-Fi, hardware detector, baud, frequências, offsets, TGIF, i18n, telas e demais protocolos não foram alterados;
+          - o avanço continua sendo o fluxo existente: backend grava provisioned/state=applied e então o wizard abre Conclusão.
+
+          Validação:
+          - source + regressões herdadas + gates focais 0.3.16 + ARM64 + XZ + SHA-256 + imagem montada;
+          - release permanece ALPHA/HW-TEST até teste físico confirmar o avanço da Configuração Básica.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.16-alpha
+          target_commitish: ${{ github.sha }}
+          name: PU2PNY-OS 0.3.16 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.16-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.3.16-alpha-arm64.img.xz.sha256
+
+
+            release/BUILD-INFO.txt
