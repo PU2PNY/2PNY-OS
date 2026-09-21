@@ -313,7 +313,7 @@ jobs:
           grep -Fq 'network-runtime.json' rootfs-overlay/usr/local/sbin/2pny-station-worker
           grep -Fq 'PU2PNY-WIFI-SECONDARY' rootfs-overlay/usr/local/sbin/2pny-wifi-profiles
           grep -Fq 'Módulo / TG' rootfs-overlay/usr/share/2pny/dashboard.html
-          grep -Fq 'PU2PNY Moderno' rootfs-overlay/usr/share/2pny/display.html
+          grep -Fq 'MMDVMHost nativo / ON7LDS' rootfs-overlay/usr/share/2pny/display.html
           grep -Fq 'Manutenção automática' rootfs-overlay/usr/share/2pny/system.html
           grep -Fq 'Perfil do protocolo' rootfs-overlay/usr/share/2pny/protocols.html
           grep -Fq '[General]' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
