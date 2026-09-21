@@ -262,3 +262,7 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-APRS-006C | APRS-006 | servidor responde unverified/timeout | erro principal traduzido; detalhe técnico somente no Expert | PENDENTE | SW/HW |
 | TEST-APRS-006D | APRS-006 | sessão não verificada | beacon/mensagem não são marcados como enviados | PENDENTE | SW/HW |
 | TEST-APRS-002B | APRS-002 | nova mensagem com usuário em outra página | toast global ~5 s mostra remetente/resumo e clique abre APRS para responder | **NÃO IMPLEMENTADO GLOBALMENTE / HW PENDENTE** | DOC/SW/HW |
+
+| TEST-APRS-007A | APRS-007 | rádio D-Star envia D-PRS válido | posição real é recebida, identificada como D-PRS e encaminhada conforme configuração sem duplicar | PENDENTE | HW |
+| TEST-APRS-007B | APRS-007 | quadro D-PRS inválido/sem posição | descarta com diagnóstico e não inventa latitude/longitude | PENDENTE | SW/HW |
+| TEST-APRS-007C | APRS-007 | falha APRS-IS durante D-PRS | D-Star/RF permanecem operacionais; posição fica pendente/erro visível | PENDENTE | HW |
