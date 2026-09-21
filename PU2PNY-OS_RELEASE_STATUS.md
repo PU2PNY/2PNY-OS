@@ -334,3 +334,11 @@ Estado antes do CI final:
 | Requisito | Estado | Nível | Resultado |
 |---|---|---:|---|
 | UI-017 — cabeçalho global | FALHA | HW/browser + DOC | Sistema apresenta cabeçalho mais alto e relógio esmagado; código confirma ausência de inicialização do relógio nessa página e flex sem proteção suficiente contra quebra |
+
+## Feedback físico 0.3.7-alpha — Expert
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| UI-018 — Expert realtime | FALHA/PARCIAL | HW/browser + DOC | Estado Ao Vivo usa polling de 15 s; precisa reutilizar SSE do Ao Vivo e ganhar dashboard/gráficos leves |
+| UI-019 — Resumo operacional | PENDENTE | DOC | substituir "Configuração pública" por resumo técnico seguro e mais completo |
+| SEC-021 — SSH assistido | FALHA UX / HW PENDENTE | HW/browser | chave inválida foi rejeitada corretamente, mas fluxo não ensina/prevalida; ssh.service ainda não foi validado com chave pública válida |
