@@ -31,7 +31,9 @@ def udp_listener(port):
         for raw in out.splitlines():
             cols=raw.split()
             if len(cols)<5:continue
-            local=cols[4]
+            # ss -H -lun: State Recv-Q Send-Q LocalAddress:Port PeerAddress:Port.
+            # Prove the bridge against the LOCAL endpoint (index 3), not peer (index 4).
+            local=cols[3]
             if local.endswith(":"+str(port)) or local.endswith("]:"+str(port)):
                 return True
     except Exception:
@@ -40,6 +42,27 @@ def udp_listener(port):
 def group_gid(name):
     try:return grp.getgrnam(name).gr_gid
     except KeyError:die(f"required group missing: {name}",1)
+
+def verify_host_bridge_config(proto):
+    """Prove the effective MMDVMHost loopback contract before restarting RF."""
+    check=configparser.ConfigParser(interpolation=None,strict=False);check.optionxform=str
+    check.read(HOST)
+    expected={
+      "DSTAR":("D-Star Network","20010","20011"),
+      "YSF":("System Fusion Network","4200","3200"),
+    }.get(proto)
+    if not expected:return
+    section,gateway_port,local_port=expected
+    if not check.has_section(section):
+        raise RuntimeError(f"{section} ausente no MMDVMHost efetivo")
+    if check.get(section,"Enable",fallback="0").strip()!="1":
+        raise RuntimeError(f"{section}.Enable não ficou ativo")
+    if check.get(section,"GatewayAddress",fallback="").strip()!="127.0.0.1":
+        raise RuntimeError(f"{section}.GatewayAddress não confirmou loopback")
+    if check.get(section,"GatewayPort",fallback="").strip()!=gateway_port:
+        raise RuntimeError(f"{section}.GatewayPort não confirmou {gateway_port}")
+    if check.get(section,"LocalPort",fallback="").strip()!=local_port:
+        raise RuntimeError(f"{section}.LocalPort não confirmou {local_port}")
 
 def atomic(path,text,mode=0o640,group=None):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
@@ -541,6 +564,8 @@ Debug=0
 
     ctl("daemon-reload")
     host="2pny-mmdvmhost.service"
+    # Verify the file that will actually be consumed, then start radio first.
+    verify_host_bridge_config(proto)
     # Validate MMDVMHost first. UDP gateways may be absent while it starts.
     mqtt_preflight()
     if not ctl("restart",host):raise RuntimeError("MMDVMHost restart failed")
@@ -560,7 +585,7 @@ Debug=0
     if proto=="DSTAR":
         # DStarGateway must expose the local Homebrew UDP endpoint used by
         # MMDVMHost. An active process alone is not a valid readiness signal.
-        deadline=time.time()+5
+        deadline=time.time()+12
         bridge_ok=False
         while time.time()<deadline:
             if udp_listener(20010):
@@ -572,7 +597,7 @@ Debug=0
     if proto=="YSF":
         # Prove the local UDP bridge is actually present.  A process that is
         # merely "active" is not sufficient evidence that RF<->gateway can flow.
-        deadline=time.time()+5
+        deadline=time.time()+12
         bridge_ok=False
         while time.time()<deadline:
             if udp_listener(4200):
