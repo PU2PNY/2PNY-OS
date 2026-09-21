@@ -514,3 +514,15 @@ Regras:
 
 ### APRS-002 — Toast global de mensagem reafirmado
 O requisito existente APRS-002 permanece obrigatório e deve ser global ao painel: ao chegar nova mensagem APRS, mostrar um balão por aproximadamente 5 s em qualquer página aberta do PU2PNY. O balão deve exibir remetente e resumo, ser clicável e abrir `/aprs?to=<remetente>`. O alerta interno deve funcionar mesmo sem permissão de Notification API.
+
+### APRS-007 — D-PRS real integrado ao D-Star
+A área APRS / D-PRS deve oferecer D-PRS funcional quando o protocolo D-Star estiver ativo e o rádio fornecer dados compatíveis.
+
+Regras:
+- receber e interpretar dados D-PRS/GPS válidos originados do D-Star;
+- converter/gatear para APRS-IS somente quando houver identidade e posição válidas;
+- não duplicar beacons nem gerar posição inventada;
+- indicar claramente origem `D-PRS/D-Star` no histórico/estado;
+- falha de D-PRS nunca pode derrubar D-Star, MMDVMHost ou o cliente APRS-IS;
+- D-PRS só pode ser marcado HW PASS depois de teste físico com rádio D-Star compatível enviando posição real;
+- a UI não pode apresentar `APRS / D-PRS` como completo enquanto o caminho D-PRS não existir.
