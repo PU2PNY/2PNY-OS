@@ -524,3 +524,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Criado rollback `backup/0.3.13-pre-0.3.14-20260921` e branch `pu2pny-os-0.3.14-alpha`.
 - Escopo 0.3.14: tornar o Mosquitto local determinístico, habilitado e validado por CONNECT/CONNACK com espera/retry limitados; manter etapa 3 em qualquer falha de apply.
 - Wi-Fi aprovado da 0.3.12, bootstrap MMDVM que passou na 0.3.13, Direct, Histórico, RF/baud/frequências e caminhos não relacionados permanecem congelados.
+
+## 2026-09-21 — abertura da 0.3.15-alpha: remover bloqueio MQTT do onboarding DMR
+- Feedback físico da 0.3.14: MMDVM continua passando no teste básico, porém o broker MQTT ainda impede concluir a Configuração Básica.
+- Revisão do GitHub confirmou o comportamento funcional 0.3.6/0.3.8: RF apply encerrava após MMDVMHost ativo com MQTT/display logging desativados; DMR helper também mantinha MQTTLevel=0 e não fazia preflight do broker.
+- Identificada regressão arquitetural atual: Fase B MQTT foi inserida dentro do RF apply e a 0.3.14 também inseriu preflight MQTT antes do helper DMR.
+- Registrados PROTO-021, WIZ-008 e REL-008.
+- Criados rollback `backup/0.3.14-pre-0.3.15-20260921` e branch `pu2pny-os-0.3.15-alpha`.
+- Escopo: remover somente esses gates no onboarding DMR, preservando todo restante.
