@@ -321,3 +321,10 @@ Estado antes do CI final:
 |---|---|---:|---|
 | LIVE-012 / DATA-001 | PARCIAL/PENDENTE | DOC/SW/HW | UI atual já mostra parte da identidade/direção/módulo/TG/QRZ-RID; falta padronizar e ampliar servidor/rede, contexto Internet, contagem/tempo acumulado e origem lógica sem dados inventados |
 | TEST-LIVE-012A..F | PENDENTE | SW/HW | precisam implementação completa e validação com eventos RF e Internet reais |
+
+## Feedback físico 0.3.7-alpha — Sistema
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| UI-016 — fuso horário pelo painel | FALHA | HW/browser | alteração de timezone bloqueada por `Access denied`; usuário não consegue ajustar pelo painel |
+| UI-006 / UI-016 | BLOQUEADOR DE UX | HW | hora/fuso precisam permanecer coerentes e ajustáveis sem terminal; correção deve preservar RF/gateways |
