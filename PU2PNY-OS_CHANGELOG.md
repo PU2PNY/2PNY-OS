@@ -408,3 +408,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Direct e Histórico ficam congelados como baseline visual e não entram nesta refatoração.
 - Reafirmado UI-008: Salvar/Ativar deve mostrar imediatamente estado visual de aplicação; o teste D-Star relatou ausência desse aviso.
 - Criado rollback `backup/0.3.9-pre-dstar-hotspot-ui-20260921`.
+
+## 2026-09-21 — feedback HW 0.3.9: Nextion, relógio e readiness D-Star
+
+- Registrado **DISPLAY-016**: Nextion via MMDVM deve ter renderer realmente selecionável, sem dois writers. Moderno V2 volta a usar o Display Core através da bridge MQTT/serial do MMDVMHost; G4KLX/ON7LDS permanece como modo nativo alternativo.
+- O painel passa a separar modelo/resolução do display de layout/renderer e incluir perfis 2,4", 2,8", 3,2", 3,5", 4,3", 5", 7" e 10,1", sem promover nenhum modelo novo a HW PASS.
+- Nenhum HMI/TFT será gravado automaticamente.
+- UI-017 foi reafirmado após novo teste: o relógio continua visualmente incorreto/inalterado. O cabeçalho deverá sincronizar com o horário/fuso do PU2PNY via backend e impedir quebra vertical.
+- Registrado **PROTO-015**: D-Star/YSF ganham verificação do INI efetivo e janela de readiness após a ordem MMDVMHost → gateway, mantendo rollback.
+- Criado rollback `backup/0.3.9-pre-nextion-clock-20260921`.
