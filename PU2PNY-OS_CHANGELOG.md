@@ -176,3 +176,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Todos os binários críticos inspecionados são ELF 32-bit ARM EABI5.
 - Artefato experimental de CI criado para o primeiro ciclo HW; não é Alpha/PROD e não altera a linha ARM64.
 - Em paralelo, o run ARM64 `35544963950` passou todos os gates e publicou a 0.3.6-alpha atualizada com SHA-256 `8460357f780577abdd12cb5cf91288aad48d27d4c130a96c97d737f8d050a50c`.
+
+## 2026-09-20 — abertura 0.3.7-alpha e nova regra permanente
+
+- Criado backup `backup/0.3.6-pre-direct-display-20260920` e branch `pu2pny-os-0.3.7-alpha`.
+- Registrado REL-008: nenhuma correção ou recurso da 0.3.6 pode se perder nesta evolução.
+- Registrados P2P-002..006 para PU2PNY Direct real: chamada por indicativo/agenda, primeiro mesmo protocolo, descoberta/NAT, Direct/Relay explícitos, criptografia, pareamento/revogação e control plane próprio.
+- Registrado DISPLAY-013 para Moderno V2 em Nextion/OLED e apresentação coerente em LCD/outros displays confirmados.
+- Registrado PROTO-013 para aviso de conexão por voz após confirmação real em todos os protocolos tecnicamente capazes.
+- D-Star corrigido em software continua HW pendente; nenhuma afirmação de RF↔rede funcional foi promovida sem teste físico.
+- Nova imagem só pode sair após TEST-007.
