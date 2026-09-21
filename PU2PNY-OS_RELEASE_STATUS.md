@@ -366,3 +366,25 @@ Estado antes do CI final:
 | RF-015 / UI-022 — potência MMDVM | PENDENTE | DOC/SW/HW | RFLevel é suportado por MMDVMHost/MMDVM_HS compatível, mas PU2PNY ainda não possui controle seguro implementado/validado |
 | UI-023 — PT/EN/ES integral | FALHA | HW/browser + DOC | teste em English mostrou mistura de idiomas; mecanismo atual deixa texto original quando não encontra tradução |
 | TEST-UI-023-CI | PENDENTE | SW | falta gate automático que impeça release com chaves/textos sem tradução completa |
+
+## Encerramento dos testes físicos 0.3.7-alpha — 2026-09-21
+
+**Ciclo encerrado pelo usuário. A 0.3.7-alpha NÃO está apta para ser promovida como release completa.**
+
+### Bloqueador final YSF/C4FM
+- YSF/C4FM funcionou no início do ciclo, porém no reteste final perdeu o caminho bidirecional.
+- Estado físico final: **RF rádio → hotspot presente; hotspot → rede ausente; rede → hotspot/rádio ausente**.
+- O mesmo rádio/hardware foi testado em outro sistema e funcionou. Isso reduz a probabilidade de falha física geral do rádio/MMDVM, mas não prova a causa específica dentro do PU2PNY.
+- Qualquer registro anterior de YSF como HW PASS neste ciclo fica **superado pelo reteste final**.
+- `PROTO-003 / PROTO-008`: **HW FAIL / regressão intermitente**.
+- Casos novos: `TEST-PROTO-003-R1` e `TEST-PROTO-003-R2`.
+
+### Gate
+A próxima imagem corretiva deve, antes de publicação, repetir YSF RF→rede e rede→RF após:
+1. boot limpo;
+2. troca de protocolo;
+3. alteração de configurações não relacionadas;
+4. permanência prolongada em runtime;
+5. retorno ao YSF sem regravar imagem.
+
+O YSF só volta a HW PASS se permanecer bidirecional em todos esses cenários.
