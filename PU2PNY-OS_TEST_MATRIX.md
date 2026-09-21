@@ -402,3 +402,12 @@ A 0.3.9 só promove os casos acima depois de nova evidência correspondente. PAS
 | TEST-HW-039 | boot restore, DMR regressão, D-Star, YSF, Nextion, Wi-Fi/DNS e UI em hardware | **PENDENTE** — exige novo teste físico | HW |
 
 A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
+
+
+## Feedback físico 0.3.9-alpha — captive portal e fluxo posterior — 2026-09-21
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-NET-021A / NET-021 | conectar cliente ao AP `pu2pny` em imagem não provisionada | SO detecta rede cativa e oferece/abre o primeiro acesso sem digitar URL | **FAIL HW atual** — página não abriu automaticamente | HW/client |
+| TEST-NET-021B / NET-021 | AP não provisionado com Ethernet/outro uplink disponível | probes continuam cativos; AP não entrega Internet transparente que mascare o wizard | PENDENTE após correção | SW/HW/client |
+| TEST-NET-021C / NET-021 | abrir `http://pu2pny.local/` manualmente e seguir wizard | scan Wi-Fi automático → senha/salvar → mensagem → handoff → página reabre → hardware detectado → configuração | **PASS HW** — fluxo aprovado; preservar sem alterações | HW |
