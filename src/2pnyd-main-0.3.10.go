@@ -754,7 +754,7 @@ func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w,400,map[string]any{"ok":false,"error":"BSSID inválido"}); return
 	}
 	snap := connectivitySnapshot()
-	writeNetworkConnectState("connecting","Validando a rede Wi-Fi, associação e endereço IP...",in.SSID)
+	writeNetworkConnectState("associating","Associando à rede Wi-Fi selecionada…",in.SSID)
 	keep := "0"; if in.KeepAP { keep = "1" }
 	go func(ssid,password,bssid,keep string){
 		time.Sleep(900*time.Millisecond)
@@ -762,14 +762,39 @@ func networkConnectHandler(w http.ResponseWriter, r *http.Request) {
 		msg := strings.TrimSpace(string(out))
 		if err != nil { if msg=="" { msg="não foi possível concluir a associação Wi-Fi" }; writeNetworkConnectState("error",friendlyNetworkError(msg),ssid); invalidateConnectivityCache(); return }
 		invalidateConnectivityCache(); cs := connectivitySnapshot()
-		if !cs.WiFi || (ssid!="" && cs.WiFiSSID!=ssid) { writeNetworkConnectState("error","O rádio não permaneceu associado à rede selecionada. A conexão anterior/AP foi preservada.",ssid); return }
+		if !cs.WiFi || (ssid!="" && cs.WiFiSSID!=ssid) {
+			writeNetworkConnectState("error","O rádio não permaneceu associado à rede selecionada. A conexão anterior/AP foi preservada.",ssid); return
+		}
+		writeNetworkConnectState("associated","Wi-Fi associado. Confirmando endereço IPv4…",ssid)
+		if cs.ClientInterface=="" {
+			writeNetworkConnectState("error","A associação Wi-Fi ocorreu, mas a interface cliente não foi confirmada.",ssid);return
+		}
+		ipOut,_:=exec.Command("ip","-4","-o","addr","show","dev",cs.ClientInterface,"scope","global").Output()
+		if strings.TrimSpace(string(ipOut))=="" {
+			writeNetworkConnectState("error","Wi-Fi associado, mas não recebeu IPv4. A configuração anterior/AP foi preservada.",ssid);return
+		}
+		writeNetworkConnectState("ipv4","IPv4 confirmado. Validando rota local…",ssid)
+		route:=defaultRouteInterface()
+		if route=="" {
+			writeNetworkConnectState("error","IPv4 confirmado, mas nenhuma rota padrão ficou disponível.",ssid);return
+		}
+		writeNetworkConnectState("route","Rota confirmada. Validando DNS efetivo…",ssid)
+		dnsOK:=false
+		if b,e:=exec.Command("nmcli","-g","IP4.DNS","device","show",cs.ClientInterface).Output(); e==nil && strings.TrimSpace(string(b))!="" { dnsOK=true }
+		if !dnsOK {
+			if b,e:=os.ReadFile("/etc/resolv.conf"); e==nil && regexp.MustCompile(`(?m)^\\s*nameserver\\s+\\S+`).Match(b) { dnsOK=true }
+		}
+		if !dnsOK {
+			writeNetworkConnectState("error","Rede associada e com IPv4, mas o DNS efetivo não foi confirmado.",ssid);return
+		}
+		writeNetworkConnectState("dns","DNS efetivo confirmado. Finalizando acesso local…",ssid)
 		_ = exec.Command("/usr/local/sbin/2pny-mdns-guard").Run()
 		invalidateConnectivityCache()
-		writeNetworkConnectState("connected","Wi-Fi conectado e validado. O PU2PNY está disponível na nova rede sem reinício obrigatório.",ssid)
+		writeNetworkConnectState("connected","Wi-Fi conectado e validado: associação, IPv4, rota e DNS confirmados. Internet externa é verificada separadamente.",ssid)
 	}(in.SSID,in.Password,in.BSSID,keep)
 	writeJSON(w,http.StatusAccepted,map[string]any{
-		"ok":true,"state":"connecting","ssid":in.SSID,"will_reboot":false,
-		"message":"Validando associação e IP. Se a mesma placa estiver sendo usada pelo AP, a página continuará procurando o PU2PNY na nova rede.",
+		"ok":true,"state":"associating","ssid":in.SSID,"will_reboot":false,
+		"message":"Associando à rede e validando IPv4, rota e DNS. Se a mesma placa estiver sendo usada pelo AP, a página continuará procurando o PU2PNY na nova rede.",
 		"reconnect_url":"http://pu2pny.local/wizard","resume_urls":lanResumeURLs(snap.IPv4),
 		"setup_url":"http://10.43.0.1/wizard","eta_seconds":30,
 	})
