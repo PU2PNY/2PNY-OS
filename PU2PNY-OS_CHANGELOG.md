@@ -397,3 +397,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Registrado **NET-021**: durante o primeiro acesso não provisionado, o AP deve permanecer realmente cativo e não oferecer Internet transparente que faça o cliente considerar a rede online.
 - O uso atual de DHCP Option 114 com endpoint HTTP local será removido. A opção 114 só deve voltar quando existir API Captive Portal HTTPS válida conforme RFC 8908/8910.
 - A compatibilidade continuará usando probes HTTP conhecidos de Windows/Android/Apple/NetworkManager e fallback `10.43.0.1` / `pu2pny.local`.
+
+## 2026-09-21 — feedback HW 0.3.9: D-Star e Hotspot/Protocolos
+
+- Registrado o D-Star HW FAIL: DStarGateway iniciou, carregou hosts e registrou o indicativo, mas a transação voltou por suposta ausência de UDP 20010.
+- Identificada causa concreta no código 0.3.9: `udp_listener()` lia a coluna peer de `ss -H -lun`, não a coluna do socket local. O mesmo erro afeta a prova YSF/4200.
+- A correção será restrita ao validador de bridge; portas e DMR não serão alterados.
+- Hotspot/Protocolos com iframe foi rejeitada visualmente.
+- Registrado **UI-024**: manter Hotspot/Protocolos unificado, porém nativo, sem iframe, no padrão visual mestre aprovado na Direct.
+- Direct e Histórico ficam congelados como baseline visual e não entram nesta refatoração.
+- Reafirmado UI-008: Salvar/Ativar deve mostrar imediatamente estado visual de aplicação; o teste D-Star relatou ausência desse aviso.
+- Criado rollback `backup/0.3.9-pre-dstar-hotspot-ui-20260921`.
