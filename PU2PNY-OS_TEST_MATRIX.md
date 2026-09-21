@@ -411,3 +411,13 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-NET-021A / NET-021 | conectar cliente ao AP `pu2pny` em imagem não provisionada | SO detecta rede cativa e oferece/abre o primeiro acesso sem digitar URL | **FAIL HW atual** — página não abriu automaticamente | HW/client |
 | TEST-NET-021B / NET-021 | AP não provisionado com Ethernet/outro uplink disponível | probes continuam cativos; AP não entrega Internet transparente que mascare o wizard | PENDENTE após correção | SW/HW/client |
 | TEST-NET-021C / NET-021 | abrir `http://pu2pny.local/` manualmente e seguir wizard | scan Wi-Fi automático → senha/salvar → mensagem → handoff → página reabre → hardware detectado → configuração | **PASS HW** — fluxo aprovado; preservar sem alterações | HW |
+
+## Casos adicionados — feedback físico 0.3.9 D-Star / Hotspot
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-PROTO-002-039A | PROTO-002/007/012 | aplicar D-Star com DStarGateway ativo em UDP 20010 | parser de `ss` identifica a porta local correta, não gera rollback por falso negativo e mantém MMDVMHost + gateway ativos | HW FAIL anterior / correção SW pendente | SW/HW |
+| TEST-PROTO-003-039A | PROTO-003/008 | aplicar YSF com YSFGateway ativo em UDP 4200 | mesma validação da coluna local evita falso negativo sem alterar as portas ou DMR | HW pendente | SW/HW |
+| TEST-UI-024A | UI-024 / PROTO-014 | abrir /hotspot | configuração de protocolos é nativa na página, sem iframe, com layout mestre e estado operacional no mesmo contexto | PENDENTE | SW/HW/browser |
+| TEST-UI-024B | UI-024 | desktop/tablet/mobile + claro/escuro | sem overflow/iframe, controles legíveis e responsivos, mesmo padrão visual da Direct | PENDENTE | SW/HW/browser |
+| TEST-UI-024C | UI-008 / UI-024 | Salvar/Ativar protocolo | overlay de operação aparece imediatamente, mostra etapa real e termina em sucesso/erro acionável sem F5 | HW FAIL observado no fluxo D-Star / correção pendente | SW/HW/browser |
