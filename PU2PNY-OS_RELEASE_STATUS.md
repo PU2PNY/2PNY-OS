@@ -457,3 +457,13 @@ Os casos BOOT/D-Star/YSF/Nextion/rede/UI que dependem de Raspberry Pi + MMDVM/di
 - **Baseline congelada:** página Direct aprovada visualmente; Histórico aprovado e não deve ser modificado.
 - **UX:** ao clicar Salvar e continuar no D-Star, o aviso visual de salvando/carregando não apareceu como esperado. UI-008/TEST-UI-024C passa a cobrir esse fluxo.
 - Ponto de retorno antes desta intervenção: `backup/0.3.9-pre-dstar-hotspot-ui-20260921`.
+
+## Feedback físico 0.3.9 — Nextion e relógio — 2026-09-21
+
+- **DISPLAY-016 / HW FAIL atual:** marcar "Usar Nextion pela MMDVM" não produziu mudança visível; a Nextion não mostrou o conjunto de informações solicitado.
+- A 0.3.9 atual desliga o PU2PNY Display Core para qualquer Nextion pela MMDVM e força fallback nativo ON7LDS quando "Moderno V2" é escolhido. Isso explica por que o renderer próprio não aparece.
+- A correção passa a separar renderer próprio e renderer nativo, com exclusão mútua para evitar disputa de writer.
+- O painel atual possui apenas três opções de layout e não separa isso do modelo físico. DISPLAY-016 adiciona perfis de tamanho/resolução documentados para a família Nextion, mantendo HW PENDENTE por modelo.
+- **UI-017 continua HW FAIL:** o relógio visual continua sem a correção esperada. A nova implementação deve usar horário/fuso retornado pelo backend e layout de cabeçalho estável.
+- **D-Star:** além do parser local UDP, PROTO-015 acrescenta confirmação explícita do MMDVM-Host.ini e espera limitada de readiness após subir MMDVMHost → DStarGateway.
+- Ponto de retorno adicional: `backup/0.3.9-pre-nextion-clock-20260921`.
