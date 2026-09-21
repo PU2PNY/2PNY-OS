@@ -476,3 +476,8 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0310-C | SW PASS — XZ + SHA-256 |
 | TEST-REL-0310-D | SW PASS — validador final da imagem |
 | TEST-REL-0310-E | PENDENTE HW — Raspberry Pi + MMDVM/display |
+| TEST-HW-004 | MMDVM detectada sem ativação RF na etapa Hardware | HW | iniciar detecção com MMDVM real | handshake confirma porta/baud; etapa Hardware não inicia MMDVMHost nem disputa UART com display | PENDENTE |
+| TEST-WIZ-010 | avanço automático após MMDVM confirmada | HW | concluir detecção real | mensagem anterior é limpa; botão habilita; contagem 5 s; avança para Configuração | PENDENTE |
+| TEST-RF-016 | ativar MMDVMHost após detecção | HW | salvar RF/perfil com MMDVM detectada | usa porta/baud detectados, preflight MQTT, lock contra display, serviço permanece ativo; falha faz rollback com causa real | PENDENTE |
+| TEST-I18N-002 | idioma integral em mensagens dinâmicas/erros | SW/HW | selecionar PT/EN/ES e disparar status/erros conhecidos | nenhuma mensagem normal aparece em idioma diferente do selecionado; logs brutos só em diagnóstico técnico | PENDENTE |
+
