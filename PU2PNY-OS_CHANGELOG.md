@@ -260,3 +260,11 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - IP remoto não será mostrado por padrão; diagnóstico de rede fica no Expert.
 - Registrado **DATA-001** para manter um único evento normalizado usado pelas duas telas.
 - A implementação atual já possui vários desses campos (direção, identidade, cidade/país, protocolo, módulo/TG, duração, QRZ/RadioID), mas o requisito novo exige ampliar e padronizar o contexto sem inventar dados.
+
+## 2026-09-20 — feedback HW 0.3.7: fuso horário bloqueado
+
+- Registrado **UI-016**: o fuso horário deve ser alterável pelo painel sem terminal.
+- Teste físico: ao aplicar o fuso, a operação foi bloqueada com `Access denied`.
+- Inspeção do backend mostrou que a rota chama `timedatectl set-timezone` diretamente e, em fallback, tenta atualizar `/etc/localtime` e `/etc/timezone`; essas operações exigem privilégio que o contexto atual do serviço web não possui/autoriza.
+- A correção deve usar privilégio mínimo específico para timezone, sem liberar root/shell genérico ao painel.
+- Após aplicar, o backend deve reler o timezone efetivo antes de declarar sucesso e atualizar a UI dinamicamente.
