@@ -252,3 +252,13 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-P2P-007D | P2P-007 | protocolos diferentes | bloqueia antes de alterar RF e informa local/remoto | PENDENTE | SW/HW |
 | TEST-UI-015A | UI-015 | abrir Direct em desktop | cabeçalho/menu/cards/botões seguem layout padrão sem elementos concatenados ou estourados | **FAIL** — página visualmente quebrada no teste | HW/browser |
 | TEST-UI-015B | UI-015 | 390px/768px/desktop | Direct responsiva e usável, sem overflow/controles quebrados | PENDENTE | SW/HW |
+
+## Feedback físico 0.3.7-alpha — APRS-IS assistido
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-APRS-006A | APRS-006 | usuário leigo abre APRS | descrição explica APRS-IS, indicativo/SSID e confirmação do servidor sem jargão obrigatório | **FAIL** — tela fala em "login APRS-IS" sem explicar o que é | HW/browser |
+| TEST-APRS-006B | APRS-006 | Testar estado agora | mostra etapas Internet→TCP→identificação→resposta→verificado e ação corretiva | **FAIL** — mensagem genérica apenas pede conferir vários itens | HW/browser |
+| TEST-APRS-006C | APRS-006 | servidor responde unverified/timeout | erro principal traduzido; detalhe técnico somente no Expert | PENDENTE | SW/HW |
+| TEST-APRS-006D | APRS-006 | sessão não verificada | beacon/mensagem não são marcados como enviados | PENDENTE | SW/HW |
+| TEST-APRS-002B | APRS-002 | nova mensagem com usuário em outra página | toast global ~5 s mostra remetente/resumo e clique abre APRS para responder | **NÃO IMPLEMENTADO GLOBALMENTE / HW PENDENTE** | DOC/SW/HW |
