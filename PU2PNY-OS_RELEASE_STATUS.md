@@ -474,3 +474,14 @@ Os casos BOOT/D-Star/YSF/Nextion/rede/UI que dependem de Raspberry Pi + MMDVM/di
 - Primeira etapa: arquitetura + detector não destrutivo Nextion/OLED + catálogo local + bootstrap/path/hotplug.
 - Gravação automática de TFT **não é permitida**. Flash futuro exigirá asset real, SHA-256 e confirmação explícita.
 - Estado desta frente: DOC / SW-syntax em desenvolvimento; HW PENDENTE.
+
+## Prioridades de hardening registradas — 2026-09-21
+Ordem de execução aprovada neste ciclo:
+1. Display Auto-Detection/Auto-Provisioning + regressão Nextion;
+2. PROTO-016 wait-for-bridge D-Star/YSF;
+3. BOOT-002 restore transacional;
+4. PROTO-017 MQTT preflight;
+5. NET-022 máquina de estados Wi-Fi;
+6. UPDATE-006, LIVE-015, SEC-022, UI-025 e i18n dinâmico.
+
+Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseline aprovada e não entram em refatoração desnecessária.
