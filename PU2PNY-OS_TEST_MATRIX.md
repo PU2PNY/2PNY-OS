@@ -421,3 +421,15 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-UI-024A | UI-024 / PROTO-014 | abrir /hotspot | configuração de protocolos é nativa na página, sem iframe, com layout mestre e estado operacional no mesmo contexto | PENDENTE | SW/HW/browser |
 | TEST-UI-024B | UI-024 | desktop/tablet/mobile + claro/escuro | sem overflow/iframe, controles legíveis e responsivos, mesmo padrão visual da Direct | PENDENTE | SW/HW/browser |
 | TEST-UI-024C | UI-008 / UI-024 | Salvar/Ativar protocolo | overlay de operação aparece imediatamente, mostra etapa real e termina em sucesso/erro acionável sem F5 | HW FAIL observado no fluxo D-Star / correção pendente | SW/HW/browser |
+
+## Casos adicionados — Nextion / relógio / readiness D-Star 0.3.9
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-DISPLAY-016A | DISPLAY-016 | Nextion pela MMDVM + PU2PNY Moderno V2 | MMDVMHost mantém transporte MQTT/serial, renderer nativo fica desativado, Display Core fica ativo e não há dois writers | PENDENTE | SW/HW |
+| TEST-DISPLAY-016B | DISPLAY-016 | escolher G4KLX/ON7LDS | Display Core para; MMDVMHost assume Nextion em Port=modem e confirma ScreenLayout efetivo | PENDENTE | SW/HW |
+| TEST-DISPLAY-016C | DISPLAY-016 | selecionar modelo/resolução | painel oferece 2,4/2,8/3,2/3,5/4,3/5/7/10,1 e persiste o perfil sem declarar detecção HW falsa | PENDENTE | SW/HW |
+| TEST-DISPLAY-016D | DISPLAY-016 / DISPLAY-015 | standby/TX/RX | Nextion volta a exibir estado operacional e sai de telas transitórias; Moderno V2 mostra hierarquia profissional quando renderer próprio estiver selecionado | HW FAIL atual / correção pendente | SW/HW |
+| TEST-UI-017D | UI-017 / UI-016 | mudar timezone e observar cabeçalho | relógio ressincroniza com /api/system imediatamente, permanece em uma linha e não usa somente timezone do navegador | HW FAIL reportado / correção pendente | SW/HW/browser |
+| TEST-PROTO-015A | PROTO-015 | apply D-Star | confirma Enable/GatewayPort/LocalPort, MMDVMHost sobe antes do gateway e aguarda bridge local com timeout limitado | PENDENTE | SW/HW |
+| TEST-PROTO-015B | PROTO-015 | bridge não aparece de verdade | rollback restaura configuração/serviços anteriores e apresenta diagnóstico útil | PENDENTE | SW/HW |
