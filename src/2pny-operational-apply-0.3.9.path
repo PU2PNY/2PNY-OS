@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY watch operational requests
+
+[Path]
+PathChanged=/run/2pny/operational-request.json
+Unit=2pny-operational-apply.service
+
+[Install]
+WantedBy=multi-user.target
