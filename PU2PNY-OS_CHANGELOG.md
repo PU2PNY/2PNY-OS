@@ -307,3 +307,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrado **LIVE-014**: conteúdo do bloco principal muda entre RF→Internet, Internet→RF e Standby, mostrando apenas métricas pertinentes a cada direção.
 - Registrado **UI-021**: alertas acionáveis levam a BER/Expert, canais Wi-Fi, diagnóstico de Internet ou configuração de protocolo.
 - O código 0.3.7 já possui SSE de Ao Vivo e campos `rssi/rssi_avg/ber`; a nova UI deve reutilizar esse fluxo, sem polling RF adicional.
+
+## 2026-09-20 — potência MMDVM no Expert e tradução integral
+
+- Registrado **RF-015 / UI-022**: controle seguro do `RFLevel` no Expert para modems que comprovadamente suportem o parâmetro.
+- O valor não será apresentado como watts/mW; `RFLevel` é um controle do modem. Ajuste será transacional, bloqueado durante TX e com rollback.
+- `RFLevel` não será confundido com `TXLevel`/desvio e não será aumentado automaticamente por causa de BER.
+- Registrado **UI-023** após teste físico/browser em English mostrar conteúdo ainda em Português.
+- Inspeção do i18n 0.3.7 confirmou a causa estrutural: a tradução usa correspondência exata de texto e, quando uma frase não existe no dicionário, retorna o texto original. Isso permite mistura silenciosa de idiomas.
+- A internacionalização passa a exigir catálogo central por chaves, cobertura PT/EN/ES de toda UI e mensagens dinâmicas, com teste automático de completude.
