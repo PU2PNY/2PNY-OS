@@ -93,6 +93,7 @@ func (c *core) apiHandler(w http.ResponseWriter, r *http.Request) {
 		if peer != "" {
 			_ = c.sendSecure(peer, "hangup", []byte("bye"), relay)
 		}
+		c.exitRadio()
 		c.mu.Lock()
 		c.st.Status = "idle"
 		c.st.Peer = ""
@@ -155,6 +156,7 @@ func main() {
 	c.forceRelay = *forceRelay
 	go c.udpLoop()
 	go c.registerLoop()
+	go c.keepaliveLoop()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", c.apiHandler)
 	log.Printf("PU2PNY Direct %s %s API %s", version, c.id.Callsign, *api)
