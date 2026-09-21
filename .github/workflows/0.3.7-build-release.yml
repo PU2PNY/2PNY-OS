@@ -279,8 +279,6 @@ jobs:
           cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
           cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
           cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
-          cp "$GITHUB_WORKSPACE/release-component/PU2PNY-OS-$VERSION-update.tar.gz" "$GITHUB_WORKSPACE/release-artifact/"
-          cp "$GITHUB_WORKSPACE/release-component/PU2PNY-OS-$VERSION-update.tar.gz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
       - uses: actions/upload-artifact@v4
         with:
           name: pu2pny-os-0.3.7-arm64
@@ -294,7 +292,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
-      VERSION: 0.3.6-alpha
+      VERSION: 0.3.7-alpha
     steps:
       - uses: actions/download-artifact@v4
         with:
