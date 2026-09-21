@@ -604,3 +604,23 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - Source, regressões, overlay, staged source, build ARM64, XZ, SHA-256, validação estrutural da imagem, transferência e publicação: **SW PASS**.
 - Correção focal: onboarding DMR não é mais bloqueado por MQTT quando MMDVMHost/DMRGateway operam com `MQTTLevel=0`.
 - **HW PENDENTE:** confirmar em Raspberry Pi + MMDVM que Configuração Básica avança para Conclusão e dashboard.
+
+## Abertura 0.3.16-alpha — feedback HW pós-0.3.15 — 2026-09-21
+
+**Estado:** implementação corretiva em andamento. Não publicada.
+
+Baseline congelada: todo o restante do sistema foi aprovado pelo mantenedor neste ciclo; somente os bugs listados entram no escopo.
+
+Falhas/ajustes observados:
+- Sistema: fuso America/Sao_Paulo não aplica; **HW FAIL**.
+- SSH: fluxo não habilitou; chave pública vazia é rejeitada corretamente, mas o request/helper e UX precisam ser determinísticos; **HW FAIL de operação**.
+- Ao Vivo: não mostrar sinal RF sem RF real.
+- Wi-Fi: perfil salvo não reconectou após retorno/reboot; Ethernet demorou a refletir; Wi-Fi 1/2 sem scan utilizável; **HW FAIL**.
+- Hotspot/Protocolos: overlay termina antes da confirmação remota.
+- Voz DMR: anúncio do sistema mistura com tráfego NETWORK→RF.
+- Direct para PU2UJY/0.3.14: **HW FAIL**, causa a isolar sem enfraquecer identidade.
+- APRS-IS: TCP para soam.aprs2.net:14580 falhou; mensagem ficou waiting_ack; conexão automática/fallback pendentes.
+- Nextion: nenhuma opção ativou a tela; regressão frente à 0.3.8 que já enviava informação; **HW FAIL**.
+- D-Star: ainda não conecta; gerador atual diverge do schema do gateway embarcado em pontos concretos.
+- Rollback: `backup/0.3.15-pre-0.3.16-20260921`.
+- Branch: `pu2pny-os-0.3.16-alpha`.
