@@ -467,3 +467,10 @@ Os casos BOOT/D-Star/YSF/Nextion/rede/UI que dependem de Raspberry Pi + MMDVM/di
 - **UI-017 continua HW FAIL:** o relógio visual continua sem a correção esperada. A nova implementação deve usar horário/fuso retornado pelo backend e layout de cabeçalho estável.
 - **D-Star:** além do parser local UDP, PROTO-015 acrescenta confirmação explícita do MMDVM-Host.ini e espera limitada de readiness após subir MMDVMHost → DStarGateway.
 - Ponto de retorno adicional: `backup/0.3.9-pre-nextion-clock-20260921`.
+
+## DISPLAY-017 — Auto-detection/provisioning
+- Novo requisito registrado após feedback físico da 0.3.9.
+- Implementação inicial deve ser isolada da detecção de hardware já existente para reduzir regressão.
+- Primeira etapa: arquitetura + detector não destrutivo Nextion/OLED + catálogo local + bootstrap/path/hotplug.
+- Gravação automática de TFT **não é permitida**. Flash futuro exigirá asset real, SHA-256 e confirmação explícita.
+- Estado desta frente: DOC / SW-syntax em desenvolvimento; HW PENDENTE.
