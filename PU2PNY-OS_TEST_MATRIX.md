@@ -357,3 +357,14 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-DISPLAY-015A | DISPLAY-015 | boot com Nextion | `Iniciando` é transitório e termina em estado operacional/standby quando serviços sobem | **FAIL** — Nextion permaneceu travada em `Iniciando` enquanto operacional não foi restaurado | HW |
 | TEST-DISPLAY-015B | DISPLAY-015 | executar Manutenção pelo painel | tela pode indicar manutenção durante a tarefa, mas ao terminar sai automaticamente desse estado | **FAIL** — Nextion ficou travada mostrando Manutenção | HW |
 | TEST-DISPLAY-015C | DISPLAY-015 | manutenção com operacional explicitamente desligado | ao terminar mostra Operacional desligado/atenção, nunca `Pronto` falso | PENDENTE | SW/HW |
+
+## Evidência de build — 0.3.8-alpha ARM64 — 2026-09-21
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-REL-038 | REL-003 | imagem 0.3.8-alpha ARM64 | source + staged source + build ARM64 + XZ + SHA-256 + validação estrutural + publicação concluídos antes da divulgação | **PASS** — GitHub Actions run `35560842909`; imagem publicada em prerelease `v0.3.8-alpha` | SW |
+| TEST-BOOT-001A-038 | BOOT-001 | novo boot com restauração do perfil | código/helper de restauração e unit de boot presentes na imagem; comportamento real deve ser repetido no Raspberry Pi | **SW/estrutural PASS; HW PENDENTE** | SW/HW |
+| TEST-NET-020A-038 | NET-020 | SSID/RSSI pós-boot | fallback por associação real/`iw` presente na imagem; validação física ainda necessária | **SW/estrutural PASS; HW PENDENTE** | SW/HW |
+| TEST-DISPLAY-015A-038 | DISPLAY-015 | Nextion sair de estados Iniciando/Manutenção | fluxo transitório corrigido na imagem; Nextion real ainda precisa repetir boot/manutenção | **SW/estrutural PASS; HW PENDENTE** | SW/HW |
+
+Artefato publicado: `PU2PNY-OS-0.3.8-alpha-arm64.img.xz`. SHA-256: `1997b05612159e0d1178e6ab0ab2dc73f1404a8f2a9e7e909e00dfb126557510`.
