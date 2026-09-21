@@ -1213,3 +1213,30 @@ A 0.3.14-alpha parte da 0.3.13 com rollback próprio e deve preservar:
 - DMR TX/RX histórico, Direct e Histórico.
 
 Publicação exige source/regressões, ARM64, XZ, SHA-256, validação estrutural e prova de broker Mosquitto com handshake MQTT em CI. Continua Alpha/HW-TEST até novo teste físico.
+
+## 2026-09-21 — correção focal 0.3.15-alpha após HW FAIL MQTT na 0.3.14
+
+### PROTO-021 — MQTT não bloqueia o primeiro provisionamento DMR quando MMDVM/DMRGateway não o utilizam
+O primeiro provisionamento DMR deve seguir a semântica comprovada em 0.3.6/0.3.8:
+- RF apply termina com sucesso assim que a MMDVM foi identificada, MMDVMHost assumiu a UART e permaneceu ativo com `MQTTLevel=0` e `DisplayLevel=0`;
+- nessa fase, Mosquitto/MQTT é telemetria auxiliar e não é pré-condição para concluir RF;
+- o caminho DMR chama diretamente o helper DMR comprovado, que mantém `MQTTLevel=0` no DMRGateway e no MMDVMHost e valida MMDVMHost + DMRGateway por estado de serviço;
+- nenhum preflight MQTT deve existir antes de delegar DMR ao helper;
+- o broker permanece instalado e diagnosticável para recursos que realmente habilitem MQTT posteriormente;
+- PROTO-018 continua aplicável quando um caminho efetivamente configurar `MQTTLevel>0`; não se aplica ao bootstrap/DMR inicial com MQTT desativado;
+- falha do broker não pode provocar rollback de uma MMDVM já comprovada nem impedir o wizard de concluir o onboarding DMR.
+
+### WIZ-008 — Avanço após estado applied preserva comportamento 0.3.6/0.3.8
+Sem alterar layout/navegação:
+- `/api/basic/apply` executa RF → mode → DMR/network → save config → grava `provisioned`;
+- somente após esse commit o backend publica `/api/rf state=applied`;
+- o wizard já existente deve então executar `loadConclusion(); step(4)` e abrir o dashboard conforme a lógica atual;
+- não criar atalho visual/falso sucesso: se MMDVMHost ou DMRGateway falhar, continua erro + rollback;
+- MQTT desativado não é erro nesse caminho.
+
+### REL-008 — 0.3.15-alpha altera somente o bloqueio MQTT do onboarding DMR
+Escopo estrito:
+- preservar integralmente Wi-Fi, hardware detect, baud, RF, frequências, offsets, TGIF, idiomas, telas e demais protocolos;
+- alterar somente o RF apply para encerrar após o bootstrap MMDVM comprovado e o dispatcher DMR para remover o preflight MQTT anterior ao helper;
+- manter rollback `backup/0.3.14-pre-0.3.15-20260921`;
+- publicar somente após source/regressões, ARM64, XZ, SHA-256 e validação estrutural.
