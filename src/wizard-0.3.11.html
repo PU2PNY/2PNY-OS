@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>PU2PNY-OS 0.3.6 — Assistente</title>
+<script>(function(){var t=localStorage.getItem('pu2pny-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
+<style>
+:root{color-scheme:dark;--bg:#070d14;--side:#0d1723;--card:#101b28;--card2:#142233;--line:#263b52;--text:#f4f8fc;--muted:#94abc4;--blue:#39adfa;--blue2:#168bd7;--green:#35d58d;--yellow:#f3c65d;--red:#ff6c7b;--shadow:0 18px 55px rgba(0,0,0,.28)}
+html[data-theme=light]{color-scheme:light;--bg:#f2f6fb;--side:#fff;--card:#fff;--card2:#edf4fa;--line:#d3dfeb;--text:#14202d;--muted:#5d7187;--blue:#087bc7;--blue2:#0568a8;--green:#087e57;--yellow:#986800;--red:#c83343;--shadow:0 15px 38px rgba(42,63,84,.1)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}.shell{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}.sidebar{background:var(--side);border-right:1px solid var(--line);padding:28px 18px;display:flex;flex-direction:column}.brand{padding:0 4px 26px}.brand strong{font-size:21px;letter-spacing:.2px}.brand small{display:block;color:var(--muted);margin-top:2px}.steps{display:grid;gap:10px}.step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:center;padding:12px;border-radius:13px;border:1px solid transparent;color:var(--muted)}.step .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--card2);font-weight:800}.step b{display:block;color:inherit}.step small{display:block;color:var(--muted)}.step.active{background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 16%,var(--card)),var(--card));border-color:color-mix(in srgb,var(--blue) 58%,var(--line));color:var(--text)}.step.active .num{background:var(--blue);color:#06131d}.step.done{color:var(--text)}.step.done .num{background:#113f31;color:#75edb8}.help{margin-top:auto;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px;color:var(--muted)}.help b{color:var(--text)}.main{width:min(1360px,100%);margin:auto;padding:30px 32px 54px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.top h1{font-size:30px;line-height:1.15;margin:0}.top p{margin:7px 0 0;color:var(--muted);font-size:16px}.theme{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:10px 13px;font-weight:750;cursor:pointer}.badges{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}.badge{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}.panel{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:24px;box-shadow:var(--shadow)}.panel+.panel{margin-top:16px}.intro{display:flex;gap:15px;align-items:center;margin-bottom:16px}.icon{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#113456;color:#5bc0ff;font-size:24px;flex:none}.intro h2{margin:0;font-size:22px}.intro p{margin:4px 0 0;color:var(--muted)}.info,.notice{border:1px solid color-mix(in srgb,var(--blue) 62%,var(--line));background:color-mix(in srgb,var(--blue) 8%,var(--card2));padding:13px 15px;border-radius:12px;color:#bfe5ff}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.option-card{border:1px solid var(--line);background:var(--card2);border-radius:16px;padding:19px}.option-card h3{margin:0 0 3px;font-size:18px}.option-card p{color:var(--muted);margin:0 0 14px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:750}.input,.field input,.field select{width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:11px;padding:12px 13px;outline:none}.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 20%,transparent)}.btn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:11px;padding:11px 15px;font-weight:780;cursor:pointer}.btn.primary{background:var(--blue);border-color:var(--blue);color:#06131d}.btn.danger{color:#ffc7ce}.btn:disabled{opacity:.4;cursor:not-allowed}.btnrow{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}.widebtn{width:100%;margin-top:10px}.switchrow{display:flex;align-items:center;gap:10px;margin-top:14px}.switchrow input{width:20px;height:20px}.wifi-picker{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.password-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.hint{display:block;color:var(--muted);margin-top:5px}.wifi-picker .btn,.password-row .btn{white-space:nowrap}.status-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.mini{border:1px solid var(--line);border-radius:13px;background:var(--card2);padding:13px}.mini b{display:block}.mini small{color:var(--muted)}.mini.ok{border-color:#1c664b}.mini.bad{border-color:#6d2d37}.progress{height:13px;border-radius:999px;background:var(--card2);border:1px solid var(--line);overflow:hidden}.progress i{display:block;width:8%;height:100%;background:linear-gradient(90deg,var(--blue2),var(--blue));transition:width .35s ease}.progressline{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;margin:18px 0}.progressline b{font-size:18px}.timeline{display:grid;gap:12px}.task{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);padding:10px 0}.task:last-child{border:0}.circle{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--muted)}.task.done .circle{background:var(--green);color:#062519;border-color:var(--green)}.task.active .circle{border-color:var(--blue);color:var(--blue)}.task small{display:block;color:var(--muted)}.task em{font-style:normal;color:var(--muted);font-size:12px}.summary{display:grid;gap:0;border:1px solid var(--line);border-radius:13px;overflow:hidden}.summary div{display:grid;grid-template-columns:145px 1fr;gap:10px;padding:12px;border-bottom:1px solid var(--line)}.summary div:last-child{border:0}.summary span{color:var(--muted)}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.choice{position:relative}.choice input{position:absolute;opacity:0;pointer-events:none}.choice label{display:block;border:1px solid var(--line);background:var(--card2);border-radius:12px;padding:13px;cursor:pointer}.choice label b{display:block}.choice label small{color:var(--muted)}.choice input:checked+label{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset;background:color-mix(in srgb,var(--blue) 9%,var(--card2))}.section-title{margin:18px 0 8px;font-weight:800}.freq{display:grid;grid-template-columns:1fr 1fr;gap:12px}.result{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:13px;background:var(--card2)}.result.error{border-color:var(--red);color:#ffd2d7}.result.success{border-color:var(--green);color:#baf2d7}.hidden{display:none!important}.successbox{text-align:center;padding:28px 20px}.successicon{width:72px;height:72px;margin:auto;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#062519;font-size:36px;font-weight:900}.successbox h2{font-size:26px;margin:14px 0 5px}.successbox p{color:var(--muted)}@media(max-width:900px){.shell{display:block}.sidebar{padding:14px;border-right:0;border-bottom:1px solid var(--line)}.brand{padding-bottom:10px}.steps{display:flex;overflow:auto;gap:7px}.step{min-width:max-content}.step small{display:none}.help{display:none}.main{padding:18px 13px 45px}.grid2,.formgrid{grid-template-columns:1fr}.top{align-items:center}.top h1{font-size:24px}}@media(max-width:560px){body{font-size:14px}.brand small{display:none}.top{flex-wrap:wrap}.theme{margin-left:auto}.panel{padding:15px;border-radius:14px}.status-cards,.freq{grid-template-columns:1fr}.summary div{grid-template-columns:1fr}.btnrow{display:grid;grid-template-columns:1fr}.btnrow .btn{width:100%}.choice-grid{grid-template-columns:1fr 1fr}.intro{align-items:flex-start}.icon{width:42px;height:42px}.top p{font-size:14px}}
+.languagewelcome{position:fixed;inset:0;z-index:1200;background:var(--bg);display:grid;place-items:center;padding:18px}.languagewelcome[hidden]{display:none}.languagebox{width:min(620px,100%);border:1px solid var(--line);background:var(--card);border-radius:20px;padding:32px;box-shadow:var(--shadow);text-align:center}.languagebox h1{margin:0 0 7px}.languagebox p{color:var(--muted);margin:0 0 22px}.languagebox select{width:100%;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:11px;padding:13px}.languagebox .btn{width:100%;margin-top:12px}.reconnect{position:fixed;inset:0;z-index:999;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(8px);display:grid;place-items:center;padding:18px}.reconnect[hidden]{display:none}.reconnectbox{width:min(620px,100%);border:1px solid var(--line);background:var(--card);border-radius:20px;padding:28px;box-shadow:var(--shadow);text-align:center}.reconnectbox h2{margin:0 0 8px;font-size:28px}.reconnectbox p{color:var(--muted)}.reconnectLoader{width:78px;height:78px;border:7px solid var(--line);border-top-color:var(--blue);border-radius:50%;margin:22px auto;animation:reconnectSpin 1s linear infinite}.reconnectDots{letter-spacing:5px;color:var(--blue);font-weight:900}@keyframes reconnectSpin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="languagewelcome" id="languageWelcome" hidden>
+  <div class="languagebox">
+    <div style="font-weight:950;color:var(--blue);margin-bottom:8px">PU2PNY-OS</div>
+    <h1 id="welcomeTitle">Bem-vindo / Welcome</h1>
+    <p id="welcomeText">Escolha o idioma / Choose your language</p>
+    <select id="welcomeLanguage" aria-label="Escolha o idioma">
+      <option value="pt">Português</option><option value="en">English</option><option value="es">Español</option>
+    </select>
+    <button class="btn primary" id="welcomeContinue" type="button">Continuar / Continue</button>
+  </div>
+</div>
+<div class="reconnect" id="reconnectOverlay" hidden>
+  <div class="reconnectbox">
+    <h2>Conectando o PU2PNY à sua rede</h2>
+    <p id="reconnectText">A rede será validada antes de encerrar o AP. Depois da associação e do endereço IP, esta tela procurará o PU2PNY automaticamente na nova rede.</p>
+    <div class="reconnectLoader" aria-hidden="true"></div>
+    <div class="reconnectDots">● ● ●</div>
+    <p><b>Não desligue o hotspot e não atualize a página.</b><br>Assim que o PU2PNY voltar na nova rede, esta página abrirá Hardware automaticamente.</p>
+  </div>
+</div>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand"><strong>PU2PNY-OS</strong><small>Digital Radio Operating System</small></div>
+  <nav class="steps">
+    <div class="step active" id="nav1"><span class="num">1</span><div><b>Internet</b><small>Conecte à internet</small></div></div>
+    <div class="step" id="nav2"><span class="num">2</span><div><b>Hardware</b><small>Detectar e preparar</small></div></div>
+    <div class="step" id="nav3"><span class="num">3</span><div><b>Configuração</b><small>Ajustes essenciais</small></div></div>
+    <div class="step" id="nav4"><span class="num">4</span><div><b>Conclusão</b><small>Pronto para usar</small></div></div>
+  </nav>
+  <div class="help"><b>Precisa de ajuda?</b><br><span>O assistente mostra somente o necessário. Ajustes avançados ficam para depois.</span></div>
+</aside>
+
+<main class="main">
+  <div class="top"><select id="language" aria-label="Idioma"><option value="pt">Português</option><option value="en">English</option><option value="es">Español</option></select>
+    <div><h1 id="title">Primeiro acesso — Internet</h1><p id="subtitle">A internet é opcional para a configuração local do PU2PNY-OS. Conecte agora se quiser atualizar diretórios e componentes.</p></div>
+    <button class="theme" id="theme">☀ Claro</button>
+  </div>
+  <div class="badges">
+    <span class="badge"><i class="dot"></i>PU2PNY-OS online</span>
+    <span class="badge" id="netbadge">Internet: verificando...</span>
+    <span class="badge" id="versionBadge">versão...</span>
+  </div>
+
+  <section id="step1">
+    <div class="panel">
+      <div class="intro"><div class="icon">◎</div><div><h2>Conectar à internet</h2><p>Use uma rede Wi‑Fi existente ou um cabo Ethernet. O acesso local continua disponível durante a configuração.</p></div></div>
+      <div class="info">A internet é usada somente para preparar pacotes oficiais, firmware e componentes necessários. Depois disso a detecção do MMDVM é automática.</div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="option-card">
+          <h3>Wi‑Fi</h3><p>Conecte a uma rede existente. Com duas interfaces Wi‑Fi, uma permanece no AP e a outra vira internet.</p>
+          <div class="field">
+            <label for="wifiCountry">País / região do Wi‑Fi</label>
+            <select id="wifiCountry">
+              <option value="BR">Brasil</option><option value="PT">Portugal</option><option value="US">Estados Unidos</option>
+              <option value="AR">Argentina</option><option value="UY">Uruguai</option><option value="PY">Paraguai</option>
+              <option value="CL">Chile</option><option value="BO">Bolívia</option><option value="PE">Peru</option>
+              <option value="CO">Colômbia</option><option value="MX">México</option><option value="CA">Canadá</option>
+              <option value="GB">Reino Unido</option><option value="ES">Espanha</option><option value="FR">França</option>
+              <option value="DE">Alemanha</option><option value="IT">Itália</option><option value="NL">Países Baixos</option>
+              <option value="BE">Bélgica</option><option value="CH">Suíça</option><option value="AT">Áustria</option>
+              <option value="PL">Polônia</option><option value="SE">Suécia</option><option value="NO">Noruega</option>
+              <option value="DK">Dinamarca</option><option value="FI">Finlândia</option><option value="IE">Irlanda</option>
+              <option value="JP">Japão</option><option value="AU">Austrália</option><option value="NZ">Nova Zelândia</option>
+              <option value="ZA">África do Sul</option>
+            </select>
+            <small class="hint">Define os canais permitidos antes da busca. Escolher o país correto ajuda a encontrar todas as redes próximas.</small>
+          </div>
+          <div class="field">
+            <label for="ssidSelect">Rede Wi‑Fi encontrada</label>
+            <div class="wifi-picker">
+              <select id="ssidSelect"><option value="">Buscando redes...</option></select>
+              <button class="btn" id="wifiScan" type="button">↻ Buscar redes</button>
+            </div>
+            <small id="scanHint" class="hint">A busca é feita automaticamente. Selecione a rede e informe somente a senha.</small>
+          </div>
+          <div class="field hidden" id="manualSsidWrap"><label for="ssidManual">Outra rede / rede oculta</label><input id="ssidManual" placeholder="Digite o nome da rede" autocomplete="off"></div>
+          <div class="field">
+            <label for="wpass">Senha</label>
+            <div class="password-row"><input id="wpass" type="password" placeholder="Senha da rede" autocomplete="new-password"><button class="btn" id="showPass" type="button">Mostrar</button></div>
+          </div>
+          <label class="switchrow" id="keepapRow"><input type="checkbox" id="keepap" checked><span id="keepapText">Manter AP ativo usando a segunda interface Wi‑Fi</span></label>
+          <div class="notice hidden" id="singleWifiNote">Há somente uma interface Wi‑Fi. Ao entrar na rede escolhida, esse mesmo rádio deixa de transmitir o AP <b>pu2pny</b>. Se a conexão falhar, o AP volta automaticamente. Se houver cabo Ethernet ligado ao roteador, ele permanece disponível durante toda a troca.</div>
+          <button class="btn primary widebtn" id="wifiConnect">Conectar Wi‑Fi</button>
+          <div class="result hidden" id="wifiResult"></div>
+        </div>
+        <div class="option-card">
+          <h3>Cabo de rede</h3><p>Primeiro tentamos DHCP. Isso funciona em roteadores e também com Compartilhamento de Internet do computador.</p>
+          <div class="notice"><b>Um endereço para o primeiro acesso:</b><br>use <b>http://10.43.0.1/</b> tanto pelo AP <b>pu2pny</b> quanto no cabo direto. Se o cabo estiver ligado ao roteador e receber um IP da LAN, use <b>http://pu2pny.local/</b> ou o IP mostrado pelo roteador.</div>
+          <button class="btn widebtn" id="refreshEthernet">Reverificar cabo e internet</button>
+        </div>
+      </div>
+      <div class="status-cards">
+        <div class="mini" id="apcard"><b>AP</b><small>verificando...</small></div>
+        <div class="mini" id="ethcard"><b>Cabo de rede</b><small>verificando...</small></div>
+        <div class="mini" id="internetcard"><b>Internet</b><small>verificando...</small></div>
+      </div>
+      <div class="option-card" style="margin-top:14px;padding:15px 17px">
+        <label class="switchrow" style="margin-top:0">
+          <input type="checkbox" id="autoMaintenance" checked>
+          <span><b>Preparação automática quando houver internet</b><br><small class="hint">Atualiza os índices e instala somente drivers/firmware oficiais que estiverem faltando. Não executa upgrade completo do Debian.</small></span>
+        </label>
+        <small id="maintenanceHint" class="hint">Verificando...</small>
+      </div>
+      <div class="btnrow"><button class="btn primary" id="toHardware">Continuar sem internet →</button></div>
+    </div>
+  </section>
+
+  <section id="step2" class="hidden">
+    <div class="panel">
+      <div class="intro"><div class="icon">⚙</div><div><h2>Buscando drivers e detectando hardware</h2><p>O PU2PNY-OS prepara firmware oficial e verifica Raspberry Pi, MMDVM e display sem expor detalhes técnicos desnecessários.</p></div></div>
+      <div class="progressline"><div class="progress"><i id="bar"></i></div><b id="percent">8%</b></div>
+      <div class="grid2">
+        <div class="option-card">
+          <div class="timeline">
+            <div class="task done" id="taskInternet"><span class="circle">✓</span><div><b>Internet conectada</b><small>Conexão confirmada.</small></div><em>Concluído</em></div>
+            <div class="task active" id="taskDrivers"><span class="circle">•</span><div><b>Drivers básicos</b><small>Preparando firmware e módulos oficiais.</small></div><em id="driversState">Aguardando</em></div>
+            <div class="task" id="taskMmdvm"><span class="circle">•</span><div><b>MMDVM</b><small>Identificação do modem pelo protocolo oficial.</small></div><em id="mmdvmState">Aguardando</em></div>
+            <div class="task" id="taskDisplay"><span class="circle">•</span><div><b>Display / Nextion</b><small>Verificação opcional.</small></div><em id="displayState">Aguardando</em></div>
+            <div class="task" id="taskReady"><span class="circle">•</span><div><b>Pronto para configuração</b><small>Hardware essencial validado.</small></div><em id="readyState">Aguardando</em></div>
+          </div>
+        </div>
+        <div class="option-card">
+          <h3>Resumo detectado</h3><p>Somente o que importa para continuar.</p>
+          <div class="summary">
+            <div><span>Plataforma</span><b id="sumPi">Detectando...</b></div>
+            <div><span>Modem</span><b id="sumModem">Detectando...</b></div>
+            <div><span>Display</span><b id="sumDisplay">Opcional</b></div>
+            <div><span>Status geral</span><b id="sumStatus">Preparando...</b></div>
+          </div>
+          <div id="nextionManual" class="hidden">
+            <div class="field">
+              <label for="nextionLayout">Layout/HMI existente na Nextion</label>
+              <select id="nextionLayout">
+                <option value="2" selected>ON7LDS / Pi-Star</option>
+                <option value="3">ON7LDS DIY</option>
+              </select>
+              <small class="hint">O PU2PNY-OS não grava o HMI/TFT. Esta opção apenas escolhe os comandos compatíveis com a tela que já está instalada.</small>
+            </div>
+            <button class="btn widebtn" id="confirmNextion" type="button">Usar minha Nextion pela MMDVM</button>
+            <small class="hint" id="nextionHint">Depois da configuração RF, o MMDVM-Display assume a tela e substitui a barra de progresso pelo estado real do rádio.</small>
+          </div>
+          <div class="result hidden" id="hardwareResult"></div>
+        </div>
+      </div>
+      <div class="btnrow"><button class="btn" id="backInternet">← Internet</button><button class="btn" id="retryHardware">Detectar novamente</button><button class="btn primary" id="toBasic" disabled>Ir para configuração básica →</button></div>
+    </div>
+  </section>
+
+  <section id="step3" class="hidden">
+    <div class="panel">
+      <div class="intro"><div class="icon">⚙</div><div><h2>Ajustes essenciais</h2><p>Somente os dados necessários para colocar o rádio em funcionamento. O PU2PNY-OS usa a porta e a velocidade realmente detectadas no MMDVM.</p></div></div>
+      <div class="formgrid">
+        <div class="field"><label for="callsign">Indicativo</label><input id="callsign" placeholder="Ex.: PU2ABC" autocomplete="off" autocapitalize="characters"></div>
+        <div class="field"><label for="dmrid">Radio ID</label><input id="dmrid" inputmode="numeric" placeholder="Ex.: 7240000" autocomplete="off"></div>
+      </div>
+
+      <div class="section-title">Modo de uso</div>
+      <div class="choice-grid">
+        <div class="choice"><input type="radio" name="usemode" id="hotspot" value="hotspot" checked><label for="hotspot"><b>Hotspot</b><small>Uso pessoal</small></label></div>
+        <div class="choice"><input type="radio" name="usemode" id="repeater" value="repeater"><label for="repeater"><b>Repetidora</b><small>Operação duplex</small></label></div>
+      </div>
+
+      <div class="section-title">Frequência</div>
+      <div class="freq">
+        <div class="field"><label id="rxLabel" for="rx">Frequência do hotspot (MHz)</label><input id="rx" inputmode="decimal" placeholder="439.125"></div>
+        <div class="field hidden" id="txWrap"><label for="tx">Frequência TX (MHz)</label><input id="tx" inputmode="decimal" placeholder="439.125"></div>
+      </div>
+
+      <details style="margin-top:12px">
+        <summary><b>Ajustes avançados de RF</b></summary>
+        <div class="formgrid" style="margin-top:10px">
+          <div class="field"><label for="rxOffset">RX Offset (Hz)</label><input id="rxOffset" inputmode="numeric" value="0" placeholder="0"><small class="hint">Use somente para calibração do modem.</small></div>
+          <div class="field"><label for="txOffset">TX Offset (Hz)</label><input id="txOffset" inputmode="numeric" value="0" placeholder="0"><small class="hint">Use somente para calibração do modem.</small></div>
+        </div>
+      </details>
+
+      <div class="section-title">Protocolo principal</div>
+      <div class="choice-grid">
+        <div class="choice"><input type="radio" name="protocol" id="pdstar" value="DSTAR"><label for="pdstar"><b>D‑STAR</b></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pdmr" value="DMR" checked><label for="pdmr"><b>DMR</b></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pysf" value="YSF"><label for="pysf"><b>YSF / C4FM</b><small>Gateway YSF/FCS</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pp25" value="P25"><label for="pp25"><b>P25</b><small>Gateway P25</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="pnxdn" value="NXDN"><label for="pnxdn"><b>NXDN</b><small>Gateway NXDN</small></label></div>
+        <div class="choice"><input type="radio" name="protocol" id="ppocsag" value="POCSAG"><label for="ppocsag"><b>POCSAG</b><small>DAPNET paging</small></label></div>
+      </div>
+
+      <div class="section-title">Rede / servidor</div>
+      <div class="option-card" id="serverCard">
+        <h3 id="serverTitle">Servidor DMR</h3>
+        <p id="serverIntro">Escolha o master/rede. A lista pública é atualizada automaticamente e o último cache válido continua disponível offline.</p>
+        <div class="field">
+          <label>Rede / sistema</label>
+          <div id="networkFilters" class="actions" role="group" aria-label="Família de rede"></div>
+          <input id="serverFilter" type="hidden" value="">
+          <button class="btn" id="serverRefresh" type="button" style="margin-top:10px">↻ Atualizar lista pública</button>
+        </div>
+        <div class="field">
+          <label for="serverSelect">Servidor / refletor</label>
+          <select id="serverSelect"><option value="">Carregando servidores...</option></select>
+          <small class="hint" id="serverHint">Aguardando lista pública.</small>
+        </div>
+        <details id="serverAdvanced" style="margin-top:12px">
+          <summary>Avançado — IP, porta e servidor personalizado</summary>
+          <div class="formgrid">
+            <div class="field"><label for="serverKind">Sistema / rede</label><select id="serverKind"></select></div>
+            <div class="field"><label for="serverAddress">Endereço / hostname</label><input id="serverAddress" placeholder="automático pela lista"></div>
+            <div class="field"><label for="serverPort">Porta</label><input id="serverPort" inputmode="numeric" placeholder="automática pelo protocolo"></div>
+          </div>
+          <small class="hint">Normalmente não é necessário alterar. Use somente para servidor personalizado ou orientação técnica.</small>
+        </details>
+        <div id="serverCustom" class="hidden"></div>
+        <div id="dmrNetworkFields">
+          <div class="notice" id="networkSpecificHelp" style="margin-bottom:12px">Escolha o servidor para ver os campos corretos desta rede.</div>
+          <div class="formgrid">
+            <div class="field">
+              <label id="serverPasswordLabel" for="serverPassword">Senha do master</label>
+              <div class="password-row"><input id="serverPassword" type="password" placeholder="Senha da rede"><button class="btn" id="showServerPass" type="button">Mostrar</button></div>
+              <small class="hint" id="serverPasswordHint"></small>
+            </div>
+            <div class="field"><label for="colorCode">Color Code</label><select id="colorCode"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option></select><small class="hint">O rádio precisa usar o mesmo Color Code.</small></div>
+            <div class="field"><label for="dmrSlot">Time Slot</label><select id="dmrSlot"><option value="2" selected>TS2 — recomendado para hotspot simplex</option><option value="1">TS1</option><option value="both">TS1 + TS2 — repetidora duplex</option></select><small class="hint">Hotspot simplex usa um slot; em repetidora duplex é possível usar os dois.</small></div>
+            <div class="field hidden" id="essidWrap"><label for="essid">Identificação do hotspot / rádio</label><select id="essid"><option value="">Sem sufixo / compatibilidade</option></select><small class="hint">BrandMeister: Rádio 1 = 01, Rádio 2 = 02. O Radio ID programado no rádio continua com 7 dígitos; use frequências diferentes para hotspots diferentes.</small></div>
+            <div class="field hidden" id="xlxModuleWrap"><label for="xlxModule">Módulo XLX</label><select id="xlxModule"></select><small class="hint" id="xlxModuleHint">No XLX026, C é voz DMR. TG 6 no rádio.</small></div>
+            <div class="field hidden" id="bmApiWrap"><label for="bmApiKey">BrandMeister API Key (opcional)</label><div class="password-row"><input id="bmApiKey" type="password" placeholder="Opcional — gerenciamento BrandMeister"><button class="btn" id="showBmApi" type="button">Mostrar</button></div><small class="hint">É uma única API Key/token. Não existe campo API Secret no PU2PNY. A API Key não autentica o hotspot e não substitui a Hotspot Security.</small></div>
+          </div>
+          <details style="margin-top:8px"><summary>Ajuste avançado da rede DMR</summary><div class="field"><label for="serverOptions">Options do master (opcional)</label><input id="serverOptions" placeholder="Somente quando o master exigir opções específicas"></div></details>
+        </div>
+        <div class="field hidden" id="dstarModuleWrap">
+          <label for="dstarModule">Módulo D-Star</label>
+          <select id="dstarModule"></select>
+          <small class="hint">Escolha A–Z. Quando o catálogo informar módulos específicos, o PU2PNY prioriza somente os disponíveis.</small>
+        </div>
+        <div class="result hidden" id="serverResult"></div>
+      </div>
+
+      <div class="section-title">Operação</div>
+      <div class="choice-grid">
+        <div class="choice"><input type="radio" name="operation" id="normal" value="normal" checked><label for="normal"><b>Normal</b><small>Opera no protocolo selecionado</small></label></div>
+        <div class="choice"><input type="radio" name="operation" id="crossmode" value="crossmode" disabled><label for="crossmode"><b>Crossmode</b><small>Planejado — ainda não habilitado nesta Alpha</small></label></div>
+      </div>
+
+      <div class="info" style="margin-top:16px">Ajustes avançados, redes, salas e parâmetros finos ficam fora do primeiro acesso e podem ser configurados depois.</div>
+      <div class="result hidden" id="basicResult"></div>
+      <div class="btnrow"><button class="btn" id="backHardware">← Hardware</button><button class="btn primary" id="saveBasic">Salvar e continuar →</button></div>
+    </div>
+  </section>
+
+  <section id="step4" class="hidden">
+    <div class="panel successbox">
+      <div class="successicon">✓</div>
+      <h2>Configuração básica concluída</h2>
+      <p id="doneMessage">Configuração básica concluída.</p>
+      <div class="summary" style="max-width:650px;margin:20px auto;text-align:left">
+        <div><span>Indicativo</span><b id="doneCall">—</b></div>
+        <div><span>Radio ID</span><b id="doneDmr">—</b></div>
+        <div><span>Modo</span><b id="doneMode">—</b></div>
+        <div><span>Frequência</span><b id="doneFreq">—</b></div>
+        <div><span>Protocolo</span><b id="doneProto">—</b></div>
+        <div><span>Servidor</span><b id="doneServer">—</b></div>
+        <div><span>Operação</span><b id="doneOp">—</b></div>
+      </div>
+      <div class="info">O endereço principal é <b>http://pu2pny.local/</b>. Depois de concluído, esse endereço abre diretamente o painel operacional.</div>
+      <div class="btnrow" style="justify-content:center;margin-top:16px">
+        <a class="btn" href="/wizard?step=1">Alterar rede</a>
+        <a class="btn" href="/wizard?step=2">Rever hardware</a>
+        <a class="btn" href="/wizard?step=3">Editar rádio</a>
+        <a class="btn primary" href="/dashboard">Abrir painel principal →</a>
+      </div>
+      <div class="muted" id="autoDashboard" style="margin-top:12px;text-align:center"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<script>
+const q=id=>document.getElementById(id);
+const titles={
+1:['Primeiro acesso — Internet','Vamos conectar o PU2PNY à internet antes de preparar drivers e hardware.'],
+2:['Preparando hardware','Drivers, MMDVM e display serão preparados automaticamente.'],
+3:['Configuração básica','Defina indicativo, ID, modo de uso, frequência, protocolo e operação.'],
+4:['Conclusão','Configuração básica concluída. Abra o painel principal para operar e ajustar o sistema.']
+};
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('pu2pny-theme',t);q('theme').textContent=t==='dark'?'☀ Claro':'☾ Escuro'}
+q('theme').onclick=function(){setTheme((document.documentElement.getAttribute('data-theme')||'dark')==='dark'?'light':'dark')};
+setTheme(localStorage.getItem('pu2pny-theme')||'dark');
+
+function step(n){
+  for(let i=1;i<=4;i++){
+    q('step'+i).classList.toggle('hidden',i!==n);
+    let nav=q('nav'+i);nav.classList.toggle('active',i===n);nav.classList.toggle('done',i<n);
+    q('nav'+i).querySelector('.num').textContent=i<n?'✓':String(i);
+  }
+  q('title').textContent=titles[n][0];q('subtitle').textContent=titles[n][1];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function getj(url,opt){let ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),15000);try{let r=await fetch(url,Object.assign({cache:'no-store',signal:ctl.signal},opt||{}));let j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Falha na operação');return j}finally{clearTimeout(timer)}}
+
+let lastConnectivity=null,reconnectCandidates=[],alreadyProvisioned=false,autoStepTimer=null,autoStepRemaining=0;
+function showConnectivity(c){
+  lastConnectivity=c;
+  (c.ipv4||[]).forEach(function(ip){if(ip&&String(ip).indexOf('10.43.0.')!==0){let u='http://'+ip;if(reconnectCandidates.indexOf(u)<0)reconnectCandidates.push(u)}});
+  q('netbadge').textContent=c.internet?'Internet conectada':'Internet não conectada';
+  q('internetcard').className='mini '+(c.internet?'ok':'bad');
+  q('internetcard').innerHTML='<b>Internet</b><small>'+(c.internet?'Conectada':'Não conectada')+'</small>';
+  q('apcard').className='mini '+(c.ap_active?'ok':'');
+  q('apcard').innerHTML='<b>AP '+(c.ap_active?'ativo':'desligado')+'</b><small>'+(c.ap_active?(c.ap_ssid+(c.ap_interface?' • '+c.ap_interface:'')):'')+'</small>';
+  q('ethcard').className='mini '+(c.ethernet?'ok':'');
+  q('ethcard').innerHTML='<b>Cabo de rede</b><small>'+(c.ethernet?(c.ethernet_interface||'detectado'):'Não detectado')+'</small>';
+  if(c.wifi&&c.wifi_ssid)q('scanHint').textContent='Wi‑Fi atual: '+c.wifi_ssid+'. Você pode buscar e trocar a rede abaixo.';
+  q('toHardware').disabled=false;
+  q('toHardware').textContent=c.internet?'Continuar para preparar hardware →':'Continuar sem internet →';
+  let multi=(c.wifi_count||0)>=2;
+  q('keepap').disabled=false;
+  q('keepap').checked=multi;
+  q('keepapRow').classList.toggle('hidden',!multi);
+  q('singleWifiNote').classList.toggle('hidden',multi);
+  q('keepapText').textContent='Manter AP pu2pny ativo usando a segunda interface Wi‑Fi';
+}
+async function pollConnectivity(){
+  try{showConnectivity(await getj('/api/connectivity'))}catch(e){}
+}
+async function loadMaintenance(){
+  try{
+    let m=await getj('/api/maintenance');
+    q('autoMaintenance').checked=!!m.enabled;
+    q('maintenanceHint').textContent=m.message||(m.enabled?'Preparação automática ativada.':'Preparação automática desativada.');
+  }catch(e){
+    q('maintenanceHint').textContent='Não foi possível consultar a preparação automática.';
+  }
+}
+q('autoMaintenance').onchange=async function(){
+  let enabled=q('autoMaintenance').checked;
+  q('maintenanceHint').textContent=enabled?'Ativando...':'Desativando...';
+  try{
+    await getj('/api/maintenance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:enabled})});
+    await loadMaintenance();
+  }catch(e){
+    q('autoMaintenance').checked=!enabled;
+    q('maintenanceHint').textContent=e.message;
+  }
+};
+
+async function loadWiFiCountry(){
+  try{let d=await getj('/api/network/country'),v=String(d.country||'BR').toUpperCase();if([...q('wifiCountry').options].some(o=>o.value===v))q('wifiCountry').value=v}catch(_){}
+}
+async function saveWiFiCountry(){
+  let v=q('wifiCountry').value;
+  await getj('/api/network/country',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({country:v})});
+}
+q('wifiCountry').onchange=async()=>{try{await saveWiFiCountry();await loadWifi()}catch(e){q('scanHint').textContent=e.message}};
+
+function selectedSSID(){
+  let sel=q('ssidSelect');
+  if(sel.value==='__manual__')return q('ssidManual').value.trim();
+  return sel.value.trim();
+}
+function setManualSSID(){
+  let manual=q('ssidSelect').value==='__manual__';
+  q('manualSsidWrap').classList.toggle('hidden',!manual);
+}
+let wifiLoaded=false;
+function renderNetworks(a){
+  let sel=q('ssidSelect'),hint=q('scanHint');
+  sel.innerHTML='';
+  if(Array.isArray(a)&&a.length){
+    a.forEach(function(x){
+      let o=document.createElement('option');
+      o.value=x.ssid;
+      o.dataset.bssid=x.bssid||'';
+      o.textContent=x.ssid+(x.signal?' · '+x.signal+'%':'')+(x.channel?' · canal '+x.channel:'')+(x.frequency_mhz?' · '+x.frequency_mhz+' MHz':'')+(x.security?' · '+x.security:'');
+      sel.appendChild(o)
+    });
+    hint.textContent=a.length+' rede(s) encontrada(s). Selecione uma e digite a senha.';
+  }else{
+    hint.textContent='Nenhuma rede apareceu. Tente novamente ou informe uma rede oculta.';
+  }
+  let manual=document.createElement('option');manual.value='__manual__';manual.textContent='Outra rede / rede oculta...';sel.appendChild(manual);
+  setManualSSID();wifiLoaded=true;
+}
+async function loadWifi(){
+  let btn=q('wifiScan'),hint=q('scanHint'),deadline=Date.now()+45000,first=true;
+  try{await saveWiFiCountry()}catch(_){};
+  btn.disabled=true;btn.textContent='Buscando...';hint.textContent='Buscando redes Wi‑Fi. Em aparelhos com uma única placa, o AP pode reiniciar rapidamente durante a busca.';
+  while(Date.now()<deadline){
+    try{
+      let st=await getj('/api/wifi/scan'+(first?'?refresh=1':''));
+      first=false;
+      if(st.state==='ready'){renderNetworks(st.networks||[]);btn.disabled=false;btn.textContent='↻ Buscar redes';return}
+      if(st.state==='error')throw new Error(st.message||'Falha ao buscar redes');
+      hint.textContent=st.message||'Buscando redes Wi‑Fi...';
+    }catch(e){
+      // A única interface Wi-Fi pode reiniciar o AP durante alguns segundos.
+      // Continuamos tentando até o AP voltar em vez de mostrar "Failed to fetch".
+      hint.textContent='A placa Wi‑Fi está sendo usada para a busca. Aguarde alguns segundos...';
+    }
+    await new Promise(r=>setTimeout(r,1200))
+  }
+  renderNetworks([]);
+  hint.textContent='A busca demorou mais que o esperado. Tente Buscar redes novamente ou informe a rede manualmente.';
+  btn.disabled=false;btn.textContent='↻ Buscar redes';
+}
+q('ssidSelect').onchange=setManualSSID;
+q('wifiScan').onclick=loadWifi;
+q('showPass').onclick=function(){
+  let p=q('wpass'),show=p.type==='password';
+  p.type=show?'text':'password';
+  q('showPass').textContent=show?'Ocultar':'Mostrar';
+};
+let reconnectDeadline=0;
+function showReconnect(ssid){
+  let ov=q('reconnectOverlay');ov.hidden=false;
+  reconnectDeadline=Date.now()+180000;
+  q('reconnectText').innerHTML='Rede <b>'+esc(ssid)+'</b> recebida. O PU2PNY validará associação e IP antes de concluir a troca. Esta tela procurará o novo endereço automaticamente.';
+}
+async function reachable(base){
+  try{
+    let ctl=window.AbortController?new AbortController():null,t=ctl?setTimeout(()=>ctl.abort(),1800):null;
+    await fetch(base+'/healthz?ts='+Date.now(),{mode:'no-cors',cache:'no-store',signal:ctl?ctl.signal:undefined});
+    if(t)clearTimeout(t);return true
+  }catch(_){return false}
+}
+async function continueAfterReconnect(){
+  let candidates=['http://pu2pny.local'].concat(reconnectCandidates);
+  if(location.hostname!=='10.43.0.1')candidates.unshift(location.origin);
+  for(let base of [...new Set(candidates)]){
+    if(await reachable(base)){
+      location.replace(base+(alreadyProvisioned?'/internet':'/wizard?step=2'));
+      return true
+    }
+  }
+  return false
+}
+async function watchWiFiConnection(ssid,eta){
+  let box=q('wifiResult'),offlineShown=false,failed=false;
+  showReconnect(ssid);
+  while(true){
+    try{
+      let st=await getj('/api/network/connect/status');
+      if(st.state==='connected'){
+        (st.resume_urls||[]).forEach(function(u){u=String(u||'').replace(/\/$/,'');if(u&&reconnectCandidates.indexOf(u)<0)reconnectCandidates.push(u)});
+        localStorage.removeItem('pu2pny-pending-ssid');
+        q('reconnectText').innerHTML='<b>Wi‑Fi conectado.</b><br>Localizando o PU2PNY na nova rede para continuar automaticamente...';
+        // The current request may still be through the AP. Prefer mDNS after the
+        // client receives its LAN address; never require a manual refresh.
+        for(let i=0;i<90;i++){if(await continueAfterReconnect())return;await new Promise(r=>setTimeout(r,1200))}
+      }
+      if(st.state==='error'||st.state==='recovery_ap'){
+        failed=true;localStorage.removeItem('pu2pny-pending-ssid');
+        q('reconnectOverlay').hidden=true;
+        box.className='result error';
+        box.innerHTML='<b>A conexão Wi‑Fi não foi concluída.</b><br>'+esc(st.message||'O perfil foi preservado e o AP pu2pny voltou para recuperação. Confira a senha e tente novamente.');
+        q('wifiConnect').disabled=false;
+        return
+      }
+      if(st.message)q('reconnectText').textContent=st.message+' Aguarde; a próxima página será aberta automaticamente.';
+      offlineShown=false
+    }catch(e){
+      if(!offlineShown){q('reconnectText').innerHTML='<b>O PU2PNY está trocando de rede.</b><br>Aguardando ele reaparecer automaticamente...';offlineShown=true}
+      if(await continueAfterReconnect())return
+    }
+    if(Date.now()>reconnectDeadline&&!failed){
+      q('reconnectText').innerHTML='<b>A rede está demorando mais que o normal.</b><br>O PU2PNY continua sendo procurado automaticamente. Se a associação falhar, o AP pu2pny será restaurado.';
+      reconnectDeadline=Date.now()+180000;
+    }
+    await new Promise(r=>setTimeout(r,1200))
+  }
+}
+
+q('wifiConnect').onclick=async function(){
+  let ssid=selectedSSID(),box=q('wifiResult');
+  if(!ssid){box.className='result error';box.textContent='Selecione uma rede Wi‑Fi.';return}
+  q('wifiConnect').disabled=true;
+  localStorage.setItem('pu2pny-pending-ssid',ssid);
+  box.className='result';box.textContent='Validando a senha e preparando a troca de rede...';
+  try{
+    let opt=q('ssidSelect').selectedOptions[0],bssid=(q('ssidSelect').value==='__manual__'||!opt)?'':(opt.dataset.bssid||'');
+    let accepted=await getj('/api/network/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ssid:ssid,password:q('wpass').value,bssid:bssid,keep_ap:q('keepap').checked})});
+    (accepted.resume_urls||[]).forEach(function(u){u=String(u||'').replace(/\/$/,'');if(u&&reconnectCandidates.indexOf(u)<0)reconnectCandidates.push(u)});
+    watchWiFiConnection(ssid,accepted.eta_seconds)
+  }catch(e){
+    // During a one-radio AP -> client handoff the browser can lose the HTTP
+    // response even though the request already reached PU2PNY. Keep watching
+    // for mDNS/new connectivity instead of immediately reporting "Failed to fetch".
+    box.className='result';box.textContent='A conexão local mudou. Aguardando o PU2PNY reaparecer automaticamente...';
+    watchWiFiConnection(ssid,75)
+  }
+};
+q('refreshEthernet').onclick=async function(){
+  q('refreshEthernet').disabled=true;q('refreshEthernet').textContent='Reverificando...';
+  try{let j=await getj('/api/network/refresh',{method:'POST'});if(j.connectivity)showConnectivity(j.connectivity)}catch(e){}
+  q('refreshEthernet').disabled=false;q('refreshEthernet').textContent='Reverificar cabo e internet'
+};
+q('toHardware').onclick=function(){step(2);startHardware()};
+q('backInternet').onclick=function(){location.href='/wizard?step=1'};
+q('retryHardware').onclick=function(){clearAutoStep();startHardware()};
+q('toBasic').onclick=function(){clearAutoStep();if(alreadyProvisioned){location.href='/hotspot';return}step(3);loadCurrentConfig().then(()=>{if(!serverCatalog.length)loadServers(false)})};
+q('backHardware').onclick=function(){step(2)};
+for(let i=1;i<=4;i++){
+  q('nav'+i).style.cursor='pointer';
+  q('nav'+i).onclick=function(){
+    if(i===4)location.href='/wizard';
+    else location.href='/wizard?step='+i;
+  };
+}
+
+function taskState(id,state,text){
+  let e=q(id);e.classList.remove('done','active');
+  if(state)e.classList.add(state);
+  e.querySelector('em').textContent=text;
+  e.querySelector('.circle').textContent=state==='done'?'✓':'•';
+}
+function clearAutoStep(){
+  if(autoStepTimer){clearInterval(autoStepTimer);autoStepTimer=null}
+  autoStepRemaining=0;
+}
+function scheduleHardwareAdvance(){
+  if(autoStepTimer)return;
+  autoStepRemaining=5;
+  q('toBasic').textContent='Ir para configuração básica agora · automático em 5 s →';
+  autoStepTimer=setInterval(function(){
+    autoStepRemaining--;
+    if(autoStepRemaining<=0){
+      clearAutoStep();q('toBasic').textContent='Ir para configuração básica →';
+      step(3);loadCurrentConfig().then(()=>{if(!serverCatalog.length)loadServers(false)});
+      return
+    }
+    q('toBasic').textContent='Ir para configuração básica agora · automático em '+autoStepRemaining+' s →';
+  },1000)
+}
+function hardwareSummary(s){
+  let pi=s.raspberry&&s.raspberry.model?s.raspberry.model:'Raspberry Pi';
+  let m=s.mmdvm||{},d=s.display||{};
+  q('sumPi').textContent=pi;
+  q('sumModem').textContent=m.detected?'MMDVM identificado':'MMDVM não confirmado';
+  q('sumDisplay').textContent=d.detected?(d.class==='nextion_mmdvm'?('Nextion via MMDVM configurada automaticamente'+(d.model?' • '+d.model:'')):(d.model||'Display identificado')):(d.state==='mmdvm_display_candidate'?'Nextion detectada como candidata; configuração automática em andamento':'Nenhum display confirmado');
+  let canForce=m.detected&&!d.detected&&d.state==='mmdvm_display_candidate';
+  q('nextionManual').classList.toggle('hidden',true);
+  if(canForce)q('sumDisplay').textContent='Nextion via MMDVM: configuração automática após iniciar o rádio';
+  if(m.detected){
+    // A confirmed MMDVM protocol reply is sufficient to complete the Hardware
+    // step. Any stale activation error belongs to the later RF/Protocol step
+    // and must not block or visually contaminate hardware discovery.
+    q('hardwareResult').className='result success';
+    q('hardwareResult').textContent='MMDVM detectada. O assistente avançará automaticamente em 5 segundos.';
+    q('sumStatus').textContent='Pronto para continuar';
+    taskState('taskMmdvm','done','Concluído');
+    taskState('taskDisplay',(d.detected||d.state==='mmdvm_display_candidate')?'done':'',d.detected?'Reconhecido':(d.state==='mmdvm_display_candidate'?'Configuração automática':'Não detectado'));
+    taskState('taskReady','done','Concluído');
+    q('toBasic').disabled=false;
+    scheduleHardwareAdvance()
+  }else{
+    clearAutoStep();
+    q('sumStatus').textContent='Revise o modem';
+    taskState('taskMmdvm','active','Não confirmado');
+    taskState('taskDisplay','',d.detected?'Detectado':'Opcional');
+    taskState('taskReady','','Aguardando');
+    q('toBasic').disabled=true
+  }
+}
+
+q('confirmNextion').onclick=async function(){
+  q('confirmNextion').disabled=true;
+  q('hardwareResult').className='result';
+  q('hardwareResult').textContent='Habilitando Nextion pela porta de display da MMDVM...';
+  try{
+    await getj('/api/display/override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true,layout:Number(q('nextionLayout').value||2)})});
+    let st=await getj('/api/hardware/status');
+    hardwareSummary(st);
+    q('hardwareResult').className='result success';
+    q('hardwareResult').innerHTML='<b>Nextion preparada via MMDVM.</b><br>O HMI/TFT não foi sobrescrito. Depois de salvar RF, o MMDVM-Display oficial assume a tela e mostra o estado do rádio.';
+  }catch(e){
+    q('hardwareResult').className='result error';q('hardwareResult').textContent=e.message;
+  }
+  q('confirmNextion').disabled=false;
+};
+
+async function startHardware(){
+  q('toBasic').disabled=true;
+  if(lastConnectivity&&lastConnectivity.internet){
+    taskState('taskInternet','done','Concluído');
+    q('taskInternet').querySelector('small').textContent='Conexão confirmada.';
+  }else{
+    taskState('taskInternet','','Opcional');
+    q('taskInternet').querySelector('small').textContent='Sem internet. A detecção local continua normalmente.';
+  }q('hardwareResult').className='result hidden';
+  q('bar').style.width='12%';q('percent').textContent='12%';
+  taskState('taskDrivers','active','Preparando');taskState('taskMmdvm','','Aguardando');taskState('taskDisplay','','Aguardando');taskState('taskReady','','Aguardando');
+  try{await getj('/api/hardware/scan',{method:'POST'})}catch(e){
+    q('hardwareResult').className='result';q('hardwareResult').textContent='A conexão local mudou durante o início da detecção. Aguardando o PU2PNY responder...'
+  }
+  let deadline=Date.now()+110000;
+  while(Date.now()<deadline){
+    try{
+      let s=await getj('/api/hardware/status');
+      if(s.state==='preparing'){q('bar').style.width='35%';q('percent').textContent='35%';taskState('taskDrivers','active','Baixando / preparando')}
+      else if(s.state==='scanning'){q('bar').style.width='72%';q('percent').textContent='72%';taskState('taskDrivers','done','Concluído');taskState('taskMmdvm','active','Detectando')}
+      else if(s.state==='complete'){
+        q('bar').style.width='100%';q('percent').textContent='100%';taskState('taskDrivers','done','Concluído');hardwareSummary(s);return
+      }else if(s.state==='error'){
+        if(s.mmdvm&&s.mmdvm.detected){
+          hardwareSummary(s);return
+        }
+        clearAutoStep();
+        q('hardwareResult').className='result error';q('hardwareResult').textContent=s.message||'Falha na detecção.';return
+      }
+    }catch(e){
+      q('hardwareResult').className='result';q('hardwareResult').textContent='Reconectando ao painel enquanto a detecção continua...'
+    }
+    await new Promise(r=>setTimeout(r,900))
+  }
+  q('hardwareResult').className='result error';q('hardwareResult').textContent='A detecção demorou mais que o esperado. Use Detectar novamente.'
+}
+
+
+for(let i=1;i<=99;i++){let o=document.createElement('option');o.value=String(i).padStart(2,'0');o.textContent='Rádio '+i+' ('+o.value+')';q('essid').appendChild(o)}
+for(let n=65;n<=90;n++){
+  let letter=String.fromCharCode(n);
+  for(let id of ['xlxModule','dstarModule']){let o=document.createElement('option');o.value=letter;o.textContent=letter;q(id).appendChild(o)}
+}
+q('xlxModule').value='C';q('dstarModule').value='D';
+let serverCatalog=[],serverLoadedProtocol='',networkFamily='';
+function selectedProtocol(){return document.querySelector('input[name=protocol]:checked').value}
+function serverOperational(proto){return ['DMR','DSTAR','YSF','P25','NXDN','POCSAG'].includes(proto)}
+function renderServers(items,proto){
+  serverCatalog=Array.isArray(items)?items:[];
+  let kinds=proto==='DMR'?['XLX','BrandMeister','TGIF','FreeDMR','DMR+','HBLink']:proto==='DSTAR'?['XLX','DPlus','DCS','DExtra']:Array.from(new Set(serverCatalog.map(x=>x.kind)));let bar=q('networkFilters');bar.innerHTML='';
+  for(let kind of ['',...kinds]){let b=document.createElement('button');b.type='button';b.className='btn '+(networkFamily===kind?'primary':'');b.textContent=kind==='DPlus'?'REF / DPlus':kind==='DExtra'?'XRF / DExtra':kind||'Todos';b.onclick=()=>{networkFamily=kind;renderServers(serverCatalog,proto)};bar.appendChild(b)}
+  let sel=q('serverSelect'),current=sel.value;
+  sel.innerHTML='';
+  let list=serverCatalog.filter(x=>(!networkFamily||x.kind===networkFamily));list.sort((a,b)=>(a.kind==='XLX'?0:1)-(b.kind==='XLX'?0:1));
+  list.forEach(function(x){
+    let o=document.createElement('option');
+    o.value='idx:'+serverCatalog.indexOf(x);
+    o.textContent=(x.priority===0?'★ ':'')+(x.name||x.address)+(x.description&&x.description!==x.name?' · '+x.description:'');
+    sel.appendChild(o)
+  });
+  if(list.length){
+    let custom=document.createElement('option');custom.value='__custom__';custom.textContent='Servidor personalizado (Avançado)...';sel.appendChild(custom);
+  }else{
+    let waiting=document.createElement('option');waiting.value='';waiting.textContent='Lista local ainda não disponível';sel.appendChild(waiting);
+  }
+  if(current&&[...sel.options].some(o=>o.value===current))sel.value=current;
+  else if(sel.options.length)sel.selectedIndex=0;
+  syncCustomKinds(proto);
+  serverSelectionChanged();
+  q('serverHint').textContent=serverCatalog.length+' servidor(es) pré-carregados para '+(proto==='DSTAR'?'D-Star':proto)+'. O gateway será validado antes de salvar.';
+}
+function syncCustomKinds(proto){
+  let map={
+    DMR:[['BrandMeister','BrandMeister'],['XLX','XLX'],['TGIF','TGIF'],['FreeDMR','FreeDMR'],['DMR+','DMR+'],['HBLink','HBLink'],['DMR','DMR / Homebrew']],
+    DSTAR:[['DPlus','REF / DPlus'],['DExtra','XRF / DExtra'],['DCS','DCS'],['XLX','XLX']],
+    YSF:[['YSF','YSF'],['FCS','FCS']],P25:[['P25','P25']],NXDN:[['NXDN','NXDN']],POCSAG:[['DAPNET','DAPNET']]
+  };
+  let sel=q('serverKind'),old=sel.value,items=map[proto]||[[proto,proto]];
+  sel.innerHTML=items.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');
+  if(items.some(x=>x[0]===old))sel.value=old;
+}
+function selectedServerObject(){
+  if(q('serverSelect').value==='__custom__')return {name:'Personalizado',kind:q('serverKind').value,address:q('serverAddress').value.trim(),port:Number(q('serverPort').value||0)};
+  let i=Number((q('serverSelect').value||'').replace('idx:',''));return serverCatalog[i]||null
+}
+function applyNetworkRequirements(x){
+  x=x||{};let kind=x.kind||'DMR';
+  q('serverPasswordLabel').textContent=x.password_label||(kind==='BrandMeister'?'Hotspot Security':'Senha do master');
+  q('serverPasswordHint').textContent=kind==='BrandMeister'?'Obrigatória e diferente da senha do SelfCare.':(kind==='DAPNET'?'Use a AuthKey fornecida pelo DAPNET para seu indicativo.':(kind==='TGIF'?'Use sua chave TGIF; passw0rd funciona no modo legado quando permitido.':(kind==='XLX'?'Senha padrão do XLX normalmente é passw0rd.':'')));
+  let proto=selectedProtocol();
+  q('networkSpecificHelp').textContent=x.help||(proto==='DMR'?(kind==='XLX'?'XLX será conectado pelo DMRGateway.':kind+' será conectado pelo DMRGateway.'):'Gateway '+proto+' será configurado automaticamente.');
+  q('xlxModuleWrap').classList.toggle('hidden',proto!=='DMR'||kind!=='XLX');
+  q('dstarModuleWrap').classList.toggle('hidden',proto!=='DSTAR');
+  q('essidWrap').classList.toggle('hidden',proto!=='DMR'||!(x.essid_supported||kind==='BrandMeister'||kind==='TGIF'||kind==='DMR'));
+  q('bmApiWrap').classList.toggle('hidden',proto!=='DMR'||kind!=='BrandMeister');
+  if(proto==='DMR'&&kind==='XLX')q('xlxModule').value=x.default_module||'C';
+  if(proto==='DSTAR'){
+    let allowed=Array.isArray(x.modules)&&x.modules.length?x.modules:Array.from({length:26},(_,i)=>String.fromCharCode(65+i));
+    let sel=q('dstarModule'),current=sel.value;sel.innerHTML='';
+    for(let letter of allowed){let o=document.createElement('option');o.value=letter;o.textContent=letter;sel.appendChild(o)}
+    sel.value=allowed.includes(x.default_module)?x.default_module:(allowed.includes(current)?current:allowed[0]||'D');
+  }
+  if(kind==='BrandMeister'&&!x.default_password)q('serverPassword').value='';
+}
+function serverSelectionChanged(){
+  let custom=q('serverSelect').value==='__custom__';
+  q('serverCustom').classList.toggle('hidden',!custom);
+  if(custom){
+    q('serverAdvanced').open=true;
+    q('serverAddress').value='';q('serverPort').value='';
+    applyNetworkRequirements({kind:q('serverKind').value,essid_supported:true});return
+  }
+  let x=selectedServerObject();
+  if(!x){applyNetworkRequirements({kind:q('serverKind').value});return}
+  if([...q('serverKind').options].some(o=>o.value===x.kind))q('serverKind').value=x.kind||q('serverKind').value;
+  q('serverAddress').value=x.address||'';
+  q('serverPort').value=x.port||'';
+  q('serverPassword').value=x.default_password||'';
+  applyNetworkRequirements(x);
+}
+async function loadServers(refresh){
+  let proto=selectedProtocol(),box=q('serverResult');
+  serverLoadedProtocol=proto;
+  q('serverTitle').textContent='Servidor '+(proto==='DSTAR'?'D‑STAR':proto);
+  q('dmrNetworkFields').classList.toggle('hidden',proto!=='DMR');
+  q('dstarModuleWrap').classList.toggle('hidden',proto!=='DSTAR');
+  box.className='result';box.textContent=refresh?'Atualizando lista pública...':'Carregando lista pública...';
+  try{
+    let j=await getj('/api/servers?protocol='+encodeURIComponent(proto),refresh?{method:'POST'}:undefined);
+    if(proto!==serverLoadedProtocol)return;
+    renderServers(j.servers||[],proto);
+    box.className='result '+(serverOperational(proto)?'success':'');
+    box.textContent='Catálogo '+(proto==='DSTAR'?'D-Star':proto)+' carregado. A rede será aplicada e testada ao salvar.';
+    setTimeout(()=>box.classList.add('hidden'),3500)
+  }catch(e){box.className='result error';box.textContent='Não foi possível atualizar agora. '+e.message}
+}
+function protocolChanged(){
+  networkFamily="";serverCatalog=[];serverLoadedProtocol="";
+  let b=q("basicResult");b.className="result hidden";b.textContent="";
+  let sr=q("serverResult");sr.className="result";sr.textContent="Carregando o protocolo selecionado...";
+  q("serverPassword").value="";q("serverOptions").value="";
+  loadServers(false)
+}
+document.querySelectorAll('input[name=protocol]').forEach(x=>x.addEventListener('change',protocolChanged));
+// Servidores são pré-carregados; não há campo de pesquisa.
+q('serverSelect').onchange=serverSelectionChanged;
+q('serverKind').onchange=serverSelectionChanged;
+q('serverRefresh').onclick=function(){loadServers(true)};
+q('showServerPass').onclick=function(){let p=q('serverPassword'),show=p.type==='password';p.type=show?'text':'password';q('showServerPass').textContent=show?'Ocultar':'Mostrar'};
+q('showBmApi').onclick=function(){let p=q('bmApiKey'),show=p.type==='password';p.type=show?'text':'password';q('showBmApi').textContent=show?'Ocultar':'Mostrar'};
+
+function syncUseMode(){
+  let rep=q('repeater').checked;
+  q('txWrap').classList.toggle('hidden',!rep);
+  q('rxLabel').textContent=rep?'Frequência RX (MHz)':'Frequência do hotspot (MHz)';
+  if(!rep)q('tx').value=q('rx').value;
+}
+q('hotspot').onchange=syncUseMode;q('repeater').onchange=syncUseMode;
+q('rx').oninput=function(){if(q('hotspot').checked)q('tx').value=q('rx').value};
+async function loadCurrentConfig(){
+  try{
+    let c=await getj('/api/config');
+    if(c.callsign)q('callsign').value=c.callsign;
+    if(c.dmr_id)q('dmrid').value=c.dmr_id;
+    if(c.use_mode==='repeater')q('repeater').checked=true;else q('hotspot').checked=true;
+    if(c.rx_hz)q('rx').value=(Number(c.rx_hz)/1000000).toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+    if(c.tx_hz)q('tx').value=(Number(c.tx_hz)/1000000).toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+    q('rxOffset').value=String(c.rx_offset_hz||0);
+    q('txOffset').value=String(c.tx_offset_hz||0);
+    let p=document.querySelector('input[name=protocol][value="'+(c.protocol||'DMR')+'"]');if(p)p.checked=true;
+    let o=document.querySelector('input[name=operation][value="'+(c.operation||'normal')+'"]');if(o)o.checked=true;
+    syncUseMode();
+    await loadServers(false);
+    if(c.server_name){
+      let idx=serverCatalog.findIndex(x=>x.name===c.server_name||((x.address||'')===c.server_address&&Number(x.port||0)===Number(c.server_port||0)));
+      if(idx>=0){q('serverSelect').value='idx:'+idx;serverSelectionChanged()}
+      else{q('serverSelect').value='__custom__';serverSelectionChanged();q('serverAddress').value=c.server_address||'';q('serverPort').value=c.server_port||''}
+    }
+    if(c.color_code!==undefined)q('colorCode').value=String(c.color_code);
+    if(c.dmr_slot)q('dmrSlot').value=c.dmr_slot;
+    if(c.xlx_module){q('xlxModule').value=c.xlx_module;q('dstarModule').value=c.xlx_module;}
+    if(c.essid!==undefined)q('essid').value=c.essid||'';
+    if(c.bm_api_configured)q('bmApiKey').placeholder='API Key já configurada — deixe vazio para preservar';
+  }catch(e){syncUseMode()}
+}
+
+function wizardOperation(title,message){
+  let old=q('wizardOperationOverlay');if(old)old.remove();
+  let ov=document.createElement('div');ov.id='wizardOperationOverlay';ov.style.cssText='position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,.66);display:grid;place-items:center;padding:18px';
+  let box=document.createElement('div');box.style.cssText='width:min(560px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 22px 70px rgba(0,0,0,.38)';
+  box.innerHTML='<h2 style="margin-top:0">'+esc(title)+'</h2><div style="height:7px;background:var(--card2);border-radius:999px;overflow:hidden"><i id="wizardOpPulse" style="display:block;width:34%;height:100%;background:var(--accent);animation:wizop 1.2s ease-in-out infinite alternate"></i></div><p id="wizardOpMsg">'+esc(message)+'</p><button class="btn hidden" id="wizardOpClose">Fechar</button>';
+  let st=document.createElement('style');st.textContent='@keyframes wizop{from{transform:translateX(-90%)}to{transform:translateX(230%)}}';ov.appendChild(st);ov.appendChild(box);document.body.appendChild(ov);
+  function finish(kind,msg){q('wizardOpMsg').textContent=msg;let p=q('wizardOpPulse');p.style.animation='none';p.style.transform='none';p.style.width='100%';p.style.background=kind==='done'?'var(--green)':'var(--red)';let b=q('wizardOpClose');b.classList.remove('hidden');b.onclick=function(){ov.remove()}}
+  return {step:function(msg){q('wizardOpMsg').textContent=msg||'Aplicando…'},done:function(msg){finish('done',msg||'Concluído.');setTimeout(function(){if(ov.parentNode)ov.remove()},1000)},error:function(msg){finish('error',msg||'Não foi possível concluir.')}}
+}
+
+q('saveBasic').onclick=async function(){
+  let serverCustom=q('serverSelect').value==='__custom__',serverObj=null;
+  if(!serverCustom){let i=Number((q('serverSelect').value||'').replace('idx:',''));serverObj=serverCatalog[i]||null}
+  let selected=selectedServerObject()||{},kind=serverCustom?q('serverKind').value:(selected.kind||'DMR');
+  let data={
+    callsign:q('callsign').value.trim().toUpperCase(),
+    dmr_id:q('dmrid').value.trim(),
+    use_mode:document.querySelector('input[name=usemode]:checked').value,
+    rx:q('rx').value.trim(),
+    tx:q('repeater').checked?q('tx').value.trim():q('rx').value.trim(),
+    rx_offset:q('rxOffset').value.trim()||'0',
+    tx_offset:q('txOffset').value.trim()||'0',
+    protocol:selectedProtocol(),
+    operation:document.querySelector('input[name=operation]:checked').value,
+    server_name:serverCustom?'Personalizado':((serverObj&&serverObj.name)||''),
+    server_address:q('serverAddress').value.trim()||((serverObj&&serverObj.address)||''),
+    server_port:Number(q('serverPort').value||((serverObj&&serverObj.port)||0)),
+    server_password:q('serverPassword').value,
+    server_options:q('serverOptions').value.trim(),
+    network_kind:kind,
+    color_code:Number(q('colorCode').value),
+    dmr_slot:q('dmrSlot').value,
+    xlx_module:selectedProtocol()==='DSTAR'?q('dstarModule').value:(kind==='XLX'?q('xlxModule').value:''),
+    essid:q('essidWrap').classList.contains('hidden')?'':q('essid').value,
+    bm_api_key:kind==='BrandMeister'?q('bmApiKey').value.trim():''
+  };
+  let box=q('basicResult');box.className='result';box.textContent='Aplicando RF, MMDVMHost e gateway '+(data.protocol==='DSTAR'?'D-Star':data.protocol)+'...';q('saveBasic').disabled=true;
+  let op=wizardOperation('Salvando e ativando '+(data.protocol==='DSTAR'?'D-Star':data.protocol),'Validando configuração antes de alterar o rádio…');
+  try{
+    await getj('/api/basic/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    op.step('Configuração aceita. Aplicando RF, MMDVMHost e gateway com rollback…');
+    let deadline=Date.now()+90000;
+    while(Date.now()<deadline){
+      let s=await getj('/api/rf');
+      op.step(s.message||'Aguardando confirmação dos serviços…');
+      if(s.state==='applied'){
+        box.className='result success';box.textContent=s.message||'Configuração concluída.';op.done(box.textContent);
+        await loadConclusion();step(4);q('saveBasic').disabled=false;
+        q('autoDashboard').textContent='Abrindo o painel principal em 5 segundos...';
+        setTimeout(function(){location.href='/dashboard'},5000);return
+      }
+      if(s.state==='error'){throw new Error(s.message||'Não foi possível aplicar')}
+      await new Promise(r=>setTimeout(r,600))
+    }
+    throw new Error('A validação demorou mais que o esperado.')
+  }catch(e){box.className='result error';box.textContent=e.message;op.error(e.message);q('saveBasic').disabled=false}
+};
+
+function mhz(hz){return hz?((Number(hz)/1000000).toFixed(6).replace(/0+$/,'').replace(/\.$/,''))+' MHz':'—'}
+async function loadConclusion(){
+  try{
+    let c=await getj('/api/config');
+    q('doneCall').textContent=c.callsign||'—';q('doneDmr').textContent=c.dmr_id||'—';
+    q('doneMode').textContent=c.use_mode==='repeater'?'Repetidora':'Hotspot';
+    q('doneFreq').textContent=c.use_mode==='repeater'?(mhz(c.rx_hz)+' / '+mhz(c.tx_hz)):mhz(c.rx_hz);
+    q('doneProto').textContent=c.protocol||'—';q('doneServer').textContent=c.server_name||((c.network_state==='rf-only')?'RF local / sem gateway':'—');q('doneOp').textContent=c.operation==='crossmode'?'Crossmode':'Normal';
+    q('doneMessage').textContent=c.operation==='crossmode'?'Base pronta e perfil Crossmode registrado.':'Configuração básica concluída e motor RF validado.'
+  }catch(e){}
+}
+function initLanguageWelcome(force){
+  let ov=q('languageWelcome'),sel=q('welcomeLanguage'),btn=q('welcomeContinue');
+  if(!force&&localStorage.getItem('pu2pny-language-welcome')==='1'){ov.hidden=true;return}
+  ov.hidden=false;sel.value=localStorage.getItem('pu2pny-language')||'pt';
+  function copy(){
+    let v=sel.value,dict={
+      pt:['Bem-vindo / Welcome','Escolha o idioma / Choose your language','Continuar / Continue'],
+      en:['Bem-vindo / Welcome','Escolha o idioma / Choose your language','Continuar / Continue'],
+      es:['Bienvenido / Welcome','Elija el idioma / Choose your language','Continuar / Continue']
+    },t=dict[v]||dict.pt;
+    q('welcomeTitle').textContent=t[0];q('welcomeText').textContent=t[1];btn.textContent=t[2]
+  }
+  sel.onchange=copy;copy();
+  btn.onclick=function(){
+    let v=sel.value;localStorage.setItem('pu2pny-language',v);localStorage.setItem('pu2pny-language-welcome','1');
+    if(q('language'))q('language').value=v;ov.hidden=true;
+    if(window.translateNavigation)window.translateNavigation()
+  }
+}
+async function boot(){
+  try{let vs=await getj('/api/status');alreadyProvisioned=!!vs.provisioned;if(q('versionBadge'))q('versionBadge').textContent=vs.version||'PU2PNY-OS'}catch(_){}
+  initLanguageWelcome(!alreadyProvisioned);
+  await pollConnectivity();
+  await loadMaintenance();
+  const params=new URLSearchParams(location.search);
+  const requested=Number(params.get('step')||0);
+  let st={};
+  try{st=await getj('/api/status')}catch(e){}
+  alreadyProvisioned=!!st.provisioned;
+  if(st.provisioned)await loadCurrentConfig();
+  if(requested>=1&&requested<=3){
+    step(requested);
+    if(requested===1){
+      if(alreadyProvisioned){q('toHardware').textContent='Voltar para Internet →';q('toHardware').onclick=function(){location.href='/internet'}}
+      loadWiFiCountry().then(loadWifi)
+    }
+    if(requested===2)startHardware();
+  }else if(st.provisioned){
+    await loadConclusion();step(4);
+  }else{
+    step(1);q('scanHint').textContent='Preparando a busca Wi‑Fi...';await loadWiFiCountry();loadWifi();
+  }
+  if(requested===3&&!serverCatalog.length)loadServers(false);
+  try{
+    let n=await getj('/api/network/connect/status');
+    if(n.state==='connected'){
+      (n.resume_urls||[]).forEach(function(u){if(u&&reconnectCandidates.indexOf(u)<0)reconnectCandidates.push(u)});
+      localStorage.removeItem('pu2pny-pending-ssid');
+      let box=q('wifiResult');box.className='result success';
+      let access=(n.resume_urls&&n.resume_urls.length?n.resume_urls[0]:"http://pu2pny.local");box.innerHTML="<b>Wi‑Fi conectado"+(n.ssid?" à "+esc(n.ssid):"")+".</b><br>Continue a configuração. Acesso normal: <b>"+esc(access)+"</b>. O endereço 10.43.0.1 só existe enquanto o AP pu2pny estiver ativo."; 
+      if(n.connectivity)showConnectivity(n.connectivity)
+    }else if(n.state==='error'||n.state==='recovery_ap'){
+      localStorage.removeItem('pu2pny-pending-ssid');
+      let box=q('wifiResult');box.className='result error';
+      box.innerHTML='<b>A última tentativa de Wi‑Fi falhou.</b><br>'+(n.message||'Confira a senha e tente novamente.');
+    }
+  }catch(e){}
+  setInterval(pollConnectivity,3000);
+  syncUseMode();
+}
+boot();
+</script>
+<script src="/ui-language.js"></script></body></html>
+
