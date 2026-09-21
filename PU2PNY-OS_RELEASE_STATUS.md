@@ -557,3 +557,9 @@ Nenhum item novo é HW PASS neste momento. Direct e Histórico permanecem baseli
 - **UI-028 implementado no wizard:** rótulos operacionais têm base PT consistente e catálogo exato PT/EN/ES; conteúdo normal fica oculto brevemente até o idioma selecionado ser aplicado, mantendo a tela inicial de idioma como única superfície intencionalmente multilíngue.
 - Direct, Histórico, frequências, offsets e caminhos DMR não-TGIF permanecem preservados.
 - Estado atual: **fonte implementada; CI/ARM64/XZ/SHA/validação final PENDENTES; HW PENDENTE**.
+
+## Identidade visual — próximo ciclo após 0.3.13
+- O mantenedor aprovou em 2026-09-21 um logotipo oficial para uso nas próximas versões do PU2PNY-OS.
+- Requisito registrado como **UI-029**.
+- A 0.3.13-alpha em build não será alterada por esta decisão, evitando mudança fora do escopo corretivo MMDVM/TGIF/i18n.
+- A integração visual entra no próximo ciclo, com asset otimizado e testes de legibilidade/desempenho.
