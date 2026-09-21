@@ -441,3 +441,18 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-DISPLAY-017E | DISPLAY-017 | hotplug tty/DRM/input | evento dispara oneshot de detecção sem polling contínuo e sem reiniciar RF | PENDENTE | SW/HW |
 | TEST-DISPLAY-017F | DISPLAY-017 | catálogo TFT sem URL/SHA | provisionamento permanece `asset_unpublished`; nenhuma gravação é oferecida | PENDENTE | SW |
 | TEST-DISPLAY-017G | DISPLAY-017 | tentativa de flash sem confirmação | operação é rejeitada; nenhum byte TFT é enviado | PENDENTE | SW/HW |
+
+## Hardening priorizado — casos 0.3.9
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-PROTO-016A | PROTO-016 | gateway demora alguns segundos para abrir UDP | estado fica waiting_bridge, tenta de forma limitada e só então aprova/reverte | PENDENTE SW/HW |
+| TEST-PROTO-016B | PROTO-016 | bridge nunca aparece | rollback + last_rollback_reason + evidência da porta/tentativas | PENDENTE SW/HW |
+| TEST-BOOT-002A | BOOT-002 | reboot com perfil D-Star/YSF | serial→MQTT→MMDVMHost→gateway→health convergem sem clique manual | PENDENTE HW |
+| TEST-BOOT-002B | BOOT-002 | dependência não fica pronta | painel/rede continuam; restore falha explicitamente, sem sucesso falso | PENDENTE SW/HW |
+| TEST-PROTO-017A | PROTO-017 | MQTT 127.0.0.1:1883 indisponível | aplicação bloqueia antes do gateway e mostra diagnóstico amigável | PENDENTE SW/HW |
+| TEST-NET-022A | NET-022 | handoff AP→Wi-Fi | só declara conectado após associação+IPv4+rota+DNS; onboarding aprovado permanece igual | PENDENTE HW |
+| TEST-UPDATE-006A | UPDATE-006 | artefato SHA inválido | recusa aplicação e mantém versão anterior | PENDENTE SW |
+| TEST-LIVE-015A | LIVE-015 | TX/RX | web e display usam os mesmos campos/evento sem divergência inventada | PENDENTE HW |
+| TEST-UI-025A | UI-025 | abrir Expert | mostra UDP/MQTT/writer/restore/rollback/Wi-Fi com valores reais ou — | PENDENTE SW/HW |
+| TEST-SEC-022A | SEC-022 | revisar endpoints privilegiados | cada ação usa unit/helper dedicado; nenhum sudo/root genérico no web daemon | PENDENTE SW |
