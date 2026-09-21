@@ -508,3 +508,10 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Registrado **UI-029** para adoção nas próximas versões.
 - A 0.3.13-alpha atualmente em validação permanece sem essa mudança para preservar o escopo corretivo e evitar regressão durante o build.
 - A primeira integração deverá usar asset otimizado, manter proporção/contraste e não aumentar de forma relevante o peso do painel ou o uso de recursos.
+
+## 2026-09-21 — 0.3.13-alpha publicada
+- Run `35631645881` concluiu com source, build-arm64 e publish em **success**.
+- Imagem publicada: `PU2PNY-OS-0.3.13-alpha-arm64.img.xz`.
+- SHA-256: `1cb0f862c09825b25394cf0cfbb6812d7e24c04a5034cab9940bc90763db67ec`.
+- O build aplicou toda a cadeia herdada e o overlay 0.3.13; staged source, regressões novas/herdadas e validador final passaram.
+- RF-018, PROTO-019 e UI-028 continuam aguardando validação física; a release permanece Alpha/HW-TEST.
