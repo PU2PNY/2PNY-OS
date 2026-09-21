@@ -268,3 +268,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Inspeção do backend mostrou que a rota chama `timedatectl set-timezone` diretamente e, em fallback, tenta atualizar `/etc/localtime` e `/etc/timezone`; essas operações exigem privilégio que o contexto atual do serviço web não possui/autoriza.
 - A correção deve usar privilégio mínimo específico para timezone, sem liberar root/shell genérico ao painel.
 - Após aplicar, o backend deve reler o timezone efetivo antes de declarar sucesso e atualizar a UI dinamicamente.
+
+## 2026-09-20 — feedback HW 0.3.7: cabeçalho Sistema quebra o relógio
+
+- Registrado **UI-017**.
+- No teste físico/browser, ao entrar em Sistema o cabeçalho ficou mais alto e o relógio foi comprimido verticalmente.
+- Comparação com Display e inspeção do código mostraram que Sistema não chama `PNY.startClock()`; o elemento `clockLocal` permanece no placeholder `--:--:--`.
+- O CSS atual também permite que a pill do relógio encolha/quebre quando a navegação ocupa muito espaço.
+- Correção requerida: inicialização global coerente + `white-space: nowrap`/dimensão mínima dos navtools + comportamento responsivo consistente.
+- A unificação Hotspot/Protocolos reduz pressão horizontal, mas não substitui a correção estrutural.
