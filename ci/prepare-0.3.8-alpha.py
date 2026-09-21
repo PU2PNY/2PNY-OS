@@ -38,11 +38,13 @@ for src,dst in (
     ("src/2pny-display-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-display-apply"),
     ("src/2pny-timezone-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-timezone-apply"),
     ("src/2pny-rflevel-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-rflevel-apply"),
+    ("src/2pny-ssh-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-ssh-apply"),
 ):
     install(src,dst,0o755)
 for src,dst in (
     ("src/2pny-timezone-apply-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-timezone-apply.service"),
     ("src/2pny-rflevel-apply-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-rflevel-apply.service"),
+    ("src/2pny-ssh-apply-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-ssh-apply.service"),
 ):
     install(src,dst,0o644)
 
@@ -65,6 +67,7 @@ subprocess.run(["python3","-m","py_compile",
     str(root/"rootfs-overlay/usr/local/sbin/2pny-display-apply"),
     str(root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply"),
     str(root/"rootfs-overlay/usr/local/sbin/2pny-rflevel-apply"),
+    str(root/"rootfs-overlay/usr/local/sbin/2pny-ssh-apply"),
 ],check=True)
 subprocess.run(["node","--check",str(root/"rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js")],check=True)
 subprocess.run(["node","--check",str(root/"rootfs-overlay/usr/share/2pny/ui-language.js")],check=True)
@@ -94,7 +97,7 @@ pa=(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply").read_text(
 da=(root/"rootfs-overlay/usr/local/sbin/2pny-display-apply").read_text()
 
 assert '"0.3.8-alpha"' in main
-assert '/api/rf/power' in main and '2pny-timezone-apply.service' in main
+assert '/api/rf/power' in main and '2pny-timezone-apply.service' in main and '2pny-ssh-apply.service' in main
 assert 'wifi_signal' in main and 'wifi_quality' in main
 assert 'Hotspot / Protocolos' in ui and '/protocols/embed' in main
 assert 'Saúde da comunicação' in ui and '/api/live/events' in ui
@@ -106,7 +109,7 @@ assert 'Etapa 1/5' in aprs and 'Você não precisa digitar passcode' in aprs
 assert 'displayDirty' in display and 'effective_layout' in da and 'ScreenLayout' in da
 assert 'new EventSource(\'/api/live/events\')' in expert and '/api/rf/power' in expert
 assert 'RFLevel' in expert and 'radioexpert' in expert
-assert 'WiresXCommandPassthrough=0' in pa and 'Reconnect=0' in pa and 'porta 4200' in pa
+assert 'WiresXCommandPassthrough=0' in pa and 'Reconnect=0' in pa and 'porta 4200' in pa and 'porta 20010' in pa
 assert "characterData:true" in lang and "loose={" in lang
 
 # Translation gate: all operational pages must load the common layer, which
