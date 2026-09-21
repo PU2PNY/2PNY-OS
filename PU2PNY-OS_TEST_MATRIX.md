@@ -170,3 +170,21 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-ARCH-004B | ARCH-004 | boot em Pi Zero/1/2 | boot, rede, painel, MMDVM e ao menos DMR baseline sem regressão | PENDENTE | HW |
 | TEST-PERF-003 | PERF-003 | idle e TX/RX em 512 MB | sem OOM, sem swapping excessivo, RF estável e polling/logs controlados | PENDENTE | HW |
 | TEST-REL-007 | REL-007 | artefato ARM32 | .img.xz íntegro, SHA-256, validação estrutural e arquitetura correta | PASS SW/estrutural no run 35545030803; HW boot/RF ainda PENDENTE | SW/HW |
+
+## Casos adicionados — 0.3.7 Direct/Display/Voice
+
+| ID | Requisito | Caso | Resultado esperado | Nível |
+|---|---|---|---|---|
+| TEST-REL-008 | REL-008 | regressão completa 0.3.6 | todos os testes/gates anteriores continuam PASS no nível já alcançado | SW/HW |
+| TEST-P2P-002A | P2P-002 | escolher contato/indicativo | chamada pode ser preparada sem IP/porta/terminal e rejeita protocolo incompatível | SW |
+| TEST-P2P-003A | P2P-003 | endpoint direto disponível | estado `Direct`, peer autenticado, latência real quando mensurável | SW/VPS/HW |
+| TEST-P2P-003B | P2P-003 | NAT restritivo | fallback `Relay`, sem rotular como Direct, mantendo criptografia ponta a ponta | VPS/HW |
+| TEST-P2P-005 | P2P-005 | parear/revogar | chaves privadas não saem na API; peer revogado deixa de ser autorizado | SW/VPS |
+| TEST-P2P-006A | P2P-006 | encapsular quadros DMR/D-Star/YSF | envelope autenticado, sequência/anti-replay e protocolo preservados | SW |
+| TEST-P2P-006B | P2P-006 | dois hotspots reais | RF A→Direct→RF B e retorno no mesmo protocolo | HW |
+| TEST-DISPLAY-013A | DISPLAY-013 | Nextion | Standby/TX/RX Moderno V2 sem HMI flash automático/flicker espúrio | SW/HW |
+| TEST-DISPLAY-013B | DISPLAY-013 | OLED SSD1306/SH1106 | layout gráfico compacto com header/estado/identidade/rede | SW/HW |
+| TEST-DISPLAY-013C | DISPLAY-013 | LCD | layout textual coerente, sem tentar recursos gráficos inexistentes | SW/HW |
+| TEST-PROTO-013A | PROTO-013 | gateway confirma link | anúncio é solicitado uma vez após `connected`, com rate-limit | SW/HW |
+| TEST-PROTO-013B | PROTO-013 | link falha/não confirmado | nenhum anúncio falso é enviado | SW/HW |
+| TEST-007 | TEST-007 | imagem 0.3.7 | build+XZ+SHA+validador final PASS antes de publicar | SW |
