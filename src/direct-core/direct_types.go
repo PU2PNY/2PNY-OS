@@ -51,6 +51,8 @@ type state struct {
 	LatencyMS   int64  `json:"latency_ms,omitempty"`
 	Fingerprint string `json:"fingerprint,omitempty"`
 	Protocol    string `json:"protocol,omitempty"`
+	RadioActive bool   `json:"radio_active"`
+	GatewayRestore bool `json:"gateway_restore,omitempty"`
 	LastError   string `json:"last_error,omitempty"`
 	Updated     string `json:"updated"`
 }
@@ -102,6 +104,12 @@ type core struct {
 	pending       map[string]chan ctrl
 	probeWait     map[string]chan time.Duration
 	forceRelay    bool
+	radioConn     *net.UDPConn
+	radioStop     chan struct{}
+	radioProto    string
+	gatewayUnit   string
+	gatewayWasActive bool
+	lastPeerTraffic time.Time
 }
 
 var callRE = regexp.MustCompile(`^[A-Z0-9]{3,8}(?:-[A-Z0-9]{1,2})?$`)
