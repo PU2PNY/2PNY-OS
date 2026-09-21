@@ -476,3 +476,23 @@ Os filtros de atividade por protocolo **não podem ser removidos**: devem perman
 Na página **Hotspot**, os perfis rápidos dos protocolos devem permanecer, porém sua ação principal passa a ser **Configurar** o perfil selecionado, e não duplicar a função de troca rápida do Ao Vivo.
 
 Cada perfil deve permitir abrir a configuração correspondente de RF/rede/frequência/servidor/TG/módulo conforme o protocolo. A página Hotspot continua sendo a referência para configuração; a página Ao Vivo passa a ser a referência para troca operacional rápida.
+
+## 22. Correções PU2PNY Direct após teste físico 0.3.7 — 2026-09-20
+
+### P2P-007 — Fluxo de pareamento/chamada com estado explícito
+A interface PU2PNY Direct deve impedir chamadas inválidas e traduzir estados técnicos em mensagens operacionais claras.
+
+Regras:
+- `Chamar` só pode ser habilitado para contato/indicativo previamente pareado e válido;
+- quando não houver nenhum peer pareado, a UI deve explicar `Pareie um PU2PNY antes de chamar` e não expor `HTTP 409`;
+- se o indicativo não estiver registrado/online no rendezvous, informar em português `PU2PNY não encontrado ou offline`;
+- se houver peer pareado, mas sem resposta, informar `Contato sem resposta` e manter o gateway/RF anterior preservado;
+- incompatibilidade de protocolo deve citar local/remoto em linguagem clara e não alterar RF;
+- códigos HTTP e mensagens brutas ficam disponíveis apenas em diagnóstico/Expert;
+- estado `Offline` do Direct deve significar ausência de sessão Direct/Relay, não Internet geral offline;
+- nenhum sucesso pode ser mostrado antes de pareamento, descoberta, autenticação, compatibilidade de protocolo e estabelecimento real do caminho.
+
+### UI-015 — Página Direct deve usar o layout comum do painel
+A página Direct deve usar o mesmo cabeçalho, navegação, tipografia, espaçamento, responsividade, tema e componentes comuns das demais páginas do PU2PNY.
+
+Não pode haver menu concatenado, campos ocupando largura indevida, botões desalinhados ou quebra visual em desktop/tablet/mobile. A UI deve permanecer legível em PT/EN/ES e atualizar estado sem refresh manual.
