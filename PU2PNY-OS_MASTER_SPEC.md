@@ -844,3 +844,36 @@ Regras:
 - rotina de manutenção não pode tomar permanentemente a Nextion nem competir com o renderer ativo do MMDVMHost/Display Core;
 - nenhum HMI/TFT é gravado automaticamente;
 - manutenção continua sem alterar RF, protocolo ou gateway.
+
+## 32. Ciclo corretivo 0.3.9-alpha após teste físico da 0.3.8 — 2026-09-21
+
+A 0.3.9 parte integralmente da 0.3.8, preserva os comportamentos aprovados da 0.3.7/0.3.8 e não altera silenciosamente a baseline DMR.
+
+### Requisitos reafirmados pelo teste físico 0.3.8
+
+- **BOOT-001:** reboot/retorno de energia deve restaurar automaticamente o último perfil/protocolo operacional; na 0.3.8 o Wi-Fi voltou, mas o rádio/gateway exigiram `Ativar perfil` manualmente.
+- **NET-012:** manter o captive portal de primeiro acesso e o fallback `pu2pny.local/wizard`; a abertura automática não ocorreu no cliente testado.
+- **NET-017/018:** `Buscar redes` deve executar varredura real sob demanda e alimentar Wi-Fi 1/2 com todas as SSIDs observadas; encontrar apenas a SSID atual não conclui a busca.
+- **NET-019:** gráfico de canais deve separar 2,4/5 GHz (e 6 GHz quando realmente observado), destacar canal ativo e ter contraste/altura suficientes para leitura imediata. Não mostrar gráfico 1–13 como se representasse uma associação em canal 44/5220 MHz.
+- **NET-020:** uma leitura transitória de estado não pode mostrar Wi-Fi desconectado quando associação/rota continuam funcionais.
+- **UI-013 / NET-014/016:** troca de DNS só termina visualmente depois que o resolvedor efetivo for relido e confirmado; sem F5 e sem polling pesado.
+- **PROTO-002/007/012:** D-Star não pode sofrer rollback por falso negativo da bridge UDP local 20010. O teste bilateral RF↔rede continua HW pendente após a correção.
+- **PROTO-003/008:** YSF/C4FM não pode sofrer rollback por falso negativo da bridge UDP local 4200. O teste bilateral RF↔rede continua HW pendente após a correção.
+- **DISPLAY-001/013/015:** estados Iniciando/Manutenção/Configuração RF/erro são transitórios; Nextion via MMDVM tem um único writer autoritativo e a UI só confirma layout após verificar o estado efetivo.
+- **LIVE-013/014:** preservar o Ao Vivo aprovado como base visual e manter Saúde da comunicação compacta dentro do bloco principal, sem duplicar a hierarquia.
+- **PROTO-014:** Hotspot/Protocolos continua unificado, com configuração no topo antes de resumo/diagnóstico.
+- **UI-018:** Expert deve consumir o mesmo SSE/event bus nomeado do Ao Vivo, com fallback leve apenas quando o stream estiver indisponível.
+- **UI-016:** timezone deve ser aplicável pelo painel com privilégio mínimo dedicado e confirmação do valor efetivo.
+- **SEC-021:** SSH permanece `radioexpert`, chave pública, sem root/senha; habilitação só é sucesso após `ssh.service` e porta 22 confirmados.
+- **UI-023:** PT/EN/ES deve traduzir também textos não cobertos por correspondência literal exata, preservando logs/código fora da tradução.
+- **DISPLAY-013/014:** pesquisar referências visuais para Nextion, OLED 128×64/128×32 e telas touch 5/7/10; o resultado deve ser identidade PU2PNY própria e nunca gravar HMI/TFT automaticamente.
+
+### Baseline congelada para regressão
+
+- fluxo AP → Wi-Fi validado na 0.3.8;
+- DMR TX/RX previamente validado;
+- Histórico aprovado pelo usuário;
+- página Direct aprovada visualmente;
+- APRS-IS chegou a login verificado no teste; mensagens e D-PRS continuam pendentes de HW específico.
+
+Nenhum item corrigido em código neste ciclo recebe HW PASS sem novo teste físico na imagem 0.3.9.
