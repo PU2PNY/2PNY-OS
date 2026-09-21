@@ -527,7 +527,10 @@ PROBE="$ROOT/usr/local/sbin/2pny-hardware-probe"
 LANG="$ROOT/usr/share/2pny/ui-language.js"
 WIZ="$ROOT/usr/share/2pny/wizard.html"
 grep -Fq 'flock -w 8 8' "$RF"
-grep -Fq '2pny-mqtt-preflight --quiet' "$RF"
+# PROTO-021 supersedes the 0.3.12 requirement that RF provisioning itself
+# invoke MQTT. The preflight binary is still validated below, but RF with
+# MQTTLevel=0 must not call it.
+! grep -Fq '2pny-mqtt-preflight --quiet' "$RF"
 grep -Fq 'last-rf-apply-error.json' "$RF"
 ! grep -Fq 'MMDVMHost failed with detected baud' "$RF"
 grep -Fq 'A MMDVM foi detectada, mas o MMDVMHost não conseguiu assumir a porta serial no teste básico' "$RF"
