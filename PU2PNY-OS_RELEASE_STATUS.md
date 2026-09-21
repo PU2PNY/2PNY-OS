@@ -254,3 +254,10 @@ Estado antes do CI final:
 - PROTO-013 exige aviso de conexão por voz somente após confirmação real do gateway, sem derrubar RF em caso de falha.
 - D-Star: schema `v20260323-612f388` já está corrigido em SW, mas RF↔rede ainda precisa novo HW PASS.
 - Estado inicial: implementação 0.3.7 em andamento. Não há autorização para chamar Direct/D-Star/YSF/display de HW PASS sem teste físico.
+
+## Requisito novo registrado — 2026-09-20
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| DISPLAY-014 — tela genérica touch 7" | PENDENTE | DOC/HW | requisito registrado; suporte físico ainda precisa implementação/validação no modelo real |
+| TEST-DISPLAY-014A..014D | PENDENTE | HW | vídeo, touch, estados runtime e falha isolada precisam teste em Raspberry + tela real |
