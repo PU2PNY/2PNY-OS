@@ -197,3 +197,9 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-DISPLAY-014B | DISPLAY-014 | touch USB/DSI | toque reconhecido, coordenadas corretas, navegação e botões funcionais sem mouse | HW PENDENTE |
 | TEST-DISPLAY-014C | DISPLAY-014 | operação Standby/RX/TX | estados e dados reais acompanham o mesmo runtime do painel sem travar RF | HW PENDENTE |
 | TEST-DISPLAY-014D | DISPLAY-014 | touch ausente/falha | vídeo/painel continuam e RF/gateways não caem; diagnóstico claro | HW PENDENTE |
+
+## Feedback físico 0.3.7-alpha — Nextion
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-HW-037-NEXTION-READY | DISPLAY-001/002/013 | Boot/wizard concluído sem abrir menu Display | Nextion sai de "Pronto" e acompanha automaticamente o runtime/Standby, sem depender de configuração manual no menu Display | **FAIL** — permaneceu travada em "Pronto" | HW |
