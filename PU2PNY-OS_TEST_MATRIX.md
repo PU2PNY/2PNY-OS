@@ -284,3 +284,11 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 |---|---|---|---|---|---|
 | TEST-UI-016-TZ | UI-016 / UI-006 | selecionar America/Sao_Paulo e aplicar | fuso muda pelo painel, estado é relido/confirmado e relógio atualiza sem terminal/F5 | **FAIL** — operação bloqueada por permissão (`Access denied`) | HW/browser |
 | TEST-UI-016-TZ-ROLLBACK | UI-016 | falha de privilégio/aplicação | fuso anterior permanece ativo; mensagem amigável; RF/gateways inalterados | PENDENTE | SW/HW |
+
+## Feedback físico 0.3.7-alpha — cabeçalho Sistema
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-UI-017A | UI-017 | abrir Sistema na mesma largura de Display | cabeçalho mantém mesma altura; relógio aparece em uma linha e controles não são esmagados | **FAIL** — relógio foi comprimido/quebrado e cabeçalho ficou mais alto | HW/browser |
+| TEST-UI-017B | UI-017 | navegar entre todas as páginas desktop | cabeçalho permanece dimensionalmente estável sem saltos de altura | PENDENTE | SW/HW |
+| TEST-UI-017C | UI-017 / UI-002 | viewport tablet/mobile | menu e ferramentas degradam responsivamente sem sobreposição ou relógio vertical | PENDENTE | SW/HW |
