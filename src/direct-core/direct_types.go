@@ -50,6 +50,7 @@ type state struct {
 	Encrypted   bool   `json:"encrypted"`
 	LatencyMS   int64  `json:"latency_ms,omitempty"`
 	Fingerprint string `json:"fingerprint,omitempty"`
+	Protocol    string `json:"protocol,omitempty"`
 	LastError   string `json:"last_error,omitempty"`
 	Updated     string `json:"updated"`
 }
@@ -67,6 +68,7 @@ type ctrl struct {
 	TS       int64  `json:"ts,omitempty"`
 	Sig      string `json:"sig,omitempty"`
 	Error    string `json:"error,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
 }
 
 type securePacket struct {
@@ -99,6 +101,7 @@ type core struct {
 	st            state
 	pending       map[string]chan ctrl
 	probeWait     map[string]chan time.Duration
+	forceRelay    bool
 }
 
 var callRE = regexp.MustCompile(`^[A-Z0-9]{3,8}(?:-[A-Z0-9]{1,2})?$`)
@@ -168,7 +171,7 @@ func savePeers(dir string, p map[string]peer) error {
 }
 
 func signBytes(c ctrl) []byte {
-	return []byte(strings.Join([]string{c.T, c.From, c.To, c.Ed, c.X, c.Nonce, fmt.Sprint(c.TS)}, "|"))
+	return []byte(strings.Join([]string{c.T, c.From, c.To, c.Ed, c.X, c.Nonce, c.Protocol, fmt.Sprint(c.TS)}, "|"))
 }
 func (c *core) sign(m *ctrl) {
 	m.TS = time.Now().Unix()
@@ -180,6 +183,20 @@ func verifyCtrl(m ctrl, pub ed25519.PublicKey) bool {
 	}
 	sig, e := unb64(m.Sig)
 	return e == nil && ed25519.Verify(pub, signBytes(m), sig)
+}
+
+func currentProtocol() string {
+	b, err := os.ReadFile("/var/lib/2pny/config.json")
+	if err != nil { return "" }
+	var v struct { Protocol string `json:"protocol"` }
+	if json.Unmarshal(b, &v) != nil { return "" }
+	p := strings.ToUpper(strings.TrimSpace(v.Protocol))
+	switch p {
+	case "DMR","DSTAR","YSF","P25","NXDN","POCSAG":
+		return p
+	default:
+		return ""
+	}
 }
 
 func newCore(dir, callsign, server string) (*core, error) {
@@ -200,7 +217,7 @@ func newCore(dir, callsign, server string) (*core, error) {
 		return nil, err
 	}
 	c := &core{dir: dir, server: server, id: id, edPriv: priv, edPub: pub, xPriv: xk, conn: conn, serverAddr: ra, peers: loadPeers(dir), peerEndpoints: map[string]*net.UDPAddr{}, lastSeq: map[string]uint64{}, pending: map[string]chan ctrl{}, probeWait: map[string]chan time.Duration{}}
-	c.st = state{Version: version, Enabled: true, Callsign: callsign, Server: server, Status: "idle", Path: "Offline", Encrypted: true, Fingerprint: fingerprint(pub), Updated: time.Now().UTC().Format(time.RFC3339)}
+	c.st = state{Version: version, Enabled: true, Callsign: callsign, Server: server, Status: "idle", Path: "Offline", Encrypted: true, Fingerprint: fingerprint(pub), Protocol: currentProtocol(), Updated: time.Now().UTC().Format(time.RFC3339)}
 	c.writeState()
 	return c, nil
 }
