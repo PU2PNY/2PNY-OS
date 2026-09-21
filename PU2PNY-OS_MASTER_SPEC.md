@@ -904,3 +904,35 @@ Regras:
 
 ### PROTO-002 / PROTO-003 — validação real da bridge UDP
 O teste físico da 0.3.9 mostrou DStarGateway ativo, host list carregada e registro em auth.dstargateway.org, seguido de rollback por "bridge UDP local na porta 20010" não detectada. A inspeção do helper encontrou falso negativo no parser de `ss -H -lun`: a validação usava a coluna peer/remota em vez da coluna endereço local. A correção deve validar a coluna local e preservar as portas já definidas pelo contrato MMDVMHost ↔ gateway. O mesmo parser é compartilhado pela validação YSF/4200 e deve ser corrigido sem alterar DMR.
+
+## 34. Feedback físico 0.3.9 — Nextion / relógio / robustez D-Star — 2026-09-21
+
+### DISPLAY-016 — Nextion pela MMDVM com renderer selecionável e perfis físicos reais
+Ao habilitar "Usar Nextion pela MMDVM", a seleção deve produzir mudança efetiva e verificável. O sistema deve oferecer dois caminhos mutuamente exclusivos, nunca dois writers simultâneos:
+
+1. **PU2PNY Moderno V2 via bridge MQTT do MMDVMHost**: MMDVMHost mantém o transporte serial do modem e o PU2PNY Display Core é o único renderer lógico. O renderer nativo Nextion do MMDVMHost fica desabilitado nesse modo.
+2. **Renderer nativo MMDVMHost**: G4KLX/ON7LDS usa `General.Display=Nextion`, `Nextion.Port=modem` e o ScreenLayout compatível escolhido. O PU2PNY Display Core fica parado nesse modo.
+
+O painel deve separar **modelo/resolução física** de **renderer/layout**. Perfis de resolução iniciais documentados, sem afirmar HW PASS antes de teste físico:
+- Auto detectar pelo retorno `comok`;
+- 2,4" 320×240;
+- 2,8" 320×240;
+- 3,2" 400×240;
+- 3,5" 480×320;
+- 4,3" 480×272;
+- 5,0" 800×480;
+- 7,0" 800×480;
+- 10,1" 1024×600.
+
+O PU2PNY não deve gravar HMI/TFT automaticamente. A UI vetorial própria pode usar comandos seriais suportados pelo display e deve manter fallback nativo. Modelo não detectado deve aparecer como não confirmado, nunca inventado.
+
+### UI-017 — relógio deve refletir o horário do próprio PU2PNY
+O relógio global do cabeçalho deve usar o horário/fuso reportado pelo backend do PU2PNY, não apenas o timezone do navegador do cliente. Deve sincronizar de forma leve e continuar contando localmente entre sincronizações. Após aplicar timezone, a UI deve ressincronizar imediatamente sem F5. O cabeçalho deve usar layout estável sem comprimir o relógio verticalmente.
+
+### PROTO-015 — readiness D-Star/YSF com ordem e janela de estabilização
+Além de validar a coluna local correta do `ss`, o apply deve:
+- confirmar explicitamente no arquivo efetivo do MMDVMHost que D-Star Network está Enable=1, GatewayPort=20010 e LocalPort=20011 antes de reiniciar;
+- iniciar/reiniciar MMDVMHost antes do DStarGateway/YSFGateway;
+- aguardar janela limitada de estabilização do socket UDP local antes de considerar falha;
+- manter rollback transacional se a bridge realmente não aparecer;
+- aplicar a mesma lógica de timing ao YSF/4200, sem alterar DMR.
