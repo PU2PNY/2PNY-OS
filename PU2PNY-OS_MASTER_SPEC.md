@@ -644,7 +644,7 @@ O teste atual com `Chave pública SSH inválida` é classificado como falha de U
 
 ## 28. BER / calibração assistida — 2026-09-20
 
-### RF-011 — Diagnóstico e autoajuste seguro de BER/RXOffset
+### RF-013 — Diagnóstico e autoajuste seguro de BER/RXOffset
 O PU2PNY deve detectar BER RF persistentemente alto e tentar corrigir automaticamente o **RXOffset** quando houver evidência suficiente e o hardware suportar ajuste por offset.
 
 Regras de segurança:
@@ -662,7 +662,7 @@ Regras de segurança:
 
 O sistema pode usar detecção automática de BER alto como gatilho, mas a alteração RF só ocorre dentro do fluxo de calibração protegido.
 
-### RF-012 — TXOffset não pode ser inferido do BER local
+### RF-014 — TXOffset não pode ser inferido do BER local
 O BER observado pelo hotspot mede a qualidade da recepção do próprio MMDVM. Portanto, **TXOffset não deve ser autoajustado apenas a partir desse BER local**.
 
 TXOffset pode ser:
