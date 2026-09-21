@@ -31,6 +31,11 @@ func (c *core) register() {
 
 func (c *core) lookup(to string) (ctrl, error) {
 	to = strings.ToUpper(strings.TrimSpace(to))
+	// P2P-006: refresh our rendezvous record immediately before lookup. This
+	// reduces cross-version/stale-registration failures without changing the
+	// signed identity, fingerprint or pairing trust model.
+	c.register()
+	time.Sleep(120 * time.Millisecond)
 	nonceRaw := make([]byte, 12)
 	_, _ = rand.Read(nonceRaw)
 	n := b64(nonceRaw)
@@ -48,7 +53,7 @@ func (c *core) lookup(to string) (ctrl, error) {
 			return v, errors.New(v.Error)
 		}
 		return v, nil
-	case <-time.After(2500 * time.Millisecond):
+	case <-time.After(4 * time.Second):
 		return ctrl{}, errors.New("rendezvous timeout")
 	}
 }
@@ -233,7 +238,7 @@ func (c *core) call(to string) error {
 				return err
 			}
 			return nil
-		case <-time.After(1800 * time.Millisecond):
+		case <-time.After(2500 * time.Millisecond):
 		}
 	}
 	_ = c.sendSecure(to, "probe", []byte(fmt.Sprintf("%d", time.Now().UnixNano())), true)
@@ -254,7 +259,7 @@ func (c *core) call(to string) error {
 				return err
 			}
 			return nil
-	case <-time.After(2200 * time.Millisecond):
+	case <-time.After(4 * time.Second):
 			c.mu.Lock()
 			c.st.Status = "error"
 			c.st.Path = "Offline"
