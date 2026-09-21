@@ -411,7 +411,10 @@ grep -Fq 'PathChanged=/run/2pny/ssh-request.json' "$ROOT/etc/systemd/system/2pny
 grep -Fq 'PathChanged=/run/2pny/operational-request.json' "$ROOT/etc/systemd/system/2pny-operational-apply.path"
 grep -Fq 'PathChanged=/run/2pny/display-apply-request.json' "$ROOT/etc/systemd/system/2pny-display-apply-request.path"
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.9-alpha'
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'mecanismo privilegiado indisponível'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/timezone-request.json'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/ssh-request.json'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/operational-request.json'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/display-apply-request.json'
 grep -Fq 'if(!base){base=text;originals.set(node,base)}' "$ROOT/usr/share/2pny/ui-language.js"
 # Approved baseline must still be present and not replaced by 0.3.9.
 grep -Fq 'PU2PNY, XLX module control' < <(strings "$ROOT/usr/local/bin/DMRGateway")
