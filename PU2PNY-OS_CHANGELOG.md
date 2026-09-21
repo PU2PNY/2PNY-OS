@@ -436,3 +436,16 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Expert ganhará diagnóstico das portas UDP, writer do display, último rollback e restore.
 - Direct e Histórico permanecem congelados como baseline.
 - Criado rollback `backup/0.3.9-pre-stability-hardening-20260921`.
+
+## 2026-09-21 — abertura 0.3.10-alpha
+- Criada branch `pu2pny-os-0.3.10-alpha` e rollback `backup/0.3.9-pre-0.3.10-image-20260921`.
+- Hotspot/Protocolos nativo sem iframe entra no overlay final.
+- Wizard ganha overlay real de Salvar/Ativar.
+- D-Star/YSF usam porta local correta + wait-for-bridge + evidência/rollback.
+- Restore de boot passa a provar MQTT e bridge do protocolo.
+- Wi-Fi passa por associação → IPv4 → rota → DNS antes de conectado.
+- Nextion ganha dois writers mutuamente exclusivos: PU2PNY Moderno V2 via MQTT/MMDVM ou MMDVMHost nativo.
+- Detector/catálogo de displays entram na imagem; TFT continua sem gravação silenciosa.
+- Relógio global sincroniza com timezone do PU2PNY.
+- Expert recebe diagnóstico sob demanda de UDP/MQTT/display/restore/rollback.
+- Criado workflow/release independente 0.3.10-alpha; publicação continua condicionada a ARM64 + XZ + SHA-256 + validação estrutural.
