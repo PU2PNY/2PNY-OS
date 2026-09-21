@@ -546,3 +546,19 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0313-C | **SW PASS** — XZ + SHA-256 |
 | TEST-REL-0313-D | **SW PASS** — validação estrutural da imagem |
 | TEST-REL-0313-E | PENDENTE HW — Raspberry Pi + MMDVM/TGIF/i18n |
+
+## Feedback físico 0.3.13-alpha e casos 0.3.14 — 2026-09-21
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-RF-018A-0313 | RF-018 | bootstrap mínimo da MMDVM na 0.3.13 | MMDVMHost assume UART sem MQTT/display como pré-condição | **PASS HW** | HW |
+| TEST-PROTO-020A | PROTO-020 | iniciar broker local após bootstrap | unidade PU2PNY/Mosquitto fica active e listener 127.0.0.1:1883 aparece dentro do teto | PENDENTE 0.3.14 | SW/HW |
+| TEST-PROTO-020B | PROTO-020 | handshake MQTT real após start | CONNECT recebe CONNACK=0; retries/backoff são limitados | PENDENTE 0.3.14 | SW/HW |
+| TEST-PROTO-020C | PROTO-020 | broker falha ao iniciar | diagnóstico diferencia service_start/service_failed/handshake_timeout sem atribuir à MMDVM | PENDENTE 0.3.14 | SW/HW |
+| TEST-WIZ-007A | WIZ-007 | erro MQTT durante Salvar e continuar | wizard permanece na etapa 3, campos atuais permanecem, botão é reabilitado | **FAIL HW na 0.3.13 / PENDENTE correção** | HW |
+| TEST-WIZ-007B | WIZ-007 | recarregar página após apply falho e ainda não provisionado | abre Configuração Básica; senha não é persistida no browser | PENDENTE 0.3.14 | SW/HW |
+| TEST-REL-0314-A | REL-007 | source + regressões | novos testes e herdados passam | PENDENTE CI | SW |
+| TEST-REL-0314-B | REL-007 | build ARM64 | imagem gerada preservando baselines | PENDENTE CI | SW |
+| TEST-REL-0314-C | REL-007 | XZ + SHA-256 | integridade confirmada | PENDENTE CI | SW |
+| TEST-REL-0314-D | REL-007 | imagem montada | broker/unit/readiness/wizard + baselines presentes | PENDENTE CI | SW |
+| TEST-REL-0314-E | REL-007 | Raspberry Pi + MMDVM | Fase A continua PASS, MQTT Fase B passa e wizard avança somente após applied | PENDENTE | HW |
