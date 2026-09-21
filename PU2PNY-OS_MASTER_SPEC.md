@@ -1154,3 +1154,17 @@ A interface operacional deve usar identificadores estáveis de mensagem para PT-
 - depois da tela inicial de idioma, nenhuma frase operacional bilíngue ou em idioma diferente do selecionado é permitida;
 - siglas, nomes próprios e nomes canônicos de protocolos não contam como mistura de idioma.
 
+## 2026-09-21 — ciclo corretivo 0.3.13-alpha
+
+### REL-006 — 0.3.13-alpha preserva a baseline HW aprovada e corrige somente bloqueadores observados
+A 0.3.13-alpha parte da 0.3.12 com ponto de retorno `backup/0.3.12-pre-0.3.13-20260921`.
+
+Escopo obrigatório:
+- preservar sem alteração o fluxo Wi-Fi fisicamente aprovado na 0.3.12: reconhecimento, conexão automática e abertura direta do painel;
+- implementar RF-018 sem remover RF-017/PROTO-018;
+- implementar PROTO-019 sem alterar os caminhos XLX/BrandMeister já existentes fora do necessário;
+- implementar UI-028 no onboarding sem alterar módulos funcionais não relacionados;
+- executar regressões herdadas, build ARM64, XZ, SHA-256 e validação estrutural antes da publicação;
+- permanecer Alpha/HW-TEST até novo teste físico de MMDVM, TGIF e idioma.
+
+**Complemento RF-018:** o preflight executado pelo serviço MMDVMHost sob usuário não privilegiado não pode transformar falha de persistência de diagnóstico em falha do rádio. Durante a Fase A, `MQTTLevel=0` deve permitir a prova da UART sem hard dependency de Mosquitto; na Fase B o CONNECT/CONNACK de PROTO-018 continua obrigatório antes da operação completa.
