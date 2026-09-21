@@ -342,3 +342,11 @@ Estado antes do CI final:
 | UI-018 — Expert realtime | FALHA/PARCIAL | HW/browser + DOC | Estado Ao Vivo usa polling de 15 s; precisa reutilizar SSE do Ao Vivo e ganhar dashboard/gráficos leves |
 | UI-019 — Resumo operacional | PENDENTE | DOC | substituir "Configuração pública" por resumo técnico seguro e mais completo |
 | SEC-021 — SSH assistido | FALHA UX / HW PENDENTE | HW/browser | chave inválida foi rejeitada corretamente, mas fluxo não ensina/prevalida; ssh.service ainda não foi validado com chave pública válida |
+
+## Função adicionada ao escopo 0.3.7-alpha — BER / calibração RF
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| RF-011 — autoajuste BER/RXOffset | PENDENTE | DOC/HW | requisito registrado; ainda não implementado/validado em hardware |
+| RF-012 — proteção TXOffset | PENDENTE | DOC/HW | TXOffset não será alterado automaticamente sem feedback confiável do receptor |
+| UI-020 — Calibração RF no Expert | PENDENTE | DOC/SW/HW | gráfico BER, autoajuste RX, manual RX/TX, rollback e toast de falha precisam implementação e teste |
