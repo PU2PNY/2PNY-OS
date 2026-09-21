@@ -936,3 +936,34 @@ Além de validar a coluna local correta do `ss`, o apply deve:
 - aguardar janela limitada de estabilização do socket UDP local antes de considerar falha;
 - manter rollback transacional se a bridge realmente não aparecer;
 - aplicar a mesma lógica de timing ao YSF/4200, sem alterar DMR.
+
+### DISPLAY-017 — Auto-Detection + Auto-Provisioning transacional de displays
+O PU2PNY-OS deve possuir módulo dedicado de detecção/provisionamento de displays executado no boot, sob solicitação do painel e em hotplug, sem exigir terminal.
+
+Escopo:
+- prioridade de detecção: USB/sysfs → UART/USB-TTL → I2C → SPI → framebuffer/DRM + touch;
+- Nextion/TJC/OpenNextion: identificação não destrutiva pelo comando `connect` e resposta `comok`, com model string, resolução/tamanho quando determináveis e distinção entre Nextion direta e via MMDVM;
+- OLED: SSD1306/SH1106 em 0x3C/0x3D; só declarar controlador exato quando houver prova por kernel/Device Tree ou teste compatível, caso contrário registrar candidato ambíguo;
+- LCD HD44780/PCF8574 em 0x27/0x3F como candidato até prova suficiente;
+- telas USB/SPI/HDMI/MIPI/framebuffer/touch genéricas devem ser detectadas e informadas; renderer gráfico touch completo é fase posterior;
+- detecção não pode gravar TFT/HMI nem alterar RF.
+
+Catálogo:
+- catálogo local versionado e futura origem remota separada para assets;
+- perfil contém família, model regex, resolução, renderer recomendado e, quando publicado, versão/filename/URL/SHA-256 do TFT;
+- valor sem asset real deve permanecer nulo/`unpublished`, nunca inventado.
+
+Provisionamento Nextion:
+- HMI oficial PU2PNY deverá expor marcador de versão consultável de forma não destrutiva;
+- download pode ocorrer somente para asset publicado e permitido;
+- gravação TFT exige confirmação explícita no painel; é proibido sobrescrever silenciosamente;
+- SHA-256 deve ser verificado antes da gravação;
+- UI deve mostrar Detectando → Identificado → Baixando → Verificando → Confirmação → Gravando → Validando → Pronto/Erro;
+- rollback deve restaurar configuração/software quando possível; não prometer rollback físico de flash quando o hardware não possuir mecanismo equivalente.
+
+Privilégio e desempenho:
+- frontend sem root;
+- helper privilegiado por systemd service/path;
+- hotplug por evento do kernel/udev, sem polling serial pesado;
+- lock contra detecções concorrentes;
+- MMDVMHost nunca deve perder a porta serial durante operação para uma varredura de display.
