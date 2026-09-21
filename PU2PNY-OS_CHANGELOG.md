@@ -239,3 +239,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrado **P2P-007**: a UI não deve expor o código HTTP bruto; `Chamar` deve ser desabilitado/assistido até existir peer pareado.
 - Como ainda não há segundo PU2PNY 0.3.7 disponível neste teste, o 409 observado não é evidência de falha de NAT/CGNAT ou Relay. O transporte entre dois hotspots continua HW PENDENTE.
 - Criados TEST-P2P-007A..D e TEST-UI-015A..B.
+
+## 2026-09-20 — feedback HW 0.3.7: APRS-IS difícil para usuário leigo
+
+- Atualização de servidor e salvamento apresentaram feedback visual adequado.
+- O teste APRS-IS falhou e a mensagem `login APRS-IS ainda não foi confirmado` não explica o conceito ao usuário.
+- Inspeção do código confirmou que o cliente já monta internamente a identificação APRS-IS com indicativo/SSID e passcode técnico e só transmite após `logresp verified`.
+- Registrado **APRS-006** para transformar isso em fluxo assistido: Internet → servidor/porta → TCP → identificação → resposta → verificado.
+- O usuário não deve precisar fornecer ou conhecer o passcode APRS-IS para operação normal do PU2PNY.
+- **APRS-002** foi reafirmado: toast global de nova mensagem por ~5 s, clicável, abrindo APRS para resposta. A implementação atual possui aviso apenas dentro da página APRS e não atende ainda ao comportamento global.
+- Geolocalização automática em HTTP continua com fallback manual; isso é limitação do contexto do navegador, não falha do motor APRS.
