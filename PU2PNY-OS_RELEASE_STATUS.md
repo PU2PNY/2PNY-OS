@@ -289,3 +289,10 @@ Estado antes do CI final:
 |---|---|---:|---|
 | NET-019 — gráfico e recomendação de canal Wi-Fi | PENDENTE | DOC | requisito registrado; implementação/validação ainda necessárias |
 | TEST-NET-019A..019E | PENDENTE | SW/HW | gráfico 2,4/5 GHz, canal ativo, recomendação explicável e scan leve precisam passar pelos testes |
+
+## Função adicionada ao escopo 0.3.7-alpha — perfis rápidos
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| LIVE-011 / PROTO-014 | PENDENTE | DOC | Ao Vivo deve trocar perfis rapidamente; Hotspot deve configurar perfis; filtros de atividade permanecem separados |
+| TEST-LIVE-011A..D / TEST-PROTO-014A..B | PENDENTE | SW/HW | implementação e validação ainda necessárias |
