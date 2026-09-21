@@ -131,6 +131,7 @@ func main() {
 	server := flag.String("server", defaultServer, "rendezvous/relay")
 	api := flag.String("api", defaultAPIAddr, "local API address")
 	selftest := flag.Bool("selftest", false, "crypto self-test")
+	forceRelay := flag.Bool("force-relay", false, "disable direct UDP and exercise encrypted relay")
 	flag.Parse()
 	if *selftest {
 		if err := cryptoSelfTest(); err != nil {
@@ -144,6 +145,7 @@ func main() {
 		log.Fatal(e)
 	}
 	defer c.conn.Close()
+	c.forceRelay = *forceRelay
 	go c.udpLoop()
 	go c.registerLoop()
 	mux := http.NewServeMux()
