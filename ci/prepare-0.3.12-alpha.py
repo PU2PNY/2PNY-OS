@@ -22,7 +22,7 @@ install("src/2pny-mqtt-preflight-0.3.12.py","rootfs-overlay/usr/local/sbin/2pny-
 install("src/2pny-mosquitto-local-0.3.12.conf","rootfs-overlay/etc/mosquitto/conf.d/2pny-local.conf",0o644)
 (root/"rootfs-overlay/etc/2pny/version").write_text(version+"\n")
 
-# RF-018: the image must contain the broker, not only libmosquitto.
+# PROTO-018: the image must contain the broker, not only libmosquitto.
 builder=root/"builder/build-image.sh"
 bs=builder.read_text()
 ready="wpasupplicant rfkill wireless-regdb mosquitto libmosquitto1"
