@@ -378,6 +378,10 @@ strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'wifi_rssi_dbm'
 grep -Fq 'WiresXCommandPassthrough=0' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'Reconnect=0' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'porta 20010' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'local=cols[3]' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+! grep -Fq 'local=cols[4]' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'verify_host_bridge_config(proto)' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'deadline=time.time()+12' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 grep -Fq 'characterData:true' "$ROOT/usr/share/2pny/ui-language.js"
 grep -Fq 'effective_layout' "$ROOT/usr/local/sbin/2pny-display-apply"
 
