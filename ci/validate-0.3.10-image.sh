@@ -466,6 +466,9 @@ test -s "$ROOT/etc/systemd/system/2pny-display-detect.service"
 test -s "$ROOT/etc/systemd/system/2pny-display-detect.path"
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-display-detect.service"
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-display-detect.path"
+! grep -Fq 'ACTION=="add|change"' "$ROOT/etc/udev/rules.d/99-pu2pny-display-hotplug.rules"
+grep -Fq 'ACTION=="add"' "$ROOT/etc/udev/rules.d/99-pu2pny-display-hotplug.rules"
+grep -Fq 'ACTION=="change"' "$ROOT/etc/udev/rules.d/99-pu2pny-display-hotplug.rules"
 
 echo '[15/15] final result'
 echo "PU2PNY-OS $VERSION ARM64 image: inherited regressions + 0.3.10 corrective SW/structural gates OK — hardware validation still required"
