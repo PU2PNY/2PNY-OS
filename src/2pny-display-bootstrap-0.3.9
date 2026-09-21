@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+STATE=/var/lib/2pny
+RUN=/run/2pny
+mkdir -p "$STATE" "$RUN"
+/usr/local/sbin/2pny-display-detector >/dev/null
+if [[ -s "$STATE/display-override.json" ]] && grep -q '"enabled"[[:space:]]*:[[:space:]]*true' "$STATE/display-override.json"; then
+  if [[ -e "$STATE/rf-configured" ]]; then
+    /usr/local/sbin/2pny-display-apply || true
+  fi
+fi
