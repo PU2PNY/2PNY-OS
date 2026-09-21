@@ -330,3 +330,17 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-LIVE-014B | LIVE-014 | Internet → RF | bloco mostra TX, identidade remota, destino, TX freq, duração e rede; sem RSSI/BER remoto falso | PENDENTE | HW |
 | TEST-LIVE-014C | LIVE-014 | Standby | mostra perfil/frequências/uplink/saúde resumida sem campos falsos | PENDENTE | SW/HW |
 | TEST-UI-021A | UI-021 | BER/Wi-Fi/Internet ruim | aviso clicável abre exatamente a área de diagnóstico/correção correspondente | PENDENTE | SW/HW |
+
+## Casos adicionados — potência MMDVM e idiomas
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-RF-015A | RF-015 / UI-022 | modem suporta RFLevel | Expert mostra valor real, altera de forma transacional e MMDVMHost permanece ativo | PENDENTE | SW/HW |
+| TEST-RF-015B | RF-015 | aplicar valor inválido/falha | configuração anterior é restaurada automaticamente | PENDENTE | SW/HW |
+| TEST-RF-015C | RF-015 | TX ativo | alteração é bloqueada/adiada até estado seguro | PENDENTE | HW |
+| TEST-RF-015D | RF-015 | modem sem suporte confirmado | controle fica desabilitado e explica o motivo; nenhum valor é inventado | PENDENTE | SW/HW |
+| TEST-UI-023-PT | UI-023 | navegar por todas as páginas em Português | 100% dos textos operacionais em PT, sem EN/ES misturado | PENDENTE | SW/HW |
+| TEST-UI-023-EN | UI-023 | navegar por todas as páginas em English | 100% dos textos operacionais em EN, sem PT/ES misturado | **FAIL observado na 0.3.7** | HW/browser |
+| TEST-UI-023-ES | UI-023 | navegar por todas as páginas em Español | 100% dos textos operacionais em ES, sem PT/EN misturado | PENDENTE | SW/HW |
+| TEST-UI-023-DYN | UI-023 | erros/modais/toasts/estados dinâmicos | mensagem amigável acompanha idioma; texto técnico bruto só no Expert/log | PENDENTE | SW/HW |
+| TEST-UI-023-CI | UI-023 | build/catalog completeness | build falha se uma chave usada não existir em PT/EN/ES ou se texto operacional novo escapar do catálogo | PENDENTE | SW |
