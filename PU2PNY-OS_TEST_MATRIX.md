@@ -531,3 +531,18 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-UI-029A | UI-029 | exibir logotipo oficial em telas suportadas | proporção preservada, contraste adequado e nenhuma distorção/corte indevido | PENDENTE próximo ciclo | SW/HW |
 | TEST-UI-029B | UI-029/PERF-* | medir impacto do asset | sem regressão perceptível de carregamento, CPU/RAM ou escrita em SD | PENDENTE próximo ciclo | SW/HW |
 | TEST-UI-029C | UI-029/DISPLAY-* | adaptar identidade para displays menores | usa derivação legível do mesmo logotipo sem prejudicar dados operacionais | PENDENTE próximo ciclo | SW/HW |
+
+### Resultado final 0.3.13-alpha — run 35631645881
+
+| ID | Resultado |
+|---|---|
+| TEST-RF-018C | SW PASS estrutural/fonte — service respeita bootstrap sem persistência não privilegiada; HW PENDENTE |
+| TEST-RF-018D | SW PASS estrutural/fonte — fases UART/MQTT e causas separadas; HW PENDENTE |
+| TEST-PROTO-019D | SW PASS estrutural/fonte — template TGIF, rewrites e segredo fora do estado público; HW PENDENTE |
+| TEST-I18N-005 | SW PASS estrutural/fonte — catálogo exato e bloqueio de exibição antes do idioma; HW PENDENTE |
+| TEST-NET-0313-REG | SW PASS — overlay 0.3.13 não substitui helpers Wi-Fi; baseline HW 0.3.12 preservada |
+| TEST-REL-0313-A | **SW PASS** — source + regressões |
+| TEST-REL-0313-B | **SW PASS** — imagem ARM64 |
+| TEST-REL-0313-C | **SW PASS** — XZ + SHA-256 |
+| TEST-REL-0313-D | **SW PASS** — validação estrutural da imagem |
+| TEST-REL-0313-E | PENDENTE HW — Raspberry Pi + MMDVM/TGIF/i18n |
