@@ -355,7 +355,9 @@ grep -Fq 'Hotspot / Protocolos' "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
 grep -Fq '/protocols/embed' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/protocols/embed'
 grep -Fq 'Pareie um PU2PNY antes de chamar' "$ROOT/usr/share/2pny/direct.html"
 grep -Fq 'Etapa 1/5' "$ROOT/usr/share/2pny/aprs.html"
-grep -Fq 'Saúde da comunicação' "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
+grep -Fq "var live=q('liveBox')" "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
+grep -Fq "sec.id='pnyHealth'" "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
+grep -Fq 'pny-healthitem' "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
 grep -Fq 'Potência RF do MMDVM' "$ROOT/usr/share/2pny/expert.html"
 grep -Fq '/api/rf/power' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/rf/power'
 test -x "$ROOT/usr/local/sbin/2pny-timezone-apply"
