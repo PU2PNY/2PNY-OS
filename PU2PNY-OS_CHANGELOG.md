@@ -194,3 +194,11 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - A interface deve usar o mesmo estado do Display Core/painel, ter operação touch adequada e não afetar RF/gateways se o display falhar.
 - Criados TEST-DISPLAY-014A..014D.
 - Estado atual: **DOC registrado / HW PENDENTE**. Não afirmar funcionamento físico até teste em tela real.
+
+## 2026-09-20 — feedback HW 0.3.7: DNS exige refresh manual
+
+- Registrado **UI-013**: operações concluídas no painel devem atualizar o estado efetivo na própria tela.
+- No teste físico da página Internet, a troca de DNS exibiu corretamente a mensagem de atualização, porém o novo DNS não apareceu automaticamente.
+- Para visualizar o estado novo foi necessário recarregar a página; em uma tentativa foram necessárias duas atualizações.
+- O defeito é classificado como sincronização UI/backend pós-operação. A troca de DNS em si não será marcada como falha apenas por este sintoma sem evidência adicional.
+- Criado `TEST-UI-013-DNS` = HW/browser FAIL.
