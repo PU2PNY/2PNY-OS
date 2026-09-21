@@ -212,3 +212,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrado **UI-014**: Mostrar/Ocultar senha nos dois perfis e mensagens no idioma selecionado.
 - No teste PT-BR apareceu a mensagem bruta em inglês `signal is aborted without reason`; isso é falha de UI/localização, mantendo o detalhe técnico apenas para Expert/log.
 - A troca deve priorizar convergência rápida, mas nunca pulando autenticação, IPv4 e rollback.
+
+## 2026-09-20 — gráfico e recomendação de canal Wi-Fi
+
+- Registrado **NET-019** para a página Internet.
+- Será exibido gráfico dos canais Wi-Fi observados, com destaque para o canal real da rede ativa e intensidade das redes vizinhas quando disponível.
+- O painel deverá sugerir o melhor canal com justificativa baseada em interferência/ocupação observada, sobreposição e sinal.
+- A recomendação não muda automaticamente o roteador.
+- Scan será sob demanda/cacheado e deve preservar conexão Wi-Fi, AP de recuperação, CPU/RAM e baixo consumo.
+- Criados `TEST-NET-019A..019E`; estado atual DOC/PENDENTE até implementação e validação.
