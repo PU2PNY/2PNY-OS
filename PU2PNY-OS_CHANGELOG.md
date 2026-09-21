@@ -541,3 +541,20 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Run final `35647296002`: source, regressões, staged source, ARM64, XZ, SHA-256, validação final e publish em **success**.
 - Publicada `v0.3.15-alpha`, SHA-256 da imagem `4caea4a281c67cd8c5a15ba134e6720dbf4adb7a675a4395052ff13be10bb690`.
 - Release permanece **Alpha/HW-TEST** até o teste físico confirmar o avanço da Configuração Básica.
+
+## 2026-09-21 — abertura da 0.3.16-alpha, somente bugs
+
+- O mantenedor declarou o restante do sistema aprovado; a partir deste ciclo, módulos sem bug reportado ficam congelados.
+- Criados `REL-009`, `NET-023`, `NET-024`, `LIVE-016`, `UI-030`, `PROTO-022`, `P2P-006`, `APRS-012`, `DISPLAY-018`, `SEC-023`, `UI-031` e `PROTO-023`.
+- Criado rollback `backup/0.3.15-pre-0.3.16-20260921` e branch `pu2pny-os-0.3.16-alpha`.
+- Diagnóstico inicial:
+  - cache de conectividade do backend pode manter estado por 15 s e a página Internet consulta em intervalos maiores;
+  - scan Wi-Fi pode ficar preso em estado `error` persistido;
+  - RSSI/BER pode ser associado a evento não-RF;
+  - overlay de ativação fecha ~1,2 s após helper local, antes de prova remota;
+  - DMRGateway permite tráfego network e voz XLX escreverem no mesmo slot no mesmo ciclo;
+  - APRS usa apenas um endpoint regional por tentativa;
+  - Nextion via modem regrediu do writer nativo comprovado na 0.3.8 para dependência da bridge MQTT/Display Core;
+  - os requests privilegiados usam `PathChanged`, sujeito a gatilho inconsistente;
+  - gerador D-Star usa `ReloadTime` onde o gateway embarcado espera `ReloadTimer` e mistura banda local com módulo remoto.
+- Nenhuma frequência, offset, baud, fluxo DMR de rede, TGIF, Wi-Fi onboarding visual aprovado, Histórico ou módulos não citados será alterado fora do mínimo necessário.
