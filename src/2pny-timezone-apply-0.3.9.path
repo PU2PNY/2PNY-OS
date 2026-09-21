@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY watch timezone requests
+
+[Path]
+PathChanged=/run/2pny/timezone-request.json
+Unit=2pny-timezone-apply.service
+
+[Install]
+WantedBy=multi-user.target
