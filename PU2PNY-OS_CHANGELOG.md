@@ -478,3 +478,16 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - UI-027: wizard mantém a tela de seleção bilíngue, remove rótulos-base desnecessariamente em inglês no restante e ganha traduções exatas adicionais PT/EN/ES para onboarding e erros dinâmicos.
 - Validação 0.3.12 passa a conferir binário Mosquitto, configuração loopback, preflight protocolar, lock compartilhado e idioma, além de toda regressão herdada.
 - DMRGateway, RF frequencies/offsets, Direct e Histórico não foram alterados por esta correção.
+## 2026-09-21 — feedback HW 0.3.12-alpha: Wi-Fi aprovado; MMDVM/TGIF/i18n pendentes
+
+- Confirmado **HW PASS** na 0.3.12 para reconhecimento do Wi-Fi, conexão automática e abertura direta do painel. Esse fluxo passa a baseline congelada para a próxima correção.
+- Confirmado **HW FAIL** no módulo de configuração MMDVM: o erro continua impedindo o avanço do wizard.
+- Comparação com a 0.3.6 mostrou diferença objetiva: o bootstrap antigo primeiro provava MMDVMHost com MQTT/display e redes desativados; a 0.3.12 passou a exigir MQTT já na primeira ativação.
+- Registrado **RF-018**: recuperar a semântica comprovada de bootstrap mínimo da 0.3.6 como Fase A e aplicar MQTT/display/protocolo somente na Fase B transacional, preservando os recursos atuais e os gates PROTO-017/018 antes da operação completa.
+- Confirmado **HW FAIL i18n**: ainda há mistura de PT/EN. Registrado **UI-028** para migrar mensagens normais a chaves estáveis PT/EN/ES, deixando substituição pós-renderização apenas como compatibilidade.
+- Registrado **HW FAIL TGIF com causa ainda não isolada**: Security Key foi fornecida, MMDVM recebeu RF do HT, mas não houve confirmação de login/atividade no servidor.
+- A inspeção do código mostrou que a Security Key fornecida é repassada ao `Password=` do DMRGateway; não foi encontrada evidência de que copiar/colar a chave seja a causa.
+- Registrado **PROTO-019** para isolar TGIF: modo seguro explícito, ESSID/Network ID correto, configuração DMRGateway compatível, diagnóstico de autenticação sem vazar segredo e distinção entre RF local e entrega à rede.
+- Nenhum código de DMR baseline, Wi-Fi aprovado, Direct ou Histórico foi alterado neste registro.
+- Criada branch de diagnóstico `test/0.3.12-hw-findings-20260921` antes de qualquer futura correção.
+
