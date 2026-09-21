@@ -87,6 +87,13 @@ func (c *core) apiHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{"ok": true, "state": st})
 	case "/hangup":
 		c.mu.Lock()
+		peer := c.st.Peer
+		relay := c.st.Path == "Relay"
+		c.mu.Unlock()
+		if peer != "" {
+			_ = c.sendSecure(peer, "hangup", []byte("bye"), relay)
+		}
+		c.mu.Lock()
 		c.st.Status = "idle"
 		c.st.Peer = ""
 		c.st.Path = "Offline"
