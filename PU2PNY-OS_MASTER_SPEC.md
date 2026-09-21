@@ -1065,3 +1065,16 @@ Expert deve exibir, sem polling pesado:
 
 ### UI-023 — i18n reafirmado
 Mensagens dinâmicas dos novos estados (`waiting_bridge`, MQTT, restore, display detection/provisioning e rollback) devem usar códigos estáveis e tradução PT/EN/ES; detalhes técnicos brutos ficam no Expert.
+
+## 36. Ciclo de release 0.3.10-alpha — 2026-09-21
+
+### REL-004 — 0.3.10 é imagem corretiva independente
+A 0.3.10-alpha parte da branch corretiva completa da 0.3.9 e não substitui o artefato/sha da 0.3.9 publicada.
+
+Gate obrigatório:
+- aplicar todos os overlays herdados até 0.3.9 e depois o overlay 0.3.10;
+- compilar 2pnyd ARM64;
+- validar sintaxe Python/Bash/JS e invariantes 0.3.10;
+- construir imagem ARM64, compactar XZ, gerar SHA-256 e executar validador final dentro da imagem;
+- preservar DMR, Histórico e Direct como baselines;
+- publicar somente como Alpha/HW-TEST enquanto captive popup, D-Star/YSF, restore e Nextion não tiverem novo HW PASS.
