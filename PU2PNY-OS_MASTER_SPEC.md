@@ -496,3 +496,21 @@ Regras:
 A página Direct deve usar o mesmo cabeçalho, navegação, tipografia, espaçamento, responsividade, tema e componentes comuns das demais páginas do PU2PNY.
 
 Não pode haver menu concatenado, campos ocupando largura indevida, botões desalinhados ou quebra visual em desktop/tablet/mobile. A UI deve permanecer legível em PT/EN/ES e atualizar estado sem refresh manual.
+
+## 23. APRS-IS assistido após teste físico 0.3.7 — 2026-09-20
+
+### APRS-006 — Assistente leigo de conexão APRS-IS
+A página APRS/D-PRS deve explicar em linguagem simples o que é o login APRS-IS e mostrar o processo de conexão por etapas, sem exigir que o usuário conheça termos como `logresp`, passcode ou sessão TCP.
+
+Regras:
+- explicar que o PU2PNY usa o indicativo configurado + SSID APRS para se identificar no APRS-IS;
+- o passcode técnico deve ser tratado internamente pelo software; o usuário final não deve precisar digitá-lo nem conhecê-lo para operação normal;
+- exibir uma breve descrição: `APRS-IS é a rede de Internet do APRS. O PU2PNY conecta ao servidor, identifica seu indicativo/SSID e aguarda a confirmação do servidor antes de enviar posição ou mensagens.`;
+- o botão `Testar estado agora` deve mostrar etapas reais: Internet → servidor/porta → TCP → identificação enviada → resposta do servidor → verificado/não verificado;
+- traduzir `logresp verified/unverified`, timeout e demais erros para PT/EN/ES, mantendo o detalhe bruto apenas no Expert;
+- quando falhar, mostrar exatamente o que conferir: indicativo efetivo, SSID, servidor, porta, Internet e resposta do servidor;
+- nunca declarar mensagem enviada ou beacon transmitido antes de sessão APRS-IS verificada;
+- manter a configuração de localização manual quando HTTP bloquear geolocalização.
+
+### APRS-002 — Toast global de mensagem reafirmado
+O requisito existente APRS-002 permanece obrigatório e deve ser global ao painel: ao chegar nova mensagem APRS, mostrar um balão por aproximadamente 5 s em qualquer página aberta do PU2PNY. O balão deve exibir remetente e resumo, ser clicável e abrir `/aprs?to=<remetente>`. O alerta interno deve funcionar mesmo sem permissão de Notification API.
