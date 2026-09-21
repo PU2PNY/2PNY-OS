@@ -1,0 +1,15 @@
+[Unit]
+Description=PU2PNY apply operational state
+After=mosquitto.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/sbin/2pny-operational-apply
+TimeoutStartSec=45
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+ReadWritePaths=/run/2pny /var/lib/2pny /etc/systemd/system

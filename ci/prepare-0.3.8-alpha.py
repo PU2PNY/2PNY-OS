@@ -29,6 +29,7 @@ for src,dst in (
     ("src/aprs-0.3.8.html","rootfs-overlay/usr/share/2pny/aprs.html"),
     ("src/display-0.3.8.html","rootfs-overlay/usr/share/2pny/display.html"),
     ("src/expert-0.3.8.html","rootfs-overlay/usr/share/2pny/expert.html"),
+    ("src/system-0.3.8.html","rootfs-overlay/usr/share/2pny/system.html"),
 ):
     install(src,dst)
 
@@ -39,16 +40,25 @@ for src,dst in (
     ("src/2pny-timezone-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-timezone-apply"),
     ("src/2pny-rflevel-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-rflevel-apply"),
     ("src/2pny-ssh-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-ssh-apply"),
+    ("src/2pny-operational-apply-0.3.8.py","rootfs-overlay/usr/local/sbin/2pny-operational-apply"),
+    ("src/2pny-auto-maintenance-0.3.8","rootfs-overlay/usr/local/sbin/2pny-auto-maintenance"),
 ):
     install(src,dst,0o755)
 for src,dst in (
     ("src/2pny-timezone-apply-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-timezone-apply.service"),
     ("src/2pny-rflevel-apply-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-rflevel-apply.service"),
     ("src/2pny-ssh-apply-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-ssh-apply.service"),
+    ("src/2pny-operational-apply-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-operational-apply.service"),
+    ("src/2pny-operational-restore-0.3.8.service","rootfs-overlay/etc/systemd/system/2pny-operational-restore.service"),
 ):
     install(src,dst,0o644)
 
 (root/"rootfs-overlay/etc/2pny/version").write_text(version+"\n")
+wants=root/"rootfs-overlay/etc/systemd/system/multi-user.target.wants"
+wants.mkdir(parents=True,exist_ok=True)
+restore_link=wants/"2pny-operational-restore.service"
+if restore_link.exists() or restore_link.is_symlink(): restore_link.unlink()
+os.symlink("../2pny-operational-restore.service",restore_link)
 
 # Harden the daemon service without broadening its write access. Privileged
 # changes use the dedicated one-shot units above.
@@ -68,12 +78,14 @@ subprocess.run(["python3","-m","py_compile",
     str(root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply"),
     str(root/"rootfs-overlay/usr/local/sbin/2pny-rflevel-apply"),
     str(root/"rootfs-overlay/usr/local/sbin/2pny-ssh-apply"),
+    str(root/"rootfs-overlay/usr/local/sbin/2pny-operational-apply"),
 ],check=True)
+subprocess.run(["bash","-n",str(root/"rootfs-overlay/usr/local/sbin/2pny-auto-maintenance")],check=True)
 subprocess.run(["node","--check",str(root/"rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js")],check=True)
 subprocess.run(["node","--check",str(root/"rootfs-overlay/usr/share/2pny/ui-language.js")],check=True)
 
 # Parse every inline script with Node's syntax checker.
-for html in ("internet.html","hotspot.html","protocols.html","direct.html","aprs.html","display.html","expert.html"):
+for html in ("internet.html","hotspot.html","protocols.html","direct.html","aprs.html","display.html","expert.html","system.html"):
     txt=(root/"rootfs-overlay/usr/share/2pny"/html).read_text()
     for n,body in enumerate(re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>",txt,re.I|re.S)):
         if not body.strip(): continue

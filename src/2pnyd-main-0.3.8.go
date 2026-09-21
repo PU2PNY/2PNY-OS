@@ -181,6 +181,7 @@ type ConnectivityStatus struct {
 	WiFiSSID          string   `json:"wifi_ssid"`
 	WiFiSignal        int      `json:"wifi_signal,omitempty"`
 	WiFiQuality       string   `json:"wifi_quality,omitempty"`
+	WiFiRSSIDBm       float64  `json:"wifi_rssi_dbm,omitempty"`
 	WiFiInterfaces    []string `json:"wifi_interfaces"`
 	WiFiCount         int      `json:"wifi_count"`
 	ClientInterface   string   `json:"client_interface,omitempty"`
@@ -277,41 +278,80 @@ func wifiInterfaces() []string {
 	return out
 }
 
-func currentWiFiSSID() string {
-	out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SSID", "dev", "wifi", "--rescan", "no").Output()
-	if err != nil {
-		return ""
-	}
-	for _, line := range strings.Split(string(out), "\n") {
-		if strings.HasPrefix(line, "yes:") {
-			return strings.TrimSpace(strings.TrimPrefix(line, "yes:"))
+func currentWiFiLink() (string, string, int, string, float64) {
+	iface := ""
+	if out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "DEVICE,TYPE,STATE", "device", "status").Output(); err == nil {
+		for _, line := range strings.Split(string(out), "\n") {
+			f := strings.Split(line, ":")
+			if len(f) >= 3 && f[1] == "wifi" && strings.HasPrefix(f[2], "connected") {
+				iface = strings.TrimSpace(f[0])
+				break
+			}
 		}
 	}
-	return ""
-}
-
-func currentWiFiSignal() (int, string) {
-	out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SIGNAL", "dev", "wifi", "--rescan", "no").Output()
-	if err != nil {
-		return 0, ""
+	if iface == "" {
+		d := defaultRouteInterface()
+		if d != "" && fileExists(filepath.Join("/sys/class/net", d, "wireless")) {
+			iface = d
+		}
 	}
-	for _, line := range strings.Split(string(out), "\n") {
-		if !strings.HasPrefix(line, "yes:") {
-			continue
-		}
-		n, _ := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "yes:")))
-		if n <= 0 {
-			return 0, ""
-		}
-		if n >= 70 {
-			return n, "Ótimo"
-		}
-		if n >= 45 {
-			return n, "Bom"
-		}
-		return n, "Ruim"
+	if iface == "" {
+		return "", "", 0, "", 0
 	}
-	return 0, ""
+	ssid := ""
+	rssi := float64(0)
+	if out, err := exec.Command("iw", "dev", iface, "link").Output(); err == nil {
+		for _, raw := range strings.Split(string(out), "\n") {
+			line := strings.TrimSpace(raw)
+			if strings.HasPrefix(line, "SSID: ") {
+				ssid = strings.TrimSpace(strings.TrimPrefix(line, "SSID: "))
+			}
+			if strings.HasPrefix(line, "signal: ") {
+				f := strings.Fields(line)
+				if len(f) >= 2 {
+					rssi, _ = strconv.ParseFloat(f[1], 64)
+				}
+			}
+		}
+	}
+	signal := 0
+	if out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SIGNAL", "dev", "wifi", "--rescan", "no").Output(); err == nil {
+		for _, line := range strings.Split(string(out), "\n") {
+			if strings.HasPrefix(line, "yes:") {
+				signal, _ = strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "yes:")))
+				break
+			}
+		}
+	}
+	if ssid == "" {
+		if out, err := exec.Command("nmcli", "-t", "--escape", "no", "-f", "ACTIVE,SSID", "dev", "wifi", "--rescan", "no").Output(); err == nil {
+			for _, line := range strings.Split(string(out), "\n") {
+				if strings.HasPrefix(line, "yes:") {
+					ssid = strings.TrimSpace(strings.TrimPrefix(line, "yes:"))
+					break
+				}
+			}
+		}
+	}
+	quality := ""
+	if signal > 0 {
+		if signal >= 70 {
+			quality = "Ótimo"
+		} else if signal >= 45 {
+			quality = "Bom"
+		} else {
+			quality = "Ruim"
+		}
+	} else if rssi != 0 {
+		if rssi >= -60 {
+			quality = "Ótimo"
+		} else if rssi >= -72 {
+			quality = "Bom"
+		} else {
+			quality = "Ruim"
+		}
+	}
+	return iface, ssid, signal, quality, rssi
 }
 
 func ethernetInterface() string {
@@ -396,9 +436,11 @@ func connectivitySnapshot() ConnectivityStatus {
 	eth := ethernetInterface()
 	client := readRunFile("uplink-iface")
 	apif := readRunFile("ap-iface")
-	ssid := currentWiFiSSID()
-	wifiUp := ssid != ""
-	wifiSignal, wifiQuality := currentWiFiSignal()
+	wifiIface, ssid, wifiSignal, wifiQuality, wifiRSSI := currentWiFiLink()
+	wifiUp := wifiIface != "" && interfaceUp(wifiIface)
+	if client == "" && wifiUp {
+		client = wifiIface
+	}
 	internet, latency, quality := internetProbe()
 	return ConnectivityStatus{
 		Internet:          internet,
@@ -411,6 +453,7 @@ func connectivitySnapshot() ConnectivityStatus {
 		WiFiSSID:          ssid,
 		WiFiSignal:        wifiSignal,
 		WiFiQuality:       wifiQuality,
+		WiFiRSSIDBm:       wifiRSSI,
 		WiFiInterfaces:    wifis,
 		WiFiCount:         len(wifis),
 		ClientInterface:   client,
@@ -892,6 +935,8 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "opção de display inválida"})
 			return
 		}
+		oldOverride, oldOverrideErr := os.ReadFile(displayOverrideFile)
+		oldOverrideExists := oldOverrideErr == nil
 		if in.Enabled {
 			if in.Layout == 0 { in.Layout = 9 }
 			if in.Layout != 9 && in.Layout != 2 && in.Layout != 3 {
@@ -910,9 +955,23 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 			_ = os.WriteFile(displayOverrideFile, raw, 0600)
 		}
 		if fileExists(filepath.Join(dataDir, "rf-configured")) {
-			_, _ = exec.Command("/usr/local/sbin/2pny-display-apply").CombinedOutput()
+			out, err := exec.Command("/usr/local/sbin/2pny-display-apply").CombinedOutput()
+			if err != nil {
+				if oldOverrideExists {
+					_ = os.WriteFile(displayOverrideFile, oldOverride, 0600)
+				} else {
+					_ = os.Remove(displayOverrideFile)
+				}
+				_, _ = exec.Command("/usr/local/sbin/2pny-display-apply").CombinedOutput()
+				msg := strings.TrimSpace(string(out))
+				if msg == "" {
+					msg = err.Error()
+				}
+				writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": "Não foi possível aplicar o display; a configuração anterior foi restaurada.", "detail": msg})
+				return
+			}
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": in.Enabled, "layout": in.Layout})
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": in.Enabled, "layout": in.Layout, "runtime": readPublicJSON(filepath.Join(dataDir, "display-runtime.json"))})
 	default:
 		http.Error(w, "GET or POST required", http.StatusMethodNotAllowed)
 	}
@@ -2278,19 +2337,21 @@ func systemControlHandler(w http.ResponseWriter, r *http.Request) {
 			_ = exec.Command("systemctl", "restart", "2pny-dmrgateway.service").Run()
 		}
 	case "operational-off":
-		for _, u := range []string{"2pny-dmrgateway.service", "2pny-dstargateway.service", "2pny-ysfgateway.service", "2pny-p25gateway.service", "2pny-nxdngateway.service", "2pny-dapnetgateway.service", "2pny-mmdvmhost.service"} {
-			_ = exec.Command("systemctl", "stop", u).Run()
+		res, e := runPrivilegedRequest("2pny-operational-apply.service", "/run/2pny/operational-request.json", "/run/2pny/operational-result.json", map[string]any{"action": "off"})
+		if e != nil {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": "Não foi possível desligar o operacional com confirmação.", "detail": e.Error(), "result": res})
+			return
 		}
+		writeJSON(w, http.StatusOK, res)
+		return
 	case "operational-on":
-		var cfg Config
-		if b, e := os.ReadFile(configFile); e == nil {
-			_ = json.Unmarshal(b, &cfg)
+		res, e := runPrivilegedRequest("2pny-operational-apply.service", "/run/2pny/operational-request.json", "/run/2pny/operational-result.json", map[string]any{"action": "on"})
+		if e != nil {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": "O operacional não ficou ativo.", "detail": e.Error(), "result": res})
+			return
 		}
-		_ = exec.Command("systemctl", "start", "2pny-mmdvmhost.service").Run()
-		m := map[string]string{"DMR": "2pny-dmrgateway.service", "DSTAR": "2pny-dstargateway.service", "YSF": "2pny-ysfgateway.service", "P25": "2pny-p25gateway.service", "NXDN": "2pny-nxdngateway.service", "POCSAG": "2pny-dapnetgateway.service"}
-		if u := m[strings.ToUpper(cfg.Protocol)]; u != "" {
-			_ = exec.Command("systemctl", "start", u).Run()
-		}
+		writeJSON(w, http.StatusOK, res)
+		return
 	case "reboot":
 		go func() { time.Sleep(800 * time.Millisecond); _ = exec.Command("systemctl", "reboot").Run() }()
 	case "poweroff":

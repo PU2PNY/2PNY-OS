@@ -1,0 +1,21 @@
+[Unit]
+Description=PU2PNY restore saved operational profile after boot
+After=NetworkManager.service network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+ConditionPathExists=/var/lib/2pny/rf-configured
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/sbin/2pny-operational-apply restore
+TimeoutStartSec=50
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+ReadWritePaths=/run/2pny /var/lib/2pny /etc/systemd/system
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
