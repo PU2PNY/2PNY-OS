@@ -7,6 +7,7 @@ ConditionPathExists=/var/lib/2pny/config.json
 [Service]
 Type=simple
 ExecStart=/usr/local/sbin/2pny-direct-start
+ExecStopPost=/usr/local/sbin/2pny-direct-recover
 Restart=on-failure
 RestartSec=5
 User=root
