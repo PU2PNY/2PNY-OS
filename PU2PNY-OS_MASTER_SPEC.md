@@ -526,3 +526,35 @@ Regras:
 - falha de D-PRS nunca pode derrubar D-Star, MMDVMHost ou o cliente APRS-IS;
 - D-PRS só pode ser marcado HW PASS depois de teste físico com rádio D-Star compatível enviando posição real;
 - a UI não pode apresentar `APRS / D-PRS` como completo enquanto o caminho D-PRS não existir.
+
+## 24. Histórico e Últimas atividades enriquecidos — 2026-09-20
+
+### LIVE-012 — Identidade e contexto rico em Histórico/Últimas atividades
+As páginas **Histórico** e **Ao Vivo → Últimas atividades/Atividade recente** devem exibir o máximo de contexto útil disponível sobre cada transmissão, principalmente tráfego que chega pela Internet ao hotspot, sem inventar dados e sem consultas externas agressivas.
+
+Campos/estado desejados quando realmente disponíveis:
+- direção explícita: `RF → Internet` ou `Internet → RF`;
+- indicativo e/ou Radio ID/identidade de origem;
+- nome, cidade, estado, país e bandeira quando já resolvidos por fonte local/cache confiável;
+- protocolo;
+- destino: TG, módulo, refletor, DG-ID ou destino equivalente;
+- servidor/refletor/rede efetivamente usados;
+- slot e Color Code em DMR quando existentes;
+- módulo/refletor em D-Star/XLX e contexto equivalente em YSF/P25/NXDN quando existente;
+- horário de início/fim, duração e quantidade de ocorrências;
+- tempo acumulado por indicativo no período;
+- frequência/perfil local aplicado quando relevante;
+- BER/RSSI somente para eventos com telemetria RF real;
+- origem lógica do caminho (`Gateway/Servidor`, `Direct`, `Relay`) quando o runtime realmente souber;
+- atalhos QRZ e RadioID somente quando houver identificador válido.
+
+Regras:
+- para tráfego vindo da Internet, não exibir BER/RSSI como se fossem métricas do transmissor remoto;
+- não mostrar IP público/remoto por padrão: é pouco útil operacionalmente e expõe informação desnecessária; detalhes de rede ficam no Expert apenas quando realmente necessários;
+- não chamar um hotspot/repetidora/gateway pelo nome se o runtime não fornecer essa identidade;
+- valores ausentes devem ser omitidos ou `—`;
+- Histórico e Ao Vivo devem usar o mesmo evento normalizado para evitar divergência;
+- enriquecimento de identidade deve usar cache local e consultas sob demanda/limitadas, preservando PERF-001.
+
+### DATA-001 — Evento normalizado enriquecido
+O Event Bus deve disponibilizar campos normalizados opcionais para suportar LIVE-012, mantendo compatibilidade com eventos antigos. Campos novos só recebem valor quando houver evidência real no gateway/MMDVM/cache de identidade. A UI não deve inferir valores inexistentes.
