@@ -230,3 +230,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - A filtragem de atividade não será removida; ficará em controle separado e compacto.
 - Registrado **PROTO-014**: na página Hotspot os perfis permanecem, mas a ação principal será **Configurar** cada protocolo.
 - Objetivo de UX: **Ao Vivo = operar/trocar rapidamente; Hotspot = configurar**.
+
+## 2026-09-20 — feedback HW 0.3.7: PU2PNY Direct
+
+- Página Direct reportada visualmente quebrada; registrado **UI-015** para obrigar uso do layout comum/responsivo do painel.
+- Tentativa de chamada sem contatos pareados exibiu `HTTP 409`.
+- Inspeção do código confirmou que o backend usa 409 quando a pré-condição de chamada não é atendida, incluindo o caso `pareie o indicativo antes da chamada`.
+- Registrado **P2P-007**: a UI não deve expor o código HTTP bruto; `Chamar` deve ser desabilitado/assistido até existir peer pareado.
+- Como ainda não há segundo PU2PNY 0.3.7 disponível neste teste, o 409 observado não é evidência de falha de NAT/CGNAT ou Relay. O transporte entre dois hotspots continua HW PENDENTE.
+- Criados TEST-P2P-007A..D e TEST-UI-015A..B.
