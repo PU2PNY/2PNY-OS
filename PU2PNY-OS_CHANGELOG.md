@@ -277,3 +277,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - O CSS atual também permite que a pill do relógio encolha/quebre quando a navegação ocupa muito espaço.
 - Correção requerida: inicialização global coerente + `white-space: nowrap`/dimensão mínima dos navtools + comportamento responsivo consistente.
 - A unificação Hotspot/Protocolos reduz pressão horizontal, mas não substitui a correção estrutural.
+
+## 2026-09-20 — feedback HW 0.3.7: Expert
+
+- Registrado **UI-018**: Expert evolui para cockpit/dashboard técnico em tempo real com cards e gráficos leves.
+- Inspeção do código confirmou que Expert usa polling fixo de 15 s para `/api/live`, enquanto Ao Vivo já usa SSE `/api/live/events` com fallback leve. Expert deve reutilizar o mesmo stream.
+- Hardware ganhará visualizações de CPU, temperatura, RAM, load, frequência/throttling, serviços e hardware detectado, sem scans pesados automáticos.
+- Registrado **UI-019**: `Configuração pública` será renomeada para **Resumo operacional** e exibirá mais contexto seguro, sem credenciais.
+- Registrado **SEC-021** para UX do SSH.
+- No teste atual, a operação parou em validação de chave pública: `Chave pública SSH inválida`. Isso não prova falha do `ssh.service`; prova que o fluxo atual é inadequado para usuário sem conhecimento de chaves OpenSSH.
+- SSH continuará sem root/senha, com chave válida, confirmação do serviço e instruções claras.
