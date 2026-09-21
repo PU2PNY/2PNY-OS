@@ -296,3 +296,11 @@ Estado antes do CI final:
 |---|---|---:|---|
 | LIVE-011 / PROTO-014 | PENDENTE | DOC | Ao Vivo deve trocar perfis rapidamente; Hotspot deve configurar perfis; filtros de atividade permanecem separados |
 | TEST-LIVE-011A..D / TEST-PROTO-014A..B | PENDENTE | SW/HW | implementação e validação ainda necessárias |
+
+## Feedback físico 0.3.7-alpha — Direct
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| P2P-007 | FALHA/PENDENTE | HW/browser | chamada sem peer pareado exibiu `HTTP 409`; fluxo precisa pré-condição e mensagens operacionais em português |
+| UI-015 | FALHA | HW/browser | página Direct abriu com layout/cabeçalho/menu quebrados |
+| P2P-006B | PENDENTE | HW | ainda não existe segundo hotspot 0.3.7 para validar RF A↔B; não classificar Direct/Relay como HW PASS |
