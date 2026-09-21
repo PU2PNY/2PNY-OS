@@ -288,7 +288,7 @@ grep -Fq 'Usar Cloudflare' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'Canais próximos' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'Manutenção automática' "$ROOT/usr/share/2pny/system.html"
 grep -Fq 'Throttling' "$ROOT/usr/share/2pny/system.html"
-grep -Fq 'PU2PNY Moderno' "$ROOT/usr/share/2pny/display.html"
+grep -Fq 'MMDVMHost nativo / ON7LDS' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'Iniciando / Starting' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'TOT: corte em' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'Em andamento / Working' "$ROOT/usr/local/sbin/2pny-display-status"
@@ -387,7 +387,7 @@ grep -Fq 'Data={audio_path}' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 
 grep -Fq 'PU2PNY Moderno V2' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'Graphical 128x64 renderer' "$ROOT/usr/local/sbin/2pny-display-core"
-grep -Fq 'PU2PNY Moderno V2' "$ROOT/usr/share/2pny/display.html"
+grep -Fq 'MMDVMHost nativo / ON7LDS' "$ROOT/usr/share/2pny/display.html"
 
 # DMR baseline markers remain untouched.
 strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX module control'
@@ -484,7 +484,7 @@ echo '[14e/15] 0.3.12 inherited display/protocol/network hardening gates'
 grep -Fq '/api/display/detection' < <(strings "$ROOT/usr/local/bin/2pnyd")
 grep -Fq '/api/diagnostics' < <(strings "$ROOT/usr/local/bin/2pnyd")
 grep -Fq 'associating' < <(strings "$ROOT/usr/local/bin/2pnyd")
-grep -Fq 'PU2PNY Moderno V2' "$ROOT/usr/share/2pny/display.html"
+grep -Fq 'MMDVMHost nativo / ON7LDS' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'nextion-101-1024x600' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'Nunca automático' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'Perfis rápidos nativos · sem iframe' "$ROOT/usr/share/2pny/hotspot.html"
@@ -742,7 +742,7 @@ grep -Fq 'Usar Cloudflare' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'Canais próximos' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'Manutenção automática' "$ROOT/usr/share/2pny/system.html"
 grep -Fq 'Throttling' "$ROOT/usr/share/2pny/system.html"
-grep -Fq 'PU2PNY Moderno' "$ROOT/usr/share/2pny/display.html"
+grep -Fq 'MMDVMHost nativo / ON7LDS' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'Iniciando / Starting' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'TOT: corte em' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'Em andamento / Working' "$ROOT/usr/local/sbin/2pny-display-status"
@@ -841,7 +841,7 @@ grep -Fq 'Data={audio_path}' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 
 grep -Fq 'PU2PNY Moderno V2' "$ROOT/usr/local/sbin/2pny-display-core"
 grep -Fq 'Graphical 128x64 renderer' "$ROOT/usr/local/sbin/2pny-display-core"
-grep -Fq 'PU2PNY Moderno V2' "$ROOT/usr/share/2pny/display.html"
+grep -Fq 'MMDVMHost nativo / ON7LDS' "$ROOT/usr/share/2pny/display.html"
 
 # DMR baseline markers remain untouched.
 strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX module control'
@@ -938,7 +938,7 @@ echo '[14e/15] 0.3.12 inherited display/protocol/network hardening gates'
 grep -Fq '/api/display/detection' < <(strings "$ROOT/usr/local/bin/2pnyd")
 grep -Fq '/api/diagnostics' < <(strings "$ROOT/usr/local/bin/2pnyd")
 grep -Fq 'associating' < <(strings "$ROOT/usr/local/bin/2pnyd")
-grep -Fq 'PU2PNY Moderno V2' "$ROOT/usr/share/2pny/display.html"
+grep -Fq 'MMDVMHost nativo / ON7LDS' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'nextion-101-1024x600' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'Nunca automático' "$ROOT/usr/share/2pny/display.html"
 grep -Fq 'Perfis rápidos nativos · sem iframe' "$ROOT/usr/share/2pny/hotspot.html"
