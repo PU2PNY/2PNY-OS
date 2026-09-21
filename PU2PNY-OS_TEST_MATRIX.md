@@ -266,3 +266,14 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-APRS-007A | APRS-007 | rádio D-Star envia D-PRS válido | posição real é recebida, identificada como D-PRS e encaminhada conforme configuração sem duplicar | PENDENTE | HW |
 | TEST-APRS-007B | APRS-007 | quadro D-PRS inválido/sem posição | descarta com diagnóstico e não inventa latitude/longitude | PENDENTE | SW/HW |
 | TEST-APRS-007C | APRS-007 | falha APRS-IS durante D-PRS | D-Star/RF permanecem operacionais; posição fica pendente/erro visível | PENDENTE | HW |
+
+## Casos adicionados — Histórico/Últimas atividades enriquecidos
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-LIVE-012A | LIVE-012 | evento Internet → RF | mostra direção, identidade disponível, protocolo, destino, servidor/rede, horário e duração sem BER/RSSI remoto inventado | PENDENTE | SW/HW |
+| TEST-LIVE-012B | LIVE-012 | evento RF → Internet | mostra identidade disponível, protocolo, destino, RF real, BER/RSSI somente quando medidos | PENDENTE | SW/HW |
+| TEST-LIVE-012C | LIVE-012 | múltiplas transmissões do mesmo indicativo | Histórico agrupa ocorrências e mostra quantidade, tempo acumulado e último evento corretamente | PENDENTE | SW/HW |
+| TEST-LIVE-012D | LIVE-012 / DATA-001 | campo não disponível | UI omite ou mostra `—`; não inventa cidade, gateway, RSSI, BER, TG ou módulo | PENDENTE | SW |
+| TEST-LIVE-012E | LIVE-012 | QRZ/RadioID | atalhos aparecem somente para identificadores válidos e não abrem JSON bruto | PENDENTE | SW/HW |
+| TEST-LIVE-012F | LIVE-012 / PERF-001 | atualização contínua | Ao Vivo atualiza pelo Event Bus sem polling externo pesado; Histórico usa cache/intervalo leve | PENDENTE | SW/HW |
