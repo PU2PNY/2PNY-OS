@@ -466,3 +466,13 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0310-C | REL-003/004 | XZ + SHA-256 | xz -t e checksum são confirmados | PENDENTE CI |
 | TEST-REL-0310-D | REL-003/004 | validar imagem montada | captive, DMR baseline, Hotspot sem iframe, Nextion, bridge, MQTT, boot e APIs estruturais passam | PENDENTE CI |
 | TEST-REL-0310-E | REL-004 | teste físico | AP popup, onboarding, DMR, D-Star, YSF, reboot restore e Nextion Moderno V2 | PENDENTE HW |
+
+### Resultado final 0.3.10-alpha — run 35600972295
+
+| ID | Resultado |
+|---|---|
+| TEST-REL-0310-A | SW PASS — source/staged source |
+| TEST-REL-0310-B | SW PASS — ARM64 |
+| TEST-REL-0310-C | SW PASS — XZ + SHA-256 |
+| TEST-REL-0310-D | SW PASS — validador final da imagem |
+| TEST-REL-0310-E | PENDENTE HW — Raspberry Pi + MMDVM/display |
