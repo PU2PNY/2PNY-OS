@@ -2922,7 +2922,7 @@ func directProxyHandler(localPath string) http.HandlerFunc {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{Timeout: 7 * time.Second}
+		client := &http.Client{Timeout: 15 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "PU2PNY Direct indisponível", "detail": err.Error()})
