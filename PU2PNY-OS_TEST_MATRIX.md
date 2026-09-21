@@ -220,3 +220,13 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-UI-014A | UI-014 | senha Wi-Fi 1/2 | botão Mostrar/Ocultar funciona nos dois campos | **FAIL** — não há controle para visualizar a senha digitada | HW/browser |
 | TEST-UI-014B | UI-014 / UI-007 | erro de rede em PT-BR | mensagem principal em português; detalhe bruto apenas no Expert/log | **FAIL** — exibiu `signal is aborted without reason` em inglês | HW/browser |
 | TEST-UI-014C | UI-014 / UI-013 | salvar/aplicar perfil | estado do perfil/conexão atualiza sozinho, sem F5 | **FAIL** — retorno não mostrou claramente perfil salvo/conectado | HW/browser |
+
+## Casos adicionados — gráfico/recomendação de canal Wi-Fi
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-NET-019A | NET-019 | scan de canais 2,4 GHz | gráfico mostra canais observados, SSIDs/força quando disponíveis e destaca o canal da rede ativa | PENDENTE | SW/HW |
+| TEST-NET-019B | NET-019 | hardware com 5 GHz | gráfico separa 2,4/5 GHz e respeita canais permitidos pelo domínio regulatório | PENDENTE | SW/HW |
+| TEST-NET-019C | NET-019 | recomendação | sugere um canal com justificativa baseada em ocupação/sinal/sobreposição; não altera o roteador | PENDENTE | SW/HW |
+| TEST-NET-019D | NET-019 / PERF-001 | repetir análise | scan é manual/cacheado, não derruba Wi-Fi/AP e não cria polling pesado | PENDENTE | HW |
+| TEST-NET-019E | NET-019 | dados incompletos | não inventa largura/sinal/canal; mostra indisponível quando não houver evidência | PENDENTE | SW/HW |
