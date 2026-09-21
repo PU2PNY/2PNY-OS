@@ -19,7 +19,8 @@ STATUS=STATE/"display-runtime.json"
 SETTINGS=STATE/"display-settings.json"
 
 BLACK=0; WHITE=65535; CYAN=2047; GREEN=2016; RED=63488; YELLOW=65504; GRAY=33808; BLUE=31
-END=b"\\xff\\xff\\xff"\nMODERN_V2="PU2PNY Moderno V2"
+END=b"\\xff\\xff\\xff"
+MODERN_V2="PU2PNY Moderno V2"
 
 def read_json(path, default=None):
     try:return json.loads(Path(path).read_text())
