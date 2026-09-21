@@ -808,3 +808,39 @@ Arquitetura:
 - mudança de idioma deve atualizar a página atual imediatamente sem F5 sempre que possível e persistir entre páginas/reboot do navegador.
 
 O mecanismo atual 0.3.7, baseado em dicionário de correspondência exata, deixa o texto original quando não encontra chave; por isso produz mistura de idiomas e deve ser substituído/endurecido.
+
+## 31. Boot/restauração operacional e display transitório — 2026-09-21
+
+### BOOT-001 — Restaurar automaticamente o último estado operacional após boot
+Depois que o hotspot já estiver provisionado, um reboot ou retorno da alimentação deve restaurar automaticamente o último perfil/protocolo operacional salvo, sem exigir que o usuário entre em Protocolos e clique em `Ativar perfil`.
+
+Regras:
+- iniciar MMDVMHost e exatamente o gateway correspondente ao protocolo salvo;
+- aguardar dependências locais necessárias (dispositivo MMDVM, MQTT e rede quando aplicável) e validar que os serviços permaneceram ativos;
+- não regravar RF/perfis em todo boot se bastar iniciar os serviços já configurados;
+- se a restauração falhar, manter painel/rede acessíveis, registrar diagnóstico acionável e não declarar `Ligado`;
+- `Desligar operacional` deve criar estado persistente explícito; somente nesse caso o reboot permanece operacionalmente desligado;
+- `Ligar operacional` pelo painel deve remover esse estado, iniciar MMDVMHost + gateway salvo, confirmar o resultado e exibir erro real se algum serviço não permanecer ativo;
+- nenhuma restauração de boot pode apagar perfil, frequência, offsets, identidade ou configuração de rede já aprovada;
+- DMR TX/RX fisicamente validado permanece baseline obrigatória de regressão.
+
+### NET-020 — Reconexão e estado Wi-Fi coerentes após boot
+Perfis Wi-Fi salvos devem permanecer com autoconnect e prioridade determinística. Depois do boot, se houver associação Wi-Fi real + IPv4, a UI deve mostrar a interface, SSID, RSSI/sinal e qualidade correspondentes.
+
+Regras:
+- se a rota padrão estiver em `wlan*` e a interface estiver realmente associada, não mostrar SSID/RSSI como `—`;
+- usar estado real da interface/NetworkManager e fallback local via `iw`, sem rescan pesado;
+- Wi-Fi 1/2 continuam obedecendo NET-018 e rollback existente;
+- Ethernet pode coexistir; a UI deve distinguir link físico de interface efetivamente usada pela rota padrão;
+- falha de Wi-Fi não pode ser inferida apenas porque um campo de UI ficou vazio.
+
+### DISPLAY-015 — Estados transitórios não podem deixar a tela física travada
+Mensagens de boot, manutenção, atualização, detecção e diagnóstico são temporárias. Ao terminar a operação, a tela física deve voltar ao estado operacional normal apropriado.
+
+Regras:
+- `Iniciando` deve evoluir para Standby/Pronto quando o rádio voltar;
+- `Manutenção` deve sair automaticamente ao concluir, falhar ou ficar aguardando rede;
+- se o operacional estiver explicitamente desligado, mostrar esse estado em vez de `Pronto` falso;
+- rotina de manutenção não pode tomar permanentemente a Nextion nem competir com o renderer ativo do MMDVMHost/Display Core;
+- nenhum HMI/TFT é gravado automaticamente;
+- manutenção continua sem alterar RF, protocolo ou gateway.
