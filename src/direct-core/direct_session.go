@@ -24,7 +24,7 @@ func (c *core) sendCtrl(addr *net.UDPAddr, m ctrl) {
 }
 func (c *core) register() {
 	log.Printf("Direct register %s -> %s", c.id.Callsign, c.serverAddr)
-	m := ctrl{T: "reg", From: c.id.Callsign, Ed: c.id.EdPub, X: c.id.XPub, FP: fingerprint(c.edPub)}
+	m := ctrl{T: "reg", From: c.id.Callsign, Ed: c.id.EdPub, X: c.id.XPub, FP: fingerprint(c.edPub), Protocol: currentProtocol()}
 	c.sign(&m)
 	c.sendCtrl(c.serverAddr, m)
 }
@@ -191,6 +191,11 @@ func (c *core) call(to string) error {
 	if !strings.EqualFold(res.Ed, paired.EdPub) || !strings.EqualFold(res.X, paired.XPub) {
 		return errors.New("identidade remota diferente do pareamento salvo")
 	}
+	localProto := currentProtocol()
+	remoteProto := strings.ToUpper(strings.TrimSpace(res.Protocol))
+	if localProto != "" && remoteProto != "" && localProto != remoteProto {
+		return fmt.Errorf("protocolo remoto incompatível: local %s, remoto %s", localProto, remoteProto)
+	}
 	ep, e := net.ResolveUDPAddr("udp", res.Endpoint)
 	if e != nil {
 		return e
@@ -201,6 +206,7 @@ func (c *core) call(to string) error {
 	c.st.Peer = to
 	c.st.Path = "Offline"
 	c.st.LastError = ""
+	c.st.Protocol = localProto
 	c.writeState()
 	c.mu.Unlock()
 	ch := make(chan time.Duration, 1)
@@ -208,19 +214,22 @@ func (c *core) call(to string) error {
 	c.probeWait[to] = ch
 	c.mu.Unlock()
 	defer func() { c.mu.Lock(); delete(c.probeWait, to); c.mu.Unlock() }()
-	_ = c.sendSecure(to, "probe", []byte(fmt.Sprintf("%d", time.Now().UnixNano())), false)
-	select {
-	case d := <-ch:
-		c.mu.Lock()
-		c.st.Status = "connected"
-		c.st.Path = "Direct"
-		c.st.LatencyMS = d.Milliseconds()
-		c.writeState()
-		c.mu.Unlock()
-		return nil
-	case <-time.After(1800 * time.Millisecond):
-		_ = c.sendSecure(to, "probe", []byte(fmt.Sprintf("%d", time.Now().UnixNano())), true)
+	if !c.forceRelay {
+		_ = c.sendSecure(to, "probe", []byte(fmt.Sprintf("%d", time.Now().UnixNano())), false)
 		select {
+		case d := <-ch:
+			c.mu.Lock()
+			c.st.Status = "connected"
+			c.st.Path = "Direct"
+			c.st.LatencyMS = d.Milliseconds()
+			c.writeState()
+			c.mu.Unlock()
+			return nil
+		case <-time.After(1800 * time.Millisecond):
+		}
+	}
+	_ = c.sendSecure(to, "probe", []byte(fmt.Sprintf("%d", time.Now().UnixNano())), true)
+	select {
 		case d := <-ch:
 			c.mu.Lock()
 			c.st.Status = "connected"
@@ -229,7 +238,7 @@ func (c *core) call(to string) error {
 			c.writeState()
 			c.mu.Unlock()
 			return nil
-		case <-time.After(2200 * time.Millisecond):
+	case <-time.After(2200 * time.Millisecond):
 			c.mu.Lock()
 			c.st.Status = "error"
 			c.st.Path = "Offline"
@@ -237,7 +246,6 @@ func (c *core) call(to string) error {
 			c.writeState()
 			c.mu.Unlock()
 			return errors.New("peer sem resposta")
-		}
 	}
 	return nil
 }
