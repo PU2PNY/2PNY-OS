@@ -1240,3 +1240,74 @@ Escopo estrito:
 - alterar somente o RF apply para encerrar após o bootstrap MMDVM comprovado e o dispatcher DMR para remover o preflight MQTT anterior ao helper;
 - manter rollback `backup/0.3.14-pre-0.3.15-20260921`;
 - publicar somente após source/regressões, ARM64, XZ, SHA-256 e validação estrutural.
+
+## 2026-09-21 — ciclo corretivo 0.3.16-alpha: somente bugs observados em HW
+
+### REL-009 — Release bugfix-only e baseline congelada
+A 0.3.16-alpha parte da 0.3.15 com rollback `backup/0.3.15-pre-0.3.16-20260921`.
+Tudo que o mantenedor não marcou como defeito neste ciclo é baseline congelada e não pode ser refatorado, redesenhado ou removido. A release corrige exclusivamente os casos registrados abaixo.
+
+### NET-023 — Wi-Fi salvo deve sobreviver a reboot e reconectar automaticamente
+Após o primeiro acesso:
+- a rede validada deve ser persistida com autoconnect habilitado e verificado;
+- a configuração só pode ser declarada salva depois de reler o perfil efetivo do NetworkManager;
+- no boot, aguardar o dispositivo Wi-Fi ficar gerenciável antes da tentativa e reativar rádio/rfkill de forma limitada;
+- falha temporária abre AP de recuperação sem apagar/desabilitar o perfil salvo;
+- conexão por cabo/Wi-Fi deve aparecer na interface em poucos segundos, sem cache de 15 s mascarando o estado real.
+
+### NET-024 — Busca utilizável para Rede Wi-Fi 1 e Rede Wi-Fi 2
+A mesma busca de redes deve alimentar os seletores primário e secundário.
+Estado de scan `error` não pode ficar preso indefinidamente: nova busca explícita inicia uma nova operação, e a UI deve oferecer retry sem reaproveitar erro antigo.
+
+### LIVE-016 — Sinal RF somente com evidência de evento RF ativo
+BER, RSSI, barra e card de Sinal RF só podem aparecer quando o evento ativo é de origem RF e existe medida real. Em standby ou evento de origem NETWORK, mostrar indisponível/ocultar; nunca reciclar valor anterior.
+
+### UI-030 — Ativação de protocolo permanece visível até evidência de estado
+Ao salvar/ativar um perfil, a mensagem operacional não pode desaparecer antes da confirmação observável.
+A UI deve acompanhar `/api/protocol/status` em janela limitada:
+- conectado: concluir;
+- gateway ativo sem prova remota: manter informação explícita, sem chamar de conectado;
+- erro: exibir causa e manter fechamento manual.
+Não inventar conexão com base apenas no processo ativo.
+
+### PROTO-022 — Arbitragem de voz de sistema
+Quando houver anúncio de voz de conexão/status em DMR/XLX, esse áudio tem prioridade no slot correspondente.
+Tráfego NETWORK→RF do mesmo slot não pode ser escrito simultaneamente no modem enquanto a voz de sistema estiver WAITING/SENDING. RF→rede não deve ser bloqueado e outros slots permanecem independentes.
+
+### P2P-006 — Direct tolerante a latência, sem enfraquecer identidade
+Antes de chamada/pareamento, atualizar registro no rendezvous; usar timeouts limitados porém realistas para lookup/Direct/Relay.
+Continuar exigindo fingerprint/chaves pareadas e protocolo compatível. Mudança de identidade deve exigir revogação e novo pareamento; nunca confiar silenciosamente em chave nova.
+
+### APRS-012 — APRS-IS pronto por padrão e com fallback
+Em sistema provisionado, APRS-IS deve iniciar habilitado para mensagens sem exigir clique manual.
+- porta padrão 14580;
+- tentar o servidor regional configurado e, se indisponível, `rotate.aprs2.net` de forma limitada;
+- resolver e tentar endereços válidos com timeout, registrar endpoint efetivo e erro;
+- não transmitir beacon/posição sem coordenadas reais confirmadas;
+- `waiting_ack` significa enviado e aguardando ACK; não apresentar como entrega confirmada;
+- retries permanecem limitados.
+
+### DISPLAY-018 — Nextion via MMDVM restaura o writer nativo comprovado
+Para Nextion ligada pela porta do modem:
+- MMDVMHost volta a ser writer autoritativo, como na 0.3.8;
+- usar `Display=Nextion`, `Port=modem`, clock/brightness e ScreenLayout 2/3 compatíveis;
+- Moderno V2 não deve depender da bridge MQTT para uma tela via modem quando HMI compatível não foi provado;
+- não gravar HMI/TFT automaticamente;
+- Nextion direta e OLED/LCD mantêm o caminho atual.
+
+### SEC-023 — Requests privilegiados de fuso/SSH com gatilho determinístico
+Timezone e SSH continuam em helpers one-shot com mínimo privilégio.
+O request em `/run/2pny` deve disparar deterministicamente via `PathExists`; o helper consome/remove o request após leitura para permitir a próxima operação. O backend não ganha sudo/root genérico.
+
+### UI-031 — SSH seguro utilizável sem terminal
+SSH continua exigindo chave pública válida, sem senha/root.
+A UI deve permitir colar a linha pública ou selecionar arquivo `.pub`; botão sem chave deve explicar o que falta. Nunca gerar/expor chave privada no hotspot.
+
+### PROTO-023 — D-Star compatível com o DStarGateway embarcado e link verificável
+A configuração deve seguir o formato da versão de DStarGateway realmente embarcada:
+- `[Repeater 1]` com loopback MMDVM 127.0.0.1:20011 e HBPort 20010;
+- `[Hosts Files]` usa a chave esperada `ReloadTimer`;
+- módulo/banda local da repetidora não deve ser confundido com o módulo remoto selecionado;
+- refletor selecionado deve poder ser incluído em CustomHostsfiles a partir do endereço/porta do catálogo, evitando depender de cache incompatível;
+- gateway ativo e porta UDP não equivalem a link remoto; estado connected/linked só com evidência do runtime/log;
+- callsign/repeater nunca podem ficar vazios.
