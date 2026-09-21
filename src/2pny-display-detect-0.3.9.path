@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch PU2PNY display detection requests
+
+[Path]
+PathChanged=/run/2pny/display-detect-request.json
+Unit=2pny-display-detect.service
+
+[Install]
+WantedBy=multi-user.target
