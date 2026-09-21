@@ -1,0 +1,25 @@
+[Unit]
+Description=PU2PNY display auto-detection
+After=local-fs.target systemd-udev-settle.service
+Wants=systemd-udev-settle.service
+Before=2pny-mmdvmhost.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-display-bootstrap
+Nice=10
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/run/2pny /var/lib/2pny
+PrivateTmp=true
+DeviceAllow=/dev/ttyAMA0 rw
+DeviceAllow=/dev/ttyS0 rw
+DeviceAllow=/dev/ttyUSB0 rw
+DeviceAllow=/dev/ttyACM0 rw
+DeviceAllow=/dev/i2c-1 rw
+SupplementaryGroups=dialout i2c
+TimeoutStartSec=25
+
+[Install]
+WantedBy=multi-user.target
