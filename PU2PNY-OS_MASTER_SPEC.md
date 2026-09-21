@@ -692,3 +692,67 @@ Se o sistema detectar BER persistentemente alto:
 5. clicar no aviso abre diretamente a seção de calibração no Expert.
 
 Nenhum aviso deve afirmar defeito de modem ou rádio sem evidência.
+
+## 29. Ao Vivo — medidores de sinal e qualidade — 2026-09-20
+
+### LIVE-013 — Medidores RF, Wi-Fi e Internet no Ao Vivo
+A página **Ao Vivo** deve incluir uma faixa compacta de **Saúde da comunicação** com três indicadores independentes: **Sinal RF**, **Wi-Fi/Uplink** e **Internet**.
+
+#### Sinal RF / S-meter
+- durante recepção originada do rádio (`RF → Internet`), mostrar um medidor visual tipo S-meter alimentado exclusivamente por RSSI real fornecido pelo MMDVM/runtime;
+- mostrar também o valor em dBm quando disponível e BER real ao lado;
+- usar `rssi_avg` quando existir, com fallback para `rssi`;
+- se não houver RSSI real, mostrar `— / indisponível`, sem fabricar barras ou nível;
+- unidades S1..S9 só podem aparecer quando existir conversão/calibração explicitamente confiável para aquele hardware; caso contrário o componente mantém aparência de S-meter, mas sua escala numérica principal é RSSI/dBm;
+- o medidor deve reagir ao mesmo Event Bus/SSE da transmissão, sem polling RF adicional.
+
+#### Qualidade Wi-Fi / uplink
+- quando a rota ativa usar Wi-Fi, mostrar intensidade/qualidade da **conexão já associada**, sem provocar novo scan;
+- classificar de forma simples em `Ótimo`, `Bom` ou `Ruim`, usando critério documentado/centralizado e mostrando o valor bruto do NetworkManager quando disponível;
+- se o uplink ativo for Ethernet, mostrar `Ethernet · Link ativo` em vez de inventar qualidade Wi-Fi;
+- clicar no indicador abre a página Internet para diagnóstico/canais.
+
+#### Qualidade da Internet
+- mostrar `Ótima`, `Boa`, `Ruim` ou `Offline`, reutilizando NET-011 e as métricas cacheadas de latência, perda e jitter já existentes;
+- não executar MTR/traceroute continuamente para alimentar o Ao Vivo;
+- quando a medição detalhada estiver antiga/indisponível, usar apenas a informação de conectividade disponível e marcar a qualidade como estimada, sem inventar perda/jitter;
+- clicar no indicador abre a página Internet no diagnóstico de rota.
+
+### LIVE-014 — Conteúdo contextual para RX/TX
+O bloco principal do Ao Vivo deve mudar de conteúdo conforme o estado real.
+
+**Quando RF → Internet (hotspot recebendo o rádio):**
+- RX/RF destacado;
+- indicativo/Radio ID, nome/local quando disponíveis;
+- protocolo;
+- destino TG/módulo/refletor/DG-ID;
+- frequência RX/perfil ativo;
+- duração;
+- RSSI/S-meter e BER reais;
+- servidor/gateway de saída quando conhecido.
+
+**Quando Internet → RF (hotspot transmitindo para o rádio):**
+- TX/RF destacado;
+- identidade da estação remota quando disponível;
+- protocolo;
+- destino TG/módulo/refletor/DG-ID;
+- frequência TX/perfil ativo;
+- duração;
+- servidor/gateway/origem lógica quando conhecida;
+- não mostrar RSSI/BER remoto como se fossem medidos localmente.
+
+**Em Standby:**
+- protocolo/perfil ativo;
+- RX/TX configurados;
+- uplink atual;
+- estado resumido RF/Wi-Fi/Internet;
+- radar leve já definido em LIVE-007.
+
+### UI-021 — Sugestões acionáveis no Ao Vivo
+A faixa de saúde pode mostrar somente avisos úteis e clicáveis:
+- BER persistente alto → abrir `Expert → Calibração RF / BER` conforme UI-020;
+- Wi-Fi ruim → abrir `Internet → canais/qualidade`;
+- Internet ruim → abrir `Internet → rota/DNS`;
+- gateway/protocolo offline → abrir configuração Hotspot/Protocolos unificada.
+
+Não exibir recomendações quando não houver evidência suficiente e não transformar o Ao Vivo em painel técnico poluído.
