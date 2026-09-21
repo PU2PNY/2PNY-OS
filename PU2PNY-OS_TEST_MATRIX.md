@@ -575,3 +575,16 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0315-B | REL-008 | build ARM64/XZ/SHA | imagem e checksum válidos | PENDENTE CI |
 | TEST-REL-0315-C | REL-008 | imagem montada | RF/DMR sem gate MQTT e baselines herdadas presentes | PENDENTE CI |
 | TEST-REL-0315-D | REL-008 | Raspberry Pi + MMDVM + DMR | Configuração Básica avança para Conclusão sem depender do broker MQTT | PENDENTE HW |
+
+### Resultado final 0.3.15-alpha — run 35647296002
+
+| ID | Resultado |
+|---|---|
+| TEST-RF-021A | **SW PASS** — RF apply termina no bootstrap MMDVM com MQTTLevel=0 e sem gate MQTT |
+| TEST-DMR-021B | **SW PASS** — dispatcher DMR delega diretamente ao helper |
+| TEST-DMR-021C | **SW PASS** — helper DMR mantém MQTTLevel=0 e valida MMDVMHost + DMRGateway |
+| TEST-WIZ-008A | **SW PASS estrutural** — fluxo backend grava provisioned/state=applied e wizard mantém step(4); **HW PENDENTE** |
+| TEST-REL-0315-A | **SW PASS** |
+| TEST-REL-0315-B | **SW PASS** |
+| TEST-REL-0315-C | **SW PASS** |
+| TEST-REL-0315-D | **PENDENTE HW** — Raspberry Pi + MMDVM + DMR |
