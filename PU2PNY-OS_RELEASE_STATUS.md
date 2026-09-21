@@ -420,3 +420,21 @@ Estado antes do CI final:
 
 ### Gate atual
 Fontes corretivas estão em `pu2pny-os-0.3.9-alpha`. Build ARM64, XZ, SHA-256, validação estrutural e publicação ainda devem concluir antes de existir imagem 0.3.9 para teste. Nenhum FAIL HW acima é promovido por CI.
+
+## Build 0.3.9-alpha publicado — 2026-09-21
+
+**Estado do artefato:** SW PASS / ALPHA para teste físico. **Não PROD.**
+
+- GitHub Actions run: `35569995279`.
+- Commit da release: `0b35a555a642ced6e13150e434072415e24175b5`.
+- Source gate: PASS.
+- Staged source: PASS.
+- Build ARM64: PASS.
+- XZ: PASS.
+- SHA-256: PASS.
+- Validação estrutural final da imagem montada: PASS.
+- Publicação: prerelease `v0.3.9-alpha`.
+- Artefato: `PU2PNY-OS-0.3.9-alpha-arm64.img.xz`.
+- SHA-256: `09ea47002f60471e3359186717370861e0090bf03c5f5fb3e2dc32456261ec71`.
+
+Os casos BOOT/D-Star/YSF/Nextion/rede/UI que dependem de Raspberry Pi + MMDVM/display real continuam PENDENTE/FAIL anterior até novo teste HW. O CI não os promove para HW PASS.
