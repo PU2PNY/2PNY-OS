@@ -877,3 +877,13 @@ A 0.3.9 parte integralmente da 0.3.8, preserva os comportamentos aprovados da 0.
 - APRS-IS chegou a login verificado no teste; mensagens e D-PRS continuam pendentes de HW específico.
 
 Nenhum item corrigido em código neste ciclo recebe HW PASS sem novo teste físico na imagem 0.3.9.
+
+
+## 15. Correção física 0.3.9 — captive portal do primeiro acesso
+
+### NET-021 — Primeiro acesso AP deve ser realmente cativo
+Enquanto o sistema ainda não estiver provisionado e o cliente estiver conectado ao AP `pu2pny`, a rede de setup deve forçar o comportamento de captive portal pelos probes HTTP legados/compatíveis de Windows, Android, Apple e NetworkManager. O AP não deve oferecer Internet transparente por NAT durante essa etapa, mesmo que exista outro uplink, porque isso mascara o estado cativo e pode impedir o sistema operacional de oferecer/abrir o portal.
+
+A implementação não deve anunciar DHCP Captive-Portal Option 114 apontando para API HTTP local, pois RFC 8908/8910 exige endpoint de API em HTTPS autenticado. Enquanto não houver endpoint HTTPS válido por dispositivo, usar a detecção legada já suportada pelo projeto e manter `http://10.43.0.1/` e `http://pu2pny.local/` como recuperação.
+
+Após a etapa inicial, preservar integralmente o fluxo HW aprovado da 0.3.9: scan automático da Wi-Fi, senha/salvar, feedback de conexão, reabertura automática da página após o handoff, detecção automática de hardware e avanço para configuração. A correção do captive portal não pode alterar esses componentes.
