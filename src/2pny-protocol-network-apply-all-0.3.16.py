@@ -273,7 +273,7 @@ Password=
 
 [Repeater 1]
 Enabled=1
-Band=B
+Band=C
 Callsign={callsign}
 Address=127.0.0.1
 Port=20011
