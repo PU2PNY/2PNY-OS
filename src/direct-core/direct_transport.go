@@ -84,6 +84,7 @@ func (c *core) handleSecure(raw []byte, addr *net.UDPAddr, relayed bool) {
 	if e != nil {
 		return
 	}
+	c.touchPeerTraffic()
 	if !relayed {
 		c.mu.Lock()
 		c.peerEndpoints[pkt.From] = addr
@@ -91,16 +92,25 @@ func (c *core) handleSecure(raw []byte, addr *net.UDPAddr, relayed bool) {
 	}
 	switch pkt.Kind {
 	case "probe":
+		proto := currentProtocol()
+		if _, ok := directRadioProfiles[proto]; !ok { return }
 		path := "Direct"
 		if relayed { path = "Relay" }
 		c.mu.Lock()
 		c.st.Status = "connected"
 		c.st.Peer = pkt.From
 		c.st.Path = path
-		c.st.Protocol = currentProtocol()
+		c.st.Protocol = proto
 		c.st.LastError = ""
+		c.lastPeerTraffic = time.Now()
 		c.writeState()
 		c.mu.Unlock()
+		if err := c.enterRadio(proto); err != nil {
+			c.mu.Lock()
+			c.st.Status = "error"; c.st.Path = "Offline"; c.st.LastError = err.Error(); c.writeState()
+			c.mu.Unlock()
+			return
+		}
 		_ = c.sendSecure(pkt.From, "probe-ack", plain, relayed)
 	case "probe-ack":
 		c.mu.Lock()
@@ -117,6 +127,7 @@ func (c *core) handleSecure(raw []byte, addr *net.UDPAddr, relayed bool) {
 			}
 		}
 	case "hangup":
+		c.exitRadio()
 		c.mu.Lock()
 		c.st.Status = "idle"
 		c.st.Peer = ""
@@ -125,9 +136,17 @@ func (c *core) handleSecure(raw []byte, addr *net.UDPAddr, relayed bool) {
 		c.st.LastError = ""
 		c.writeState()
 		c.mu.Unlock()
+	case "keepalive":
+		_ = c.sendSecure(pkt.From, "keepalive-ack", []byte("k"), relayed)
+	case "keepalive-ack":
+		// touchPeerTraffic above is sufficient.
 	case "message":
 		log.Printf("Direct message from %s: %s", pkt.From, string(plain))
-	case "radio": // Transport envelope is ready; protocol adapters own RF integration.
+	default:
+		if strings.HasPrefix(pkt.Kind, "radio:") {
+			proto := strings.TrimPrefix(pkt.Kind, "radio:")
+			_ = c.deliverRadio(proto, plain)
+		}
 	}
 }
 func (c *core) udpLoop() {
