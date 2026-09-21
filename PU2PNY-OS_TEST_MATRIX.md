@@ -188,3 +188,12 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-PROTO-013A | PROTO-013 | gateway confirma link | anúncio é solicitado uma vez após `connected`, com rate-limit | SW/HW |
 | TEST-PROTO-013B | PROTO-013 | link falha/não confirmado | nenhum anúncio falso é enviado | SW/HW |
 | TEST-007 | TEST-007 | imagem 0.3.7 | build+XZ+SHA+validador final PASS antes de publicar | SW |
+
+## Casos adicionados — tela genérica touch 7"
+
+| ID | Requisito | Caso | Resultado esperado | Nível/Estado |
+|---|---|---|---|---|
+| TEST-DISPLAY-014A | DISPLAY-014 | vídeo 7" HDMI/DSI | imagem PU2PNY correta em boot/runtime, resolução utilizável, sem exigir terminal | HW PENDENTE |
+| TEST-DISPLAY-014B | DISPLAY-014 | touch USB/DSI | toque reconhecido, coordenadas corretas, navegação e botões funcionais sem mouse | HW PENDENTE |
+| TEST-DISPLAY-014C | DISPLAY-014 | operação Standby/RX/TX | estados e dados reais acompanham o mesmo runtime do painel sem travar RF | HW PENDENTE |
+| TEST-DISPLAY-014D | DISPLAY-014 | touch ausente/falha | vídeo/painel continuam e RF/gateways não caem; diagnóstico claro | HW PENDENTE |
