@@ -269,3 +269,9 @@ Estado antes do CI final:
 - Isso prova uma falha do fluxo automático de inicialização/atualização do display; não deve ser atribuída a configuração manual do menu Display.
 - Causa raiz ainda não determinada. Não alterar HMI/TFT automaticamente e não tocar no caminho RF para diagnosticar este defeito.
 - Novo caso: `TEST-HW-037-NEXTION-READY`.
+
+## Feedback físico 0.3.7-alpha — DNS/UI
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| UI-013 / NET-016 | FALHA | HW/browser | troca de DNS mostrou feedback de aplicação, mas "DNS efetivo" e diagnóstico não atualizaram sozinhos; exigiu refresh manual, em uma tentativa duas vezes |
