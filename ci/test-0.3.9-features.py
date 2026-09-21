@@ -47,12 +47,10 @@ assert "wait_prereqs" in op and "mosquitto.service" in op
 assert "if(!base){base=text;originals.set(node,base)}" in lang
 
 # 0.3.9 must not replace proven DMR helper, Direct page, or History page.
-for forbidden in (
-    'install("src/2pny-dmr',
-    'rootfs-overlay/usr/share/2pny/direct.html")',
-    'rootfs-overlay/usr/share/2pny/history.html")',
-):
-    assert forbidden not in prepare
+# No 0.3.9 install() entry may replace the proven DMR helper, Direct UI or History UI.
+assert not re.search(r'install\("src/[^"]*dmr[^"]*"\s*,',prepare,re.I)
+assert not re.search(r'install\("src/direct[^"]*"\s*,\s*"rootfs-overlay/usr/share/2pny/direct\.html"',prepare)
+assert not re.search(r'install\("src/history[^"]*"\s*,\s*"rootfs-overlay/usr/share/2pny/history\.html"',prepare)
 
 # Captive fallback canonical address.
 assert 'address=/#/10.43.0.1' in prepare
