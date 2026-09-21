@@ -33,8 +33,8 @@ class Test037(unittest.TestCase):
         self.assertIn("keepaliveLoop",radio)
         self.assertIn('strings.HasPrefix(pkt.Kind, "radio:")',transport)
         self.assertIn("c.exitRadio()",transport)
-        self.assertIn("--force-relay",main)
-        self.assertIn("--skip-systemd",main)
+        self.assertIn('flag.Bool("force-relay"',main)
+        self.assertIn('flag.Bool("skip-systemd"',main)
 
     def test_direct_service_fail_safe(self):
         svc=(R/"src/2pny-direct-core-0.3.7.service").read_text()
