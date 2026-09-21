@@ -2439,8 +2439,13 @@ func captiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 func captivePortalHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 	if !fileExists(provisionedFile) {
-		http.Redirect(w, r, "/wizard", http.StatusFound)
+		// Use an absolute local URL. Clients probe with foreign Host headers
+		// (Microsoft/Google/Apple); a relative redirect can keep that probe host
+		// in the address bar even though DNS is intercepted.
+		http.Redirect(w, r, "http://10.43.0.1/wizard?captive=1", http.StatusFound)
 		return
 	}
 	switch r.URL.Path {
