@@ -249,3 +249,5 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - O usuário não deve precisar fornecer ou conhecer o passcode APRS-IS para operação normal do PU2PNY.
 - **APRS-002** foi reafirmado: toast global de nova mensagem por ~5 s, clicável, abrindo APRS para resposta. A implementação atual possui aviso apenas dentro da página APRS e não atende ainda ao comportamento global.
 - Geolocalização automática em HTTP continua com fallback manual; isso é limitação do contexto do navegador, não falha do motor APRS.
+
+- Registrado **APRS-007**: a área APRS / D-PRS não pode continuar com D-PRS apenas nominal. O código atual ainda contém `Sem DPRS`; D-PRS real via D-Star entra como requisito explícito e permanece HW PENDENTE até rádio compatível ser testado.
