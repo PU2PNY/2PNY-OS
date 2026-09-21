@@ -287,3 +287,14 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrado **SEC-021** para UX do SSH.
 - No teste atual, a operação parou em validação de chave pública: `Chave pública SSH inválida`. Isso não prova falha do `ssh.service`; prova que o fluxo atual é inadequado para usuário sem conhecimento de chaves OpenSSH.
 - SSH continuará sem root/senha, com chave válida, confirmação do serviço e instruções claras.
+
+## 2026-09-20 — BER alto / ajuste automático assistido
+
+- Registrado **RF-013**: detectar BER RF alto de forma persistente e tentar autoajuste protegido de **RXOffset**.
+- A automação exige múltiplas amostras reais, snapshot/rollback, passos pequenos, limite de tentativas e melhora mensurável antes de persistir.
+- Registrado **RF-014**: TXOffset não será autoajustado com base apenas no BER medido pelo próprio hotspot; essa métrica descreve o caminho de recepção local e não prova o erro do transmissor do hotspot.
+- Registrado **UI-020**: seção `Calibração RF / BER` no Expert com gráfico, RXOffset/TXOffset, ajuste automático de RX, ajuste manual guiado e restauração.
+- Se o automático não convergir, toast global leva diretamente ao Expert para ajuste manual.
+- Nenhuma correção automática pode mudar frequência nominal, simplex/duplex, modem, baud ou gateway.
+- DMR validado continua baseline obrigatória de regressão.
+
