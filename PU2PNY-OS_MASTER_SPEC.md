@@ -1181,3 +1181,35 @@ Regras:
 - manter o sistema leve: assets devem ser otimizados e não causar carregamento pesado ou gravações extras;
 - a primeira adoção deve ocorrer em release posterior à 0.3.13-alpha, para não alterar o escopo de uma imagem já em validação;
 - futuras variações de tamanho devem derivar do mesmo logotipo oficial, mantendo identidade consistente entre web, Nextion/OLED e documentação quando aplicável.
+
+## 2026-09-21 — feedback HW 0.3.13 e ciclo corretivo 0.3.14-alpha
+
+### PROTO-020 — Broker MQTT local determinístico e readiness com recuperação
+Após RF-018 Fase A confirmar a UART/MMDVM, a Fase B deve tornar o broker MQTT local previsível e diagnosticável.
+
+Regras:
+- o broker local deve usar o binário Mosquitto instalado na imagem com configuração exclusiva do PU2PNY, listener somente em `127.0.0.1:1883`, `allow_anonymous true` e `persistence false`;
+- a unidade systemd do broker deve ser controlada pelo PU2PNY e habilitada na imagem, sem depender de defaults variáveis do pacote Debian;
+- antes do preflight: `reset-failed`, `start` e espera limitada pelo estado `active`;
+- readiness deve exigir MQTT CONNECT/CONNACK real, nunca somente `systemctl is-active` ou porta TCP aberta;
+- usar retries limitados com backoff curto e teto total de aproximadamente 20 s;
+- em falha, registrar endpoint, estado/resultado do serviço e último erro técnico em diagnóstico local sem segredos;
+- RF-018 Fase A continua independente do broker e não pode regredir;
+- nenhuma falha MQTT pode ser rotulada como falha de baud/UART.
+
+### WIZ-007 — Falha na Configuração Básica não pode retirar o usuário da etapa
+Enquanto `/api/rf` não retornar `state=applied`, o wizard deve permanecer explicitamente na etapa 3 — Configuração Básica.
+- em erro RF/MQTT/gateway, chamar/forçar `step(3)`, preservar os campos visíveis atuais e reabilitar `Salvar e continuar`;
+- não executar redirecionamento automático para dashboard/Conclusão;
+- em reload de uma instalação ainda não provisionada após falha, o wizard deve reabrir a etapa 3 se houver tentativa de apply pendente/falha registrada;
+- credenciais/senhas não devem ser persistidas em localStorage;
+- `provisioned` continua sendo criado somente após RF + protocolo/rede + save final concluírem com sucesso.
+
+### REL-007 — 0.3.14-alpha é correção focal do MQTT pós-bootstrap
+A 0.3.14-alpha parte da 0.3.13 com rollback próprio e deve preservar:
+- HW PASS de Wi-Fi/conexão automática/abertura do painel da 0.3.12;
+- HW PASS da Fase A MMDVM observado na 0.3.13;
+- TGIF/i18n implementados na 0.3.13, ainda pendentes de HW porque o fluxo não chegou até eles;
+- DMR TX/RX histórico, Direct e Histórico.
+
+Publicação exige source/regressões, ARM64, XZ, SHA-256, validação estrutural e prova de broker Mosquitto com handshake MQTT em CI. Continua Alpha/HW-TEST até novo teste físico.
