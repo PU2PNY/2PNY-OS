@@ -15,6 +15,10 @@ type radioProfile struct {
 	Unit        string
 }
 
+var radioGatewayPortOverride int
+var radioHostPortOverride int
+var skipSystemdForTest bool
+
 var directRadioProfiles = map[string]radioProfile{
 	"DMR":   {GatewayPort: 62031, HostPort: 62032, Unit: "2pny-dmrgateway.service"},
 	"DSTAR": {GatewayPort: 20010, HostPort: 20011, Unit: "2pny-dstargateway.service"},
@@ -42,6 +46,8 @@ func (c *core) enterRadio(proto string) error {
 	if !ok {
 		return fmt.Errorf("PU2PNY Direct RF ainda não suporta %s", proto)
 	}
+	if radioGatewayPortOverride > 0 { p.GatewayPort = radioGatewayPortOverride }
+	if radioHostPortOverride > 0 { p.HostPort = radioHostPortOverride }
 
 	c.mu.Lock()
 	if c.st.RadioActive {
@@ -54,7 +60,8 @@ func (c *core) enterRadio(proto string) error {
 	}
 	c.mu.Unlock()
 
-	wasActive := systemdActive(p.Unit)
+	wasActive := false
+	if !skipSystemdForTest { wasActive = systemdActive(p.Unit) }
 	if wasActive {
 		if out, err := exec.Command("systemctl", "stop", p.Unit).CombinedOutput(); err != nil {
 			return fmt.Errorf("não foi possível pausar %s: %s", p.Unit, strings.TrimSpace(string(out)))
@@ -137,6 +144,7 @@ func (c *core) deliverRadio(proto string, frame []byte) error {
 	if !ok {
 		return errors.New("protocolo Direct RF inválido")
 	}
+	if radioHostPortOverride > 0 { p.HostPort = radioHostPortOverride }
 	if len(frame) == 0 || len(frame) > 4096 {
 		return errors.New("quadro Direct RF inválido")
 	}
