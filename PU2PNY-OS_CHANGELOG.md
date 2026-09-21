@@ -316,3 +316,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Registrado **UI-023** após teste físico/browser em English mostrar conteúdo ainda em Português.
 - Inspeção do i18n 0.3.7 confirmou a causa estrutural: a tradução usa correspondência exata de texto e, quando uma frase não existe no dicionário, retorna o texto original. Isso permite mistura silenciosa de idiomas.
 - A internacionalização passa a exigir catálogo central por chaves, cobertura PT/EN/ES de toda UI e mensagens dinâmicas, com teste automático de completude.
+
+## 2026-09-21 — encerramento do ciclo físico da 0.3.7-alpha
+
+- O usuário encerrou o ciclo de testes físicos da 0.3.7.
+- Resultado final de YSF/C4FM: **regressão HW**. O protocolo havia funcionado antes no mesmo ciclo, mas no reteste final o rádio ainda chegava ao hotspot enquanto o caminho hotspot→rede e rede→rádio deixou de funcionar.
+- Teste comparativo com outro sistema no mesmo rádio/hardware funcionou; isso estreita o diagnóstico para o caminho de software/configuração/runtime do PU2PNY, sem afirmar causa raiz antes de logs/estado.
+- Qualquer observação anterior de YSF aprovado neste ciclo fica substituída pelo estado final **FAIL / regressão intermitente**.
+- A próxima correção deve preservar DMR baseline, diagnosticar YSFGateway/MMDVMHost/portas/configuração ativa e validar estabilidade após troca de protocolos, não apenas um teste imediatamente após ativação.
+- Nenhuma nova imagem deve ser declarada pronta antes da regressão YSF e demais bloqueadores HW do ciclo serem corrigidos e retestados.
