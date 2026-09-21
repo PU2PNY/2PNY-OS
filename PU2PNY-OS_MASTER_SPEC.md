@@ -887,3 +887,20 @@ Enquanto o sistema ainda não estiver provisionado e o cliente estiver conectado
 A implementação não deve anunciar DHCP Captive-Portal Option 114 apontando para API HTTP local, pois RFC 8908/8910 exige endpoint de API em HTTPS autenticado. Enquanto não houver endpoint HTTPS válido por dispositivo, usar a detecção legada já suportada pelo projeto e manter `http://10.43.0.1/` e `http://pu2pny.local/` como recuperação.
 
 Após a etapa inicial, preservar integralmente o fluxo HW aprovado da 0.3.9: scan automático da Wi-Fi, senha/salvar, feedback de conexão, reabertura automática da página após o handoff, detecção automática de hardware e avanço para configuração. A correção do captive portal não pode alterar esses componentes.
+
+## 33. Feedback físico 0.3.9 — D-Star e Hotspot/Protocolos — 2026-09-21
+
+### UI-024 — Hotspot / Protocolos nativo, unificado e profissional
+A página Hotspot / Protocolos continua unificada conforme PROTO-014, porém a configuração deve fazer parte da própria página e não pode depender de iframe.
+
+Regras:
+- usar o layout mestre do painel e a mesma linguagem visual aprovada na página Direct;
+- configuração do protocolo no topo, com abas DMR, D-Star, YSF/C4FM, P25, NXDN e POCSAG/DAPNET;
+- exibir resumo operacional e estado do gateway no mesmo contexto, sem duplicação visual;
+- manter perfis por protocolo, salvar sem reiniciar e ativar com preflight, validação e rollback;
+- manter responsividade, PT/EN/ES, tema claro/escuro, alto contraste e feedback visual imediato;
+- a rota histórica /protocols pode permanecer por compatibilidade, mas o fluxo principal deve ser /hotspot sem iframe;
+- Histórico e Direct são baseline visual aprovadas e não devem ser alteradas por esta correção.
+
+### PROTO-002 / PROTO-003 — validação real da bridge UDP
+O teste físico da 0.3.9 mostrou DStarGateway ativo, host list carregada e registro em auth.dstargateway.org, seguido de rollback por "bridge UDP local na porta 20010" não detectada. A inspeção do helper encontrou falso negativo no parser de `ss -H -lun`: a validação usava a coluna peer/remota em vez da coluna endereço local. A correção deve validar a coluna local e preservar as portas já definidas pelo contrato MMDVMHost ↔ gateway. O mesmo parser é compartilhado pela validação YSF/4200 e deve ser corrigido sem alterar DMR.
