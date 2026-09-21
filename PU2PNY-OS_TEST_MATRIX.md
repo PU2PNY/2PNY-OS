@@ -344,3 +344,16 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-UI-023-ES | UI-023 | navegar por todas as páginas em Español | 100% dos textos operacionais em ES, sem PT/EN misturado | PENDENTE | SW/HW |
 | TEST-UI-023-DYN | UI-023 | erros/modais/toasts/estados dinâmicos | mensagem amigável acompanha idioma; texto técnico bruto só no Expert/log | PENDENTE | SW/HW |
 | TEST-UI-023-CI | UI-023 | build/catalog completeness | build falha se uma chave usada não existir em PT/EN/ES ou se texto operacional novo escapar do catálogo | PENDENTE | SW |
+
+## Feedback físico 0.3.7-alpha — boot, Wi-Fi e display após reinício
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-BOOT-001A | BOOT-001 | reiniciar hotspot com perfil/protocolo ativo salvo | após boot MMDVMHost + gateway do último perfil voltam automaticamente; não exige `Ativar perfil` | **FAIL** — após religar o hotspot o operacional ficou desligado e foi necessário ativar manualmente o perfil | HW |
+| TEST-BOOT-001B | BOOT-001 | botão `Ligar operacional` | backend inicia e confirma MMDVMHost + gateway correspondente; UI muda para Ligado ou mostra erro acionável | **FAIL** — clique não apresentou mudança/resultado útil no teste | HW/browser |
+| TEST-BOOT-001C | BOOT-001 | usuário desliga operacional explicitamente e reinicia | estado desligado persiste apenas por marcador explícito; nenhum gateway sobe sozinho | PENDENTE | SW/HW |
+| TEST-NET-020A | NET-020 | boot com Wi-Fi associado e rota padrão em wlan0 | UI mostra SSID e sinal/RSSI reais da associação ativa sem rescan agressivo | **FAIL UI** — screenshot mostra wlan0/Internet ativos, porém SSID e RSSI aparecem `—` | HW/browser |
+| TEST-NET-020B | NET-020 / NET-018 | dois perfis salvos + reboot | NetworkManager escolhe perfil autoconnect conforme prioridade e mantém fallback seguro | PENDENTE | HW |
+| TEST-DISPLAY-015A | DISPLAY-015 | boot com Nextion | `Iniciando` é transitório e termina em estado operacional/standby quando serviços sobem | **FAIL** — Nextion permaneceu travada em `Iniciando` enquanto operacional não foi restaurado | HW |
+| TEST-DISPLAY-015B | DISPLAY-015 | executar Manutenção pelo painel | tela pode indicar manutenção durante a tarefa, mas ao terminar sai automaticamente desse estado | **FAIL** — Nextion ficou travada mostrando Manutenção | HW |
+| TEST-DISPLAY-015C | DISPLAY-015 | manutenção com operacional explicitamente desligado | ao terminar mostra Operacional desligado/atenção, nunca `Pronto` falso | PENDENTE | SW/HW |
