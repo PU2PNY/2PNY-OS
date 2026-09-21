@@ -328,3 +328,9 @@ Estado antes do CI final:
 |---|---|---:|---|
 | UI-016 — fuso horário pelo painel | FALHA | HW/browser | alteração de timezone bloqueada por `Access denied`; usuário não consegue ajustar pelo painel |
 | UI-006 / UI-016 | BLOQUEADOR DE UX | HW | hora/fuso precisam permanecer coerentes e ajustáveis sem terminal; correção deve preservar RF/gateways |
+
+## Feedback físico 0.3.7-alpha — cabeçalho
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| UI-017 — cabeçalho global | FALHA | HW/browser + DOC | Sistema apresenta cabeçalho mais alto e relógio esmagado; código confirma ausência de inicialização do relógio nessa página e flex sem proteção suficiente contra quebra |
