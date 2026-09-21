@@ -502,3 +502,9 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - **UI-028:** wizard recebeu base PT coerente para os rótulos reportados, traduções exatas PT/EN/ES e proteção contra exibir o idioma-base antes de a seleção ser aplicada.
 - DMR XLX/BrandMeister, Direct, Histórico, frequências e offsets permanecem fora do escopo da correção.
 - Adicionados prepare, testes de regressão e validador estrutural próprios da 0.3.13. Publicação continua bloqueada até ARM64 + XZ + SHA-256 + validação final.
+
+## 2026-09-21 — logotipo oficial para próximas versões
+- O logotipo enviado pelo mantenedor foi definido como referência visual oficial do PU2PNY-OS.
+- Registrado **UI-029** para adoção nas próximas versões.
+- A 0.3.13-alpha atualmente em validação permanece sem essa mudança para preservar o escopo corretivo e evitar regressão durante o build.
+- A primeira integração deverá usar asset otimizado, manter proporção/contraste e não aumentar de forma relevante o peso do painel ou o uso de recursos.
