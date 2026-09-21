@@ -590,3 +590,54 @@ Regras:
 - a futura unificação Hotspot + Protocolos pode reduzir um item da navegação, mas UI-017 deve funcionar independentemente dessa mudança.
 
 Diagnóstico confirmado no código 0.3.7: `system-0.3.6.html` não chama `PNY.startClock()`, enquanto páginas como Display chamam; o placeholder `--:--:--` permanece e pode ser comprimido/quebrado pelo flex do cabeçalho.
+
+## 27. Expert — dashboard técnico em tempo real — feedback físico 0.3.7 — 2026-09-20
+
+### UI-018 — Expert como cockpit técnico em tempo real
+O modo **Expert** deve funcionar como um dashboard técnico/operacional visual, inspirado em painéis de monitoramento/CRM, sem virar uma tela de JSON bruto.
+
+Estrutura obrigatória:
+- cards de saúde: versão, uptime, MMDVMHost, gateway ativo, Display Core, protocolo/perfil, uplink e estado geral;
+- **Estado Ao Vivo realmente em tempo real**, consumindo o mesmo `/api/live/events` usado pelo Ao Vivo, com fallback leve apenas se SSE falhar;
+- gráficos leves em memória do navegador para CPU, temperatura, RAM, load, frequência CPU e throttling;
+- gráficos de rede para latência/perda/jitter usando métricas já coletadas/cacheadas, sem executar MTR/traceroute continuamente;
+- gráfico/linha RF apenas quando existirem BER/RSSI reais;
+- cards de hardware para Raspberry Pi, MMDVM, porta/baud, display, armazenamento e interfaces detectadas quando disponíveis;
+- serviços/gateways com estado real e último erro disponível;
+- detalhes JSON/log bruto somente em seções expansíveis.
+
+Atualização:
+- eventos RF/live via Event Bus/SSE;
+- telemetria leve somente enquanto a aba estiver visível;
+- nenhuma varredura de hardware, MTR ou consulta externa pesada em loop;
+- séries históricas do dashboard ficam preferencialmente em memória do navegador para não aumentar gravações no SD.
+
+### UI-019 — Renomear e enriquecer “Configuração pública”
+O bloco `Configuração pública` do Expert passa a se chamar **Resumo operacional**.
+
+Deve exibir, sem segredos:
+- indicativo e Radio ID;
+- protocolo/perfil ativo;
+- RX/TX, offsets, simplex/duplex e modem quando disponíveis;
+- servidor/refletor, módulo/TG/DG-ID, slot e Color Code conforme protocolo;
+- interface de rede, IP local, DNS efetivo e uplink;
+- timezone;
+- display configurado/ativo;
+- voz, APRS/D-PRS e Direct apenas com estados reais;
+- versão instalada.
+
+Senhas, API keys, passcodes, Hotspot Security, credenciais QRZ e outros segredos nunca aparecem.
+
+### SEC-021 — SSH assistido e verificável
+O SSH Expert deve continuar **por chave**, sem root e sem senha, mas a interface deve ser utilizável por quem não conhece OpenSSH.
+
+Regras:
+- explicar em português o que é uma chave pública SSH e mostrar exemplo completo do formato aceito;
+- validar a chave no navegador/backend antes de tentar habilitar;
+- diferenciar claramente `chave ausente`, `formato inválido`, `sshd inválido`, `serviço não iniciou` e `SSH ativo`;
+- após habilitar, confirmar `ssh.service` ativo e mostrar usuário `radioexpert`, porta e IP local para conexão;
+- botão de desativar deve confirmar que o serviço realmente parou;
+- não gerar senha/root nem abrir terminal web privilegiado;
+- a UI pode oferecer ajuda para criar/importar uma chave, mas nunca exibir ou armazenar chave privada do usuário no hotspot.
+
+O teste atual com `Chave pública SSH inválida` é classificado como falha de UX/preflight; o transporte SSH ainda precisa ser testado com uma chave pública válida antes de ser marcado como HW FAIL ou PASS.
