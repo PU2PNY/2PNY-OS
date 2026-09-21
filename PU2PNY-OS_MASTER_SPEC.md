@@ -1120,3 +1120,37 @@ Depois da escolha inicial, o wizard e mensagens normais devem permanecer integra
 
 ### REL-005 — 0.3.12-alpha é correção independente da 0.3.11
 A 0.3.11 permanece preservada para rollback. A 0.3.12 deve passar source, regressões, build ARM64, XZ, SHA-256 e validação estrutural da imagem antes de ser publicada como Alpha/HW-TEST. Nenhum gate SW promove RF/DMR/MQTT para HW PASS.
+## 2026-09-21 — feedback HW 0.3.12-alpha: bootstrap MMDVM, TGIF e i18n
+
+### RF-018 — Bootstrap MMDVM em duas fases, preservando a base comprovada
+A configuração inicial deve separar a prova básica do modem das dependências operacionais adicionais.
+
+**Fase A — prova mínima de RF/UART:**
+- usar exclusivamente porta, baud, frequências, offsets, duplex, indicativo e DMR ID já validados;
+- iniciar MMDVMHost com protocolos/redes desativados e sem tornar MQTT/display/gateway pré-condição para provar que o processo consegue assumir a UART;
+- confirmar que MMDVMHost permanece ativo por janela limitada;
+- esta fase é somente bootstrap/diagnóstico de provisionamento e não substitui os gates operacionais de MQTT definidos em PROTO-017/PROTO-018.
+
+**Fase B — operação completa:**
+- somente após PASS da Fase A, aplicar MQTT/event bus, display e protocolo/gateway selecionado de forma transacional;
+- PROTO-017/PROTO-018 continuam obrigatórios antes de declarar o caminho operacional pronto;
+- se uma dependência da Fase B falhar, informar a dependência real e executar rollback transacional sem atribuir a falha ao baud ou à MMDVM sem evidência;
+- preservar o comportamento funcional comprovado na 0.3.6 como referência de bootstrap, sem reverter os recursos posteriores do sistema.
+
+### PROTO-019 — Perfil TGIF autenticado e diagnosticável
+A rede TGIF deve possuir tratamento explícito no caminho DMR:
+- preservar exatamente a Security Key informada pelo operador até o DMRGateway, sem expô-la em UI, log, API pública ou diagnóstico;
+- diferenciar configuração segura por Security Key de eventual modo legado, sem substituir silenciosamente uma chave fornecida por senha padrão;
+- preservar ESSID válido e Network ID efetivo;
+- gerar configuração DMRGateway compatível com a rede TGIF e com a versão do DMRGateway embarcada, validando as diretivas de roteamento necessárias em vez de assumir equivalência de um perfil DMR genérico;
+- diagnosticar separadamente: gateway local iniciado, resolução/alcance do master, tentativa de autenticação e evidência de conexão quando disponível;
+- recepção RF local não pode ser apresentada como tráfego entregue à TGIF sem evidência da rede.
+
+### UI-028 — i18n por chaves estáveis, sem tradução pós-renderização como fonte principal
+A interface operacional deve usar identificadores estáveis de mensagem para PT-BR, English e Español.
+- textos estáticos e dinâmicos do wizard/painel devem ser renderizados diretamente no idioma selecionado;
+- erros do backend/helpers destinados ao operador devem chegar como código estável + parâmetros traduzíveis, mantendo texto bruto somente no Expert;
+- MutationObserver/substituição de frases pode existir apenas como compatibilidade temporária, não como mecanismo principal;
+- depois da tela inicial de idioma, nenhuma frase operacional bilíngue ou em idioma diferente do selecionado é permitida;
+- siglas, nomes próprios e nomes canônicos de protocolos não contam como mistura de idioma.
+
