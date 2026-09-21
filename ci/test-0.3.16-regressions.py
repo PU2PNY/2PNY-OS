@@ -76,7 +76,7 @@ assert displayui.count('value="mmdvmhost-native"')>=1
 assert 'value="pu2pny-modern-v2">PU2PNY Moderno V2</option>' not in displayui
 
 # PROTO-023 exact pinned gateway schema.
-assert 'Band=B' in dstar
+assert 'Band=C' in dstar
 assert 'ReloadTimer=72' in dstar and 'ReloadTime=72' not in dstar
 assert 'custom/"DStar_Hosts.json"' in dstar
 assert 'reflector_type="DCS"' in dstar
