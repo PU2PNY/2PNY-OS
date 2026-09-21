@@ -366,3 +366,13 @@ Estado antes do CI final:
 | RF-015 / UI-022 — potência MMDVM | PENDENTE | DOC/SW/HW | RFLevel é suportado por MMDVMHost/MMDVM_HS compatível, mas PU2PNY ainda não possui controle seguro implementado/validado |
 | UI-023 — PT/EN/ES integral | FALHA | HW/browser + DOC | teste em English mostrou mistura de idiomas; mecanismo atual deixa texto original quando não encontra tradução |
 | TEST-UI-023-CI | PENDENTE | SW | falta gate automático que impeça release com chaves/textos sem tradução completa |
+
+## Feedback físico 0.3.7-alpha — boot/religamento, Wi-Fi e Nextion
+
+| Requisito | Estado | Nível | Resultado |
+|---|---|---:|---|
+| BOOT-001 — restauração operacional após boot | **FALHA / BLOQUEADOR** | HW | após retorno da alimentação MMDVMHost/gateway não restauraram automaticamente o último perfil; usuário precisou entrar em Protocolos e ativar o perfil |
+| BOOT-001 — Ligar operacional | **FALHA UX/FUNCIONAL** | HW/browser | botão não produziu mudança confirmada; backend atual descarta erros de `systemctl start` e responde sucesso genérico |
+| NET-020 — Wi-Fi pós-boot/estado real | **FALHA DE ESTADO UI** | HW/browser | Internet/rota estavam em `wlan0`, mas SSID e RSSI apareceram vazios; não há evidência suficiente para classificar o Wi-Fi como desconectado |
+| DISPLAY-015 — estados transitórios | **FALHA** | HW | Nextion ficou presa em `Iniciando` após boot e em `Manutenção` após execução manual |
+| Gate de release | **BLOQUEADO até nova correção SW + novo teste HW** | REL | 0.3.8 não pode ser tratada como pronta para novo ciclo enquanto boot operacional e display transitório não estiverem corrigidos no código/build |
