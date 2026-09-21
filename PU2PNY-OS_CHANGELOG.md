@@ -221,3 +221,12 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - A recomendação não muda automaticamente o roteador.
 - Scan será sob demanda/cacheado e deve preservar conexão Wi-Fi, AP de recuperação, CPU/RAM e baixo consumo.
 - Criados `TEST-NET-019A..019E`; estado atual DOC/PENDENTE até implementação e validação.
+
+## 2026-09-20 — perfis de protocolo no Ao Vivo
+
+- Registrado **LIVE-011**: os botões por protocolo da tela Ao Vivo passam a funcionar como troca rápida de perfil/protocolo.
+- O perfil ativo deve ficar destacado; perfil não configurado leva à configuração em vez de tentar aplicar.
+- A troca usa o fluxo transacional existente com progresso real e rollback.
+- A filtragem de atividade não será removida; ficará em controle separado e compacto.
+- Registrado **PROTO-014**: na página Hotspot os perfis permanecem, mas a ação principal será **Configurar** cada protocolo.
+- Objetivo de UX: **Ao Vivo = operar/trocar rapidamente; Hotspot = configurar**.
