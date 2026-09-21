@@ -338,3 +338,41 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Imagem: `PU2PNY-OS-0.3.8-alpha-arm64.img.xz`.
 - SHA-256: `1997b05612159e0d1178e6ab0ab2dc73f1404a8f2a9e7e909e00dfb126557510`.
 - A imagem está liberada somente como **Alpha/HW-TEST**. O novo ciclo deve começar por boot/religamento → Wi-Fi → MMDVM/DMR baseline → protocolo ativo → Nextion/manutenção, sem chamar essas correções de HW PASS antes do teste real.
+
+## 2026-09-21 — abertura e implementação corretiva 0.3.9-alpha
+
+### Governança
+- Preservado o commit base da 0.3.8 em `backup/0.3.8-hw-feedback-20260921`.
+- Criada branch `pu2pny-os-0.3.9-alpha`.
+- DMR, Histórico e página Direct aprovada visualmente permanecem baseline; a 0.3.9 não substitui esses componentes por conveniência.
+
+### Feedback físico 0.3.8 incorporado
+- Wi-Fi pós-provisionamento e reconexão após reboot funcionaram, porém o último perfil/protocolo não voltou ativo.
+- Captive portal não abriu automaticamente no cliente testado.
+- D-Star e YSF sofreram rollback por falsos negativos das bridges UDP 20010/4200.
+- Nextion ficou presa em estados transitórios e a troca de layout pela MMDVM não foi confirmada.
+- Scan Wi-Fi retornou somente a rede associada; gráfico não representou corretamente 5 GHz.
+- DNS demorou a refletir estado efetivo; consulta de update produziu falso estado visual de desconexão.
+- Expert Ao Vivo não acompanhou eventos em tempo real.
+- Timezone e SSH permaneceram inadequados para operação normal.
+- Histórico foi aprovado; Direct foi aprovado visualmente; APRS-IS atingiu login verificado.
+
+### Correções implementadas em código — HW ainda pendente
+- D-Star/YSF: substituída regex defeituosa por validação determinística do socket UDP local.
+- Boot: restauração aguarda serial/MQTT, possui retry controlado e confirma MMDVMHost + gateway.
+- Wi-Fi: scan sob demanda combina múltiplas varreduras limitadas e não encerra apenas por encontrar a SSID atual.
+- Canal Wi-Fi: UI separa 2,4/5/6 GHz e aumenta a legibilidade.
+- DNS: backend relê resolvedor efetivo e reverte se o pedido não for confirmado.
+- Expert/Ao Vivo: listeners passam a consumir o evento SSE nomeado `live`.
+- Ao Vivo: Saúde da comunicação fica compacta dentro do card principal; perfil rápido fica recolhido.
+- Hotspot/Protocolos: configuração integrada sobe para o topo.
+- Nextion: MMDVMHost passa a ser writer exclusivo no caminho via modem; layout 2/3 é verificado antes do sucesso; erro não usa 100%.
+- Timezone/SSH/operacional/RFLevel/display: pedidos privilegiados usam units `.path` dedicados; o backend não ganha root/sudo genérico.
+- SSH confirma serviço e listener TCP 22.
+- Timezone possui fallback root controlado apenas para `/etc/localtime` e `/etc/timezone`, seguido de releitura.
+- i18n: tradução passa a guardar todos os nós de texto visíveis e aplicar catálogo/fallback guardado, não apenas correspondências exatas.
+- Captive portal: opção DHCP 114 usa o endereço canônico 10.43.0.1 e o fallback histórico 10.42 é removido do overlay final.
+- Adicionados testes determinísticos e validador estrutural específicos da 0.3.9.
+
+### Estado
+As correções acima estão implementadas em fonte. Ainda não são HW PASS. Build ARM64, validação estrutural, SHA-256 e publicação são o próximo gate.
