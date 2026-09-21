@@ -98,6 +98,7 @@ mqtt=(root/"rootfs-overlay/usr/local/sbin/2pny-mqtt-preflight").read_text()
 dapply=(root/"rootfs-overlay/usr/local/sbin/2pny-display-apply").read_text()
 dcore=(root/"rootfs-overlay/usr/local/sbin/2pny-display-core").read_text()
 det=(root/"rootfs-overlay/usr/local/sbin/2pny-display-detector").read_text()
+udev=(root/"rootfs-overlay/etc/udev/rules.d/99-pu2pny-display-hotplug.rules").read_text()
 
 assert '"0.3.10-alpha"' in main
 assert '/api/display/detection' in main and '/api/diagnostics' in main
@@ -115,4 +116,6 @@ assert 'pu2pny-modern-v2' in dapply and 'mmdvmhost-native' in dapply
 assert 'host/display-in' in dcore and '1060' in dcore
 assert 'connect' in det and 'comok' in det and 'pnyver.txt' in det
 assert 'flashing' not in det.lower()
+assert 'ACTION=="add|change"' not in udev
+assert 'ACTION=="add"' in udev and 'ACTION=="change"' in udev
 print("PREPARE_0310_OK")
