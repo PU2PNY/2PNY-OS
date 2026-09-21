@@ -467,3 +467,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - A camada de idioma passa a normalizar mensagens técnicas conhecidas para uma chave/canonical PT e então renderizar PT/EN/ES conforme a escolha do usuário.
 - Nenhuma alteração foi feita para mudar frequência, offsets, DMRGateway ou o baseline RF/DMR aprovado.
 
+## 2026-09-21 — 0.3.12-alpha — correção da regressão MMDVMHost/MQTT da 0.3.11
+
+- Preservada a 0.3.11 em backup/0.3.11-pre-0.3.12-fix-20260921.
+- Criada branch pu2pny-os-0.3.12-alpha sem refatorar módulos aprovados.
+- RF-017: hardware probe e RF apply passam a compartilhar /run/2pny/mmdvm-serial.lock; a passagem de ownership para MMDVMHost espera a identificação terminar.
+- PROTO-018: preflight MQTT passa de teste TCP para MQTT CONNECT/CONNACK real.
+- PROTO-018: build passa a exigir o pacote mosquitto e adiciona listener local exclusivo em 127.0.0.1:1883.
+- O gate MQTT aprovado permanece obrigatório; falha de broker não é mascarada como erro de baud.
+- UI-027: wizard mantém a tela de seleção bilíngue, remove rótulos-base desnecessariamente em inglês no restante e ganha traduções exatas adicionais PT/EN/ES para onboarding e erros dinâmicos.
+- Validação 0.3.12 passa a conferir binário Mosquitto, configuração loopback, preflight protocolar, lock compartilhado e idioma, além de toda regressão herdada.
+- DMRGateway, RF frequencies/offsets, Direct e Histórico não foram alterados por esta correção.
