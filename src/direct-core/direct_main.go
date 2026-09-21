@@ -140,7 +140,15 @@ func main() {
 	api := flag.String("api", defaultAPIAddr, "local API address")
 	selftest := flag.Bool("selftest", false, "crypto self-test")
 	forceRelay := flag.Bool("force-relay", false, "disable direct UDP and exercise encrypted relay")
+	protoOverride := flag.String("protocol-override", "", "test-only protocol override")
+	radioGatewayPort := flag.Int("radio-gateway-port", 0, "test-only local gateway port override")
+	radioHostPort := flag.Int("radio-host-port", 0, "test-only local MMDVMHost port override")
+	skipSystemd := flag.Bool("skip-systemd", false, "test-only: do not stop/start gateway service")
 	flag.Parse()
+	protocolOverride = strings.ToUpper(strings.TrimSpace(*protoOverride))
+	radioGatewayPortOverride = *radioGatewayPort
+	radioHostPortOverride = *radioHostPort
+	skipSystemdForTest = *skipSystemd
 	if *selftest {
 		if err := cryptoSelfTest(); err != nil {
 			log.Fatal(err)
