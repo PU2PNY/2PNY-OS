@@ -28,7 +28,10 @@ assert r'(?m)\\b127\\.0\\.0\\.1:4200' not in proto
 assert 'for attempt in 1 2 3' in net
 assert "merge_scan_json" in net
 assert "passive_count" in net
-assert 'dhcp-option-force=114,http://$SETUP_IP/captive-api' in netcore
+assert "sed -i '/^dhcp-option-force=114,/d'" in netcore
+assert 'if test ! -f "$STATE/provisioned"; then' in netcore
+assert 'test -f "$STATE/provisioned" || return 0' in netcore
+assert 'http://10.43.0.1/wizard?captive=1' in main
 assert "5 GHz" in internet and "2,4 GHz" in internet and "bandgraph" in internet
 assert "effective_dns" in internet
 assert "addEventListener('live'" in ui and "addEventListener('live'" in expert
@@ -54,6 +57,6 @@ assert not re.search(r'install\("src/history[^"]*"\s*,\s*"rootfs-overlay/usr/sha
 
 # Captive fallback canonical address.
 assert 'address=/#/10.43.0.1' in prepare
-assert 'dhcp-option-force=114,http://10.43.0.1/captive-api' in prepare
+assert 'dhcp-option-force=114,http://10.43.0.1/captive-api' not in prepare
 
 print("TEST-0.3.9-FEATURES PASS")
