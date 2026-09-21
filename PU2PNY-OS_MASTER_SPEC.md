@@ -1078,3 +1078,18 @@ Gate obrigatório:
 - construir imagem ARM64, compactar XZ, gerar SHA-256 e executar validador final dentro da imagem;
 - preservar DMR, Histórico e Direct como baselines;
 - publicar somente como Alpha/HW-TEST enquanto captive popup, D-Star/YSF, restore e Nextion não tiverem novo HW PASS.
+
+## 2026-09-21 — feedback HW 0.3.10: detecção MMDVM, avanço do wizard e idioma integral
+
+### HW-003 — Detecção MMDVM não ativa nem disputa o motor RF
+A etapa **Hardware** deve considerar a MMDVM confirmada somente após resposta real ao protocolo de identificação, registrando porta e baud observados. Essa etapa não deve iniciar MMDVMHost/gateway nem reabrir a mesma UART para testar display via modem depois que a MMDVM já foi identificada. Nextion conectada à porta da MMDVM deve ser confirmada somente depois que MMDVMHost for o writer/owner da serial e a bridge de display estiver pronta.
+
+### RF-016 — Ativação do MMDVMHost deve usar evidência e causa real
+Ao aplicar RF, usar a porta e o baud efetivamente confirmados pelo detector, preservar configuração anterior, serializar a operação contra detectores de display, executar preflight MQTT quando aplicável e confirmar que MMDVMHost permaneceu ativo. Uma falha genérica de inicialização não pode ser apresentada como “erro de baud” sem evidência. Em falha: diagnóstico técnico limitado + rollback automático.
+
+### WIZ-006 — MMDVM confirmada libera avanço automático
+Quando a MMDVM estiver realmente confirmada, a etapa Hardware recebe PASS, limpa mensagens de erro transitórias anteriores, habilita o avanço manual e inicia a contagem de 5 s definida em WIZ-003. Falha posterior de ativação RF pertence à etapa Configuração/Protocolos e não pode manter a etapa Hardware visualmente em erro.
+
+### UI-026 — Idioma selecionado cobre mensagens dinâmicas e erros
+Após escolher PT-BR, English ou Español, toda mensagem destinada ao operador deve permanecer no idioma selecionado: páginas, wizard, status, overlays, toasts, validações, erros do backend e mensagens de helpers. Texto bruto de upstream/log pode permanecer no idioma original somente em diagnóstico técnico explicitamente identificado; ele não pode vazar como mensagem normal da interface.
+
