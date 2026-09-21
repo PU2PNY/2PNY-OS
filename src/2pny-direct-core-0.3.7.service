@@ -15,7 +15,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/2pny/direct /run/2pny
+ReadWritePaths=/var/lib/2pny /run/2pny
 MemoryMax=96M
 TasksMax=32
 
