@@ -558,3 +558,20 @@ Regras:
 
 ### DATA-001 — Evento normalizado enriquecido
 O Event Bus deve disponibilizar campos normalizados opcionais para suportar LIVE-012, mantendo compatibilidade com eventos antigos. Campos novos só recebem valor quando houver evidência real no gateway/MMDVM/cache de identidade. A UI não deve inferir valores inexistentes.
+
+## 25. Sistema / fuso horário — feedback físico 0.3.7 — 2026-09-20
+
+### UI-016 — Fuso horário ajustável pelo painel sem terminal
+A página **Sistema** deve permitir ao usuário alterar o fuso horário pelo painel, sem terminal e sem exigir autenticação Polkit interativa.
+
+Regras:
+- validar o fuso contra `/usr/share/zoneinfo`;
+- executar somente a alteração de timezone por um mecanismo de privilégio mínimo e explicitamente autorizado;
+- não conceder shell/root genérico ao serviço web;
+- após aplicar, reler o fuso efetivo do sistema e só então mostrar sucesso;
+- hora local, UTC e campo `Fuso horário` devem atualizar automaticamente sem F5;
+- se a alteração falhar, preservar o fuso anterior e mostrar mensagem em português; detalhe técnico fica no Expert/log;
+- a correção não deve reiniciar RF, MMDVMHost ou gateways;
+- `America/Sao_Paulo` deve funcionar quando selecionado e disponível no sistema.
+
+A implementação não deve depender de o daemon web poder editar livremente `/etc`; usar helper/serviço de privilégio restrito ou mecanismo equivalente com superfície mínima.
