@@ -456,3 +456,13 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-LIVE-015A | LIVE-015 | TX/RX | web e display usam os mesmos campos/evento sem divergência inventada | PENDENTE HW |
 | TEST-UI-025A | UI-025 | abrir Expert | mostra UDP/MQTT/writer/restore/rollback/Wi-Fi com valores reais ou — | PENDENTE SW/HW |
 | TEST-SEC-022A | SEC-022 | revisar endpoints privilegiados | cada ação usa unit/helper dedicado; nenhum sudo/root genérico no web daemon | PENDENTE SW |
+
+## Release 0.3.10-alpha
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-REL-0310-A | REL-003/004 | source/staged source | Go/Python/Bash/JS e gates 0.3.10 passam | PENDENTE CI |
+| TEST-REL-0310-B | REL-003/004 | build ARM64 | imagem ARM64 é gerada sem remover baseline | PENDENTE CI |
+| TEST-REL-0310-C | REL-003/004 | XZ + SHA-256 | xz -t e checksum são confirmados | PENDENTE CI |
+| TEST-REL-0310-D | REL-003/004 | validar imagem montada | captive, DMR baseline, Hotspot sem iframe, Nextion, bridge, MQTT, boot e APIs estruturais passam | PENDENTE CI |
+| TEST-REL-0310-E | REL-004 | teste físico | AP popup, onboarding, DMR, D-Star, YSF, reboot restore e Nextion Moderno V2 | PENDENTE HW |
