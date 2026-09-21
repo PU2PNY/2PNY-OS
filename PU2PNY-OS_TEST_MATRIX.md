@@ -368,3 +368,27 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-DISPLAY-015A-038 | DISPLAY-015 | Nextion sair de estados Iniciando/Manutenção | fluxo transitório corrigido na imagem; Nextion real ainda precisa repetir boot/manutenção | **SW/estrutural PASS; HW PENDENTE** | SW/HW |
 
 Artefato publicado: `PU2PNY-OS-0.3.8-alpha-arm64.img.xz`. SHA-256: `1997b05612159e0d1178e6ab0ab2dc73f1404a8f2a9e7e909e00dfb126557510`.
+
+## Feedback físico 0.3.8-alpha incorporado à 0.3.9 — 2026-09-21
+
+| ID | Requisito | Caso observado / próximo teste | Estado | Nível |
+|---|---|---|---|---|
+| TEST-NET-002-038 | NET-002 | AP → selecionar Wi-Fi → salvar → retornar conectado ao roteador | **PASS** no cenário testado; preservar | HW |
+| TEST-NET-012-038 | NET-012 | conectar ao AP e aguardar captive portal | **FAIL** — wizard abriu somente pelo endereço manual | HW/client |
+| TEST-NET-018-038 | NET-017/018 | Buscar redes para cadastrar Wi-Fi 2 | **FAIL** — retornou somente a SSID atual | HW |
+| TEST-NET-019-038 | NET-019 | associação canal 44/5220 MHz + gráfico | **FAIL** — gráfico 2,4 GHz 1–13 e pouca visibilidade | HW/browser |
+| TEST-UI-013-DNS-038 | UI-013 / NET-014/016 | trocar DNS e observar valor efetivo | **FAIL** — atualização visual demorou excessivamente | HW/browser |
+| TEST-NET-020-038 | NET-020 | verificar atualização mantendo TX/rede ativa | **FAIL UI** — tela aparentou Wi-Fi desconectado, embora TX pela rede funcionasse | HW/browser |
+| TEST-BOOT-001A-039BASE | BOOT-001 | reboot com perfil ativo salvo | **FAIL** — Wi-Fi voltou; perfil/gateway exigiu Ativar perfil manual | HW |
+| TEST-PROTO-007-038 | PROTO-002/007/012 | aplicar D-Star | **FAIL de aplicação** — falso negativo da bridge UDP 20010; RF↔rede ainda pendente | HW |
+| TEST-PROTO-008-038 | PROTO-003/008 | aplicar YSF | **FAIL de aplicação** — log mostrou bridge/link, mas validador fez rollback; RF↔rede ainda pendente | HW |
+| TEST-DISPLAY-015-038 | DISPLAY-001/013/015 | boot/manutenção/RF/layout Nextion | **FAIL** — estados presos/100% e seleção MMDVM/2/3 sem efeito visível | HW |
+| TEST-UI-018-038 | UI-018 | Estado Ao Vivo no Expert durante tráfego | **FAIL** — não acompanhou em tempo real | HW/browser |
+| TEST-UI-016-038 | UI-016 | aplicar timezone pelo painel | **FAIL** — alteração não concluiu | HW/browser |
+| TEST-SEC-021-038 | SEC-021 | habilitar SSH | **PENDENTE/FAIL UX** — chave informada não passou validação; retestar transporte com chave pública válida após correção | HW/browser |
+| TEST-APRS-006-038 | APRS-004/006 | conexão APRS-IS | **PASS parcial** — login verificado em `soam.aprs2.net`; mensagem TX/RX/ACK continua pendente | HW/browser |
+| TEST-HISTORY-038 | LIVE-012 / DATA-001 | uso da página Histórico | **PASS visual/uso** — preservar | HW/browser |
+| TEST-P2P-UI-038 | UI-015 / P2P-007 | página Direct | **PASS visual** — preservar; chamada entre dois hotspots segue PENDENTE | HW/browser |
+| TEST-REL-039 | REL-003 | build ARM64 0.3.9, XZ, SHA-256 e validador final | **PENDENTE** até execução do workflow | SW |
+
+A 0.3.9 só promove os casos acima depois de nova evidência correspondente. PASS SW/CI não substitui os FAIL/PENDENTE HW.
