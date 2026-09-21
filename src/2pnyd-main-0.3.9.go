@@ -983,23 +983,20 @@ func displayOverrideHandler(w http.ResponseWriter, r *http.Request) {
 			_ = os.WriteFile(displayOverrideFile, raw, 0600)
 		}
 		if fileExists(filepath.Join(dataDir, "rf-configured")) {
-			out, err := exec.Command("/usr/local/sbin/2pny-display-apply").CombinedOutput()
+			res, err := runPrivilegedRequest("2pny-display-apply-request.service", "/run/2pny/display-apply-request.json", "/run/2pny/display-apply-result.json", map[string]any{"apply": true})
 			if err != nil {
 				if oldOverrideExists {
 					_ = os.WriteFile(displayOverrideFile, oldOverride, 0600)
 				} else {
 					_ = os.Remove(displayOverrideFile)
 				}
-				_, _ = exec.Command("/usr/local/sbin/2pny-display-apply").CombinedOutput()
-				msg := strings.TrimSpace(string(out))
-				if msg == "" {
-					msg = err.Error()
-				}
-				writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": "Não foi possível aplicar o display; a configuração anterior foi restaurada.", "detail": msg})
+				_, _ = runPrivilegedRequest("2pny-display-apply-request.service", "/run/2pny/display-apply-request.json", "/run/2pny/display-apply-result.json", map[string]any{"rollback": true})
+				writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": "Não foi possível aplicar o display; a configuração anterior foi restaurada.", "detail": err.Error(), "result": res})
 				return
 			}
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": in.Enabled, "layout": in.Layout, "runtime": readPublicJSON(filepath.Join(dataDir, "display-runtime.json"))})
+		runtime:=readPublicJSON(filepath.Join(dataDir, "display-runtime.json"))
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "enabled": in.Enabled, "layout": in.Layout, "runtime": runtime})
 	default:
 		http.Error(w, "GET or POST required", http.StatusMethodNotAllowed)
 	}
