@@ -437,3 +437,22 @@ Regras:
 Nos campos de senha de Wi-Fi 1 e Wi-Fi 2 deve existir controle `Mostrar/Ocultar` para o usuário conferir o que digitou. Após salvar/aplicar, a própria página deve atualizar dinamicamente o estado do perfil e da conexão sem refresh manual.
 
 Mensagens técnicas brutas de NetworkManager/systemd não devem aparecer ao usuário final quando houver tradução segura disponível. Com PT-BR selecionado, erros como `signal is aborted without reason` devem ser apresentados em português, preservando o detalhe técnico em área Expert/log.
+
+## 20. Análise visual de canais Wi-Fi — 2026-09-20
+
+### NET-019 — Gráfico de ocupação e recomendação de canal Wi-Fi
+A página Internet deve incluir uma visualização gráfica leve dos canais Wi-Fi observados no ambiente e indicar o canal atualmente usado pela rede à qual o PU2PNY está conectado.
+
+Requisitos:
+- exibir separadamente as bandas disponíveis no hardware (por exemplo 2,4 GHz e 5 GHz);
+- mostrar por canal as redes observadas e sua intensidade de sinal quando essa telemetria estiver disponível;
+- identificar claramente o SSID/rede atualmente conectada e seu canal real;
+- considerar sobreposição de canais, intensidade dos APs vizinhos, quantidade de redes, largura de canal quando detectável e domínio regulatório configurado;
+- calcular uma recomendação explicável de **Melhor canal sugerido**, com motivo resumido, por exemplo: menor interferência estimada/menor ocupação;
+- não afirmar que um canal é "livre" quando o scan apenas não observou redes naquele instante;
+- a recomendação deve ser informativa: o PU2PNY não altera automaticamente o canal do roteador do usuário;
+- permitir nova medição manual e usar cache/intervalo mínimo para evitar scans agressivos, quedas de associação, aumento de CPU ou interferência no AP de recuperação;
+- se a interface Wi-Fi estiver ocupada com conexão crítica ou AP de recuperação, o scan deve ser adiado/limitado de forma segura em vez de derrubar a conectividade;
+- dados sem evidência devem aparecer como indisponíveis, nunca inventados.
+
+A recomendação deve priorizar estabilidade e qualidade real, não apenas o menor número de redes encontradas.
