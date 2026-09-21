@@ -312,3 +312,5 @@ Estado antes do CI final:
 | APRS-006 — assistente de login APRS-IS | FALHA | HW/browser | teste exibiu erro de login não confirmado sem explicar o que é o login ou indicar a etapa exata que falhou |
 | APRS-002 — toast global 5 s | PENDENTE/NÃO IMPLEMENTADO GLOBALMENTE | DOC/SW/HW | código atual avisa dentro da página APRS; falta toast global clicável em qualquer página |
 | APRS-004 transporte bidirecional | HW PENDENTE | SW/VPS/HW | não promover a HW PASS até login verificado + envio + recebimento reais |
+
+| APRS-007 — D-PRS | PENDENTE | DOC/HW | código atual ainda indica `Sem DPRS`; funcionalidade precisa implementação e teste físico D-Star/GPS antes de qualquer HW PASS |
