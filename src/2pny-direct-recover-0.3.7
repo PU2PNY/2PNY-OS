@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+STATE=/run/2pny/direct-state.json
+[[ -s "$STATE" ]] || exit 0
+read -r active restore proto < <(python3 - "$STATE" <<'PY'
+import json,sys
+try:d=json.load(open(sys.argv[1]))
+except Exception: d={}
+print("1" if d.get("radio_active") else "0","1" if d.get("gateway_restore") else "0",str(d.get("protocol") or "").upper())
+PY
+)
+[[ "$active" == 1 && "$restore" == 1 ]] || exit 0
+case "$proto" in
+  DMR) unit=2pny-dmrgateway.service;;
+  DSTAR) unit=2pny-dstargateway.service;;
+  YSF) unit=2pny-ysfgateway.service;;
+  *) exit 0;;
+esac
+systemctl start "$unit" || true
