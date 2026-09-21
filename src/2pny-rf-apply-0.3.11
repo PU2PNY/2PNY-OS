@@ -5,6 +5,7 @@ CONFIG=/var/lib/2pny/mmdvm/MMDVM-Host.ini
 STATE=/var/lib/2pny
 BACKUPS="$STATE/backups/rf"
 LOCK=/run/2pny-rf-apply.lock
+DISPLAY_LOCK=/run/2pny/display-detect.lock
 SERVICE=2pny-mmdvmhost.service
 
 usage(){
@@ -55,6 +56,12 @@ PY
 mkdir -p /run/2pny "$STATE" "$BACKUPS" "$(dirname "$CONFIG")"
 install -d -m 0750 -o root -g mmdvm "$STATE" "$(dirname "$CONFIG")"
 exec 9>"$LOCK"; flock -x 9
+# Não disputar a UART com a detecção de display.
+exec 8>"$DISPLAY_LOCK"
+if ! flock -w 8 8; then
+  echo "A detecção de display ainda está usando a porta da MMDVM; tente novamente em alguns segundos." >&2
+  exit 3
+fi
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 OLD=""; WAS_ACTIVE=0
 systemctl is-active --quiet "$SERVICE" && WAS_ACTIVE=1 || true
