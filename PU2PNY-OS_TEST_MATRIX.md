@@ -241,3 +241,14 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | TEST-LIVE-011D | LIVE-011 | filtros de atividade | continuam disponíveis separadamente e funcionais após a mudança | PENDENTE | SW/HW |
 | TEST-PROTO-014A | PROTO-014 | página Hotspot | perfis permanecem visíveis e cada um oferece ação de configurar | PENDENTE | SW/HW |
 | TEST-PROTO-014B | PROTO-014 | configurar frequência/rede | abre contexto correto do protocolo sem refazer wizard e sem alterar outro perfil | PENDENTE | SW/HW |
+
+## Feedback físico 0.3.7-alpha — PU2PNY Direct
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-P2P-007A | P2P-007 | nenhum contato pareado + clicar Chamar | botão desabilitado ou mensagem PT explicando que é necessário parear; nenhum `HTTP 409` bruto | **FAIL** — UI exibiu `HTTP 409` | HW/browser |
+| TEST-P2P-007B | P2P-007 | indicativo inexistente/offline | mensagem clara `PU2PNY não encontrado ou offline`; RF inalterado | PENDENTE | SW/VPS/HW |
+| TEST-P2P-007C | P2P-007 | peer pareado porém sem resposta | informa sem resposta, restaura/preserva gateway anterior e não deixa estado falso de conectado | PENDENTE | SW/HW |
+| TEST-P2P-007D | P2P-007 | protocolos diferentes | bloqueia antes de alterar RF e informa local/remoto | PENDENTE | SW/HW |
+| TEST-UI-015A | UI-015 | abrir Direct em desktop | cabeçalho/menu/cards/botões seguem layout padrão sem elementos concatenados ou estourados | **FAIL** — página visualmente quebrada no teste | HW/browser |
+| TEST-UI-015B | UI-015 | 390px/768px/desktop | Direct responsiva e usável, sem overflow/controles quebrados | PENDENTE | SW/HW |
