@@ -1,0 +1,409 @@
+#!/bin/bash
+set -u
+export LC_ALL=C
+nmcli(){ timeout -k 2 20 /usr/bin/nmcli "$@"; }
+
+RUN=/run/2pny
+STATE=/var/lib/2pny
+SETUP_IP=10.43.0.1
+SETUP_CIDR=10.43.0.1/24
+SETUP_NET=10.43.0.0/24
+mkdir -p "$RUN" "$STATE"
+
+log(){
+  logger -t pu2pny-network -- "$*" 2>/dev/null || true
+  printf '[%s] %s\n' "$(date -Is)" "$*" >>"$RUN/network.log"
+}
+alive(){ test -n "$1" && kill -0 "$1" 2>/dev/null; }
+readpid(){ test -r "$1" && cat "$1" 2>/dev/null || true; }
+
+systemctl start NetworkManager.service >/dev/null 2>&1 || true
+systemctl start avahi-daemon.service >/dev/null 2>&1 || true
+rfkill unblock wifi >/dev/null 2>&1 || true
+nmcli networking on >/dev/null 2>&1 || true
+nmcli radio wifi on >/dev/null 2>&1 || true
+
+# NET-023: NetworkManager can be active before the Wi-Fi device has finished
+# appearing/transitioning to managed. Wait a bounded period before restoring
+# the persisted client profile instead of treating that boot race as failure.
+for _ in $(seq 1 20); do
+  if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -Eq '^wifi:(disconnected|connected|connecting)'; then
+    break
+  fi
+  sleep .25
+done
+
+# 0.3.3 activates a saved client profile only after helper functions are
+# defined below. This keeps AP recovery deterministic on single-radio boards.
+
+wifi_list(){
+  for p in /sys/class/net/*; do
+    test -d "$p/wireless" || continue
+    basename "$p"
+  done
+}
+find_eth(){
+  for p in /sys/class/net/*; do
+    test -e "$p" || continue
+    n="$(basename "$p")"
+    test "$n" = lo && continue
+    test -d "$p/wireless" && continue
+    test -e "$p/device" || continue
+    case "$n" in docker*|br-*|veth*|virbr*|tun*|tap*|wg*) continue ;; esac
+    echo "$n"; return
+  done
+}
+active_wifi(){
+  nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null | awk -F: '$2=="wifi" && $3=="connected"{print $1;exit}'
+}
+default_iface(){
+  ip -4 route show default 2>/dev/null | awk '/default/{for(i=1;i<=NF;i++)if($i=="dev"){print $(i+1);exit}}'
+}
+has_global_v4(){ ip -4 -o addr show dev "$1" scope global 2>/dev/null | grep -q 'inet '; }
+carrier(){ cat "/sys/class/net/$1/carrier" 2>/dev/null || echo 0; }
+
+write_connect_state(){
+  local state="$1" message="$2" ssid="${3:-}"
+  python3 - "$STATE/network-connect.json" "$state" "$message" "$ssid" <<'PY'
+import json,os,sys,tempfile,time
+path,state,message,ssid=sys.argv[1:]
+os.makedirs(os.path.dirname(path),exist_ok=True)
+payload={"state":state,"message":message,"ssid":ssid,"updated":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())}
+fd,tmp=tempfile.mkstemp(prefix=".network-connect.",dir=os.path.dirname(path))
+with os.fdopen(fd,"w") as f:
+    json.dump(payload,f,ensure_ascii=False,separators=(",",":"))
+    f.write("\n");f.flush();os.fsync(f.fileno())
+os.chmod(tmp,0o600);os.replace(tmp,path)
+PY
+}
+
+SAVED_SSID="$(cat "$STATE/uplink-ssid" 2>/dev/null || true)"
+WIFI_BOOT_OK=0
+WIFI_MISS_COUNT=0
+wifi_profile_link_ok(){
+  iface="$1"; wanted="$2"
+  test -n "$iface" || return 1
+  has_global_v4 "$iface" || return 1
+  actual="$(iw dev "$iface" link 2>/dev/null | sed -n 's/^[[:space:]]*SSID: //p' | head -1)"
+  test -n "$actual" && { test -z "$wanted" || test "$actual" = "$wanted"; }
+}
+if nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq 'PU2PNY-WIFI'; then
+  # Reassert the persisted boot policy before trying the profile. Recovery AP
+  # never deletes or disables this profile.
+  nmcli connection modify PU2PNY-WIFI connection.autoconnect yes connection.autoconnect-priority 100 connection.autoconnect-retries 3 >/dev/null 2>&1 || true
+  nmcli connection reload >/dev/null 2>&1 || true
+  SAVED_IF="$(nmcli -g connection.interface-name connection show PU2PNY-WIFI 2>/dev/null | head -1 || true)"
+  if test -z "$SAVED_IF" || test "$SAVED_IF" = "--"; then SAVED_IF="$(wifi_list | head -1)"; fi
+  rfkill unblock wifi >/dev/null 2>&1 || true
+  nmcli radio wifi on >/dev/null 2>&1 || true
+  test -n "$SAVED_IF" && nmcli device set "$SAVED_IF" managed yes >/dev/null 2>&1 || true
+  REG="$(cat "$STATE/wifi-country" 2>/dev/null || echo BR)"; [[ "$REG" =~ ^[A-Z]{2}$ ]] || REG=BR
+  iw reg set "$REG" >/dev/null 2>&1 || true
+  KEYMGMT="$(nmcli -g 802-11-wireless-security.key-mgmt connection show PU2PNY-WIFI 2>/dev/null | head -1 || true)"
+  for attempt in 1 2 3; do
+    case "$attempt:$KEYMGMT" in
+      2:wpa-psk) nmcli connection modify PU2PNY-WIFI 802-11-wireless-security.key-mgmt sae >/dev/null 2>&1 || true ;;
+      2:sae) nmcli connection modify PU2PNY-WIFI 802-11-wireless-security.key-mgmt wpa-psk >/dev/null 2>&1 || true ;;
+      3:*) nmcli connection modify PU2PNY-WIFI 802-11-wireless-security.key-mgmt "$KEYMGMT" >/dev/null 2>&1 || true ;;
+    esac
+    log "trying saved Wi-Fi profile at boot (attempt $attempt)"
+    set +e
+    OUT="$(nmcli --wait 45 connection up PU2PNY-WIFI ifname "$SAVED_IF" 2>&1)"
+    RC=$?
+    set -e
+    CAND="$(active_wifi)"
+    if test "$RC" = 0 && wifi_profile_link_ok "$CAND" "$SAVED_SSID"; then
+      WIFI_BOOT_OK=1
+      touch "$STATE/ap-disabled"
+      rm -f "$STATE/ap-auto-disabled" "$STATE/wifi-pending"
+      WIFI_IP="$(ip -4 -o addr show dev "$CAND" scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)"
+      test -n "$WIFI_IP" && printf '%s\n' "$WIFI_IP" >"$STATE/uplink-ipv4"
+      write_connect_state connected "Wi-Fi conectado. Continue a configuração." "$SAVED_SSID"
+      /usr/local/sbin/2pny-mdns-guard >/dev/null 2>&1 || true
+      log "saved Wi-Fi profile connected on $CAND"
+      break
+    fi
+    SAFEERR="$(printf '%s' "$OUT" | tr '\n\r' '  ' | sed -E 's/[[:space:]]+/ /g' | cut -c1-240)"
+    log "saved Wi-Fi attempt $attempt failed rc=$RC: $SAFEERR"
+    sleep 2
+  done
+  if test "$WIFI_BOOT_OK" != 1; then
+    test -n "$KEYMGMT" && test "$KEYMGMT" != "--" && nmcli connection modify PU2PNY-WIFI 802-11-wireless-security.key-mgmt "$KEYMGMT" >/dev/null 2>&1 || true
+    rm -f "$STATE/ap-disabled" "$STATE/ap-auto-disabled"
+    write_connect_state recovery_ap "Não foi possível entrar no Wi-Fi salvo. O perfil foi preservado e o AP pu2pny voltou para recuperação." "$SAVED_SSID"
+    log "saved Wi-Fi failed; preserving profile and enabling recovery AP"
+  fi
+fi
+
+ETH="$(find_eth)"
+CLIENT_WIFI="$(active_wifi)"
+AP_WIFI=""
+UPLINK_WIFI=""
+
+if test -n "$CLIENT_WIFI"; then
+  UPLINK_WIFI="$CLIENT_WIFI"
+  for w in $(wifi_list); do
+    test "$w" = "$CLIENT_WIFI" && continue
+    AP_WIFI="$w"; break
+  done
+else
+  for w in $(wifi_list); do
+    if test -z "$AP_WIFI"; then AP_WIFI="$w"
+    elif test -z "$UPLINK_WIFI"; then UPLINK_WIFI="$w"; break
+    fi
+  done
+fi
+
+printf '%s\n' "$ETH" >"$RUN/eth-iface"
+printf '%s\n' "$AP_WIFI" >"$RUN/ap-iface"
+printf '%s\n' "$UPLINK_WIFI" >"$RUN/uplink-iface"
+
+HOSTAPD_PID=""
+DNS_AP_PID=""
+DNS_ETH_PID=""
+ETH_MODE="none"
+AP_ONLINE="-1"
+LAST_CARRIER="-1"
+MAINT_TRIGGERED=0
+SCAN_HOLD="$RUN/ap-scan-hold"
+
+stop_pidfile(){
+  f="$1"; p="$(readpid "$f")"
+  test -n "$p" && kill "$p" 2>/dev/null || true
+  rm -f "$f"
+}
+stop_ap_dns(){ stop_pidfile "$RUN/dnsmasq-ap.pid"; DNS_AP_PID=""; }
+stop_ap(){
+  stop_ap_dns
+  stop_pidfile "$RUN/hostapd.pid"
+  HOSTAPD_PID=""
+  if test -n "$AP_WIFI"; then
+    ip addr del "$SETUP_CIDR" dev "$AP_WIFI" 2>/dev/null || true
+    nmcli device set "$AP_WIFI" managed yes >/dev/null 2>&1 || true
+  fi
+}
+stop_eth_fallback(){
+  stop_pidfile "$RUN/dnsmasq-eth.pid"
+  DNS_ETH_PID=""
+  if test -n "$ETH"; then
+    ip addr del "$SETUP_CIDR" dev "$ETH" 2>/dev/null || true
+    nmcli device set "$ETH" managed yes >/dev/null 2>&1 || true
+  fi
+}
+disconnect_eth(){
+  stop_eth_fallback
+  test -n "$ETH" && nmcli connection down PU2PNY-ETH-AUTO >/dev/null 2>&1 || true
+  ETH_MODE="disconnected"
+}
+
+start_eth_fallback(){
+  test -n "$ETH" || return 1
+  # 10.43.0.1 is unique: direct Ethernet and setup AP never own it together.
+  alive "$HOSTAPD_PID" && stop_ap
+  nmcli connection down PU2PNY-ETH-AUTO >/dev/null 2>&1 || true
+  nmcli device disconnect "$ETH" >/dev/null 2>&1 || true
+  nmcli device set "$ETH" managed no >/dev/null 2>&1 || true
+  ip link set "$ETH" up >/dev/null 2>&1 || true
+  ip addr flush dev "$ETH" >/dev/null 2>&1 || true
+  ip addr add "$SETUP_CIDR" dev "$ETH" >/dev/null 2>&1 || ip addr replace "$SETUP_CIDR" dev "$ETH" >/dev/null 2>&1 || return 1
+  sed "s/@IFACE@/$ETH/g" /usr/share/2pny/network/dnsmasq-eth.template >"$RUN/dnsmasq-eth.conf"
+  dnsmasq --keep-in-foreground --conf-file="$RUN/dnsmasq-eth.conf" --pid-file="$RUN/dnsmasq-eth.pid" >>"$RUN/dnsmasq-eth.log" 2>&1 &
+  DNS_ETH_PID=$!
+  sleep .5
+  alive "$DNS_ETH_PID" || return 1
+  ETH_MODE="direct"
+  log "Direct Ethernet active at http://$SETUP_IP/"
+}
+
+start_eth(){
+  test -n "$ETH" || return 0
+  test "$(carrier "$ETH")" = 1 || { disconnect_eth; return 0; }
+
+  stop_eth_fallback
+  nmcli device set "$ETH" managed yes >/dev/null 2>&1 || true
+  nmcli connection delete PU2PNY-ETH-AUTO >/dev/null 2>&1 || true
+  nmcli connection add type ethernet ifname "$ETH" con-name PU2PNY-ETH-AUTO \
+    ipv4.method auto ipv4.dhcp-timeout 8 ipv6.method disabled \
+    connection.autoconnect yes connection.autoconnect-priority 70 >/dev/null 2>&1 || true
+
+  if nmcli --wait 10 connection up PU2PNY-ETH-AUTO ifname "$ETH" >/dev/null 2>&1 && has_global_v4 "$ETH"; then
+    ETH_MODE="dhcp"
+    /usr/local/sbin/2pny-mdns-guard >/dev/null 2>&1 || true
+    log "Ethernet DHCP active on $ETH"
+    return 0
+  fi
+  start_eth_fallback || log "Direct Ethernet fallback failed on $ETH"
+}
+
+generate_ap_dns(){
+  sed "s/@IFACE@/$AP_WIFI/g" /usr/share/2pny/network/dnsmasq-ap.template >"$RUN/dnsmasq-ap.conf"
+  echo "address=/pu2pny.local/$SETUP_IP" >>"$RUN/dnsmasq-ap.conf"
+  # RFC 8908/8910 captive API discovery requires an authenticated HTTPS API.
+  # PU2PNY's offline setup portal is HTTP, so never advertise an invalid
+  # DHCP Captive-Portal API URI. Legacy HTTP probes remain the compatibility path.
+  sed -i '/^dhcp-option-force=114,/d' "$RUN/dnsmasq-ap.conf" 2>/dev/null || true
+
+  # First access must remain truly captive. If an Ethernet/other uplink exists,
+  # transparently forwarding Internet would let NCSI/Android probes succeed and
+  # suppress the portal prompt. Until onboarding is complete, resolve all names
+  # to the local setup server and do not expose upstream DNS.
+  if test ! -f "$STATE/provisioned"; then
+    { echo "address=/#/$SETUP_IP"; echo 'no-resolv'; echo 'no-hosts'; } >>"$RUN/dnsmasq-ap.conf"
+    AP_ONLINE=0
+    return 0
+  fi
+
+  outif="$(default_iface)"
+  if test -n "$outif" && test "$outif" != "$AP_WIFI"; then
+    { echo 'server=1.1.1.1'; echo 'server=8.8.8.8'; } >>"$RUN/dnsmasq-ap.conf"
+    AP_ONLINE=1
+  else
+    { echo "address=/#/$SETUP_IP"; echo 'no-resolv'; echo 'no-hosts'; } >>"$RUN/dnsmasq-ap.conf"
+    AP_ONLINE=0
+  fi
+}
+start_ap_dns(){
+  test -n "$AP_WIFI" || return 1
+  stop_ap_dns
+  generate_ap_dns
+  dnsmasq --keep-in-foreground --conf-file="$RUN/dnsmasq-ap.conf" --pid-file="$RUN/dnsmasq-ap.pid" >>"$RUN/dnsmasq-ap.log" 2>&1 &
+  DNS_AP_PID=$!
+  sleep .4
+  alive "$DNS_AP_PID"
+}
+start_ap(){
+  test -n "$AP_WIFI" || return 1
+  test "$ETH_MODE" != direct || return 1
+  rfkill unblock wifi >/dev/null 2>&1 || true
+  REG="$(cat "$STATE/wifi-country" 2>/dev/null || echo BR)"
+  [[ "$REG" =~ ^[A-Z]{2}$ ]] || REG=BR
+  iw reg set "$REG" >/dev/null 2>&1 || true
+  nmcli device disconnect "$AP_WIFI" >/dev/null 2>&1 || true
+  nmcli device set "$AP_WIFI" managed no >/dev/null 2>&1 || true
+  ip link set "$AP_WIFI" down >/dev/null 2>&1 || true
+  ip addr flush dev "$AP_WIFI" >/dev/null 2>&1 || true
+  sleep .25
+  ip link set "$AP_WIFI" up >/dev/null 2>&1 || true
+  ip addr add "$SETUP_CIDR" dev "$AP_WIFI" >/dev/null 2>&1 || ip addr replace "$SETUP_CIDR" dev "$AP_WIFI" >/dev/null 2>&1 || return 1
+  sed "s/@IFACE@/$AP_WIFI/g" /usr/share/2pny/network/hostapd.template >"$RUN/hostapd.conf"
+  hostapd -P "$RUN/hostapd.pid" "$RUN/hostapd.conf" >>"$RUN/hostapd.log" 2>&1 &
+  HOSTAPD_PID=$!
+  sleep .8
+  alive "$HOSTAPD_PID" || return 1
+  start_ap_dns || { stop_ap; return 1; }
+  log "Setup AP pu2pny active at http://$SETUP_IP/"
+}
+enable_ap_forwarding(){
+  test -n "$AP_WIFI" || return 0
+  # Never make the unprovisioned setup AP look like normal Internet access.
+  test -f "$STATE/provisioned" || return 0
+  outif="$(default_iface)"
+  test -n "$outif" || return 0
+  test "$outif" = "$AP_WIFI" && return 0
+  sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1 || true
+  command -v iptables >/dev/null 2>&1 || return 0
+  iptables -t nat -C POSTROUTING -s "$SETUP_NET" -o "$outif" -j MASQUERADE >/dev/null 2>&1 ||
+    iptables -t nat -A POSTROUTING -s "$SETUP_NET" -o "$outif" -j MASQUERADE >/dev/null 2>&1 || true
+  iptables -C FORWARD -i "$AP_WIFI" -o "$outif" -j ACCEPT >/dev/null 2>&1 ||
+    iptables -A FORWARD -i "$AP_WIFI" -o "$outif" -j ACCEPT >/dev/null 2>&1 || true
+  iptables -C FORWARD -i "$outif" -o "$AP_WIFI" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT >/dev/null 2>&1 ||
+    iptables -A FORWARD -i "$outif" -o "$AP_WIFI" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT >/dev/null 2>&1 || true
+}
+maybe_maintenance(){
+  outif="$(default_iface)"
+  if test -n "$outif"; then
+    if test "$MAINT_TRIGGERED" = 0; then
+      systemctl start --no-block 2pny-auto-maintenance.service >/dev/null 2>&1 || true
+      MAINT_TRIGGERED=1
+      log "automatic maintenance trigger requested after network route became available"
+    fi
+  else
+    MAINT_TRIGGERED=0
+  fi
+}
+write_status(){
+  {
+    VERSION="$(cat /etc/2pny/version 2>/dev/null || echo unknown)"
+    echo "PU2PNY $VERSION"
+    echo "time=$(date -Is)"
+    echo "ethernet_if=$ETH"
+    echo "ethernet_mode=$ETH_MODE"
+    echo "ap_if=$AP_WIFI"
+    echo "uplink_if=$UPLINK_WIFI"
+    echo "setup_ip=$SETUP_IP"
+    DFLT="$(default_iface)"
+    echo "default_if=$DFLT"
+    DFLT_IP=""
+    test -n "$DFLT" && DFLT_IP="$(ip -4 -o addr show dev "$DFLT" scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)"
+    echo "default_ip=$DFLT_IP"
+    case "$DFLT" in wl*) echo "uplink_type=wifi" ;; en*|eth*) echo "uplink_type=ethernet" ;; *) echo "uplink_type=other" ;; esac
+    if alive "$HOSTAPD_PID"; then echo 'hostapd=active'; else echo 'hostapd=inactive'; fi
+    if alive "$DNS_AP_PID"; then echo 'dnsmasq_ap=active'; else echo 'dnsmasq_ap=inactive'; fi
+    if alive "$DNS_ETH_PID"; then echo 'dnsmasq_eth=active'; else echo 'dnsmasq_eth=inactive'; fi
+    if test -f "$SCAN_HOLD"; then echo 'ap_scan_hold=active'; else echo 'ap_scan_hold=inactive'; fi
+  } >"$RUN/network-status.txt"
+}
+cleanup(){ stop_ap; stop_eth_fallback; write_status; }
+trap cleanup EXIT TERM INT
+
+if test -n "$ETH"; then
+  LAST_CARRIER="$(carrier "$ETH")"
+  if test "$LAST_CARRIER" = 1; then start_eth; else ETH_MODE="disconnected"; fi
+fi
+
+if test ! -f "$STATE/ap-disabled" && test -n "$AP_WIFI" && test "$ETH_MODE" != direct; then
+  start_ap || log "AP startup failed"
+fi
+write_status
+maybe_maintenance
+
+while true; do
+  if test -n "$ETH"; then
+    NOW_CARRIER="$(carrier "$ETH")"
+    if test "$NOW_CARRIER" != "$LAST_CARRIER"; then
+      LAST_CARRIER="$NOW_CARRIER"
+      if test "$NOW_CARRIER" = 1; then start_eth
+      else disconnect_eth
+      fi
+    elif test "$NOW_CARRIER" = 1 && test "$ETH_MODE" = dhcp && ! has_global_v4 "$ETH"; then
+      start_eth
+    fi
+  fi
+
+  ACTIVE_CLIENT="$(active_wifi)"
+  if test -n "$ACTIVE_CLIENT"; then
+    WIFI_MISS_COUNT=0
+    touch "$STATE/ap-disabled"
+  elif nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq 'PU2PNY-WIFI'; then
+    WIFI_MISS_COUNT=$(( ${WIFI_MISS_COUNT:-0} + 1 ))
+    if test "$WIFI_MISS_COUNT" -ge 15 && test ! -f "$SCAN_HOLD"; then
+      rm -f "$STATE/ap-disabled" "$STATE/ap-auto-disabled"
+      if test -z "$AP_WIFI"; then AP_WIFI="$(wifi_list | head -1)"; printf '%s\n' "$AP_WIFI" >"$RUN/ap-iface"; fi
+      write_connect_state recovery_ap "Wi-Fi cliente indisponível. O AP pu2pny está disponível para recuperação; a rede salva foi preservada." "$SAVED_SSID"
+    fi
+  else
+    WIFI_MISS_COUNT=0
+  fi
+  # Recover stale holds only after the scan/connect process releases its lock.
+  if test -f "$SCAN_HOLD" && flock -n "$RUN/wifi-operation.lock" true; then rm -f "$SCAN_HOLD"; fi
+  if test -f "$SCAN_HOLD"; then
+    alive "$HOSTAPD_PID" && stop_ap
+  elif test -f "$STATE/ap-disabled" || test "$ETH_MODE" = direct; then
+    alive "$HOSTAPD_PID" && stop_ap
+  elif test -n "$AP_WIFI"; then
+    if ! alive "$HOSTAPD_PID"; then start_ap || true
+    elif ! alive "$DNS_AP_PID"; then start_ap_dns || true
+    fi
+  fi
+
+  if alive "$HOSTAPD_PID"; then
+    outif="$(default_iface)"; now=0
+    test -n "$outif" && test "$outif" != "$AP_WIFI" && now=1
+    test "$now" = "$AP_ONLINE" || start_ap_dns || true
+    enable_ap_forwarding
+  fi
+  maybe_maintenance
+  write_status
+  sleep 3
+done
+
