@@ -457,3 +457,13 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Imagem publicada: `PU2PNY-OS-0.3.10-alpha-arm64.img.xz`.
 - SHA-256: `9bbbffe310401dbe4dffe10316a11fc8647465112070592275a45bee3d0c23ee`.
 - Release permanece Alpha/HW-TEST até a validação física.
+
+## 2026-09-21 — abertura corretiva 0.3.11-alpha após teste HW da 0.3.10
+- Criado rollback `backup/0.3.10-hw-feedback-20260921` e branch `pu2pny-os-0.3.11-alpha`.
+- Registrados HW-003, RF-016, WIZ-006 e UI-026.
+- A etapa Hardware deixa de reabrir a serial da MMDVM para tentar confirmar Nextion antes do MMDVMHost; a confirmação via modem fica para depois que o rádio estiver ativo.
+- O aplicador RF continua usando o baud realmente detectado, mas deixa de atribuir qualquer falha ao baud: serializa contra o detector de display, prova MQTT, tenta inicialização controlada, registra diagnóstico e faz rollback.
+- O wizard limpa erro transitório quando a MMDVM está confirmada e restaura o avanço automático de 5 s.
+- A camada de idioma passa a normalizar mensagens técnicas conhecidas para uma chave/canonical PT e então renderizar PT/EN/ES conforme a escolha do usuário.
+- Nenhuma alteração foi feita para mudar frequência, offsets, DMRGateway ou o baseline RF/DMR aprovado.
+
