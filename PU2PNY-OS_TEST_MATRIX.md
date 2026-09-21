@@ -562,3 +562,16 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0314-C | REL-007 | XZ + SHA-256 | integridade confirmada | PENDENTE CI | SW |
 | TEST-REL-0314-D | REL-007 | imagem montada | broker/unit/readiness/wizard + baselines presentes | PENDENTE CI | SW |
 | TEST-REL-0314-E | REL-007 | Raspberry Pi + MMDVM | Fase A continua PASS, MQTT Fase B passa e wizard avança somente após applied | PENDENTE | HW |
+
+## Casos 0.3.15-alpha — correção focal MQTT/onboarding DMR
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-RF-021A | PROTO-021 | RF apply após MMDVM bootstrap | retorna RF_APPLY_OK com MQTTLevel=0; não chama preflight/broker nem habilita MQTT | PENDENTE CI/HW |
+| TEST-DMR-021B | PROTO-021 | dispatcher recebe DMR | delega diretamente ao 2pny-dmr-apply sem preflight MQTT | PENDENTE CI/HW |
+| TEST-DMR-021C | PROTO-021 | helper DMR efetivo | MMDVMHost/DMRGateway usam MQTTLevel=0 e continuam validando ambos os serviços | PENDENTE CI/HW |
+| TEST-WIZ-008A | WIZ-008 | backend conclui RF+DMR | grava provisioned, publica state=applied e wizard executa step(4) | PENDENTE CI/HW |
+| TEST-REL-0315-A | REL-008 | regressões/source | 0.3.14 herdado + testes focais 0.3.15 passam | PENDENTE CI |
+| TEST-REL-0315-B | REL-008 | build ARM64/XZ/SHA | imagem e checksum válidos | PENDENTE CI |
+| TEST-REL-0315-C | REL-008 | imagem montada | RF/DMR sem gate MQTT e baselines herdadas presentes | PENDENTE CI |
+| TEST-REL-0315-D | REL-008 | Raspberry Pi + MMDVM + DMR | Configuração Básica avança para Conclusão sem depender do broker MQTT | PENDENTE HW |
