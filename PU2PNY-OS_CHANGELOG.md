@@ -202,3 +202,13 @@ Neste ponto os itens acima estão **implementados em código**. Não são HW PAS
 - Para visualizar o estado novo foi necessário recarregar a página; em uma tentativa foram necessárias duas atualizações.
 - O defeito é classificado como sincronização UI/backend pós-operação. A troca de DNS em si não será marcada como falha apenas por este sintoma sem evidência adicional.
 - Criado `TEST-UI-013-DNS` = HW/browser FAIL.
+
+## 2026-09-20 — feedback HW 0.3.7: Wi-Fi 1/2 e mensagens
+
+- Registrado **NET-018** para separar claramente "salvar perfil" de "trocar conexão".
+- "Salvar Rede Wi-Fi 2" não deve conectar/trocar automaticamente; a troca fica em ação explícita própria.
+- A busca única que alimenta os dois seletores é aceita e deve ser compartilhada para reduzir custo/tempo.
+- Cada perfil deve exibir estado real de salvo/conectado e atualizar a tela dinamicamente.
+- Registrado **UI-014**: Mostrar/Ocultar senha nos dois perfis e mensagens no idioma selecionado.
+- No teste PT-BR apareceu a mensagem bruta em inglês `signal is aborted without reason`; isso é falha de UI/localização, mantendo o detalhe técnico apenas para Expert/log.
+- A troca deve priorizar convergência rápida, mas nunca pulando autenticação, IPv4 e rollback.
