@@ -22,15 +22,25 @@ install("src/2pny-mqtt-preflight-0.3.12.py","rootfs-overlay/usr/local/sbin/2pny-
 install("src/2pny-mosquitto-local-0.3.12.conf","rootfs-overlay/etc/mosquitto/conf.d/2pny-local.conf",0o644)
 (root/"rootfs-overlay/etc/2pny/version").write_text(version+"\n")
 
-# PROTO-018: the image must contain the broker, not only libmosquitto.
+# PROTO-018: the final image must contain the broker, not only libmosquitto.
+# Install it after the MMDVMHost build-dependency cleanup so later purges cannot
+# accidentally remove the runtime broker.
 builder=root/"builder/build-image.sh"
 bs=builder.read_text()
-ready="wpasupplicant rfkill wireless-regdb mosquitto libmosquitto1"
-old="wpasupplicant rfkill wireless-regdb libmosquitto1"
-if ready not in bs:
-    if old not in bs:
-        raise SystemExit("builder package anchor for mosquitto not found")
-    bs=bs.replace(old,ready,1)
+broker_marker="# PU2PNY_MOSQUITTO_RUNTIME_0312"
+if broker_marker not in bs:
+    anchor='echo "[5/9] Aplicando overlay 2PNY..."'
+    if anchor not in bs:
+        raise SystemExit("builder final-overlay anchor for mosquitto not found")
+    block='''# PU2PNY_MOSQUITTO_RUNTIME_0312
+echo "[4c/9] Instalando broker MQTT local do PU2PNY..."
+chroot "$ROOT_MNT" env DEBIAN_FRONTEND=noninteractive apt-get update
+chroot "$ROOT_MNT" env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends mosquitto
+chroot "$ROOT_MNT" apt-get clean
+rm -rf "$ROOT_MNT/var/lib/apt/lists/"*
+
+'''
+    bs=bs.replace(anchor,block+anchor,1)
 builder.write_text(bs)
 
 subprocess.run(["gofmt","-w",str(root/"src/2pnyd/main.go")],check=True)
@@ -63,7 +73,8 @@ assert 'SERIAL_LOCK=/run/2pny/mmdvm-serial.lock' in rf and 'flock -w 15 7' in rf
 assert 'mmdvm-serial.lock' in probe and 'fcntl.flock' in probe
 assert 'mqtt_connect_packet' in mqtt and 'CONNACK' in mqtt
 assert 'listener 1883 127.0.0.1' in mosq and 'allow_anonymous true' in mosq
-assert ready in builder.read_text()
+assert 'PU2PNY_MOSQUITTO_RUNTIME_0312' in builder.read_text()
+assert 'apt-get install -y --no-install-recommends mosquitto' in builder.read_text()
 assert 'Requires=mosquitto.service' in service
 assert 'ExecStartPre=/usr/local/sbin/2pny-mqtt-preflight --quiet' in service
 assert 'scheduleHardwareAdvance' in wiz and 'Sistema Operacional de Rádio Digital' in wiz
