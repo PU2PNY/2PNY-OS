@@ -418,3 +418,22 @@ Para troca de DNS:
 - nenhum valor antigo pode permanecer visível até refresh manual;
 - se a convergência do sistema ainda estiver em andamento, mostrar estado intermediário real e atualizar quando confirmado, com timeout e erro claro;
 - preservar NET-016: mostrar somente DNS efetivamente ativos e nunca inventar sucesso.
+
+## 19. Ajustes Wi-Fi confirmados no teste físico 0.3.7 — 2026-09-20
+
+### NET-018 — Perfis Wi-Fi 1/2 com semântica clara e troca rápida
+A página Internet deve tratar Wi-Fi 1 e Wi-Fi 2 como dois perfis persistentes e distintos.
+
+Regras:
+- **Salvar Rede Wi-Fi 2** deve somente persistir/validar o perfil, sem trocar imediatamente a conexão ativa, salvo se o usuário escolher explicitamente "Conectar agora";
+- a troca efetiva entre Wi-Fi 1 e Wi-Fi 2 deve ocorrer pelo controle próprio de troca e continuar transacional;
+- cada perfil deve mostrar claramente: SSID salvo, estado `Salva`, `Conectada`, `Disponível`, `Falhou` ou equivalente, além do IP quando aquele perfil estiver ativo;
+- a busca de redes pode alimentar os dois seletores em uma única varredura compartilhada, evitando scan duplicado e consumo desnecessário;
+- a troca deve ser otimizada para convergir o mais rápido possível, sem reboot ou espera artificial quando não necessários;
+- velocidade nunca pode substituir validação: associação, autenticação e IPv4 precisam ser confirmados antes de declarar sucesso;
+- em falha, restaurar imediatamente o perfil anterior ou AP de recuperação, mantendo o painel acessível quando houver outro caminho de rede.
+
+### UI-014 — UX de credenciais e estado Wi-Fi
+Nos campos de senha de Wi-Fi 1 e Wi-Fi 2 deve existir controle `Mostrar/Ocultar` para o usuário conferir o que digitou. Após salvar/aplicar, a própria página deve atualizar dinamicamente o estado do perfil e da conexão sem refresh manual.
+
+Mensagens técnicas brutas de NetworkManager/systemd não devem aparecer ao usuário final quando houver tradução segura disponível. Com PT-BR selecionado, erros como `signal is aborted without reason` devem ser apresentados em português, preservando o detalhe técnico em área Expert/log.
