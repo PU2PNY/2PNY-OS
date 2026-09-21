@@ -40,7 +40,7 @@ func (c *core) handlePacket(raw []byte, addr *net.UDPAddr) {
 	if json.Unmarshal(raw, &m) == nil && m.T != "" {
 		switch m.T {
 		case "lookup-query":
-			resp := ctrl{T: "lookup-result", From: c.id.Callsign, To: m.From, Nonce: m.Nonce, Ed: c.id.EdPub, X: c.id.XPub, FP: fingerprint(c.edPub)}
+			resp := ctrl{T: "lookup-result", From: c.id.Callsign, To: m.From, Nonce: m.Nonce, Ed: c.id.EdPub, X: c.id.XPub, FP: fingerprint(c.edPub), Protocol: currentProtocol()}
 			c.sign(&resp)
 			c.sendCtrl(c.serverAddr, resp)
 		case "lookup-result":
@@ -91,6 +91,16 @@ func (c *core) handleSecure(raw []byte, addr *net.UDPAddr, relayed bool) {
 	}
 	switch pkt.Kind {
 	case "probe":
+		path := "Direct"
+		if relayed { path = "Relay" }
+		c.mu.Lock()
+		c.st.Status = "connected"
+		c.st.Peer = pkt.From
+		c.st.Path = path
+		c.st.Protocol = currentProtocol()
+		c.st.LastError = ""
+		c.writeState()
+		c.mu.Unlock()
 		_ = c.sendSecure(pkt.From, "probe-ack", plain, relayed)
 	case "probe-ack":
 		c.mu.Lock()
