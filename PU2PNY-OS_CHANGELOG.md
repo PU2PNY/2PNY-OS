@@ -449,3 +449,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Relógio global sincroniza com timezone do PU2PNY.
 - Expert recebe diagnóstico sob demanda de UDP/MQTT/display/restore/rollback.
 - Criado workflow/release independente 0.3.10-alpha; publicação continua condicionada a ARM64 + XZ + SHA-256 + validação estrutural.
+
+## 2026-09-21 — 0.3.10-alpha publicada
+- Corrigidos gates herdados que ainda exigiam iframe, renderer antigo Nextion e implementação antiga de readiness D-Star/YSF.
+- Os gates foram alinhados aos requisitos UI-024, DISPLAY-016 e PROTO-016 sem remover proteção.
+- Run final `35600972295` passou source, staged source, ARM64, XZ/SHA-256, validação estrutural, transferência e publicação.
+- Imagem publicada: `PU2PNY-OS-0.3.10-alpha-arm64.img.xz`.
+- SHA-256: `9bbbffe310401dbe4dffe10316a11fc8647465112070592275a45bee3d0c23ee`.
+- Release permanece Alpha/HW-TEST até a validação física.
