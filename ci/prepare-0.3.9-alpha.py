@@ -131,6 +131,9 @@ lang=(root/"rootfs-overlay/usr/share/2pny/ui-language.js").read_text()
 
 assert '"0.3.9-alpha"' in main
 assert 'udp_listener(20010)' in proto and 'udp_listener(4200)' in proto
+assert 'local=cols[3]' in proto and 'local=cols[4]' not in proto
+assert 'verify_host_bridge_config(proto)' in proto
+assert 'deadline=time.time()+12' in proto
 assert r'\\b127\\.0\\.0\\.1:20010' not in proto
 assert 'for attempt in 1 2 3' in net and 'merge_scan_json' in net
 assert "sed -i '/^dhcp-option-force=114,/d'" in netcore
