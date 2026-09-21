@@ -209,3 +209,14 @@ A 0.3.4 não pode ser chamada de release completa enquanto TEST-NET-003, TEST-NE
 | ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
 |---|---|---|---|---|---|
 | TEST-UI-013-DNS | UI-013 / NET-016 | trocar DNS e aguardar conclusão | mensagem de aplicação termina e "DNS efetivo" + diagnóstico mudam automaticamente para o estado confirmado, sem F5 | **FAIL** — foi necessário atualizar a página, inclusive duas vezes em uma tentativa | HW/browser |
+
+## Feedback físico 0.3.7-alpha — Wi-Fi 1/2
+
+| ID | Requisito | Caso | Resultado esperado | Estado atual | Nível |
+|---|---|---|---|---|---|
+| TEST-NET-018A | NET-018 | salvar Wi-Fi 1 | perfil persiste e a página mostra imediatamente `Salva/Conectada` conforme estado real | **FAIL** — após aplicar não ficou claro que foi salvo/conectado | HW/browser |
+| TEST-NET-018B | NET-018 | salvar Wi-Fi 2 | salva o perfil sem trocar de rede automaticamente; troca só por ação explícita | **FAIL** — botão "Salvar Rede Wi-Fi 2" tentou conectar/trocar | HW/browser |
+| TEST-NET-018C | NET-018 | trocar Wi-Fi 1↔2 | mensagem transacional + associação/IP rápidos, sem reboot desnecessário, com rollback em falha | **FAIL** — operação terminou com erro; rede/configuração ainda instáveis | HW |
+| TEST-UI-014A | UI-014 | senha Wi-Fi 1/2 | botão Mostrar/Ocultar funciona nos dois campos | **FAIL** — não há controle para visualizar a senha digitada | HW/browser |
+| TEST-UI-014B | UI-014 / UI-007 | erro de rede em PT-BR | mensagem principal em português; detalhe bruto apenas no Expert/log | **FAIL** — exibiu `signal is aborted without reason` em inglês | HW/browser |
+| TEST-UI-014C | UI-014 / UI-013 | salvar/aplicar perfil | estado do perfil/conexão atualiza sozinho, sem F5 | **FAIL** — retorno não mostrou claramente perfil salvo/conectado | HW/browser |
