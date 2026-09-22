@@ -165,7 +165,6 @@ func main() {
 	go c.udpLoop()
 	go c.registerLoop()
 	go c.keepaliveLoop()
-	go c.autoCallLoop()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", c.apiHandler)
 	log.Printf("PU2PNY Direct %s %s API %s", version, c.id.Callsign, *api)
