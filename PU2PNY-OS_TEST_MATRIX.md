@@ -634,3 +634,14 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0317-B | REL-010 | build ARM64/XZ/SHA | artefato íntegro | PENDENTE CI |
 | TEST-REL-0317-C | REL-010 | imagem montada | D-Star local C/comandos/timezone + baselines presentes | PENDENTE CI |
 | TEST-REL-0317-D | REL-010 | Raspberry Pi + MMDVM | validação física D-Star e timezone | PENDENTE HW |
+
+## Casos adicionais 0.3.18-alpha
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-PROTO-024G | PROTO-024 | gerar DStarGateway.ini | `[Paths] Data=/usr/local/share/dstargateway.d/` | PENDENTE CI |
+| TEST-PROTO-024H | PROTO-024 | imagem ARM64 montada | `en_GB.ambe` e `en_GB.indx` existem no diretório configurado | PENDENTE CI |
+| TEST-REL-0318-A | REL-011 | source/regressões 0.3.16/0.3.17 + correção áudio | todos passam | PENDENTE CI |
+| TEST-REL-0318-B | REL-011 | ARM64/XZ/SHA-256 | artefato íntegro | PENDENTE CI |
+| TEST-REL-0318-C | REL-011 | imagem montada | D-Star/voz/timezone + baseline congelada presentes | PENDENTE CI |
+| TEST-REL-0318-D | REL-011 | Raspberry Pi + MMDVM | D-Star rede→RF, I/E/U/L/link, Hotspot e timezone | PENDENTE HW |
