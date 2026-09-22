@@ -59,7 +59,7 @@ assert "waitProtocolConnection" not in hotspot
 assert 'duplex=1 if usemode=="repeater" else 0' in dmr
 assert 'slot1=True if duplex' in dmr and 'slot2=True if duplex' in dmr
 assert 'route_slots=(1,2) if duplex' in dmr
-assert dmr.index('restart",HOST_SERVICE') < dmr.index('restart",GW_SERVICE')
+assert dmr.rindex('restart",HOST_SERVICE') < dmr.rindex('restart",GW_SERVICE')
 for marker in ('MQTTLevel=0','Jitter":"360"','TG4000=unlink','TG4099=status voice'):
     assert marker in dmr
 
