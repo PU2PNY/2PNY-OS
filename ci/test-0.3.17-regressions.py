@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Focused regression gates for PU2PNY-OS 0.3.17-alpha."""
 from pathlib import Path
-import importlib.util
+import importlib.util, json, os, tempfile, time
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -80,6 +80,47 @@ assert 'request_id=request_id' in tz
 assert 'User=root' in tzsvc
 assert 'ExecStart=/usr/local/sbin/2pny-timezone-apply' in tzsvc
 assert 'ReadWritePaths=/run/2pny /etc/timezone' in tzsvc
+
+# SEC-025: RF administration is restricted, armed, one-shot and allowlisted.
+radio=text("src/2pny-radio-admin-0.3.17.py")
+radiopath=text("src/2pny-radio-admin-0.3.17.path")
+radiosvc=text("src/2pny-radio-admin-0.3.17.service")
+dstarpatch=text("ci/patch-dstargateway-radio-admin-0.3.17.py")
+for marker in ("PNYARM","PNYOFF","PNYRBT","PNYDMR","PNYDST","PNYYSF","PNYP25","PNYNXD","PNYPOC"):
+    assert marker in dstarpatch,marker
+for marker in ('"DMR":"DMR"','"DSTAR":"DSTAR"','"YSF":"YSF"','"P25":"P25"','"NXDN":"NXDN"','"POCSAG":"POCSAG"'):
+    assert marker in radio,marker
+assert "ARM_SECONDS=30" in radio
+assert "configured_owner()" in radio and "caller!=owner" in radio
+assert "if not armed_for(caller)" in radio and "consume_arm()" in radio
+assert "2pny-protocol-profiles" in radio
+assert 'systemd-run' in radio and '"/usr/bin/systemctl",verb' in radio
+assert 'PathExists=/run/2pny/radio-admin-command.request' in radiopath
+assert 'User=root' in radiosvc
+assert 'ReadWritePaths=/run/2pny /var/lib/2pny' in radiosvc
+assert "PU2PNY SEC-025" in dstarpatch
+assert "radio-admin-command.request" in dstarpatch
+
+# Exercise the helper without executing any system action.
+rspec=importlib.util.spec_from_file_location("radio_admin",ROOT/"src/2pny-radio-admin-0.3.17.py")
+rmod=importlib.util.module_from_spec(rspec);rspec.loader.exec_module(rmod)
+with tempfile.TemporaryDirectory() as td:
+    td=Path(td)
+    rmod.REQ=td/"request";rmod.ARM=td/"armed";rmod.STATUS=td/"status";rmod.CFG=td/"config.json"
+    rmod.CFG.write_text(json.dumps({"callsign":"PU2PNY"})+"\n")
+    rmod.REQ.write_text("ARM\tPU2PNY\t\n")
+    real_geteuid=rmod.os.geteuid
+    try:
+        rmod.os.geteuid=lambda:0
+        assert rmod.main()==0
+        arm=json.loads(rmod.ARM.read_text())
+        assert arm["caller"]=="PU2PNY" and arm["expires"]>time.time()
+        rmod.REQ.write_text("REBOOT\tOTHER\t\n")
+        assert rmod.main()==3
+        # Wrong caller never consumes/executes an owner action.
+        st=json.loads(rmod.STATUS.read_text());assert st["ok"] is False
+    finally:
+        rmod.os.geteuid=real_geteuid
 
 # REL-010: 0.3.17 overlay is intentionally narrow.
 for forbidden in (
