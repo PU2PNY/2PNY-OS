@@ -2084,7 +2084,9 @@ func protocolStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if active { state = "gateway_active" }
 	if active && connected { state = "connected" }
 	writeJSON(w, http.StatusOK, map[string]any{"protocol": p, "active": active, "connected": connected, "state": state, "gateway": gateway,
-		"server_name": nr["server_name"], "kind": nr["kind"], "module": nr["module"], "address": nr["address"], "port": nr["port"]})
+		"server_name": nr["server_name"], "kind": nr["kind"], "module": nr["module"], "address": nr["address"], "port": nr["port"],
+		"link_state": nr["link_state"], "last_command": nr["last_command"], "last_command_target": nr["last_command_target"],
+		"last_command_source": nr["last_command_source"]})
 }
 
 func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
