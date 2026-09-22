@@ -64,6 +64,8 @@ strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX module control'
 strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX status voice requested'
 test -s "$ROOT/usr/local/share/dstargateway.d/en_GB.ambe"
 test -s "$ROOT/usr/local/share/dstargateway.d/en_GB.indx"
+test -s "$ROOT/usr/local/share/dstargateway.d/DStar_Hosts.json"
+test "$(wc -c < "$ROOT/usr/local/share/dstargateway.d/DStar_Hosts.json")" -gt 1000
 grep -Fq 'audio_path="/usr/local/share/dstargateway.d/"' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
 
 echo '[preflight 6/6] protocol services + no provisioned runtime state'
