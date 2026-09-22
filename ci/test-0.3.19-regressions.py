@@ -22,6 +22,7 @@ mode=text("src/2pny-mode-apply-0.3.19")
 station=text("src/2pny-station-worker-0.3.17.py")
 switch=text("src/2pny-network-switch-0.3.16")
 prep18=text("ci/prepare-0.3.18-alpha.py")
+prep19=text("ci/prepare-0.3.19-alpha.py")
 
 # NET-025/026: DNS activation and dual Wi-Fi/channel UX.
 compact="".join(main.split())
@@ -34,8 +35,15 @@ assert 'Canal em uso:' in internet and "tag=isActive?' atual':best===ch?' melhor
 assert '<h3>Conexão via cabo</h3>' in internet
 assert '<h3>Caminho da conexão</h3>' in internet
 
+# UI-035: canonical browser-tab title.
+for page in (internet,hotspot,dash,expert,system,display):
+    assert '<title>PU2PNY-OS</title>' in page
+assert "document.title='PU2PNY-OS'" in ui
+assert 'ui_dir=root/"rootfs-overlay/usr/share/2pny"' in prep19
+assert '<title>PU2PNY-OS</title>' in prep19
+
 # UI-033/LIVE-018: protocol/frequency/save state and transient-only live fields/TOT.
-assert 'PU2PNY — Protocolos' in hotspot and 'PU2PNY — Hotspot / Protocolos' not in hotspot
+assert '<h1>Protocolos</h1>' in hotspot and 'PU2PNY — Hotspot / Protocolos' not in hotspot
 assert 'toFixed(6)' in hotspot and "replace(',','.')" in hotspot
 assert "PNY.operation('Salvando perfil'" in hotspot and 'Atualizando perfil...' in hotspot
 assert 'slotFact' in dash and 'ccFact' in dash
