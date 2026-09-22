@@ -727,3 +727,31 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 
 | TEST-BUILD-0319-DSTAR-HOSTS | REL-011 / PROTO-024 / REL-015 | catálogo D-Star na imagem antes do validador | o catálogo pinado staged é copiado para `/usr/local/share/dstargateway.d/DStar_Hosts.json`, >1000 bytes, e o preflight bloqueia se faltar | PASS run 35760337205 |
+
+
+## Matriz adicional 0.3.20-alpha — REL-016
+
+| Teste | Requisito | Procedimento / critério de aceite | Estado | Nível |
+|---|---|---|---|---|
+| TEST-UI-037A | UI-037 | indicadores sem valor real ficam invisíveis globalmente; aparecem quando o valor real chega | SW candidato | SW/HW/browser |
+| TEST-LIVE-020A | LIVE-020 | TX RF contínuo: 2:30–2:49 pulso amarelo; 2:50–2:59 pulso vermelho; corte aos 3:00 preservado | SW candidato / HW PENDENTE | SW/HW |
+| TEST-LIVE-021A | LIVE-021 | S-meter 0/1/5/9/9+30 somente em evento RF com RSSI real; Internet→RF não mostra | SW candidato / HW PENDENTE | SW/HW |
+| TEST-NET-027A | NET-027 | troca DNS aguarda backend sem aborto prematuro, relê DNS efetivo e não afirma rollback sem prova | SW candidato / HW/browser PENDENTE | SW/HW |
+| TEST-PERF-004A | PERF-004 | apply local termina e a tela libera sem esperar até 35 s pelo link remoto; observação continua não bloqueante | SW candidato | SW/VPS/HW |
+| TEST-PROTO-029A | PROTO-029 | selecionar DMR mostra XLX como primeira opção | SW candidato | SW/browser |
+| TEST-PROTO-030A | PROTO-030 | BrandMeister com ESSID → XLX resulta em DMR ID base, sem ESSID residual | SW candidato / HW PENDENTE | SW/HW |
+| TEST-RF-020A | RF-020 | DMR simplex TX/RX permanece igual à baseline | **HW PENDENTE nesta release** | HW |
+| TEST-RF-020B | RF-020 | DMR duplex: rádio→hotspot e rede→rádio com áudio, TS/CC corretos | HW PENDENTE | HW |
+| TEST-PROTO-031A | PROTO-031 | nova configuração D-Star mostra módulo local B; usuário troca A–E; RPT1 esperado acompanha seleção; RPT2=G | SW candidato / HW PENDENTE | SW/HW |
+| TEST-PROTO-032A | PROTO-032 | em D-Star conectado a XLX300D, comando RF para XLX026DL só muda servidor efetivo após log de link estabelecido; falha não muda efetivo | HW PENDENTE; FAIL observado na 0.3.19 | HW |
+| TEST-PROTO-032B | PROTO-032 | repetir link/unlink via rádio com XLX, REF, XRF e DCS presentes no catálogo | HW PENDENTE | HW |
+| TEST-PROTO-033A | PROTO-033 | TG4000/4001–4026/4099 enviados em TS1 e TS2 são cumpridos pelo DMRGateway e painel reflete apenas estado efetivo | SW candidato / HW PENDENTE | SW/HW |
+| TEST-UI-038A | UI-038 | Wi-Fi/Internet online + gateway sem link remoto mostra “Internet disponível / link remoto pendente”, nunca “aguardando rede” | SW candidato | SW/HW/browser |
+| TEST-P2P-008A | P2P-008 | D-Star URCALL para peer pareado online inicia Direct; DMR Private ID faz o mesmo; TG não dispara | SW candidato / HW PENDENTE | SW/HW |
+| TEST-APRS-014A | APRS-014 | PING/STATUS/LAST/MYLAST/ONLINE/MODULE/INFO/HELP retornam apenas estado/eventos locais reais | SW candidato / VPS parcial / HW PENDENTE | SW/VPS/HW |
+| TEST-DISPLAY-020A | DISPLAY-020 | Nextion via MMDVM só recebe physical_confirmed após connect→comok pela bridge MQTT | SW candidato / HW PENDENTE | SW/HW |
+| TEST-DISPLAY-021A | DISPLAY-021 | após confirmação, Moderno V2 mostra PU2PNY-OS, indicativo, protocolo e inicialização 0–100% | HW PENDENTE | HW |
+| TEST-SYS-001A | SYS-001 | ajuste manual aplica hora efetiva, desativa NTP e confirma resultado | SW candidato / VPS/HW PENDENTE | SW/VPS/HW |
+| TEST-SYS-002A | SYS-002 | America/Sao_Paulo, Europe/London e outras zonas instaladas aplicam e são confirmadas | SW candidato / VPS/HW PENDENTE | SW/VPS/HW |
+| TEST-SYS-003A | SYS-003 | botão baixa pacote de logs sanitizado sem password/token/api key/secret | SW candidato / VPS PENDENTE | SW/VPS |
+| TEST-UPDATE-007A | UPDATE-007 | download verificado oferece instalar agora/depois; falha após mutação restaura backup e versão e registra rolled_back | SW candidato / VPS PENDENTE | SW/VPS |
