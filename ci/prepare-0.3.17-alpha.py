@@ -19,6 +19,7 @@ for src,dst,mode in (
     ("src/hotspot-0.3.17.html","rootfs-overlay/usr/share/2pny/hotspot.html",0o644),
     ("src/2pny-protocol-network-apply-all-0.3.17.py","rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply",0o755),
     ("src/2pny-station-worker-0.3.17.py","rootfs-overlay/usr/local/sbin/2pny-station-worker",0o755),
+    ("src/2pny-live-core-0.3.17.py","rootfs-overlay/usr/local/lib/2pny-live-core.py",0o755),
     ("src/2pny-timezone-apply-0.3.17.py","rootfs-overlay/usr/local/sbin/2pny-timezone-apply",0o755),
     ("src/2pny-timezone-apply-0.3.17.path","rootfs-overlay/etc/systemd/system/2pny-timezone-apply.path",0o644),
     ("src/2pny-timezone-apply-0.3.17.service","rootfs-overlay/etc/systemd/system/2pny-timezone-apply.service",0o644),
@@ -33,6 +34,7 @@ subprocess.run(["go","test",str(root/"src/2pnyd/main.go")],check=True)
 for rel in (
     "rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply",
     "rootfs-overlay/usr/local/sbin/2pny-station-worker",
+    "rootfs-overlay/usr/local/lib/2pny-live-core.py",
     "rootfs-overlay/usr/local/sbin/2pny-timezone-apply",
 ):
     subprocess.run(["python3","-m","py_compile",str(root/rel)],check=True)
