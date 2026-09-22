@@ -116,6 +116,37 @@ def modem_realpath():
     hw=read_json(HARDWARE);m=hw.get("mmdvm") if isinstance(hw.get("mmdvm"),dict) else {};port=str((m or {}).get("port") or "")
     return os.path.realpath(port) if port else ""
 
+
+def probe_nextion_mmdvm_bridge():
+    """Probe a modem-attached Nextion without opening the protected UART."""
+    if not service_active("2pny-mmdvmhost.service"):
+        return None
+    sub=None
+    try:
+        subprocess.run(["systemctl","start","mosquitto.service"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5)
+        sub=subprocess.Popen(["mosquitto_sub","-h","127.0.0.1","-t","host/display-out","-C","1","-W","3","-N"],
+                             stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        time.sleep(.15)
+        pub=subprocess.run(["mosquitto_pub","-h","127.0.0.1","-t","host/display-in","-s"],
+                           input=b"connect\xff\xff\xff",stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=4)
+        if pub.returncode:
+            return None
+        out,_=sub.communicate(timeout=4)
+        info=parse_connect(out or b"")
+        if not info:
+            return None
+        info.update({"detected":True,"class":"nextion_mmdvm","transport":"mmdvm-mqtt",
+                     "port":"modem","baud":None,"state":"identified","confidence":"protocol",
+                     "physical_confirmed":True,"hmi_status":"unknown","hmi_version":None})
+        return info
+    except Exception:
+        try:
+            if sub is not None:
+                sub.kill()
+        except Exception:
+            pass
+        return None
+
 def confirmed_mmdvm_nextion():
     hw=read_json(HARDWARE);d=hw.get("display") if isinstance(hw.get("display"),dict) else {}
     if not d or d.get("class")!="nextion_mmdvm" or d.get("detected") is not True or d.get("confidence") not in ("protocol","manual"):return None
@@ -191,7 +222,8 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX);publish("detecting","Detectando displays conectados…")
         radio_active=service_active("2pny-mmdvmhost.service");modem=modem_realpath();serial=serial_candidates();usb=usb_devices();i2c=i2c_devices();spi=spi_devices();results=[]
         publish("detecting","Verificando USB e UART…")
-        bridge=confirmed_mmdvm_nextion()
+        bridge=probe_nextion_mmdvm_bridge() if radio_active else None
+        if not bridge:bridge=confirmed_mmdvm_nextion()
         if bridge:results.append(bridge)
         for item in serial:
             if modem and item["realpath"]==modem:continue
