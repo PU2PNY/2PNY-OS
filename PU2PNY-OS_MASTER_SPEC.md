@@ -1,7 +1,7 @@
 # PU2PNY-OS — MASTER SPEC
 
 **Fonte oficial dos requisitos do projeto.**  
-**Estado:** consolidado para o ciclo corretivo 0.3.6-alpha após feedback físico da 0.3.5 em 2026-09-20.
+**Estado:** consolidado para o ciclo ativo 0.3.20-alpha em 2026-09-22. Releases anteriores permanecem registradas como histórico e baseline quando comprovadas.
 
 > `docs/PU2PNY-MASTER-PLAN.md` e os requisitos já aprovados nas versões anteriores permanecem válidos e incorporados por referência. Este arquivo não autoriza apagar ou simplificar funcionalidades anteriores. Em conflito, a decisão mais recente e explicitamente identificada por requisito neste arquivo prevalece.
 
@@ -1650,3 +1650,15 @@ Sistema deve oferecer botão visível para baixar pacote de diagnóstico sob dem
 
 ### UPDATE-007 — OTA com staging explícito e rollback automático
 Após download 0–100% e SHA-256 verificado, oferecer “Instalar agora” ou “Instalar depois”. Antes da aplicação, criar ponto de retorno. Se a instalação falhar depois de iniciar mutação, restaurar automaticamente arquivos/versão anteriores e registrar estado `rolled_back`. Queda abrupta de energia continua risco físico e não deve ser mascarada.
+
+
+## 33. Governança permanente de baseline, evidência e documentação — 2026-09-22
+
+### ARCH-006 — Hierarquia documental e organização segura
+START_HERE, MASTER_SPEC, RELEASE_STATUS, TEST_MATRIX, CHANGELOG e PROJECT_INSTRUCTIONS formam o conjunto canônico de governança. O README deve refletir o ciclo atual sem substituir essas fontes. Documentos versionados em `docs/` são preservados como histórico/técnicos enquanto tiverem valor de auditoria, licença, regressão ou rastreabilidade. Conteúdo antigo não deve ser apresentado como estado atual.
+
+### REL-017 — Baseline protegido e escopo mínimo permanente
+Tudo explicitamente aprovado, testado ou comprovado funcionando é baseline protegido. Não pode ser removido, substituído, refatorado, redesenhado, renomeado ou ter comportamento/dependências alterados sem necessidade direta do pedido ou ordem explícita. Correção localizada deve tocar somente o necessário e possuir rollback proporcional ao risco. DMR simplex TX/RX comprovadamente funcional permanece baseline obrigatório: defeito duplex não autoriza reescrever simplex. Após mudança duplex, retestar simplex TX/RX e os caminhos duplex correspondentes.
+
+### TEST-008 — Evidência cruzada, SentinelX e verdade técnica
+Antes de afirmar correção ou compatibilidade, usar o nível de validação correto. Quando uma mudança puder ser reproduzida sem RF/hardware físico, usar VPS via SentinelX quando disponível e registrar resultado. Usar GitHub/CI, plugins/conectores e fontes oficiais/atuais para validação cruzada quando aplicável. VPS não promove teste para HW. Compilar, instalar ou ler documentação não equivale a teste físico. Sem evidência suficiente, registrar `—`, indisponível, não verificado ou pendente; nunca inventar resultado, BER, RSSI, chamadas, gateways, IDs, localização ou estado.
