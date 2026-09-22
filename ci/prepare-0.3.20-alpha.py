@@ -60,6 +60,14 @@ builder.write_text(bs);os.chmod(builder,0o755)
 direct=root/"src/direct-core";direct.mkdir(parents=True,exist_ok=True)
 direct_names=("direct_types.go","direct_session.go","direct_transport.go","direct_radio.go","direct_autocall.go","direct_main.go")
 for name in direct_names:shutil.copy2(repo/"src/direct-core"/name,direct/name)
+# Keep shared Direct files byte-compatible with the protected historical chain.
+# The new runtime hook/version are injected only into the 0.3.20 staged build.
+mainp=direct/"direct_main.go";dm=mainp.read_text()
+anchor="go c.keepaliveLoop()"
+if anchor not in dm:raise SystemExit("0.3.20 Direct keepalive anchor missing")
+dm=dm.replace(anchor,anchor+"\n\tgo c.autoCallLoop()",1);mainp.write_text(dm)
+typesp=direct/"direct_types.go";dt=typesp.read_text()
+dt=re.sub(r'const version = "[^"]+"','const version = "0.3.20-alpha"',dt,count=1);typesp.write_text(dt)
 subprocess.run(["gofmt","-w",*(str(direct/n) for n in direct_names)],check=True)
 subprocess.run(["go","test",*(str(direct/n) for n in direct_names)],check=True)
 target=root/"rootfs-overlay/usr/local/bin/2pny-direct-core";target.parent.mkdir(parents=True,exist_ok=True)
