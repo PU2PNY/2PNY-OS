@@ -706,3 +706,6 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 
 | TEST-BUILD-0319-DSTAR | REL-012 / REL-014 | builder aplica patch radio-admin antes de `make -C DStarGateway` | fonte do gateway ainda existe quando o patch roda; build não falha por source missing | SW PENDENTE novo run |
+
+| TEST-ARCH-005A | ARCH-005 | consultar metadata do repositório no GitHub | nome canônico retornado é `PU2PNY/PU2PNY-OS` | **PENDENTE — renomeação administrativa ainda precisa ser confirmada** | DOC/GitHub |
+| TEST-UI-035A | UI-035 | validar fontes e overlay gerado | toda página HTML com `<head>` contém exatamente `<title>PU2PNY-OS</title>`; JS comum reforça `document.title='PU2PNY-OS'` | PENDENTE CI | SW |
