@@ -124,4 +124,11 @@ for marker in ('GatewayPort":"62031"','LocalPort":"62032"','RptPort=62032','Loca
 assert 'make -j"$JOBS" DStarGateway/dstargateway' in prep18
 assert 'exact DStarGateway target make anchor missing' in prep18
 assert 'DSTAR_RF_ADMIN_SRC=' in prep18
+# REL-011/PROTO-024: voice assets must be staged from the exact pinned
+# DStarGateway checkout before /tmp/DStarGateway-029 is removed.
+for marker in ('PU2PNY_DSTAR_VOICE_ASSETS_0318',
+               "find Data -maxdepth 1 -type f",
+               "test -s /usr/local/share/dstargateway.d/en_GB.ambe",
+               "test -s /usr/local/share/dstargateway.d/en_GB.indx"):
+    assert marker in prep18,marker
 print("TEST_0319_REGRESSIONS_OK")

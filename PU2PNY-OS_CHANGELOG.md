@@ -667,3 +667,10 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Em duplex, os rewrites TGIF agora são gerados para os dois slots RF locais, mantendo o lado de rede TGIF em TS2. Em simplex, permanece o slot selecionado pelo operador.
 - BrandMeister continua usando pass-through e, em duplex, cobre TS1/TS2. XLX continua com um único slot remoto selecionado.
 - Nenhuma porta, baud, offset, frequência ou credencial foi alterada fora dessa restauração.
+
+### 2026-09-22 — D-Star voice assets no builder da 0.3.19
+- A validação montada detectou que a imagem não carregava os `.ambe/.indx` nativos do DStarGateway, apesar de o caminho `[Paths] Data=/usr/local/share/dstargateway.d/` estar correto.
+- O builder manual instalava somente o binário `dstargateway`; foi adicionado um hook antes da remoção do checkout pinado para instalar os packs de voz nativos em `/usr/local/share/dstargateway.d/`.
+- O hook exige fisicamente `en_GB.ambe` e `en_GB.indx` antes de continuar.
+- Não são copiados/reescritos hostfiles PU2PNY, frequências, offsets, baud ou configurações RF.
+- Criado rollback `backup/0.3.19-pre-dstar-voice-assets-fix-20260922`.

@@ -742,3 +742,10 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Correção aplicada: restauração do routing/auth TGIF com extensão duplex limitada aos dois slots RF locais.
 - Rollback: `backup/0.3.19-pre-tgif-duplex-fix-20260922`.
 - Estado: **SW corrigido / novo build+imagem montada obrigatórios / HW PENDENTE**.
+
+### Gate D-Star voice assets da imagem 0.3.19 — 2026-09-22
+- O run `35756725766` passou source, staging, ARM64, XZ/SHA e todos os gates até PROTO-024, mas bloqueou a publicação porque `/usr/local/share/dstargateway.d/en_GB.ambe` não existia na imagem.
+- Causa confirmada no builder herdado: ele compilava/instalava apenas `DStarGateway/dstargateway` e removia o checkout sem instalar os arquivos `Data/*.ambe/*.indx` do mesmo commit pinado.
+- Correção: copiar somente os packs de voz nativos `.ambe/.indx` para `/usr/local/share/dstargateway.d/` antes de remover o source; hostfiles/configuração PU2PNY não são substituídos.
+- Rollback: `backup/0.3.19-pre-dstar-voice-assets-fix-20260922`.
+- Estado: **SW corrigido / novo build e validação montada obrigatórios / HW PENDENTE**.

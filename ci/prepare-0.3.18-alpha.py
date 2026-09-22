@@ -45,6 +45,23 @@ if "patch-dstargateway-radio-admin-0.3.17.py" not in bs:
     if stage_anchor not in bs: raise SystemExit("0.3.18: DStar patch staging anchor missing")
     bs=bs.replace(stage_anchor,stage_line,1)
 
+# REL-011 / PROTO-024: the 0.2.9 builder compiles and installs only the
+# dstargateway binary, so upstream Data/*.ambe and *.indx never reach the image.
+# Install the native voice packs from the same pinned DStarGateway checkout
+# before its source tree is removed. This mirrors the upstream Data install
+# without replacing PU2PNY host files/configuration.
+if "PU2PNY_DSTAR_VOICE_ASSETS_0318" not in bs:
+    binary_install='install -D -m 0755 DStarGateway/dstargateway /usr/local/bin/dstargateway'
+    if binary_install not in bs:
+        raise SystemExit("0.3.18: DStar binary install anchor missing")
+    voice_block=binary_install+"""\n# PU2PNY_DSTAR_VOICE_ASSETS_0318
+install -d -m 0755 /usr/local/share/dstargateway.d
+find Data -maxdepth 1 -type f \\( -name '*.ambe' -o -name '*.indx' \\) -exec install -m 0644 {} /usr/local/share/dstargateway.d/ \\;
+test -s /usr/local/share/dstargateway.d/en_GB.ambe
+test -s /usr/local/share/dstargateway.d/en_GB.indx
+"""
+    bs=bs.replace(binary_install,voice_block,1)
+
 if "PU2PNY_DSTAR_RADIO_ADMIN_0318" not in bs:
     lines=bs.splitlines()
     # Patch the pinned DStarGateway source before its own compile step. The old
@@ -105,6 +122,10 @@ assert 'User=root' in radiosvc and 'ReadWritePaths=/run/2pny /var/lib/2pny' in r
 assert radio_link.is_symlink() and os.readlink(radio_link)=="../2pny-radio-admin.path"
 assert "PU2PNY_DSTAR_RADIO_ADMIN_0318" in builder.read_text()
 assert "patch-dstargateway-radio-admin-0.3.17.py" in builder.read_text()
+assert "PU2PNY_DSTAR_VOICE_ASSETS_0318" in builder.read_text()
+assert "find Data -maxdepth 1 -type f" in builder.read_text()
+assert "test -s /usr/local/share/dstargateway.d/en_GB.ambe" in builder.read_text()
+assert "test -s /usr/local/share/dstargateway.d/en_GB.indx" in builder.read_text()
 hotspot=(root/"rootfs-overlay/usr/share/2pny/hotspot.html").read_text()
 for cmd in ("PNYARM","PNYOFF","PNYRBT","PNYDMR","PNYDST","PNYYSF","PNYP25","PNYNXD","PNYPOC"):
     assert cmd in hotspot,cmd
