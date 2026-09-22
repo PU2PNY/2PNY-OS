@@ -30,7 +30,7 @@
 <h2 id="title">D-Star</h2><p class="muted help" id="help"></p>
 <div id="dstarCommands" class="notice hidden" style="margin:10px 0 14px">
  <b>Comandos D-Star pelo rádio / modo DR</b><br>
- <div class="muted" style="line-height:1.8"><div><code>_______I</code> — informa o estado.</div><div><code>_______E</code> — faz eco.</div><div><code>_______U</code> — desconecta.</div><div><code>_______L</code> — conecta ao refletor padrão.</div><div><code>XLX026DL</code> — exemplo: conecta XLX026 ao módulo remoto D.</div><div><code>REF030CL</code> — exemplo: conecta REF030 ao módulo remoto C.</div><div>Depois volte o destino para <code>CQCQCQ</code>.</div><div><b>DR/RPT1:</b> indicativo do hotspot + <code>C</code>. <b>RPT2:</b> indicativo do hotspot + <code>G</code>. Em Icom simplex, use DUP+/DUP− com offset 0; DUP desligado pode não gerar cabeçalho de repetidora.</div><div>O módulo local do hotspot permanece <b>C</b>; o módulo do refletor é independente.</div></div>
+ <div class="muted" style="line-height:1.8"><div><code>_______I</code> — informa o estado.</div><div><code>_______E</code> — faz eco.</div><div><code>_______U</code> — desconecta.</div><div><code>_______L</code> — conecta ao refletor padrão.</div><div><code>XLX026DL</code> — exemplo: conecta XLX026 ao módulo remoto D.</div><div><code>REF030CL</code> — exemplo: conecta REF030 ao módulo remoto C.</div><div>Depois volte o destino para <code>CQCQCQ</code>.</div><div><b>DR/RPT1:</b> indicativo do hotspot + o <b>módulo local</b> selecionado abaixo. <b>RPT2:</b> indicativo do hotspot + <code>G</code>. Em Icom simplex, use DUP+/DUP− com offset 0; DUP desligado pode não gerar cabeçalho de repetidora.</div><div>O padrão PU2PNY para uma nova configuração é <b>B</b>. O módulo remoto do refletor é independente.</div></div>
  <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
  <b>Administração PU2PNY pelo rádio</b><br>
  <span class="muted">Somente o indicativo configurado. Envie <code>PNYARM</code> e, dentro de 30 segundos, uma ação: <code>PNYRBT</code> reinicia; <code>PNYOFF</code> faz shutdown seguro; <code>PNYDMR</code>, <code>PNYDST</code>, <code>PNYYSF</code>, <code>PNYP25</code>, <code>PNYNXD</code> ou <code>PNYPOC</code> ativam um perfil já salvo. O armamento vale para uma única ação. Corte físico da alimentação exige hardware externo.</span>
@@ -40,7 +40,7 @@
  <div class="field" id="familyWrap"><label id="familyLabel">Sistema</label><select id="family"></select></div>
  <div class="field"><label id="serverLabel">Servidor / refletor</label><select id="server"></select></div>
 </div>
-<div class="field hidden" id="moduleWrap"><label>Módulo</label><select id="module"></select></div>
+<div class="field hidden" id="dstarLocalWrap"><label>Módulo local D-Star / RPT1</label><select id="dstarLocalModule"><option value="A">A</option><option value="B" selected>B (padrão PU2PNY)</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select><small class="muted">Configure o RPT1 do rádio com o indicativo do hotspot + este módulo. RPT2 permanece indicativo + G.</small></div><div class="field hidden" id="moduleWrap"><label>Módulo remoto do refletor</label><select id="module"></select></div>
 <div class="field hidden" id="dmrEssentials">
  <div class="formline"><div><label>Time Slot</label><select id="slot"><option value="2">TS2</option><option value="1">TS1</option></select></div>
  <div><label>Color Code</label><input id="cc" type="number" min="0" max="15" value="1"></div></div>
@@ -77,7 +77,7 @@
 PNY.nav('hotspot');PNY.initTheme();PNY.startClock();
 var definitions={
  DSTAR:{label:'D-Star',familyLabel:'Sistema D-Star',serverLabel:'Refletor / servidor',
-   help:'O módulo local do hotspot é C. O módulo escolhido abaixo é somente o módulo remoto do refletor. Comandos de link/status podem ser enviados pelo URCALL/DR do rádio.',
+   help:'O módulo local do hotspot (RPT1) e o módulo remoto do refletor são independentes. O rádio deve usar no RPT1 o mesmo módulo local selecionado abaixo; RPT2 usa G. Comandos de link/status podem ser enviados pelo URCALL/DR.',
    families:[['DPlus','REF / DPlus'],['DExtra','XRF / DExtra'],['DCS','DCS'],['XLX','XLX']]},
  DMR:{label:'DMR',familyLabel:'Rede DMR',serverLabel:'Master / servidor',
    help:'Escolha a rede DMR e o master. XLX também permite selecionar o módulo.',
@@ -169,7 +169,7 @@ function choose(p){
  document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('active',b.dataset.p===p)});
  PNY.q('title').textContent=d.label;PNY.q('help').textContent=d.help;PNY.q('familyLabel').textContent=d.familyLabel;PNY.q('serverLabel').textContent=d.serverLabel;
  PNY.q('dstarCommands').classList.toggle('hidden',p!=='DSTAR');protocolHelp();
- PNY.q('moduleWrap').classList.add('hidden');PNY.q('dmrEssentials').classList.toggle('hidden',p!=='DMR');
+ PNY.q('moduleWrap').classList.add('hidden');PNY.q('dstarLocalWrap').classList.toggle('hidden',p!=='DSTAR');PNY.q('dmrEssentials').classList.toggle('hidden',p!=='DMR');
  PNY.q('passwordWrap').classList.add('hidden');loadCatalog(false);loadProfile(p)
 }
 async function load(){
@@ -195,14 +195,14 @@ async function load(){
  var alias=String(cfg.essid||'');PNY.q('stAlias').textContent=(String(current.protocol||cfg.protocol||'').toUpperCase()==='DMR'&&alias)?('Rádio '+Number(alias)+' ('+alias+')'):'—';
  var isDstar=String(current.protocol||cfg.protocol||'').toUpperCase()==='DSTAR';
  PNY.q('stModule').textContent=isDstar?(liveDstarModule||'—'):(current.module||cfg.xlx_module||'—');
- PNY.q('stDstarLocal').textContent=isDstar?'C':'—';
+ PNY.q('stDstarLocal').textContent=isDstar?(current.local_module||cfg.dstar_local_module||'B'):'—';
  var dc=current.last_command?String(current.last_command).toUpperCase():'';
  if(current.last_command_target)dc+=(dc?' → ':'')+String(current.last_command_target);
  PNY.q('stDstarCommand').textContent=isDstar?(dc||'—'):'—';
  PNY.q('stGateway').textContent=current.gateway||'—';
  PNY.q('stAddress').textContent=current.address||cfg.server_address||'—';
  if(PNY.sweepRealOnly)PNY.sweepRealOnly(document);
- var rej=PNY.q('dstarRFReject');rej.classList.add('hidden');if(isDstar){try{var de=await PNY.getj('/api/diagnostics/errors',null,5000),rr=de.dstar_rf_rejections||[];if(rr.length){rej.textContent='D-Star RF: '+String(rr[rr.length-1]).slice(0,240)+' · confira DR/RPT1='+String(cfg.callsign||'').padEnd(7,' ')+'C e RPT2='+String(cfg.callsign||'').padEnd(7,' ')+'G.';rej.classList.remove('hidden')}}catch(_){}}
+ var rej=PNY.q('dstarRFReject');rej.classList.add('hidden');if(isDstar){try{var de=await PNY.getj('/api/diagnostics/errors',null,5000),rr=de.dstar_rf_rejections||[];if(rr.length){var lm=current.local_module||cfg.dstar_local_module||PNY.q('dstarLocalModule').value||'B';rej.textContent='D-Star RF: '+String(rr[rr.length-1]).slice(0,240)+' · confira DR/RPT1='+String(cfg.callsign||'').padEnd(7,' ')+lm+' e RPT2='+String(cfg.callsign||'').padEnd(7,' ')+'G.';rej.classList.remove('hidden')}}catch(_){}}
  PNY.q('dmrEssid').value=(String(cfg.network_kind||'').toUpperCase()==='XLX'?'':(cfg.essid||''));
  PNY.q('slot').value=cfg.dmr_slot||'2';PNY.q('cc').value=cfg.color_code==null?1:cfg.color_code;
  var requested=new URLSearchParams(location.search).get('protocol'),p=String(requested||current.protocol||cfg.protocol||'DSTAR').toUpperCase();if(!definitions[p])p='DSTAR';choose(p)
@@ -230,7 +230,7 @@ var profileCache={};
 function hzToMHz(v){return v?(Number(v)/1000000).toFixed(6):''}
 function normalizeMHzField(el){var s=String(el.value||'').trim().replace(',','.');var n=Number(s);if(Number.isFinite(n)&&n>0)el.value=n.toFixed(6)}
 async function loadProfile(proto){
- try{var d=await PNY.getj('/api/protocol/profiles'),ps=d.profiles||{};profileCache=ps;var p=ps[proto]||{};if(!p.rx_hz){var c=cfg||{};if(String(c.protocol||'').toUpperCase()===proto)p={rx_hz:c.rx_hz,tx_hz:c.tx_hz,use_mode:c.use_mode,essid:c.essid}}if(proto==='DMR'&&p.essid!==undefined)PNY.q('dmrEssid').value=p.essid||'';PNY.q('profileMode').value=p.use_mode||'hotspot';PNY.q('profileRx').value=hzToMHz(p.rx_hz);PNY.q('profileTx').value=hzToMHz(p.tx_hz||p.rx_hz);syncProfileMode();PNY.q('profileResult').textContent=p.rx_hz?'Perfil salvo para '+definitions[proto].label+'.':'Configure e salve a frequência deste protocolo.'}catch(e){PNY.q('profileResult').textContent='Perfil ainda não disponível.'}
+ try{var d=await PNY.getj('/api/protocol/profiles'),ps=d.profiles||{};profileCache=ps;var p=ps[proto]||{};if(!p.rx_hz){var c=cfg||{};if(String(c.protocol||'').toUpperCase()===proto)p={rx_hz:c.rx_hz,tx_hz:c.tx_hz,use_mode:c.use_mode,essid:c.essid,dstar_local_module:c.dstar_local_module}}if(proto==='DMR'&&p.essid!==undefined)PNY.q('dmrEssid').value=p.essid||'';if(proto==='DSTAR')PNY.q('dstarLocalModule').value=p.dstar_local_module||cfg.dstar_local_module||'B';PNY.q('profileMode').value=p.use_mode||'hotspot';PNY.q('profileRx').value=hzToMHz(p.rx_hz);PNY.q('profileTx').value=hzToMHz(p.tx_hz||p.rx_hz);syncProfileMode();PNY.q('profileResult').textContent=p.rx_hz?'Perfil salvo para '+definitions[proto].label+'.':'Configure e salve a frequência deste protocolo.'}catch(e){PNY.q('profileResult').textContent='Perfil ainda não disponível.'}
 }
 function syncProfileMode(){PNY.q('profileTxWrap').classList.toggle('hidden',PNY.q('profileMode').value!=='repeater');if(PNY.q('profileMode').value!=='repeater')PNY.q('profileTx').value=PNY.q('profileRx').value}
 PNY.q('profileMode').onchange=syncProfileMode;PNY.q('profileRx').oninput=function(){if(PNY.q('profileMode').value!=='repeater')PNY.q('profileTx').value=PNY.q('profileRx').value};PNY.q('profileRx').onblur=function(){normalizeMHzField(this);if(PNY.q('profileMode').value!=='repeater')PNY.q('profileTx').value=this.value};PNY.q('profileTx').onblur=function(){normalizeMHzField(this)};
@@ -239,6 +239,7 @@ function profileBody(){
  return {action:'save',protocol:selected,rx:PNY.q('profileRx').value,tx:PNY.q('profileTx').value,use_mode:PNY.q('profileMode').value,
   server_name:PNY.q('serverName').value.trim()||x.name||'',server_address:PNY.q('address').value.trim()||x.address||'',server_port:Number(PNY.q('port').value||x.port||0),
   network_kind:PNY.q('family').value||x.kind||'',module:PNY.q('moduleWrap').classList.contains('hidden')?'':PNY.q('module').value,
+  dstar_local_module:selected==='DSTAR'?PNY.q('dstarLocalModule').value:'',
   color_code:Number(PNY.q('cc').value||1),dmr_slot:PNY.q('slot').value,essid:selected==='DMR'?PNY.q('dmrEssid').value:'',password:PNY.q('password').value}
 }
 PNY.q('saveProfile').onclick=async function(){var op=PNY.operation('Salvando perfil','Validando frequência e rede do protocolo...');try{await PNY.getj('/api/protocol/profiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(profileBody())},15000);PNY.q('profileResult').textContent='Atualizando perfil...';op.done('Perfil salvo sem reiniciar o rádio.');loadProfile(selected)}catch(e){PNY.q('profileResult').textContent=e.message;op.error(e.message)}};
@@ -263,6 +264,7 @@ PNY.q('save').onclick=async function(){
   server_port:Number(PNY.q('port').value||x.port||0),
   network_kind:PNY.q('family').value||x.kind||'',
   module:PNY.q('moduleWrap').classList.contains('hidden')?'':PNY.q('module').value,
+  dstar_local_module:selected==='DSTAR'?PNY.q('dstarLocalModule').value:'',
   color_code:Number(PNY.q('cc').value||1),dmr_slot:PNY.q('slot').value,essid:selected==='DMR'?PNY.q('dmrEssid').value:'',password:PNY.q('password').value
  };
  PNY.q('save').disabled=true;var op=PNY.operation('Aplicando protocolo','Validando gateway, MMDVMHost e rede antes de alterar...');PNY.q('result').textContent='Validando e aplicando somente a mudança necessária...';
