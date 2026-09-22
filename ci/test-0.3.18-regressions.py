@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Regression gates for PU2PNY-OS 0.3.18-alpha.
 
-The source delta from 0.3.17 is deliberately constrained to:
+The 0.3.18 delta is constrained to:
 1) app version;
-2) native DStarGateway AMBE data directory.
+2) native DStarGateway AMBE data directory;
+3) explicit SEC-025 D-Star radio administration requested before publication.
 """
 from pathlib import Path
+import importlib.util, json, tempfile, time
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -62,5 +64,42 @@ hotspot=text("src/hotspot-0.3.17.html")
 assert 'DSTAR_START_RE' in live and 'received (RF|network)' in live
 assert 'last_command' in station
 assert 'Comandos pelo rádio' in hotspot or 'I' in hotspot
+
+# SEC-025 / REL-012.
+radio=text("src/2pny-radio-admin-0.3.17.py")
+radiopath=text("src/2pny-radio-admin-0.3.17.path")
+radiosvc=text("src/2pny-radio-admin-0.3.17.service")
+dstarpatch=text("ci/patch-dstargateway-radio-admin-0.3.17.py")
+hotspot=text("src/hotspot-0.3.17.html")
+for cmd in ("PNYARM","PNYOFF","PNYRBT","PNYDMR","PNYDST","PNYYSF","PNYP25","PNYNXD","PNYPOC"):
+    assert cmd in dstarpatch and cmd in hotspot,cmd
+assert "ARM_SECONDS=30" in radio
+assert "caller!=owner" in radio
+assert "if not armed_for(caller)" in radio
+assert "2pny-protocol-profiles" in radio
+assert 'systemd-run' in radio
+assert 'PathExists=/run/2pny/radio-admin-command.request' in radiopath
+assert 'User=root' in radiosvc
+assert 'ReadWritePaths=/run/2pny /var/lib/2pny' in radiosvc
+
+# Safe unit proof: owner can arm, a different MYCALL is refused. No system
+# reboot/poweroff/profile action is executed by this test.
+spec=importlib.util.spec_from_file_location("radio_admin",ROOT/"src/2pny-radio-admin-0.3.17.py")
+mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
+with tempfile.TemporaryDirectory() as td:
+    td=Path(td);mod.REQ=td/"req";mod.ARM=td/"arm";mod.STATUS=td/"status";mod.CFG=td/"config.json"
+    mod.CFG.write_text(json.dumps({"callsign":"PU2PNY"})+"\n")
+    real=mod.os.geteuid
+    try:
+        mod.os.geteuid=lambda:0
+        mod.REQ.write_text("ARM\tPU2PNY\t\n")
+        assert mod.main()==0
+        state=json.loads(mod.ARM.read_text())
+        assert state["caller"]=="PU2PNY" and state["expires"]>time.time()
+        mod.REQ.write_text("REBOOT\tN0CALL\t\n")
+        assert mod.main()==3
+        assert json.loads(mod.STATUS.read_text())["ok"] is False
+    finally:
+        mod.os.geteuid=real
 
 print("TEST_0318_REGRESSIONS_OK")
