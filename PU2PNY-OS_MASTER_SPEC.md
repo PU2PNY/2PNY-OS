@@ -1376,3 +1376,39 @@ Para o DStarGateway pinado no PU2PNY:
 - não copiar, converter ou inventar AMBE; usar somente os assets distribuídos com a versão upstream compilada;
 - quando `Language=Portugues` não possuir pack AMBE específico na revisão pinada, o comportamento nativo do gateway pode usar o fallback de áudio que o próprio upstream implementa; o texto/status de link continua derivado do gateway;
 - manter `ReflectorReconnect=Never`, módulo local C e porta 20010/20011 para que comandos pelo rádio não sejam revertidos pela configuração do painel.
+
+## 2026-09-22 — adição explícita ao ciclo 0.3.18: administração D-Star pelo rádio
+
+### SEC-025 — Administração segura do hotspot por comando D-Star via rádio
+O PU2PNY-OS deve permitir ações administrativas básicas pelo próprio rádio D-Star, sem terminal e sem expor shell remoto.
+
+Comandos PU2PNY reservados no URCALL/DR:
+- `PNYARM` — arma uma janela administrativa one-shot de 30 segundos;
+- `PNYOFF` — desligamento seguro do Linux;
+- `PNYRBT` — reinicialização segura;
+- `PNYDMR` — ativa perfil DMR salvo;
+- `PNYDST` — ativa perfil D-Star salvo;
+- `PNYYSF` — ativa perfil YSF/C4FM salvo;
+- `PNYP25` — ativa perfil P25 salvo;
+- `PNYNXD` — ativa perfil NXDN salvo;
+- `PNYPOC` — ativa perfil POCSAG salvo.
+
+Regras:
+- aceitar somente pedido RF cujo MYCALL1 normalizado corresponda ao callsign principal configurado;
+- toda ação exige `PNYARM` imediatamente antes, dentro de 30 s; a janela é consumida pela primeira ação;
+- DStarGateway somente reconhece o URCALL e grava request local; não recebe API de shell nem executa ação privilegiada;
+- helper root one-shot executa allowlist fixa: poweroff, reboot ou ativação de perfil existente;
+- troca de perfil nunca cria/edita perfil por rádio; usa somente `2pny-protocol-profiles activate`;
+- registrar ação, origem, resultado e horário em runtime local, sem polling/log pesado;
+- `PNYOFF` faz shutdown seguro do sistema operacional. Corte físico de 5 V exige hardware externo e não deve ser anunciado como função puramente de software;
+- comandos D-Star nativos `I/E/U/L` e links `REF/DCS/XRF/XLXnnn<mod>L` permanecem independentes.
+
+### REL-012 — 0.3.18 incorpora SEC-025 por decisão posterior do mantenedor
+REL-011 originalmente restringia 0.3.18 ao caminho do pack de voz D-Star. Em 2026-09-22 o mantenedor adicionou explicitamente SEC-025 antes da publicação da 0.3.18.
+
+A release 0.3.18 pode portanto conter apenas:
+- tudo já aprovado/congelado de 0.3.16/0.3.17;
+- correção do pack nativo de voz D-Star de REL-011;
+- SEC-025 e somente o mínimo de UI/CI necessário aos comandos administrativos.
+
+Nenhum outro componente entra no escopo.
