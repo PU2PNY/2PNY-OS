@@ -586,3 +586,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Diagnóstico de comandos: `ReflectorReconnect=Fixed` bloqueia o handler de comandos `L/U` no DStarGateway embarcado. O código upstream já implementa `I`, `E`, `L`, `U` e troca de refletor/módulo via URCALL; a correção habilitará esse caminho existente.
 - O fuso continua HW FAIL; o fluxo será corrigido para esperar confirmação real do helper privilegiado e do Timezone aplicado.
 - Nenhuma outra página, protocolo, rede, display, DMR, APRS, Direct, RF, frequência, offset ou baud entra neste ciclo.
+
+## 2026-09-22 — abertura 0.3.18-alpha antes do reteste
+
+- A 0.3.17-alpha passou CI, mas não foi entregue como candidata final após revisão adicional do upstream.
+- Encontrado defeito objetivo: o DStarGateway pinado instala seus arquivos de áudio/status em `/usr/local/share/dstargateway.d/`; o gerador 0.3.17 ainda configurava `/usr/share/2pny/audio/dstar/`.
+- Isso impediria respostas de voz/status mesmo com os comandos I/E/U/L reconhecidos pelo gateway.
+- Criado `REL-011`; branch `pu2pny-os-0.3.18-alpha`; rollback `backup/0.3.17-pre-0.3.18-20260922`.
+- Nenhum outro módulo será alterado. Os gates 0.3.18 passam a exigir a presença física de `en_GB.ambe` e `en_GB.indx` dentro da imagem.
