@@ -1615,7 +1615,7 @@ Ao trocar de BrandMeister/TGIF/outro DMR para XLX, ESSID/identificação extra n
 No modo repetidora/duplex, MMDVMHost deve subir antes do DMRGateway e manter TS1/TS2 ativos localmente. O controle/roteamento deve preservar os dois slots onde tecnicamente aplicável. DMR simplex aprovado não pode ser alterado. Estado atual: SW candidato; HW obrigatório para áudio e TX/RX.
 
 ### PROTO-031 — Módulo local D-Star explícito e independente
-O módulo local usado no cabeçalho RPT1 é separado do módulo remoto do refletor. Novas configurações PU2PNY usam **B** como padrão do módulo local, com seletor manual A–E em Protocolos. Upgrades preservam o módulo local efetivo já configurado até alteração explícita. RPT2 continua indicativo do hotspot + G.
+O módulo local usado no cabeçalho RPT1 é separado do módulo remoto do refletor. Novas configurações PU2PNY usam **B** como padrão do módulo local, com seletor manual A–D em Protocolos. Upgrades preservam o módulo local efetivo já configurado até alteração explícita. RPT2 continua indicativo do hotspot + G.
 
 ### PROTO-032 — Comandos D-Star pelo rádio devem ser executados, não simulados
 Comandos de link/unlink/status via URCALL/DR devem ser cumpridos pelo DStarGateway para XLX, REF/DPlus, XRF/DExtra e DCS quando o destino existir no catálogo. O painel pode mostrar “solicitado/linking”, mas só muda servidor/módulo efetivo depois de evidência do gateway de link estabelecido. Destino desconhecido/falha deve aparecer como falha e não como troca concluída.
