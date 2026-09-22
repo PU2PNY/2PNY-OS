@@ -716,3 +716,11 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-PROTO-028D | PROTO-028 / PROTO-019 | DMR TGIF simplex e duplex | preserva `Name=TGIF_Network`, auth legacy/secured e rewrites RF→TS2; duplex gera mapping para TS1 e TS2 locais | PENDENTE CI/HW |
 
 | TEST-BUILD-0319-DSTAR-VOICE | REL-011 / PROTO-024 | builder instala voice pack do checkout DStarGateway pinado | `en_GB.ambe` e `en_GB.indx` existem em `/usr/local/share/dstargateway.d/` na imagem montada | PENDENTE CI |
+
+
+## Pré-validação permanente de release
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-REL-015A | REL-015 | imagem ARM64 gerada antes do validador final | pré-validação monta a raiz em RO e confirma XZ/SHA, identidade, arquivos essenciais, título canônico, DMR baseline e assets D-Star exigidos | PENDENTE CI |
+| TEST-REL-015B | REL-015 | qualquer gate da pré-validação falha | validador final e publicação não executam; causa é corrigida no fonte/builder e a imagem é reconstruída | PENDENTE CI |
