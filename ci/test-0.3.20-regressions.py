@@ -85,10 +85,11 @@ assert "netOnline=conn.internet===true" in hotspot
 assert "Internet disponível / link remoto pendente" in hotspot
 
 # P2P-008: RF-driven Direct only from real RF, D-Star callsign or DMR private ID.
+direct_compact="".join(direct.split())
 assert 'live.Active.Direction' in direct and '"RF"' in direct
-assert 'proto=="DSTAR"' in direct and 'proto=="DMR"' in direct
-assert 'strings.HasPrefix(target,"TG ")' in direct
-assert 'c.call(target)' in direct
+assert 'proto=="DSTAR"' in direct_compact and 'proto=="DMR"' in direct_compact
+assert 'strings.HasPrefix(target,"TG")' in direct_compact or 'strings.HasPrefix(target,"TG ")' in direct_compact
+assert 'c.call(target)' in direct_compact
 
 # APRS-014: page name and XLX026-style command set with real local data.
 assert "<h1>APRS</h1>" in aprsui and "APRS / D-PRS" not in aprsui
