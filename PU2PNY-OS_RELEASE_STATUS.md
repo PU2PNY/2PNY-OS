@@ -671,3 +671,14 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - D-Star já preservado no código 0.3.17: MMDVMHost módulo local C, gateway Band C, 20010/20011, `ReflectorReconnect=Never`, `ReloadTime=72`, comandos nativos I/E/U/L/link e parser NETWORK→RF.
 - Timezone já preservado no código 0.3.17: request/result único via PathExistsGlob + helper root restrito a `timedatectl set-timezone`.
 - Estado: implementação/CI; HW PENDENTE.
+
+## Adição SEC-025 à 0.3.18-alpha — 2026-09-22
+
+- A tag `v0.3.18-alpha` ainda não estava publicada quando o mantenedor solicitou administração pelo rádio.
+- Rollback adicional antes da mudança: `backup/0.3.18-pre-sec025-20260922`.
+- Novo requisito: **SEC-025**; controle de escopo: **REL-012**.
+- Comandos: `PNYARM`, `PNYOFF`, `PNYRBT`, `PNYDMR`, `PNYDST`, `PNYYSF`, `PNYP25`, `PNYNXD`, `PNYPOC`.
+- Segurança: MYCALL1 deve corresponder ao callsign configurado; ação exige armamento one-shot de 30 s; gateway apenas escreve request local; helper root possui allowlist fixa.
+- Poweroff é desligamento seguro do Linux. Corte físico da alimentação exige hardware externo.
+- D-Star I/E/U/L/link, correção NETWORK→RF, pack de voz e timezone continuam no mesmo ciclo; todo o restante permanece congelado.
+- Estado: implementação/CI; HW PENDENTE.
