@@ -1311,3 +1311,47 @@ A configuração deve seguir o formato da versão de DStarGateway realmente emba
 - refletor selecionado deve poder ser incluído em CustomHostsfiles a partir do endereço/porta do catálogo, evitando depender de cache incompatível;
 - gateway ativo e porta UDP não equivalem a link remoto; estado connected/linked só com evidência do runtime/log;
 - callsign/repeater nunca podem ficar vazios.
+
+## 2026-09-21 — ciclo corretivo 0.3.17-alpha: somente D-Star RX/comandos/voz e fuso horário
+
+### REL-010 — Baseline 0.3.16 congelada por aprovação do mantenedor
+Neste ciclo, **todo item da 0.3.16 que não foi citado como defeito passa a baseline aprovada e não pode ser alterado, substituído, refatorado ou removido**. A 0.3.17-alpha corrige exclusivamente PROTO-024/LIVE-017/UI-032 e SEC-024.
+
+Rollback obrigatório: `backup/0.3.16-pre-0.3.17-20260921`.
+
+### PROTO-024 — D-Star bidirecional com identidade local C e comandos de rádio
+Estado HW da 0.3.16: o DStarGateway conecta ao refletor e recebe tráfego da rede, porém o MMDVM não transmite esse tráfego por RF.
+
+Contrato:
+- a identidade **local** D-Star do hotspot é módulo `C` em ambos os lados do loopback: MMDVMHost `[D-Star] Module=C` e DStarGateway `[Repeater 1] Band=C`;
+- o módulo **remoto** A–Z do refletor é independente e aparece somente no destino/link do refletor; nunca deve reconfigurar o módulo local;
+- manter MMDVMHost `GatewayPort=20010` e `LocalPort=20011`; DStarGateway HB escuta `20010` e escreve para `127.0.0.1:20011`;
+- `ReflectorReconnect` não pode ser `Fixed` quando o operador deve controlar o link pelo rádio;
+- comandos D-Star padrão pelo URCALL/DR devem funcionar: `_______I` informação/status, `_______E` echo, `_______U` unlink, `_______L` link do default e `REF/DCS/XRF/XLXnnn<mod>L` para link/troca de módulo;
+- após comando de link/unlink/troca, o gateway deve emitir a resposta/voz de status nativa quando os arquivos AMBE correspondentes estiverem presentes; não inventar áudio se o pack não existir;
+- voltar o destino do rádio para `CQCQCQ` continua sendo operação normal após comandos;
+- RF→rede e rede→RF devem permanecer funcionais sem alterar frequência, offset, baud ou outros protocolos.
+
+### LIVE-017 — Tráfego D-Star rede→RF precisa aparecer no Ao Vivo
+Quando DStarGateway entrega uma chamada da rede ao MMDVMHost:
+- o runtime deve publicar evento D-Star com direção `NETWORK`/Internet→RF e indicativo/destino somente quando extraídos de evidência real;
+- o painel Hotspot/Ao Vivo não deve ficar em standby enquanto há transmissão D-Star de rede sendo enviada ao modem;
+- RSSI/BER continuam ocultos para tráfego NETWORK, conforme LIVE-016.
+
+### UI-032 — Estado e comandos D-Star legíveis no Hotspot
+O painel Hotspot/Protocolos deve expor, sem polling pesado:
+- refletor e módulo remoto efetivo quando comprovados;
+- estado linking/linked/unlinked;
+- último comando D-Star reconhecido quando houver evidência de log/runtime;
+- instrução curta dos comandos `I/E/U/L` e link por URCALL/DR;
+- nunca declarar linked apenas porque o processo DStarGateway está ativo.
+
+### SEC-024 — Alteração de fuso precisa ser efetivamente aplicada sem terminal
+O fluxo de fuso continua com helper privilegiado restrito, mas deve ser determinístico:
+- validar o identificador em `/usr/share/zoneinfo`;
+- aplicar via `timedatectl set-timezone`;
+- confirmar lendo `timedatectl show -p Timezone --value` e `/etc/localtime` quando aplicável;
+- o backend deve aguardar resultado do helper com request-id/resultado correspondente, em vez de presumir sucesso apenas porque escreveu o request;
+- se o path unit não disparar, o sistema pode acionar **somente** o serviço one-shot específico de timezone por mecanismo autorizado e limitado; não conceder sudo genérico ao backend;
+- erro deve indicar causa real e manter o fuso anterior;
+- `America/Sao_Paulo` é caso obrigatório de regressão.
