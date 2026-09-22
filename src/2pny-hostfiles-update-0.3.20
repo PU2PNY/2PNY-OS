@@ -1,0 +1,174 @@
+#!/bin/bash
+set -euo pipefail
+
+BASE=/var/lib/2pny/hosts
+RUN=/run/2pny
+STATUS=/var/lib/2pny/hostfiles-status.json
+mkdir -p "$BASE" "$RUN"
+
+log(){ logger -t pu2pny-hostfiles -- "$*" 2>/dev/null || true; }
+
+write_status(){
+  python3 - "$STATUS" "$1" "$2" <<'PY'
+import json,sys,datetime,os,tempfile
+path,state,msg=sys.argv[1:4]
+data={"state":state,"message":msg,"updated":datetime.datetime.now(datetime.timezone.utc).isoformat()}
+fd,tmp=tempfile.mkstemp(prefix=".hostfiles.",dir=os.path.dirname(path))
+with os.fdopen(fd,"w") as f: json.dump(data,f,ensure_ascii=False)
+os.chmod(tmp,0o600); os.replace(tmp,path)
+PY
+}
+
+fetch_one(){
+  local name="$1" url="$2" minlines="$3"
+  local tmp="$RUN/${name}.new"
+  rm -f "$tmp"
+  if ! curl -fsSL --connect-timeout 8 --max-time 35 --retry 2 \
+      --user-agent "PU2PNY/0.3.2" "$url" -o "$tmp"; then
+    log "download failed: $name"
+    rm -f "$tmp"
+    return 1
+  fi
+  local lines
+  lines="$(grep -vc '^[[:space:]]*$' "$tmp" 2>/dev/null || echo 0)"
+  if [ "$lines" -lt "$minlines" ]; then
+    log "validation failed: $name lines=$lines"
+    rm -f "$tmp"
+    return 1
+  fi
+  if grep -qiE '<html|<!doctype' "$tmp"; then
+    log "validation failed: html returned for $name"
+    rm -f "$tmp"
+    return 1
+  fi
+  install -m 0644 "$tmp" "$BASE/$name"
+  rm -f "$tmp"
+  return 0
+}
+
+write_status updating "Atualizando listas públicas de servidores..."
+ok=0
+fail=0
+
+while IFS='|' read -r name url minlines; do
+  [ -n "$name" ] || continue
+  if fetch_one "$name" "$url" "$minlines"; then
+    ok=$((ok+1))
+  else
+    fail=$((fail+1))
+  fi
+done <<'EOF'
+DMR_Hosts.txt|https://www.pistar.uk/downloads/DMR_Hosts.txt|100
+YSFHosts.txt|https://www.pistar.uk/downloads/YSF_Hosts.txt|100
+FCSHosts.txt|https://www.pistar.uk/downloads/FCS_Hosts.txt|20
+P25Hosts.txt|https://www.pistar.uk/downloads/P25_Hosts.txt|20
+NXDNHosts.txt|https://www.pistar.uk/downloads/NXDN_Hosts.txt|20
+DStar_Hosts.json|https://raw.githubusercontent.com/g4klx/DStarGateway/612f388727a9bb47aaeaae3a89f5abff3152ed93/Data/DStar_Hosts.json|20
+DPlus_Hosts.txt|https://www.pistar.uk/downloads/DPlus_Hosts.txt|20
+DExtra_Hosts.txt|https://www.pistar.uk/downloads/DExtra_Hosts.txt|20
+DCS_Hosts.txt|https://www.pistar.uk/downloads/DCS_Hosts.txt|20
+XLXHosts.txt|https://www.pistar.uk/downloads/XLXHosts.txt|20
+TGList_BM.txt|https://www.pistar.uk/downloads/TGList_BM.txt|100
+TGList_P25.txt|https://www.pistar.uk/downloads/TGList_P25.txt|20
+TGList_NXDN.txt|https://www.pistar.uk/downloads/TGList_NXDN.txt|20
+TGList_YSF.txt|https://www.pistar.uk/downloads/TGList_YSF.txt|20
+DMRIds.dat|https://www.pistar.uk/downloads/DMRIds.dat|100
+NXDN.csv|https://www.pistar.uk/downloads/NXDN.csv|20
+EOF
+
+# YSFGateway expects FCSRooms.txt; Pi-Star distributes the same room table as FCSHosts.txt.
+if [ -s "$BASE/FCSHosts.txt" ]; then
+  install -m 0644 "$BASE/FCSHosts.txt" "$BASE/FCSRooms.txt"
+fi
+
+# Build gateway JSON snapshots from the validated Pi-Star text cache.
+# This avoids making the runtime depend on any single JSON host service.
+python3 - "$BASE" <<'PY'
+import json,sys,os,tempfile
+from pathlib import Path
+base=Path(sys.argv[1])
+def atomic(name,obj):
+    fd,tmp=tempfile.mkstemp(prefix="."+name+".",dir=base)
+    with os.fdopen(fd,"w") as f:json.dump(obj,f,ensure_ascii=False,separators=(",",":"))
+    os.chmod(tmp,0o644);os.replace(tmp,base/name)
+
+refs=[]
+p=base/"YSFHosts.txt"
+if p.exists():
+    for raw in p.read_text(errors="ignore").splitlines():
+        line=raw.strip()
+        if not line or line.startswith("#"):continue
+        parts=line.split(";")
+        if len(parts)<5:continue
+        ident,name,desc,address,port=map(str.strip,parts[:5])
+        try:port=int(port)
+        except Exception:continue
+        prefix,sep,rest=name.partition("-")
+        if sep and 1<=len(prefix)<=4:
+            country=prefix.upper();short=rest
+        else:
+            country="YSF";short=name
+        refs.append({"designator":ident.zfill(5)[-5:],"country":country,"name":short,
+                     "use_xx_prefix":False,"user_count":"000","description":desc or name,
+                     "port":port,"ipv4":address,"ipv6":None})
+atomic("YSFHosts.json",{"reflectors":refs})
+
+# RF-022 / PROTO-032: DStarGateway's upstream DStar_Hosts.json does not
+# enumerate XLX reflectors. Merge the independently downloaded Pi-Star XLX
+# master list into the validated D-Star JSON so URCALL commands such as
+# XLX300DL can be resolved by the gateway, not merely shown in the panel.
+dstar=base/"DStar_Hosts.json"
+xlx=base/"XLXHosts.txt"
+if dstar.exists() and xlx.exists():
+    try:
+        obj=json.loads(dstar.read_text(errors="ignore"))
+        rows=obj.get("reflectors") if isinstance(obj,dict) else None
+        if not isinstance(rows,list):rows=[]
+        merged={}
+        for row in rows:
+            if isinstance(row,dict) and row.get("name"):
+                merged[str(row["name"]).upper()]=row
+        for raw in xlx.read_text(errors="ignore").splitlines():
+            line=raw.strip()
+            if not line or line.startswith("#"):continue
+            parts=[x.strip() for x in line.split(";")]
+            if len(parts)<2:continue
+            ident,address=parts[0].upper(),parts[1]
+            if not ident or not address or not all(ch.isalnum() for ch in ident):continue
+            name="XLX"+ident
+            merged[name]={"name":name,"reflector_type":"DCS","ipv4":address}
+        atomic("DStar_Hosts.json",{"reflectors":[merged[k] for k in sorted(merged)]})
+    except Exception:
+        pass
+
+# P25/NXDN gateways also accept their legacy text host file as HostsFile2.
+# Keep a valid empty JSON primary so parser startup is deterministic.
+atomic("P25Hosts.json",{"reflectors":[]})
+atomic("NXDNHosts.json",{"reflectors":[]})
+PY
+
+if [ "$ok" -gt 0 ]; then
+  touch "$BASE/.updated"
+fi
+
+if [ "$fail" -eq 0 ]; then
+  write_status ready "Listas públicas atualizadas: $ok arquivo(s)."
+  echo "HOSTFILES_OK updated=$ok"
+  exit 0
+fi
+
+if [ "$ok" -gt 0 ]; then
+  write_status partial "Listas parcialmente atualizadas: $ok ok, $fail falha(s). As últimas listas válidas foram preservadas."
+  echo "HOSTFILES_PARTIAL updated=$ok failed=$fail"
+  exit 0
+fi
+
+if find "$BASE" -maxdepth 1 -type f -name '*Hosts*.txt' -size +0c | grep -q .; then
+  write_status stale "Internet indisponível para atualizar. Usando as últimas listas válidas."
+  echo "HOSTFILES_STALE"
+  exit 0
+fi
+
+write_status error "Não foi possível obter listas públicas e ainda não há cache local."
+echo "HOSTFILES_ERROR" >&2
+exit 1
