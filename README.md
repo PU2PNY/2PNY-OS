@@ -1,6 +1,6 @@
-# 2PNY OS
+# PU2PNY-OS
 
-**2PNY — Digital Radio Operating System**
+**PU2PNY-OS — Digital Radio Operating System**
 
 Sistema operacional headless para Raspberry Pi destinado a hotspots MMDVM, com foco em baixo consumo, configuração simples, diagnóstico de rede e evolução para operação multiprotocolo.
 
@@ -27,7 +27,7 @@ Esta versão ainda **não deve ser usada para transmissão RF**. A etapa atual v
 - BrandMeister, TGIF, FreeDMR, DMR+, XLX e redes personalizadas;
 - RadioID, QRZ opcional, GPS/APRS e histórico;
 - diagnóstico de Internet, failover Ethernet/Wi‑Fi e reconexão automática;
-- 2PNY Direct para chamadas ponto a ponto em etapa futura.
+- PU2PNY Direct para chamadas ponto a ponto em etapa futura.
 
 ## Build
 
