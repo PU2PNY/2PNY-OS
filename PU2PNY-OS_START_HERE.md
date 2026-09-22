@@ -54,6 +54,8 @@ Antes de divulgar imagem: requisito → implementação → teste → resultado 
 
 Não liberar como completa com requisito crítico ausente, regressão conhecida de DMR/RF/rede/wizard, build ARM64 incompleto, imagem sem validação estrutural/SHA-256 ou afirmação de hardware sem teste HW.
 
+**REL-015:** antes de qualquer validador final de imagem, executar pré-validação montada em modo somente leitura. Se falhar, corrigir a causa no fonte/overlay/builder, reconstruir a imagem e somente então repetir; nunca pular ou enfraquecer o gate.
+
 
 ## Identidade canônica aprovada em 2026-09-22
 - Repositório canônico aprovado: `PU2PNY/PU2PNY-OS`.
