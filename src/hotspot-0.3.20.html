@@ -202,7 +202,7 @@ async function load(){
  PNY.q('stGateway').textContent=current.gateway||'—';
  PNY.q('stAddress').textContent=current.address||cfg.server_address||'—';
  if(PNY.sweepRealOnly)PNY.sweepRealOnly(document);
- var rej=PNY.q('dstarRFReject');rej.classList.add('hidden');if(isDstar){try{var de=await PNY.getj('/api/diagnostics/errors',null,5000),rr=de.dstar_rejects||[];if(rr.length){rej.textContent='D-Star RF: '+String(rr[rr.length-1]).slice(0,240)+' · confira DR/RPT1='+String(cfg.callsign||'').padEnd(7,' ')+'C e RPT2='+String(cfg.callsign||'').padEnd(7,' ')+'G.';rej.classList.remove('hidden')}}catch(_){}}
+ var rej=PNY.q('dstarRFReject');rej.classList.add('hidden');if(isDstar){try{var de=await PNY.getj('/api/diagnostics/errors',null,5000),rr=de.dstar_rf_rejections||[];if(rr.length){rej.textContent='D-Star RF: '+String(rr[rr.length-1]).slice(0,240)+' · confira DR/RPT1='+String(cfg.callsign||'').padEnd(7,' ')+'C e RPT2='+String(cfg.callsign||'').padEnd(7,' ')+'G.';rej.classList.remove('hidden')}}catch(_){}}
  PNY.q('dmrEssid').value=(String(cfg.network_kind||'').toUpperCase()==='XLX'?'':(cfg.essid||''));
  PNY.q('slot').value=cfg.dmr_slot||'2';PNY.q('cc').value=cfg.color_code==null?1:cfg.color_code;
  var requested=new URLSearchParams(location.search).get('protocol'),p=String(requested||current.protocol||cfg.protocol||'DSTAR').toUpperCase();if(!definitions[p])p='DSTAR';choose(p)
