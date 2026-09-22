@@ -674,3 +674,13 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - O hook exige fisicamente `en_GB.ambe` e `en_GB.indx` antes de continuar.
 - Não são copiados/reescritos hostfiles PU2PNY, frequências, offsets, baud ou configurações RF.
 - Criado rollback `backup/0.3.19-pre-dstar-voice-assets-fix-20260922`.
+
+
+### 2026-09-22 — pré-validação obrigatória antes do validador final
+- Criado **REL-015** como regra permanente para todas as versões.
+- Novo `ci/preflight-image.sh` monta a imagem gerada em modo somente leitura antes do validador final.
+- O gate confirma XZ/SHA-256, identidade/versão, runtime essencial, título `PU2PNY-OS`, DMR baseline, serviços críticos e assets nativos D-Star.
+- O workflow 0.3.19 agora executa `Pre-validate generated image` antes de `Validate final image`.
+- Falha de pré-validação bloqueia validador/publicação e exige correção no fonte/builder + novo build; não é permitido mascarar o erro alterando a imagem pronta ou removendo o gate.
+- Criados **TEST-REL-015A/B**.
+- Rollback preservado: `backup/0.3.19-pre-prevalidation-rule-20260922b`.
