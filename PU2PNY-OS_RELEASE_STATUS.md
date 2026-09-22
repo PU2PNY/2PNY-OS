@@ -661,3 +661,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Rollback: `backup/0.3.16-pre-0.3.17-20260921`.
 - Branch: `pu2pny-os-0.3.17-alpha`.
 - Escopo: PROTO-024, LIVE-017, UI-032, SEC-024 e gates REL-010.
+
+## 0.3.18-alpha — correção pré-reteste — 2026-09-22
+
+- A 0.3.17-alpha foi construída em SW, mas **não será usada como candidata de reteste**: revisão do código upstream mostrou que o pack de voz/status do DStarGateway é instalado em `/usr/local/share/dstargateway.d/`, enquanto o gerador 0.3.17 ainda apontava para `/usr/share/2pny/audio/dstar/`.
+- Branch: `pu2pny-os-0.3.18-alpha`.
+- Rollback: `backup/0.3.17-pre-0.3.18-20260922`.
+- Escopo: somente corrigir `[Paths] Data` e exigir os AMBE/INDX reais na imagem. Todo o restante permanece congelado.
+- D-Star já preservado no código 0.3.17: MMDVMHost módulo local C, gateway Band C, 20010/20011, `ReflectorReconnect=Never`, `ReloadTime=72`, comandos nativos I/E/U/L/link e parser NETWORK→RF.
+- Timezone já preservado no código 0.3.17: request/result único via PathExistsGlob + helper root restrito a `timedatectl set-timezone`.
+- Estado: implementação/CI; HW PENDENTE.
