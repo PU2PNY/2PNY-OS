@@ -661,3 +661,11 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Rollback: `backup/0.3.16-pre-0.3.17-20260921`.
 - Branch: `pu2pny-os-0.3.17-alpha`.
 - Escopo: PROTO-024, LIVE-017, UI-032, SEC-024 e gates REL-010.
+
+### Adição de escopo 0.3.17 — comandos administrativos pelo rádio
+- Novo requisito: **SEC-025**.
+- Comandos planejados/implementados no ciclo: `PNYARM`, `PNYOFF`, `PNYRBT`, `PNYDMR`, `PNYDST`, `PNYYSF`, `PNYP25`, `PNYNXD`, `PNYPOC`.
+- Ações exigem indicativo MYCALL1 igual ao callsign configurado e armamento temporário de 30 s.
+- DStarGateway apenas cria request local; execução privilegiada fica em helper one-shot dedicado.
+- Poweroff significa desligamento seguro do sistema operacional; corte elétrico físico continua dependente de hardware externo.
+- Escopo anterior 0.3.17 (D-Star RX/comandos nativos/timezone) permanece; demais módulos continuam congelados.
