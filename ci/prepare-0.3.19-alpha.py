@@ -4,7 +4,7 @@
 Everything not explicitly changed by REL-013/REL-014 stays inherited from 0.3.18.
 """
 from pathlib import Path
-import os, shutil, subprocess, sys
+import os, re, shutil, subprocess, sys
 
 root=Path(sys.argv[1]).resolve()
 repo=Path(__file__).resolve().parents[1]
@@ -31,6 +31,16 @@ install("src/2pny-display-online-detect-0.3.19.service","rootfs-overlay/etc/syst
 install("src/2pny-protocol-network-apply-all-0.3.19.py","rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply",0o755)
 install("src/2pny-protocol-network-apply-0.3.19.py","rootfs-overlay/usr/local/libexec/2pny-dmr-apply",0o755)
 install("src/2pny-mode-apply-0.3.19","rootfs-overlay/usr/local/sbin/2pny-mode-apply",0o755)
+
+# UI-035: every browser tab uses the product name only, including inherited pages.
+ui_dir=root/"rootfs-overlay/usr/share/2pny"
+for page in ui_dir.glob("*.html"):
+    html=page.read_text()
+    normalized,count=re.subn(r"(?is)<title>.*?</title>","<title>PU2PNY-OS</title>",html,count=1)
+    if count==0 and re.search(r"(?is)<head[^>]*>",normalized):
+        normalized=re.sub(r"(?is)(<head[^>]*>)",r"\1<title>PU2PNY-OS</title>",normalized,count=1)
+    if normalized!=html:
+        page.write_text(normalized)
 
 wants=root/"rootfs-overlay/etc/systemd/system/multi-user.target.wants"
 wants.mkdir(parents=True,exist_ok=True)
@@ -61,6 +71,11 @@ dash=(root/"rootfs-overlay/usr/share/2pny/dashboard.html").read_text()
 expert=(root/"rootfs-overlay/usr/share/2pny/expert.html").read_text()
 system=(root/"rootfs-overlay/usr/share/2pny/system.html").read_text()
 ui=(root/"rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js").read_text()
+assert "document.title='PU2PNY-OS'" in ui
+for page in ui_dir.glob("*.html"):
+    html=page.read_text()
+    if re.search(r"(?is)<head[^>]*>",html):
+        assert re.search(r"(?is)<title>\s*PU2PNY-OS\s*</title>",html),str(page)
 displaycore=(root/"rootfs-overlay/usr/local/sbin/2pny-display-core").read_text()
 tz=(root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply").read_text()
 proto=(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply").read_text()
@@ -76,7 +91,7 @@ assert 'connection.autoconnect-retries 3' in (root/"rootfs-overlay/usr/local/sbi
 assert 'rede conectada' in internet and 'Nenhuma segunda rede encontrada' in internet
 assert 'Canal em uso:' in internet and ' melhor' in internet and ' atual' in internet
 assert '<h3>Conexão via cabo</h3>' in internet and '<h3>Caminho da conexão</h3>' in internet
-assert 'PU2PNY — Protocolos' in hotspot and 'Hotspot / Protocolos' not in hotspot
+assert '<h1>Protocolos</h1>' in hotspot and 'Hotspot / Protocolos' not in hotspot
 assert 'toFixed(6)' in hotspot and "replace(',','.')" in hotspot
 for marker in ('_______I','_______E','_______U','_______L','XLX026DL','REF030CL','DUP+/DUP−'):
     assert marker in hotspot,marker
