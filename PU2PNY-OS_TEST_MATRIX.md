@@ -593,22 +593,25 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 | ID | Requisito | Caso | Resultado esperado | Estado |
 |---|---|---|---|---|
-| TEST-NET-023A | NET-023 | salvar Wi-Fi e reiniciar | perfil persistido/autoconnect e reconexão automática | PENDENTE SW/HW |
-| TEST-NET-023B | NET-023 | conectar/desconectar Ethernet | API/UI convergem em poucos segundos | PENDENTE SW/HW |
-| TEST-NET-024A | NET-024 | scan para Wi-Fi 1/2 após erro anterior | nova busca real e ambos seletores populados | PENDENTE SW/HW |
-| TEST-LIVE-016A | LIVE-016 | standby/network RX sem RF | BER/RSSI/Sinal RF ocultos | PENDENTE SW/HW |
-| TEST-UI-030A | UI-030 | ativar perfil | overlay persiste até connected, erro ou timeout diagnosticável | PENDENTE SW/HW |
-| TEST-PROTO-022A | PROTO-022 | anúncio XLX + chegada NETWORK simultânea | voz de sistema não mistura no mesmo slot | PENDENTE SW/HW |
-| TEST-P2P-006A | P2P-006 | Direct/Relay com peer pareado | registro/lookup/probes com janela robusta; segurança preservada | PENDENTE SW/HW |
-| TEST-APRS-012A | APRS-012 | página APRS em instalação provisionada | APRS-IS inicia automaticamente para mensagens | PENDENTE SW/HW |
-| TEST-APRS-012B | APRS-012 | regional indisponível | fallback limitado para rotate.aprs2.net:14580 | PENDENTE SW/HW |
-| TEST-APRS-012C | APRS-012 | mensagem sem ACK | waiting_ack/retry/no_ack sem afirmar entrega | PENDENTE SW/HW |
-| TEST-DISPLAY-018A | DISPLAY-018 | Nextion via modem | MMDVMHost writer, Port=modem, layout 2/3, sem MQTT obrigatório | PENDENTE SW/HW |
-| TEST-SEC-023A | SEC-023 | aplicar America/Sao_Paulo | helper dispara, consome request e confirma fuso | PENDENTE SW/HW |
-| TEST-SEC-023B | SEC-023/UI-031 | habilitar SSH com .pub válida | authorized_keys aplicado; root/senha continuam bloqueados | PENDENTE SW/HW |
-| TEST-PROTO-023A | PROTO-023 | gerar D-Star | schema do gateway embarcado, ReloadTimer, custom host e loopback corretos | PENDENTE SW/HW |
+| TEST-NET-023A | NET-023 | salvar Wi-Fi e reiniciar | perfil persistido/autoconnect e reconexão automática | SW PASS estrutural / HW PENDENTE |
+| TEST-NET-023B | NET-023 | conectar/desconectar Ethernet | API/UI convergem em poucos segundos | SW PASS estrutural / HW PENDENTE |
+| TEST-NET-024A | NET-024 | scan para Wi-Fi 1/2 após erro anterior | nova busca real e ambos seletores populados | SW PASS estrutural / HW PENDENTE |
+| TEST-LIVE-016A | LIVE-016 | standby/network RX sem RF | BER/RSSI/Sinal RF ocultos | SW PASS determinístico / HW PENDENTE |
+| TEST-UI-030A | UI-030 | ativar perfil | overlay persiste até connected, erro ou timeout diagnosticável | SW PASS estrutural / HW PENDENTE |
+| TEST-PROTO-022A | PROTO-022 | anúncio XLX + chegada NETWORK simultânea | voz de sistema não mistura no mesmo slot | SW PASS build/estrutural / HW PENDENTE |
+| TEST-P2P-006A | P2P-006 | Direct/Relay com peer pareado | registro/lookup/probes com janela robusta; segurança preservada | SW PASS estrutural/selftest / HW PENDENTE |
+| TEST-APRS-012A | APRS-012 | página APRS em instalação provisionada | APRS-IS inicia automaticamente para mensagens | SW PASS estrutural / HW PENDENTE |
+| TEST-APRS-012B | APRS-012 | regional indisponível | fallback limitado para rotate.aprs2.net:14580 | SW PASS determinístico / HW PENDENTE |
+| TEST-APRS-012C | APRS-012 | mensagem sem ACK | waiting_ack/retry/no_ack sem afirmar entrega | SW PASS determinístico / HW PENDENTE |
+| TEST-DISPLAY-018A | DISPLAY-018 | Nextion via modem | MMDVMHost writer, Port=modem, layout 2/3, sem MQTT obrigatório | SW PASS estrutural / HW PENDENTE |
+| TEST-SEC-023A | SEC-023 | aplicar America/Sao_Paulo | helper dispara, consome request e confirma fuso | SW PASS estrutural / HW PENDENTE |
+| TEST-SEC-023B | SEC-023/UI-031 | habilitar SSH com .pub válida | authorized_keys aplicado; root/senha continuam bloqueados | SW PASS estrutural / HW PENDENTE |
+| TEST-PROTO-023A | PROTO-023 | gerar D-Star | schema do gateway embarcado, ReloadTimer, custom host e loopback corretos | SW PASS estrutural / HW PENDENTE |
 | TEST-PROTO-023B | PROTO-023 | ativar D-Star | não declara conectado sem evidência de link remoto | PENDENTE HW |
-| TEST-REL-0316-A | REL-009 | regressões + source | baselines herdadas + testes focais passam | PENDENTE CI |
-| TEST-REL-0316-B | REL-009 | build ARM64/XZ/SHA | artefato íntegro | PENDENTE CI |
-| TEST-REL-0316-C | REL-009 | imagem montada | componentes focais e baselines estruturais presentes | PENDENTE CI |
+| TEST-REL-0316-A | REL-009 | regressões + source | baselines herdadas + testes focais passam | **SW PASS** |
+| TEST-REL-0316-B | REL-009 | build ARM64/XZ/SHA | artefato íntegro | **SW PASS** |
+| TEST-REL-0316-C | REL-009 | imagem montada | componentes focais e baselines estruturais presentes | **SW PASS** |
 | TEST-REL-0316-D | REL-009 | Raspberry Pi/MMDVM/Nextion | validação física do lote | PENDENTE HW |
+
+
+**Evidência de release 0.3.16:** GitHub Actions run `35669972163`, commit da imagem `1c5ec75548374ac13be6948fc86eae46bd9eeddf`, artefato ARM64/XZ e validação final em PASS. `TEST-REL-0316-D` e todos os estados HW continuam pendentes.
