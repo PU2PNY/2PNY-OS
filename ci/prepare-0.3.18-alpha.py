@@ -47,13 +47,15 @@ if "patch-dstargateway-radio-admin-0.3.17.py" not in bs:
 
 if "PU2PNY_DSTAR_RADIO_ADMIN_0318" not in bs:
     lines=bs.splitlines()
-    boost=[i for i,line in enumerate(lines) if "libboost-dev" in line and ("apt-get" in line or "apt " in line)]
-    if not boost: raise SystemExit("0.3.18: DStar libboost build anchor missing")
-    bi=boost[-1];make_i=None
-    for i in range(bi+1,min(len(lines),bi+80)):
-        if __import__("re").search(r"(^|[;& ])make(?:[ ;]|$)",lines[i]):
+    # Patch the pinned DStarGateway source before its own compile step. The old
+    # generic "first make after libboost" anchor could land after the gateway
+    # had already been built/cleaned, leaving no RepeaterHandler.cpp in /tmp.
+    make_i=None
+    for i,line in enumerate(lines):
+        if "make -C DStarGateway" in line:
             make_i=i;break
-    if make_i is None: raise SystemExit("0.3.18: DStar make anchor missing")
+    if make_i is None:
+        raise SystemExit("0.3.18: exact DStarGateway make anchor missing")
     hook=[
       '# PU2PNY_DSTAR_RADIO_ADMIN_0318',
       'DSTAR_RF_ADMIN_SRC="$(find /tmp -maxdepth 4 -type f -path "*/Common/RepeaterHandler.cpp" -print -quit)"',
