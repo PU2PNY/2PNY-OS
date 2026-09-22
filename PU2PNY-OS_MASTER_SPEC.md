@@ -1541,3 +1541,16 @@ Quando DMR estiver em modo repetidora/duplex:
 - XLX continua com **um** slot de rede selecionado conforme a configuração do operador; não inventar operação XLX simultânea em dois slots, mas o transporte local duplex permanece com TS1/TS2 disponíveis;
 - tráfego NETWORK→RF e RF→NETWORK deve ser validado nos dois sentidos em hardware;
 - se o modem/firmware não suportar duplex real, apresentar diagnóstico e não mascarar como sucesso.
+
+
+## 2026-09-22 — Identidade canônica do projeto
+
+### ARCH-005 — Repositório canônico PU2PNY-OS
+O nome canônico do repositório deve ser `PU2PNY/PU2PNY-OS`.
+O nome anterior `PU2PNY/2PNY-OS` é legado e, após a alteração administrativa no GitHub, deve existir apenas por redirecionamento/histórico.
+Documentação, links novos, instruções de clone e automações novas devem usar o nome canônico.
+
+### UI-035 — Título fixo da aba do navegador
+Em todas as páginas web do produto — painel, wizard, provisionamento, páginas operacionais e telas auxiliares — o título da aba do navegador deve ser exatamente `PU2PNY-OS`.
+Não incluir versão, nome da página, protocolo, estado, indicativo ou outro sufixo/prefixo no `<title>`.
+A regra deve ser aplicada de forma centralizada no build/runtime e coberta por teste de regressão.
