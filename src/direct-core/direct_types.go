@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-const version = "0.3.7-alpha"
+const version = "0.3.20-alpha"
 const defaultServer = "xlx026.net:43070"
 const defaultAPIAddr = "127.0.0.1:43071"
 
