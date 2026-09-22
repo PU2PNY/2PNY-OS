@@ -1,0 +1,10 @@
+[Unit]
+Description=PU2PNY clock/timezone request watcher
+
+[Path]
+PathExistsGlob=/run/2pny/timezone-request-*.json
+PathExistsGlob=/run/2pny/time-request-*.json
+Unit=2pny-timezone-apply.service
+
+[Install]
+WantedBy=multi-user.target
