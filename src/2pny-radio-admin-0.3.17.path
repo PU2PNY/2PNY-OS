@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY RF admin command watcher
+
+[Path]
+PathExists=/run/2pny/radio-admin-command.request
+Unit=2pny-radio-admin.service
+
+[Install]
+WantedBy=multi-user.target
