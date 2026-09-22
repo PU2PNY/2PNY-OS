@@ -66,6 +66,8 @@ def verify_host_bridge_config(proto):
         raise RuntimeError(f"{section}.GatewayPort não confirmou {gateway_port}")
     if check.get(section,"LocalPort",fallback="").strip()!=local_port:
         raise RuntimeError(f"{section}.LocalPort não confirmou {local_port}")
+    if proto=="DSTAR" and check.get("D-Star","Module",fallback="").strip().upper()!="C":
+        raise RuntimeError("D-Star.Module local não confirmou C")
 
 def atomic(path,text,mode=0o640,group=None):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
