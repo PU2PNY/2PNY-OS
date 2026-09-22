@@ -742,7 +742,7 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-PROTO-030A | PROTO-030 | BrandMeister com ESSID → XLX resulta em DMR ID base, sem ESSID residual | SW candidato / HW PENDENTE | SW/HW |
 | TEST-RF-020A | RF-020 | DMR simplex TX/RX permanece igual à baseline | **HW PENDENTE nesta release** | HW |
 | TEST-RF-020B | RF-020 | DMR duplex: rádio→hotspot e rede→rádio com áudio, TS/CC corretos | HW PENDENTE | HW |
-| TEST-PROTO-031A | PROTO-031 | nova configuração D-Star mostra módulo local B; usuário troca A–E; RPT1 esperado acompanha seleção; RPT2=G | SW candidato / HW PENDENTE | SW/HW |
+| TEST-PROTO-031A | PROTO-031 | nova configuração D-Star mostra módulo local B; usuário troca A–D; RPT1 esperado acompanha seleção; RPT2=G | SW candidato / HW PENDENTE | SW/HW |
 | TEST-PROTO-032A | PROTO-032 | em D-Star conectado a XLX300D, comando RF para XLX026DL só muda servidor efetivo após log de link estabelecido; falha não muda efetivo | HW PENDENTE; FAIL observado na 0.3.19 | HW |
 | TEST-PROTO-032B | PROTO-032 | repetir link/unlink via rádio com XLX, REF, XRF e DCS presentes no catálogo | HW PENDENTE | HW |
 | TEST-PROTO-033A | PROTO-033 | TG4000/4001–4026/4099 enviados em TS1 e TS2 são cumpridos pelo DMRGateway e painel reflete apenas estado efetivo | SW candidato / HW PENDENTE | SW/HW |
