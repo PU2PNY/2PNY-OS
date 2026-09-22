@@ -1061,7 +1061,7 @@ grep -Fq 'waitProtocolConnection' "$ROOT/usr/share/2pny/hotspot.html"
 
 grep -Fq 'PathExistsGlob=/run/2pny/timezone-request-*.json' "$ROOT/etc/systemd/system/2pny-timezone-apply.path"
 grep -Fq 'PathExists=/run/2pny/ssh-request.json' "$ROOT/etc/systemd/system/2pny-ssh-apply.path"
-grep -Fq 'REQ.unlink()' "$ROOT/usr/local/sbin/2pny-timezone-apply"
+grep -Fq 'req_path.unlink()' "$ROOT/usr/local/sbin/2pny-timezone-apply"
 grep -Fq 'REQ.unlink()' "$ROOT/usr/local/sbin/2pny-ssh-apply"
 grep -Fq 'id="sshPubFile"' "$ROOT/usr/share/2pny/expert.html"
 
