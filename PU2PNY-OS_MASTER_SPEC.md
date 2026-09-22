@@ -1307,7 +1307,7 @@ A UI deve permitir colar a linha pública ou selecionar arquivo `.pub`; botão s
 A configuração deve seguir o formato da versão de DStarGateway realmente embarcada:
 - `[Repeater 1]` com loopback MMDVM 127.0.0.1:20011 e HBPort 20010;
 - `[Hosts Files]` usa a chave esperada `ReloadTimer`;
-- módulo/banda local da repetidora não deve ser confundido com o módulo remoto selecionado;
+- na baseline atual, MMDVMHost usa `[D-Star] Module=C` e o DStarGateway deve usar `[Repeater 1] Band=C`; o módulo remoto A–Z do refletor permanece independente e nunca altera essa identidade local;
 - refletor selecionado deve poder ser incluído em CustomHostsfiles a partir do endereço/porta do catálogo, evitando depender de cache incompatível;
 - gateway ativo e porta UDP não equivalem a link remoto; estado connected/linked só com evidência do runtime/log;
 - callsign/repeater nunca podem ficar vazios.
