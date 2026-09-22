@@ -21,6 +21,7 @@ dmr=text("src/2pny-protocol-network-apply-0.3.19.py")
 mode=text("src/2pny-mode-apply-0.3.19")
 station=text("src/2pny-station-worker-0.3.17.py")
 switch=text("src/2pny-network-switch-0.3.16")
+prep18=text("ci/prepare-0.3.18-alpha.py")
 
 # NET-025/026: DNS activation and dual Wi-Fi/channel UX.
 compact="".join(main.split())
@@ -104,4 +105,8 @@ assert 'DMR duplex candidate did not enable TS1/TS2 local transport' in dmr
 for marker in ('GatewayPort":"62031"','LocalPort":"62032"','RptPort=62032','LocalPort=62031',
                'TG4000=unlink','voice_dir="/usr/share/2pny/audio/dmrgateway"'):
     assert marker in dmr,marker
+# REL-012 build reproducibility: radio-admin patch must run before DStarGateway compile.
+assert 'if "make -C DStarGateway" in line' in prep18
+assert 'exact DStarGateway make anchor missing' in prep18
+assert 'DSTAR_RF_ADMIN_SRC=' in prep18
 print("TEST_0319_REGRESSIONS_OK")

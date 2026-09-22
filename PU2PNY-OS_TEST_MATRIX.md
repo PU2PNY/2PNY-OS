@@ -703,3 +703,6 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-PROTO-028B | PROTO-028 | DMR duplex BrandMeister/TGIF | pass-through cobre TS1 e TS2; RF→rede e rede→RF funcionam | PENDENTE HW |
 | TEST-PROTO-028C | PROTO-028 | DMR duplex XLX | transporte local TS1/TS2 ativo; XLX mantém apenas slot de rede escolhido | PENDENTE CI/HW |
 | TEST-REL-0319-E | REL-014 | regressão DMR simplex + YSF + duplex | DMR simplex baseline preservada e novo lote passa gates SW antes de imagem | PENDENTE CI |
+
+
+| TEST-BUILD-0319-DSTAR | REL-012 / REL-014 | builder aplica patch radio-admin antes de `make -C DStarGateway` | fonte do gateway ainda existe quando o patch roda; build não falha por source missing | SW PENDENTE novo run |

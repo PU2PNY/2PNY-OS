@@ -635,3 +635,9 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - O helper de modo passará a reforçar `General.Duplex` conforme `use_mode` para todos os protocolos.
 - Nenhum baud, offset ou frequência será recalculado. DMR simplex permanece baseline obrigatória.
 - Tudo continua **HW PENDENTE** até reteste físico.
+
+
+### 2026-09-22 — correção do builder D-Star antes da publicação 0.3.19
+- Corrigida a ordem do hook `SEC-025/REL-012`: o patch de comandos administrativos D-Star agora é aplicado imediatamente antes de `make -C DStarGateway`.
+- O anchor genérico anterior podia executar só depois da compilação/limpeza do fonte e causar `DStarGateway source for PU2PNY radio-admin patch not found`.
+- Escopo: **build/reprodutibilidade apenas**; nenhuma mudança funcional adicional em RF, D-Star, YSF ou DMR.

@@ -721,3 +721,9 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
   - o helper DMR atual habilita TS1/TS2 conforme o slot salvo mesmo em `Duplex=1`; em repetidora isso pode deixar um dos caminhos locais desabilitado;
   - o helper de modo recebe `use_mode`, mas não reforça `[General] Duplex`, deixando caminhos de ativação dependentes da ordem anterior.
 - Estado: **implementação iniciada / HW PENDENTE**. DMR simplex funcional permanece baseline e não pode regredir.
+
+
+### Gate de build D-Star — 2026-09-22
+- Run ARM64 anterior falhou antes de gerar imagem porque o hook do patch `SEC-025` procurou `RepeaterHandler.cpp` após a compilação do DStarGateway.
+- Correção: anchor determinístico imediatamente antes de `make -C DStarGateway`.
+- Estado: **SW corrigido; novo build ARM64 obrigatório antes de disponibilizar download**.
