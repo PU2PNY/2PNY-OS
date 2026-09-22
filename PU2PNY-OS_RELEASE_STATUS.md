@@ -757,3 +757,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Falha no preflight bloqueia o validador final e a publicação; a correção deve ocorrer no fonte/overlay/builder e exigir novo build.
 - Implementação atual: `ci/preflight-image.sh` + etapa `Pre-validate generated image` no workflow 0.3.19.
 - Estado: **implementado em código; CI PENDENTE até o novo run concluir**.
+
+
+### Run 35758692012 — REL-015 funcionou; novo bloqueador D-Star identificado
+- Source, staging, ARM64, XZ/SHA-256 e **Pre-validate generated image**: PASS.
+- O preflight confirmou `en_GB.ambe` e `en_GB.indx` antes do validador final.
+- O validador final bloqueou a publicação porque `/usr/local/share/dstargateway.d/DStar_Hosts.json` ainda não estava presente.
+- Causa de empacotamento: o catálogo pinado já existia no cache staged da cadeia herdada, mas não era duplicado para o diretório de dados do DStarGateway.
+- Correção staged: copiar o mesmo catálogo pinado para o overlay do diretório de dados antes do build e exigir sua presença/tamanho também no REL-015.
+- Rollback: `backup/0.3.19-pre-dstar-hostfile-fix-20260922`.
+- Estado: **SW corrigido / novo CI obrigatório / publicação bloqueada até PASS**.
