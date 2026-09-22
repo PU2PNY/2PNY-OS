@@ -1583,3 +1583,70 @@ A pré-validação deve, no mínimo:
 Se a pré-validação falhar, a causa deve ser corrigida no fonte, overlay, builder ou empacotamento correspondente e a imagem deve ser reconstruída. É proibido editar a imagem pronta para mascarar a falha, remover silenciosamente o gate ou enfraquecer o teste apenas para obter PASS.
 
 Esta regra é permanente e deve ser herdada por todos os workflows/releases futuros.
+
+
+## 32. Ciclo 0.3.20-alpha — manutenção focal pós-0.3.19 (2026-09-22)
+
+### REL-016 — Escopo congelado da 0.3.20-alpha
+A 0.3.20-alpha herda integralmente a 0.3.19-alpha. Tudo que não estiver coberto pelos requisitos abaixo permanece baseline protegido. DMR simplex TX/RX e YSF/C4FM simplex continuam obrigatoriamente preservados. RF real, duplex, BER/RSSI reais e Nextion física só podem receber HW PASS após Raspberry Pi + MMDVM reais.
+
+### UI-037 — Indicadores sem dado real ficam ocultos
+Em todas as páginas, caixa/card/indicador que dependa de dado operacional deve permanecer invisível enquanto o valor real não existir. Não exibir placeholders como se fossem estado válido para D-Star hotspot/rádio, último comando, Nextion, gateway, RSSI/BER ou métricas equivalentes. O componente compartilhado de UI deve aplicar a regra de forma global e leve.
+
+### LIVE-020 — Aviso visual TOT em dois estágios
+Preservar o corte de TOT em 180 s. De 150 s a 169 s, as bordas TX/RX piscam neon amarelo; de 170 s até o corte, piscam neon vermelho. O cronômetro deve usar o início efetivo do evento, sem reiniciar por refresh de snapshot.
+
+### LIVE-021 — S-meter somente com RF real
+O Ao Vivo exibe S-meter com marcas 0, 1, 5, 9 e 9+30 somente para atividade cuja origem comprovada seja RF. Tráfego Internet→RF não mostra S-meter/RSSI. Acima de 30 MHz, a conversão visual segue a referência IARU de S9=-93 dBm e 6 dB por S-unit; fora de faixa/sem RSSI, ocultar.
+
+### NET-027 — Confirmação de DNS com orçamento coerente
+O timeout do navegador deve ser maior que a janela máxima do backend para reativar o perfil NetworkManager e confirmar o DNS efetivo. Timeout de UI nunca pode afirmar rollback sem evidência. Após a operação, reler o estado efetivo.
+
+### PERF-004 — Ativação de perfil não bloqueia na confirmação remota
+Após o apply transacional local concluir, a UI deve liberar a operação imediatamente e observar o link remoto em segundo plano, sem reinícios adicionais e sem prender o usuário por dezenas de segundos.
+
+### PROTO-029 — XLX é a primeira opção DMR
+Ao selecionar DMR, XLX deve aparecer como primeira família de rede.
+
+### PROTO-030 — BrandMeister → XLX limpa identidade incompatível
+Ao trocar de BrandMeister/TGIF/outro DMR para XLX, ESSID/identificação extra não pode permanecer aplicada. XLX usa o DMR ID base conforme o perfil PU2PNY.
+
+### RF-020 — DMR duplex sem regressão do simplex
+No modo repetidora/duplex, MMDVMHost deve subir antes do DMRGateway e manter TS1/TS2 ativos localmente. O controle/roteamento deve preservar os dois slots onde tecnicamente aplicável. DMR simplex aprovado não pode ser alterado. Estado atual: SW candidato; HW obrigatório para áudio e TX/RX.
+
+### PROTO-031 — Módulo local D-Star explícito e independente
+O módulo local usado no cabeçalho RPT1 é separado do módulo remoto do refletor. Novas configurações PU2PNY usam **B** como padrão do módulo local, com seletor manual A–E em Protocolos. Upgrades preservam o módulo local efetivo já configurado até alteração explícita. RPT2 continua indicativo do hotspot + G.
+
+### PROTO-032 — Comandos D-Star pelo rádio devem ser executados, não simulados
+Comandos de link/unlink/status via URCALL/DR devem ser cumpridos pelo DStarGateway para XLX, REF/DPlus, XRF/DExtra e DCS quando o destino existir no catálogo. O painel pode mostrar “solicitado/linking”, mas só muda servidor/módulo efetivo depois de evidência do gateway de link estabelecido. Destino desconhecido/falha deve aparecer como falha e não como troca concluída.
+O catálogo D-Star deve incorporar a lista XLX validada, pois o DStar_Hosts.json upstream fixado não contém a malha XLX completa. REF/XRF/DCS continuam usando o catálogo compatível do DStarGateway.
+
+### PROTO-033 — Comandos TG DMR pelo rádio em ambos os timeslots
+TG4000 (unlink), TG4001–TG4026 (módulos A–Z) e TG4099 (status) devem ser aceitos em TS1 ou TS2 no RF, preservando o fluxo de áudio e a lógica existente. A UI só promove módulo efetivo com evidência do gateway.
+
+### UI-038 — Internet local e link remoto são estados distintos
+A página Protocolos deve distinguir “Internet disponível” de “gateway/link remoto confirmado”. Não mostrar “aguardando rede” quando há conectividade IP comprovada; mostrar “link remoto pendente” quando for o caso.
+
+### P2P-008 — Direct acionado pelo rádio
+Quando houver peer pareado e online no mesmo protocolo, um alvo RF real pode iniciar Direct automaticamente: D-Star por URCALL/indicativo e DMR por Private Call/Radio ID resolvido no cache local. TG DMR não é chamada Direct. YSF não deve inventar identidade global a partir de DG-ID.
+
+### APRS-014 — Página APRS e comandos operacionais
+A página chama-se apenas **APRS**. Preservar login APRS-IS verificado, ACK/REJ, retry limitado e deduplicação. Implementar PING, STATUS, LAST, MYLAST, ONLINE, MODULE, INFO e HELP usando exclusivamente estado/eventos locais reais; ausência de informação retorna indisponível/sem atividade.
+
+### DISPLAY-020 — Nextion física requer confirmação COMOK
+Serviço ativo ou configuração lógica não prova tela física. Para Nextion via MMDVM, MMDVMHost continua único dono da UART; o detector usa a bridge MQTT display-in/display-out e exige resposta real `comok` antes de marcar `physical_confirmed`.
+
+### DISPLAY-021 — PU2PNY Moderno V2 como layout padrão
+Após confirmação física, Nextion via MMDVM usa PU2PNY Moderno V2, destacando PU2PNY-OS, indicativo e protocolo. O fluxo de inicialização existente 0–100% deve ser exibido no renderer compatível. Nenhum TFT/HMI é gravado automaticamente.
+
+### SYS-001 — Ajuste manual de relógio
+A página Sistema permite data/hora manual com helper privilegiado restrito, validação de formato e confirmação efetiva. Ajuste manual desativa NTP; sincronização posterior pode reativá-lo.
+
+### SYS-002 — Todos os timezones instalados
+A UI deve carregar `timedatectl list-timezones` e aceitar qualquer zona instalada válida, incluindo America/Sao_Paulo. O helper confirma o timezone efetivo após aplicação.
+
+### SYS-003 — Download claro de logs sanitizados
+Sistema deve oferecer botão visível para baixar pacote de diagnóstico sob demanda. O pacote remove/sanitiza password, token, API key e secret e inclui somente recorte operacional necessário.
+
+### UPDATE-007 — OTA com staging explícito e rollback automático
+Após download 0–100% e SHA-256 verificado, oferecer “Instalar agora” ou “Instalar depois”. Antes da aplicação, criar ponto de retorno. Se a instalação falhar depois de iniciar mutação, restaurar automaticamente arquivos/versão anteriores e registrar estado `rolled_back`. Queda abrupta de energia continua risco físico e não deve ser mascarada.
