@@ -75,7 +75,6 @@ assert 'PathExistsGlob=/run/2pny/timezone-request-*.json' in tzpath
 assert 'timezone-request-' in tz and 'timezone-result-' in tz
 assert '["timedatectl","set-timezone",tz]' in tz
 assert '["timedatectl","show","-p","Timezone","--value"]' in tz
-assert 'effective!=tz' not in tz  # implementation uses effective!=tz? guard spelling check below
 assert 'if effective!=tz:' in tz
 assert 'request_id=request_id' in tz
 assert 'User=root' in tzsvc
