@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# REL-015 permanent release gate: run before every version-specific final validator.
 set -euo pipefail
 
 if (( EUID != 0 )); then
