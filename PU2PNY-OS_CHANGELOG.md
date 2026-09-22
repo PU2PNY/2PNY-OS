@@ -720,3 +720,15 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - OTA recebe instalar agora/depois e rollback automático em falha de aplicação.
 - Direct recebe gatilho por atividade RF real para D-Star/DMR mantendo pareamento e criptografia.
 - VPS WartyWallaby: regressões Python/Shell/JS e backend Go passaram; a compilação Direct não pôde ser executada nessa VPS porque o Go 1.19 não possui `crypto/ecdh`. O gate oficial usa Go 1.24 no CI.
+
+
+## 2026-09-22 — organização documental e governança permanente
+- Criado rollback `backup/0.3.20-pre-doc-governance-20260922` antes da organização.
+- Registrados **ARCH-006**, **REL-017** e **TEST-008**.
+- Baseline aprovado passa a ser explicitamente protegido; DMR simplex funcional não pode ser alterado para corrigir duplex sem necessidade direta.
+- Reforçada validação por SentinelX/VPS quando aplicável, GitHub/CI, plugins/conectores e fontes oficiais, sem promover SW/VPS para HW.
+- `README.md` foi atualizado do estado obsoleto 0.1.1 para o ciclo real 0.3.20-alpha.
+- `PU2PNY-OS_START_HERE.md` e `PU2PNY-OS_PROJECT_INSTRUCTIONS.md` foram consolidados com as regras permanentes atuais.
+- Criado `docs/README.md` para separar fontes canônicas de documentos históricos/técnicos.
+- Documentos antigos não foram apagados por idade: permanecem úteis para regressão, auditoria e rastreabilidade.
+- Nenhum teste físico é promovido por esta alteração documental.
