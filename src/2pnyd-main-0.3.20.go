@@ -2000,7 +2000,7 @@ func currentDStarLocalModule() string {
 		parts:=strings.SplitN(line,"=",2)
 		if strings.TrimSpace(parts[0])!="Module" { continue }
 		m:=strings.ToUpper(strings.TrimSpace(parts[1]))
-		if len(m)==1&&m[0]>='A'&&m[0]<='E' { return m }
+		if len(m)==1&&m[0]>='A'&&m[0]<='D' { return m }
 	}
 	return "B"
 }
@@ -2210,10 +2210,10 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 	if in.Protocol=="DSTAR" {
 		if in.LocalModule=="" {
 			in.LocalModule=strings.ToUpper(strings.TrimSpace(cfg.DStarLocalModule))
-			if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'E' { in.LocalModule=currentDStarLocalModule() }
+			if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'D' { in.LocalModule=currentDStarLocalModule() }
 		}
-		if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'E' {
-			writeJSON(w,400,map[string]any{"error":"selecione módulo local D-Star A-E"});return
+		if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'D' {
+			writeJSON(w,400,map[string]any{"error":"selecione módulo local D-Star A-D"});return
 		}
 	}
 	if in.ColorCode < 0 || in.ColorCode > 15 {
@@ -2313,7 +2313,7 @@ func protocolProfilesHandler(w http.ResponseWriter, r *http.Request) {
 	in.Protocol=strings.ToUpper(strings.TrimSpace(in.Protocol));in.UseMode=strings.ToLower(strings.TrimSpace(in.UseMode));in.ESSID=strings.TrimSpace(in.ESSID);in.LocalModule=strings.ToUpper(strings.TrimSpace(in.LocalModule))
 	if in.Protocol=="DSTAR" {
 		if in.LocalModule=="" { in.LocalModule="B" }
-		if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'E' { writeJSON(w,400,map[string]any{"error":"módulo local D-Star deve ser A-E"});return }
+		if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'D' { writeJSON(w,400,map[string]any{"error":"módulo local D-Star deve ser A-D"});return }
 	}
 	if in.Protocol=="DMR" && in.ESSID!="" && !regexp.MustCompile(`^(0[1-9]|[1-9][0-9])$`).MatchString(in.ESSID) { writeJSON(w,400,map[string]any{"error":"identificação DMR deve ser 01 a 99"});return }
 	if in.Protocol!="DMR" { in.ESSID="" }
