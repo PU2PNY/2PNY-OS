@@ -793,5 +793,5 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **HW:** PENDENTE para D-Star RF real, troca de refletor por rádio, DMR duplex áudio/TX/RX, Nextion física/COMOK/Moderno V2, S-meter/RSSI/BER reais e Direct entre dois hotspots.
 - **Baseline obrigatório:** DMR simplex TX/RX aprovado e YSF/C4FM simplex reportado funcionando perfeitamente não podem regredir.
 - **Falha D-Star confirmada na 0.3.19:** painel aplicava corretamente mudança manual de refletor (XLX300D comprovado); comando de rádio para troca alterava apenas estado visual sem confirmar execução. PROTO-032 corrige sem promover HW PASS antes do novo teste.
-- **Módulo local D-Star:** padrão de nova configuração B, seletor A–E; upgrades preservam configuração anterior.
+- **Módulo local D-Star:** padrão de nova configuração B, seletor A–D; upgrades preservam configuração anterior.
 - **Gate de imagem:** source → staging → ARM64 → XZ/SHA-256 → REL-015 preflight → `validate-0.3.20-image.sh` → prerelease. Link só pode ser divulgado após PASS real dessa cadeia.
