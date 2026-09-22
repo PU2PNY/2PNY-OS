@@ -615,3 +615,22 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 
 **Evidência de release 0.3.16:** GitHub Actions run `35669972163`, commit da imagem `1c5ec75548374ac13be6948fc86eae46bd9eeddf`, artefato ARM64/XZ e validação final em PASS. `TEST-REL-0316-D` e todos os estados HW continuam pendentes.
+
+## Casos 0.3.17-alpha — D-Star RX/comandos e timezone
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-PROTO-024A | PROTO-024 | aplicar D-Star com refletor remoto módulo D | MMDVMHost permanece local `Module=C`; gateway `Band=C`; refletor remoto termina em `D` | PENDENTE SW/HW |
+| TEST-PROTO-024B | PROTO-024 | tráfego D-Star recebido do refletor | DStarGateway entrega UDP ao MMDVMHost:20011 e MMDVM transmite RF | PENDENTE HW |
+| TEST-PROTO-024C | PROTO-024 | DR/URCALL `_______I` | gateway responde com status/info por RF | PENDENTE HW |
+| TEST-PROTO-024D | PROTO-024 | DR/URCALL `_______E` | echo local retorna ao rádio | PENDENTE HW |
+| TEST-PROTO-024E | PROTO-024 | DR/URCALL `_______U`, `_______L` | unlink/link default funcionam e status é anunciado | PENDENTE HW |
+| TEST-PROTO-024F | PROTO-024 | comando `XLXnnn<mod>L` | troca refletor/módulo remoto sem mudar módulo local C | PENDENTE HW |
+| TEST-LIVE-017A | LIVE-017 | chamada D-Star NETWORK→RF | Ao Vivo mostra D-Star/Internet→RF enquanto o modem transmite; sem RSSI/BER inventados | PENDENTE SW/HW |
+| TEST-UI-032A | UI-032 | painel D-Star | estado/link e ajuda de comandos aparecem sem declarar conexão falsa | PENDENTE SW/HW |
+| TEST-SEC-024A | SEC-024 | aplicar `America/Sao_Paulo` | helper aplica, confirma Timezone e UI atualiza sem terminal | PENDENTE SW/HW |
+| TEST-SEC-024B | SEC-024 | timezone inválido/falha helper | mantém zona anterior e devolve causa real | PENDENTE SW/HW |
+| TEST-REL-0317-A | REL-010 | regressões/source | baseline 0.3.16 + testes focais passam | PENDENTE CI |
+| TEST-REL-0317-B | REL-010 | build ARM64/XZ/SHA | artefato íntegro | PENDENTE CI |
+| TEST-REL-0317-C | REL-010 | imagem montada | D-Star local C/comandos/timezone + baselines presentes | PENDENTE CI |
+| TEST-REL-0317-D | REL-010 | Raspberry Pi + MMDVM | validação física D-Star e timezone | PENDENTE HW |
