@@ -63,8 +63,9 @@ type Config struct {
 	NetworkKind     string `json:"network_kind,omitempty"`
 	ColorCode       int    `json:"color_code,omitempty"`
 	DMRSlot         string `json:"dmr_slot,omitempty"`
-	XLXModule       string `json:"xlx_module,omitempty"`
-	ESSID           string `json:"essid,omitempty"`
+	XLXModule        string `json:"xlx_module,omitempty"`
+	DStarLocalModule string `json:"dstar_local_module,omitempty"`
+	ESSID            string `json:"essid,omitempty"`
 	BMAPIConfigured bool   `json:"bm_api_configured,omitempty"`
 	NetworkState    string `json:"network_state,omitempty"`
 	CreatedAt       string `json:"created_at"`
@@ -1988,6 +1989,22 @@ func serviceActive(name string) bool {
 	return exec.Command("systemctl", "is-active", "--quiet", name).Run() == nil
 }
 
+func currentDStarLocalModule() string {
+	b,err:=os.ReadFile(filepath.Join(dataDir,"mmdvm","MMDVM-Host.ini"))
+	if err!=nil { return "B" }
+	section:=""
+	for _,raw:=range strings.Split(string(b),"\n") {
+		line:=strings.TrimSpace(raw)
+		if strings.HasPrefix(line,"[")&&strings.HasSuffix(line,"]") { section=strings.TrimSpace(line[1:len(line)-1]);continue }
+		if section!="D-Star"||strings.HasPrefix(line,"#")||!strings.Contains(line,"=") { continue }
+		parts:=strings.SplitN(line,"=",2)
+		if strings.TrimSpace(parts[0])!="Module" { continue }
+		m:=strings.ToUpper(strings.TrimSpace(parts[1]))
+		if len(m)==1&&m[0]>='A'&&m[0]<='E' { return m }
+	}
+	return "B"
+}
+
 func recentActivity() []string {
 	out, err := exec.Command("journalctl", "-u", "2pny-mmdvmhost.service", "-n", "40", "--no-pager", "-o", "short-iso").Output()
 	if err != nil {
@@ -2145,6 +2162,7 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 		ServerPort    int    `json:"server_port"`
 		NetworkKind   string `json:"network_kind"`
 		Module        string `json:"module"`
+		LocalModule   string `json:"dstar_local_module"`
 		ColorCode     int    `json:"color_code"`
 		DMRSlot       string `json:"dmr_slot"`
 		ESSID          string `json:"essid"`
@@ -2159,6 +2177,7 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 	in.ServerAddress = strings.TrimSpace(in.ServerAddress)
 	in.NetworkKind = strings.TrimSpace(in.NetworkKind)
 	in.Module = strings.ToUpper(strings.TrimSpace(in.Module))
+	in.LocalModule = strings.ToUpper(strings.TrimSpace(in.LocalModule))
 	in.DMRSlot = strings.TrimSpace(in.DMRSlot)
 	in.ESSID = strings.TrimSpace(in.ESSID)
 	in.Password = strings.TrimSpace(in.Password)
@@ -2172,7 +2191,7 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if in.Protocol == "DSTAR" && (len(in.Module) != 1 || in.Module[0] < 'A' || in.Module[0] > 'Z') {
-		writeJSON(w, 400, map[string]any{"error": "selecione módulo D-Star A-Z"})
+		writeJSON(w, 400, map[string]any{"error": "selecione módulo remoto D-Star A-Z"})
 		return
 	}
 	if in.Protocol == "DMR" && in.ESSID != "" && !regexp.MustCompile(`^(0[1-9]|[1-9][0-9])$`).MatchString(in.ESSID) {
@@ -2186,6 +2205,15 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 	if b, e := os.ReadFile(configFile); e != nil || json.Unmarshal(b, &cfg) != nil {
 		writeJSON(w, 409, map[string]any{"error": "configuração inicial ausente"})
 		return
+	}
+	if in.Protocol=="DSTAR" {
+		if in.LocalModule=="" {
+			in.LocalModule=strings.ToUpper(strings.TrimSpace(cfg.DStarLocalModule))
+			if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'E' { in.LocalModule=currentDStarLocalModule() }
+		}
+		if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'E' {
+			writeJSON(w,400,map[string]any{"error":"selecione módulo local D-Star A-E"});return
+		}
 	}
 	if in.ColorCode < 0 || in.ColorCode > 15 {
 		in.ColorCode = cfg.ColorCode
@@ -2204,6 +2232,7 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	changed := strings.ToUpper(cfg.Protocol) != in.Protocol || cfg.ServerName != in.ServerName || cfg.ServerAddress != in.ServerAddress ||
 		cfg.ServerPort != in.ServerPort || cfg.NetworkKind != in.NetworkKind || cfg.XLXModule != in.Module ||
+		(in.Protocol=="DSTAR" && strings.ToUpper(strings.TrimSpace(cfg.DStarLocalModule))!=in.LocalModule) ||
 		(in.Protocol == "DMR" && (cfg.ColorCode != in.ColorCode || cfg.DMRSlot != in.DMRSlot || cfg.ESSID != in.ESSID || in.Password != ""))
 	if !changed {
 		writeJSON(w, 200, map[string]any{"ok": true, "changed": false})
@@ -2211,7 +2240,9 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	applyMu.Lock()
 	defer applyMu.Unlock()
-	args := []string{in.Protocol, in.ServerName, in.ServerAddress, strconv.Itoa(in.ServerPort), in.Password, cfg.UseMode, strconv.Itoa(in.ColorCode), in.DMRSlot, in.Module, in.ESSID, in.NetworkKind, ""}
+	options:=""
+	if in.Protocol=="DSTAR" { options="DSTAR_LOCAL="+in.LocalModule }
+	args := []string{in.Protocol, in.ServerName, in.ServerAddress, strconv.Itoa(in.ServerPort), in.Password, cfg.UseMode, strconv.Itoa(in.ColorCode), in.DMRSlot, in.Module, in.ESSID, in.NetworkKind, options}
 	out, err := exec.Command("/usr/local/sbin/2pny-protocol-network-apply", args...).CombinedOutput()
 	if err != nil {
 		msg := strings.TrimSpace(string(out))
@@ -2227,6 +2258,7 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 	cfg.ServerPort = in.ServerPort
 	cfg.NetworkKind = in.NetworkKind
 	cfg.XLXModule = in.Module
+	if in.Protocol=="DSTAR" { cfg.DStarLocalModule=in.LocalModule }
 	cfg.ColorCode = in.ColorCode
 	cfg.DMRSlot = in.DMRSlot
 	cfg.ESSID = in.ESSID
@@ -2242,7 +2274,7 @@ func protocolApplyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	profile := map[string]any{"protocol":in.Protocol,"rx_hz":cfg.RXHz,"tx_hz":cfg.TXHz,"use_mode":cfg.UseMode,
 		"server_name":cfg.ServerName,"server_address":cfg.ServerAddress,"server_port":cfg.ServerPort,
-		"network_kind":cfg.NetworkKind,"xlx_module":cfg.XLXModule,"color_code":cfg.ColorCode,"dmr_slot":cfg.DMRSlot,"essid":cfg.ESSID}
+		"network_kind":cfg.NetworkKind,"xlx_module":cfg.XLXModule,"dstar_local_module":cfg.DStarLocalModule,"color_code":cfg.ColorCode,"dmr_slot":cfg.DMRSlot,"essid":cfg.ESSID}
 	if raw,e:=json.Marshal(profile); e==nil {
 		cmd:=exec.Command("/usr/local/sbin/2pny-protocol-profiles","save-json");cmd.Stdin=bytes.NewReader(raw);_ = cmd.Run()
 	}
@@ -2270,13 +2302,18 @@ func protocolProfilesHandler(w http.ResponseWriter, r *http.Request) {
 		ServerPort int `json:"server_port"`
 		NetworkKind string `json:"network_kind"`
 		Module string `json:"module"`
+		LocalModule string `json:"dstar_local_module"`
 		ColorCode int `json:"color_code"`
 		DMRSlot string `json:"dmr_slot"`
 		ESSID string `json:"essid"`
 		Password string `json:"password"`
 	}
 	if json.NewDecoder(http.MaxBytesReader(w,r.Body,16<<10)).Decode(&in)!=nil { writeJSON(w,400,map[string]any{"error":"perfil inválido"});return }
-	in.Protocol=strings.ToUpper(strings.TrimSpace(in.Protocol));in.UseMode=strings.ToLower(strings.TrimSpace(in.UseMode));in.ESSID=strings.TrimSpace(in.ESSID)
+	in.Protocol=strings.ToUpper(strings.TrimSpace(in.Protocol));in.UseMode=strings.ToLower(strings.TrimSpace(in.UseMode));in.ESSID=strings.TrimSpace(in.ESSID);in.LocalModule=strings.ToUpper(strings.TrimSpace(in.LocalModule))
+	if in.Protocol=="DSTAR" {
+		if in.LocalModule=="" { in.LocalModule="B" }
+		if len(in.LocalModule)!=1||in.LocalModule[0]<'A'||in.LocalModule[0]>'E' { writeJSON(w,400,map[string]any{"error":"módulo local D-Star deve ser A-E"});return }
+	}
 	if in.Protocol=="DMR" && in.ESSID!="" && !regexp.MustCompile(`^(0[1-9]|[1-9][0-9])$`).MatchString(in.ESSID) { writeJSON(w,400,map[string]any{"error":"identificação DMR deve ser 01 a 99"});return }
 	if in.Protocol!="DMR" { in.ESSID="" }
 	if in.Action=="activate" {
@@ -2293,7 +2330,7 @@ func protocolProfilesHandler(w http.ResponseWriter, r *http.Request) {
 	if in.UseMode=="repeater" { _,txHz,e=normalizeFrequency(in.TX);if e!=nil { writeJSON(w,400,map[string]any{"error":"TX: "+e.Error()});return } } else { in.UseMode="hotspot" }
 	profile:=map[string]any{"protocol":in.Protocol,"rx_hz":rxHz,"tx_hz":txHz,"use_mode":in.UseMode,
 		"server_name":strings.TrimSpace(in.ServerName),"server_address":strings.TrimSpace(in.ServerAddress),"server_port":in.ServerPort,
-		"network_kind":strings.TrimSpace(in.NetworkKind),"xlx_module":strings.ToUpper(strings.TrimSpace(in.Module)),
+		"network_kind":strings.TrimSpace(in.NetworkKind),"xlx_module":strings.ToUpper(strings.TrimSpace(in.Module)),"dstar_local_module":in.LocalModule,
 		"color_code":in.ColorCode,"dmr_slot":in.DMRSlot,"essid":in.ESSID}
 	raw,_:=json.Marshal(profile);cmd:=exec.Command("/usr/local/sbin/2pny-protocol-profiles","save-json");cmd.Stdin=bytes.NewReader(raw)
 	out,err:=cmd.CombinedOutput();if err!=nil { writeJSON(w,503,map[string]any{"error":strings.TrimSpace(string(out))});return }
