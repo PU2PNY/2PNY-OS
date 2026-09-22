@@ -709,3 +709,6 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 | TEST-ARCH-005A | ARCH-005 | consultar metadata do repositório no GitHub | nome canônico retornado é `PU2PNY/PU2PNY-OS` | **PENDENTE — renomeação administrativa ainda precisa ser confirmada** | DOC/GitHub |
 | TEST-UI-035A | UI-035 | validar fontes e overlay gerado | toda página HTML com `<head>` contém exatamente `<title>PU2PNY-OS</title>`; JS comum reforça `document.title='PU2PNY-OS'` | PENDENTE CI | SW |
+
+
+| TEST-UI-039 | UI-036 | próxima versão carrega logotipo oficial do painel | ativo local existe, carrega sem dependência externa, mantém fallback `PU2PNY-OS` e não altera layout/funcionalidade | PENDENTE próxima versão |

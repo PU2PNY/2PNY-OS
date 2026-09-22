@@ -652,3 +652,9 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Fontes HTML atuais, JS comum e etapa de preparação da imagem passam a normalizar o título; páginas herdadas também ficam cobertas pelo build.
 - Adicionados TEST-ARCH-005A e TEST-UI-035A.
 - Nenhuma alteração em RF, modem, MMDVMHost, DMRGateway, gateways de protocolo, rede ou boot.
+
+
+### 2026-09-22 — identidade visual futura
+- Criado **UI-036**: a partir da versão posterior à 0.3.19-alpha, o painel deve incorporar o logotipo oficial fornecido pelo mantenedor.
+- O ativo **não** será introduzido na 0.3.19-alpha durante o build/validação para evitar ampliar novamente o escopo desta release.
+- Criado **TEST-UI-039** para presença do ativo, fallback, carregamento local e ausência de regressão visual.

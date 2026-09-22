@@ -165,7 +165,8 @@ grep -Fq 'Nenhuma segunda rede encontrada' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'Canal em uso:' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'Conexão via cabo' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'Caminho da conexão' "$ROOT/usr/share/2pny/internet.html"
-grep -Fq 'PU2PNY — Protocolos' "$ROOT/usr/share/2pny/hotspot.html"
+grep -Fq '<title>PU2PNY-OS</title>' "$ROOT/usr/share/2pny/hotspot.html"
+grep -Fq '<h1>Protocolos</h1>' "$ROOT/usr/share/2pny/hotspot.html"
 grep -Fq 'DUP+/DUP−' "$ROOT/usr/share/2pny/hotspot.html"
 grep -Fq 'TOT restante' "$ROOT/usr/share/2pny/dashboard.html"
 grep -Fq 'expertLiveSection' "$ROOT/usr/share/2pny/expert.html"
@@ -252,10 +253,10 @@ test "$CODE" = "302"
 # Then simulate completed onboarding only for route validation.
 touch "$ROOT/var/lib/2pny/provisioned"
 curl -fsS http://127.0.0.1/dashboard | grep -Fq 'id="liveBox"'
-curl -fsS http://127.0.0.1/hotspot | grep -Fq '<h1>Hotspot / Protocolos</h1>'
+curl -fsS http://127.0.0.1/hotspot | grep -Fq '<h1>Protocolos</h1>'
 curl -fsS http://127.0.0.1/display | grep -Fq '<h1>Display</h1>'
 rm -f "$ROOT/var/lib/2pny/provisioned" /tmp/pu2pny-dashboard-unprovisioned
-curl -fsS http://127.0.0.1/ui-common-0.3.0.js | grep -Fq "['/hotspot','Hotspot / Protocolos','hotspot']"
+curl -fsS http://127.0.0.1/ui-common-0.3.0.js | grep -Fq "['/hotspot','Protocolos','hotspot']"
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'will_reboot'
 curl -fsS http://127.0.0.1/api/network/country | grep -Fq '"country":"BR"'
 curl -fsS http://127.0.0.1/flags/4x3/br.svg | grep -Eq '<svg|<SVG'
@@ -431,7 +432,7 @@ strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX status voice re
 echo '[14c/15] 0.3.8 physical-feedback corrections represented'
 grep -Fq 'wifiChannelGraph' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'data-showpass' "$ROOT/usr/share/2pny/internet.html"
-grep -Fq 'Hotspot / Protocolos' "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
+grep -Fq "['/hotspot','Protocolos','hotspot']" "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
 grep -Fq '/protocols/embed' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/protocols/embed'
 grep -Fq 'Pareie um PU2PNY antes de chamar' "$ROOT/usr/share/2pny/direct.html"
 grep -Fq 'Etapa 1/5' "$ROOT/usr/share/2pny/aprs.html"
@@ -706,10 +707,10 @@ test "$CODE" = "302"
 # Then simulate completed onboarding only for route validation.
 touch "$ROOT/var/lib/2pny/provisioned"
 curl -fsS http://127.0.0.1/dashboard | grep -Fq 'id="liveBox"'
-curl -fsS http://127.0.0.1/hotspot | grep -Fq '<h1>Hotspot / Protocolos</h1>'
+curl -fsS http://127.0.0.1/hotspot | grep -Fq '<h1>Protocolos</h1>'
 curl -fsS http://127.0.0.1/display | grep -Fq '<h1>Display</h1>'
 rm -f "$ROOT/var/lib/2pny/provisioned" /tmp/pu2pny-dashboard-unprovisioned
-curl -fsS http://127.0.0.1/ui-common-0.3.0.js | grep -Fq "['/hotspot','Hotspot / Protocolos','hotspot']"
+curl -fsS http://127.0.0.1/ui-common-0.3.0.js | grep -Fq "['/hotspot','Protocolos','hotspot']"
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'will_reboot'
 curl -fsS http://127.0.0.1/api/network/country | grep -Fq '"country":"BR"'
 curl -fsS http://127.0.0.1/flags/4x3/br.svg | grep -Eq '<svg|<SVG'
@@ -885,7 +886,7 @@ strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, XLX status voice re
 echo '[14c/15] 0.3.8 physical-feedback corrections represented'
 grep -Fq 'wifiChannelGraph' "$ROOT/usr/share/2pny/internet.html"
 grep -Fq 'data-showpass' "$ROOT/usr/share/2pny/internet.html"
-grep -Fq 'Hotspot / Protocolos' "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
+grep -Fq "['/hotspot','Protocolos','hotspot']" "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
 grep -Fq '/protocols/embed' "$ROOT/usr/local/bin/2pnyd" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/protocols/embed'
 grep -Fq 'Pareie um PU2PNY antes de chamar' "$ROOT/usr/share/2pny/direct.html"
 grep -Fq 'Etapa 1/5' "$ROOT/usr/share/2pny/aprs.html"

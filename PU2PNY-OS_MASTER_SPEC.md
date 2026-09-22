@@ -1554,3 +1554,14 @@ Documentação, links novos, instruções de clone e automações novas devem us
 Em todas as páginas web do produto — painel, wizard, provisionamento, páginas operacionais e telas auxiliares — o título da aba do navegador deve ser exatamente `PU2PNY-OS`.
 Não incluir versão, nome da página, protocolo, estado, indicativo ou outro sufixo/prefixo no `<title>`.
 A regra deve ser aplicada de forma centralizada no build/runtime e coberta por teste de regressão.
+
+
+### UI-036 — Logotipo oficial no painel a partir da próxima versão
+A partir da versão posterior à 0.3.19-alpha, o painel web deve incorporar o logotipo oficial fornecido pelo mantenedor em 2026-09-22.
+- não incluir o novo ativo na 0.3.19-alpha já em validação;
+- armazenar o arquivo de imagem como ativo próprio do PU2PNY-OS no repositório, sem dependência externa;
+- usar a mesma identidade visual em tema claro e escuro, preservando contraste e legibilidade;
+- não deformar, recortar de forma destrutiva nem alterar silenciosamente a identidade do logotipo;
+- otimizar dimensões/peso para não degradar carregamento do painel nem aumentar gravações no SD;
+- definir fallback textual `PU2PNY-OS` caso o ativo não carregue;
+- cobrir presença do ativo, referência válida e ausência de regressão visual/funcional em teste.
