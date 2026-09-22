@@ -1327,6 +1327,7 @@ Contrato:
 - o módulo **remoto** A–Z do refletor é independente e aparece somente no destino/link do refletor; nunca deve reconfigurar o módulo local;
 - manter MMDVMHost `GatewayPort=20010` e `LocalPort=20011`; DStarGateway HB escuta `20010` e escreve para `127.0.0.1:20011`;
 - `ReflectorReconnect` não pode ser `Fixed` quando o operador deve controlar o link pelo rádio;
+- para o DStarGateway efetivamente embarcado/pinado neste release, `[Hosts Files]` usa a chave `ReloadTime`; esta regra corrige e substitui a referência anterior a `ReloadTimer` em PROTO-023;
 - comandos D-Star padrão pelo URCALL/DR devem funcionar: `_______I` informação/status, `_______E` echo, `_______U` unlink, `_______L` link do default e `REF/DCS/XRF/XLXnnn<mod>L` para link/troca de módulo;
 - após comando de link/unlink/troca, o gateway deve emitir a resposta/voz de status nativa quando os arquivos AMBE correspondentes estiverem presentes; não inventar áudio se o pack não existir;
 - voltar o destino do rádio para `CQCQCQ` continua sendo operação normal após comandos;
