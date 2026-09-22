@@ -105,7 +105,7 @@ for _ in {1..100}; do
   sleep .2
 done
 test "$OK" = 1 || { cat /tmp/pu2pnyd-0320.log; exit 1; }
-curl -fsS http://127.0.0.1/api/status | grep -Fq ""version":"$VERSION""
+curl -fsS http://127.0.0.1/api/status | grep -Fq "\"version\":\"$VERSION\""
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.20-alpha'
 kill "$PID"; wait "$PID" 2>/dev/null || true; PID=""
 
