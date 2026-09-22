@@ -586,3 +586,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Diagnóstico de comandos: `ReflectorReconnect=Fixed` bloqueia o handler de comandos `L/U` no DStarGateway embarcado. O código upstream já implementa `I`, `E`, `L`, `U` e troca de refletor/módulo via URCALL; a correção habilitará esse caminho existente.
 - O fuso continua HW FAIL; o fluxo será corrigido para esperar confirmação real do helper privilegiado e do Timezone aplicado.
 - Nenhuma outra página, protocolo, rede, display, DMR, APRS, Direct, RF, frequência, offset ou baud entra neste ciclo.
+
+## 2026-09-22 — comandos administrativos D-Star pelo rádio adicionados ao plano 0.3.17
+- Registrado **SEC-025**.
+- Definidos comandos `PNYARM`, `PNYOFF`, `PNYRBT`, `PNYDMR`, `PNYDST`, `PNYYSF`, `PNYP25`, `PNYNXD` e `PNYPOC`.
+- Ações administrativas são owner-only pelo MYCALL1 configurado e exigem janela armada de 30 s, consumida uma vez.
+- DStarGateway fica responsável apenas por reconhecer o URCALL e escrever request local; helper privilegiado separado executa allowlist de poweroff/reboot/activate-profile.
+- Não será criado mecanismo de comando arbitrário, shell remoto ou sudo genérico via RF.
+- Poweroff software não é apresentado como corte físico de alimentação da Raspberry Pi.
