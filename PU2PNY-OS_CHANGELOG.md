@@ -694,3 +694,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Criado `TEST-BUILD-0319-DSTAR-HOSTS`.
 - Rollback: `backup/0.3.19-pre-dstar-hostfile-fix-20260922`.
 - Nenhum parâmetro RF, baud, frequência, offset, DMR, YSF ou rede foi alterado.
+
+
+### 2026-09-22 — 0.3.19-alpha publicada com REL-015
+- Run `35760337205` concluiu source, staged source, ARM64, XZ/SHA-256, **preflight REL-015**, validador final, artefato e publish em PASS.
+- O catálogo `DStar_Hosts.json` e os assets nativos `en_GB.ambe/.indx` foram confirmados na imagem antes do validador final.
+- Publicada prerelease `v0.3.19-alpha` no commit `c4db3e0098e2af1cd0ec1504e8946d30ac8c6391`.
+- Imagem: `PU2PNY-OS-0.3.19-alpha-arm64.img.xz`, 597725788 bytes.
+- SHA-256: `5f14e62b5811129f42f6dd9b7c637cfaa0944a370db42637abc56d1ac62f2355`.
+- Estado permanece **ALPHA/HW-TEST**; CI não substitui validação física.
