@@ -131,4 +131,18 @@ for marker in ('PU2PNY_DSTAR_VOICE_ASSETS_0318',
                "test -s /usr/local/share/dstargateway.d/en_GB.ambe",
                "test -s /usr/local/share/dstargateway.d/en_GB.indx"):
     assert marker in prep18,marker
+# REL-015: every generated image must pass a mounted read-only prevalidation
+# before the version-specific final validator is allowed to run.
+workflow=text(".github/workflows/0.3.19-build-release.yml")
+preflight=text("ci/preflight-image.sh")
+assert "Pre-validate generated image" in workflow
+assert workflow.index("Pre-validate generated image") < workflow.index("Validate final image")
+for gate in ("PU2PNY_PREVALIDATION_OK",
+             "en_GB.ambe",
+             "en_GB.indx",
+             "DMRGateway",
+             "<title>PU2PNY-OS</title>",
+             "xz -t"):
+    assert gate in preflight,gate
+
 print("TEST_0319_REGRESSIONS_OK")
