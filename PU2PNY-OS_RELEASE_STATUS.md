@@ -637,3 +637,27 @@ Falhas/ajustes observados:
 - D-Star atual: identidade local `Band=C`, independente do módulo remoto; `ReloadTimer` e `DStar_Hosts.json` customizado conforme o gateway embarcado.
 - Nextion via modem: caminho nativo MMDVMHost/`Port=modem` restaurado no código e na imagem.
 - **HW PENDENTE:** nenhuma das correções 0.3.16 é promovida a HW PASS até reteste em Raspberry Pi + MMDVM + Nextion/rede real. DMR TX/RX permanece baseline obrigatória de regressão.
+
+## Abertura 0.3.17-alpha — feedback HW da 0.3.16 — 2026-09-21
+
+**Estado:** correção focal em andamento. Não publicada.
+
+### Baseline congelada
+O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi citado neste feedback. Esses componentes não entram no escopo da 0.3.17.
+
+### Defeitos observados
+- **D-Star rede/conexão:** DStarGateway conecta e recebe da rede — **HW PASS parcial**.
+- **D-Star rede→RF:** Hotspot não mostra a recepção e a MMDVM não transmite o tráfego recebido da rede — **HW FAIL**.
+- **Comandos D-Star via rádio/DR:** precisam funcionar `I`, `E`, `U`, link do default e link/troca de módulo/refletor, com voz/status do gateway — **HW PENDENTE/FAIL funcional**.
+- **Fuso horário:** continua sem permitir aplicar a zona selecionada — **HW FAIL**.
+
+### Diagnóstico de código antes da correção
+- 0.3.16 configurava DStarGateway local como `Band=C`, mas ainda escrevia o **módulo remoto selecionado** em `MMDVMHost [D-Star] Module=`, criando identidade local divergente no loopback.
+- 0.3.16 usava `ReflectorReconnect=Fixed`; no DStarGateway embarcado, o handler retorna antes de processar comandos de link/unlink quando reconnect é Fixed.
+- O DStarGateway embarcado possui suporte nativo aos comandos URCALL `_______I` e `_______E`, e ao handler de `L/U`; a correção deve habilitar esse caminho, não criar protocolo paralelo.
+- Timezone usa helper/path one-shot, mas o teste HW confirma que escrever o request ainda não resulta em mudança aplicada.
+
+### Controle de mudança
+- Rollback: `backup/0.3.16-pre-0.3.17-20260921`.
+- Branch: `pu2pny-os-0.3.17-alpha`.
+- Escopo: PROTO-024, LIVE-017, UI-032, SEC-024 e gates REL-010.
