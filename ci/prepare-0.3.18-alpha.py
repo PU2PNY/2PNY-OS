@@ -62,6 +62,23 @@ test -s /usr/local/share/dstargateway.d/en_GB.indx
 """
     bs=bs.replace(binary_install,voice_block,1)
 
+
+# PU2PNY_DSTAR_HOSTS_OVERLAY_0318
+# DStarGateway's Data directory also needs the same pinned DStar_Hosts.json
+# already seeded by the inherited catalog chain. Stage it in the rootfs
+# overlay before image creation; never patch a finished image.
+host_candidates=[
+    root/"rootfs-overlay/var/lib/2pny/hosts/DStar_Hosts.json",
+    root/"rootfs-overlay/var/lib/2pny/hostfiles/DStar_Hosts.json",
+]
+host_src=next((p for p in host_candidates if p.exists() and p.stat().st_size>1000),None)
+if host_src is None:
+    raise SystemExit("0.3.18: staged DStar_Hosts.json catalog missing or too small")
+host_dst=root/"rootfs-overlay/usr/local/share/dstargateway.d/DStar_Hosts.json"
+host_dst.parent.mkdir(parents=True,exist_ok=True)
+shutil.copy2(host_src,host_dst)
+os.chmod(host_dst,0o644)
+
 if "PU2PNY_DSTAR_RADIO_ADMIN_0318" not in bs:
     lines=bs.splitlines()
     # Patch the pinned DStarGateway source before its own compile step. The old
@@ -126,6 +143,8 @@ assert "PU2PNY_DSTAR_VOICE_ASSETS_0318" in builder.read_text()
 assert "find Data -maxdepth 1 -type f" in builder.read_text()
 assert "test -s /usr/local/share/dstargateway.d/en_GB.ambe" in builder.read_text()
 assert "test -s /usr/local/share/dstargateway.d/en_GB.indx" in builder.read_text()
+assert "PU2PNY_DSTAR_HOSTS_OVERLAY_0318" in Path(__file__).read_text()
+assert (root/"rootfs-overlay/usr/local/share/dstargateway.d/DStar_Hosts.json").stat().st_size>1000
 hotspot=(root/"rootfs-overlay/usr/share/2pny/hotspot.html").read_text()
 for cmd in ("PNYARM","PNYOFF","PNYRBT","PNYDMR","PNYDST","PNYYSF","PNYP25","PNYNXD","PNYPOC"):
     assert cmd in hotspot,cmd
