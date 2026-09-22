@@ -724,3 +724,6 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 |---|---|---|---|---|
 | TEST-REL-015A | REL-015 | imagem ARM64 gerada antes do validador final | pré-validação monta a raiz em RO e confirma XZ/SHA, identidade, arquivos essenciais, título canônico, DMR baseline e assets D-Star exigidos | PENDENTE CI |
 | TEST-REL-015B | REL-015 | qualquer gate da pré-validação falha | validador final e publicação não executam; causa é corrigida no fonte/builder e a imagem é reconstruída | PENDENTE CI |
+
+
+| TEST-BUILD-0319-DSTAR-HOSTS | REL-011 / PROTO-024 / REL-015 | catálogo D-Star na imagem antes do validador | o catálogo pinado staged é copiado para `/usr/local/share/dstargateway.d/DStar_Hosts.json`, >1000 bytes, e o preflight bloqueia se faltar | PENDENTE CI |
