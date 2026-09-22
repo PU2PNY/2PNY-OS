@@ -645,3 +645,15 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0318-B | REL-011 | ARM64/XZ/SHA-256 | artefato íntegro | PENDENTE CI |
 | TEST-REL-0318-C | REL-011 | imagem montada | D-Star/voz/timezone + baseline congelada presentes | PENDENTE CI |
 | TEST-REL-0318-D | REL-011 | Raspberry Pi + MMDVM | D-Star rede→RF, I/E/U/L/link, Hotspot e timezone | PENDENTE HW |
+
+## Casos SEC-025 adicionados à 0.3.18-alpha
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-SEC-025A | SEC-025 | `PNYARM` por MYCALL configurado | abre janela one-shot de 30 s e registra origem | PENDENTE SW/HW |
+| TEST-SEC-025B | SEC-025 | `PNYRBT`/`PNYOFF` sem armamento | recusa; nenhum reboot/poweroff | PENDENTE SW/HW |
+| TEST-SEC-025C | SEC-025 | `PNYRBT` após `PNYARM` | agenda reinício seguro, consome armamento | PENDENTE SW/HW |
+| TEST-SEC-025D | SEC-025 | `PNYOFF` após `PNYARM` | agenda shutdown seguro, consome armamento | PENDENTE SW/HW |
+| TEST-SEC-025E | SEC-025 | comando de perfil após armamento | ativa somente perfil salvo/validado correspondente | PENDENTE SW/HW |
+| TEST-SEC-025F | SEC-025 | MYCALL diferente do callsign configurado | recusa sem ação privilegiada | PENDENTE SW/HW |
+| TEST-REL-0318-E | REL-012 | imagem montada | helper/path unit presentes e dstargateway contém handler SEC-025 compilado | PENDENTE CI |
