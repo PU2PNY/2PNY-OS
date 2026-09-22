@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""Apply the focused PU2PNY-OS 0.3.19-alpha maintenance overlay.
+
+Everything not explicitly changed by REL-013 stays inherited from 0.3.18.
+"""
+from pathlib import Path
+import os, shutil, subprocess, sys
+
+root=Path(sys.argv[1]).resolve()
+repo=Path(__file__).resolve().parents[1]
+version="0.3.19-alpha"
+
+def install(src,dst,mode=0o644):
+    target=root/dst
+    target.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(repo/src,target)
+    os.chmod(target,mode)
+
+install("src/2pnyd-main-0.3.19.go","src/2pnyd/main.go")
+install("src/ui-common-0.3.19.js","rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js")
+install("src/internet-0.3.19.html","rootfs-overlay/usr/share/2pny/internet.html")
+install("src/hotspot-0.3.19.html","rootfs-overlay/usr/share/2pny/hotspot.html")
+install("src/dashboard-0.3.19.html","rootfs-overlay/usr/share/2pny/dashboard.html")
+install("src/expert-0.3.19.html","rootfs-overlay/usr/share/2pny/expert.html")
+install("src/system-0.3.19.html","rootfs-overlay/usr/share/2pny/system.html")
+install("src/display-0.3.19.html","rootfs-overlay/usr/share/2pny/display.html")
+install("src/2pny-timezone-apply-0.3.19.py","rootfs-overlay/usr/local/sbin/2pny-timezone-apply",0o755)
+install("src/2pny-display-core-0.3.19.py","rootfs-overlay/usr/local/sbin/2pny-display-core",0o755)
+install("src/2pny-display-online-detect-0.3.19","rootfs-overlay/usr/local/sbin/2pny-display-online-detect",0o755)
+install("src/2pny-display-online-detect-0.3.19.service","rootfs-overlay/etc/systemd/system/2pny-display-online-detect.service")
+
+wants=root/"rootfs-overlay/etc/systemd/system/multi-user.target.wants"
+wants.mkdir(parents=True,exist_ok=True)
+link=wants/"2pny-display-online-detect.service"
+if link.exists() or link.is_symlink(): link.unlink()
+link.symlink_to("../2pny-display-online-detect.service")
+
+(root/"rootfs-overlay/etc/2pny/version").write_text(version+"\n")
+
+subprocess.run(["gofmt","-w",str(root/"src/2pnyd/main.go")],check=True)
+subprocess.run(["go","test",str(root/"src/2pnyd/main.go")],check=True)
+for p in (
+    root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply",
+    root/"rootfs-overlay/usr/local/sbin/2pny-display-core",
+):
+    subprocess.run(["python3","-m","py_compile",str(p)],check=True)
+subprocess.run(["bash","-n",str(root/"rootfs-overlay/usr/local/sbin/2pny-display-online-detect")],check=True)
+cache=root/"rootfs-overlay/usr/local/sbin/__pycache__"
+if cache.exists(): shutil.rmtree(cache)
+
+main=(root/"src/2pnyd/main.go").read_text()
+internet=(root/"rootfs-overlay/usr/share/2pny/internet.html").read_text()
+hotspot=(root/"rootfs-overlay/usr/share/2pny/hotspot.html").read_text()
+dash=(root/"rootfs-overlay/usr/share/2pny/dashboard.html").read_text()
+expert=(root/"rootfs-overlay/usr/share/2pny/expert.html").read_text()
+system=(root/"rootfs-overlay/usr/share/2pny/system.html").read_text()
+ui=(root/"rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js").read_text()
+displaycore=(root/"rootfs-overlay/usr/local/sbin/2pny-display-core").read_text()
+tz=(root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply").read_text()
+proto=(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply").read_text()
+
+assert '"0.3.19-alpha"' in main
+assert 'exec.Command("nmcli","device","reapply",iface)' not in main
+assert '"connection","up",conn,"ifname",iface' in main
+assert '/api/diagnostics/errors' in main
+assert 'connection.autoconnect-retries 3' in (root/"rootfs-overlay/usr/local/sbin/2pny-network-switch").read_text()
+assert 'rede conectada' in internet and 'Nenhuma segunda rede encontrada' in internet
+assert 'Canal em uso:' in internet and ' melhor' in internet and ' atual' in internet
+assert '<h3>Conexão via cabo</h3>' in internet and '<h3>Caminho da conexão</h3>' in internet
+assert 'PU2PNY — Protocolos' in hotspot and 'Hotspot / Protocolos' not in hotspot
+assert 'toFixed(6)' in hotspot and "replace(',','.')" in hotspot
+for marker in ('_______I','_______E','_______U','_______L','XLX026DL','REF030CL','DUP+/DUP−'):
+    assert marker in hotspot,marker
+assert "Salvando perfil" in hotspot and "Atualizando perfil" in hotspot
+assert 'slotFact' in dash and 'ccFact' in dash and 'TOT restante' in dash
+assert 'dstarLinked' in dash and "nr.link_state==='linked'" in dash
+assert 'expertLiveSection' in expert and 'generateSSHKey' in expert and 'pu2pny-erros.txt' in expert
+assert "setInterval(function(){show(last)},250)" in system
+assert "location.pathname==='/aprs'" in ui and '5000' in ui
+assert 'range(0,101,10)' in displaycore and 'PU2PNY-OS' in displaycore
+assert 'drain pending requests' in tz
+assert '"Module":"C" if proto=="DSTAR"' in proto
+assert 'Band=C' in proto and 'LocalPort":"20011"' in proto and 'GatewayPort":"20010"' in proto
+assert 'ReflectorReconnect=Never' in proto
+assert link.is_symlink() and os.readlink(link)=="../2pny-display-online-detect.service"
+print("PREPARE_0319_OK")
