@@ -558,3 +558,20 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
   - os requests privilegiados usam `PathChanged`, sujeito a gatilho inconsistente;
   - gerador D-Star usa `ReloadTime` onde o gateway embarcado espera `ReloadTimer` e mistura banda local com módulo remoto.
 - Nenhuma frequência, offset, baud, fluxo DMR de rede, TGIF, Wi-Fi onboarding visual aprovado, Histórico ou módulos não citados será alterado fora do mínimo necessário.
+
+
+## 2026-09-22 — build e publicação 0.3.16-alpha
+
+- A correção permaneceu bugfix-only sobre a 0.3.15; módulos sem defeito reportado não foram redesenhados.
+- Pesquisa upstream confirmou para o MMDVMHost atual: D-Star local em módulo C, rede loopback 20010/20011 e Nextion com `Port=modem`/layout ON7LDS suportados. O D-Star foi alinhado para `Band=C` local, independente do módulo remoto do refletor.
+- A Nextion via modem voltou ao writer nativo do MMDVMHost; OLED/LCD/Nextion direta preservam seus caminhos existentes.
+- APRS-IS ganhou provisionamento automático para mensagens, fallback limitado regional→mundial e distinção explícita entre `waiting_ack` e ACK confirmado, sem inventar posição.
+- DMRGateway recebeu somente um patch estreito de arbitragem: voz de sistema/XLX bloqueia áudio NETWORK→RF concorrente no mesmo slot enquanto WAITING/SENDING; RF→rede e o outro slot não são bloqueados.
+- Direct renova rendezvous antes de lookup e usa janelas limitadas mais tolerantes, sem alterar fingerprint/pareamento.
+- Wi-Fi/Internet, Ao Vivo, overlay de protocolo, timezone/SSH e D-Star receberam apenas as correções registradas em NET-023/024, LIVE-016, UI-030, SEC-023/UI-031 e PROTO-023.
+- Builds intermediários falharam somente em gates CI obsoletos (`PU2PNY Moderno` e `PathChanged`) que contrariavam os requisitos novos; os gates foram corrigidos, sem reintroduzir comportamento superado.
+- Run final `35669972163`: source, regressões, staged source, ARM64, XZ, SHA-256, imagem montada, artefato e publicação em **success**.
+- Publicada prerelease `v0.3.16-alpha` no commit `1c5ec75548374ac13be6948fc86eae46bd9eeddf`.
+- Imagem: `PU2PNY-OS-0.3.16-alpha-arm64.img.xz` (614130916 bytes).
+- SHA-256: `8329b976c733054787052484974fc86663e337bfdce4b31e461361fbfa465426`.
+- Estado permanece **Alpha/HW-TEST**. Nenhuma correção 0.3.16 é declarada HW PASS antes do novo teste físico em Raspberry Pi + MMDVM + Nextion/rede real.
