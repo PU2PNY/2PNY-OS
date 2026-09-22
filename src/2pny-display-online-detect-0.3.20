@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+RUN=/run/2pny;STAMP="$RUN/display-online-detect.stamp";mkdir -p "$RUN";now=$(date +%s);last=0
+test -f "$STAMP" && read -r last <"$STAMP" || true
+if test $((now-last)) -lt 60; then exit 0; fi
+printf '%s\n' "$now" >"$STAMP"
+timeout -k 2 25 /usr/local/sbin/2pny-display-detector >/dev/null 2>&1 || true
+# Only the apply helper may change renderer state; it refuses to call a
+# modem-attached Nextion physical until COMOK has been confirmed.
+timeout -k 2 35 /usr/local/sbin/2pny-display-apply >/dev/null 2>&1 || true
+exit 0
