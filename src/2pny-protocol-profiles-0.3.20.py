@@ -29,7 +29,7 @@ def current_dstar_local_module():
         cp=configparser.ConfigParser(interpolation=None,strict=False);cp.optionxform=str
         cp.read(STATE/"mmdvm/MMDVM-Host.ini")
         m=cp.get("D-Star","Module",fallback="").strip().upper()
-        if re.fullmatch(r"[A-E]",m):return m
+        if re.fullmatch(r"[A-D]",m):return m
     except Exception:pass
     return "B"
 
@@ -46,7 +46,7 @@ def validate(profile):
     if proto=="DSTAR" and not re.fullmatch(r"[A-Z]",module or ""):module="D"
     local_module=str(profile.get("dstar_local_module") or "").upper()
     if proto=="DSTAR":
-        if not re.fullmatch(r"[A-E]",local_module or ""):local_module=current_dstar_local_module()
+        if not re.fullmatch(r"[A-D]",local_module or ""):local_module=current_dstar_local_module()
     else:local_module=""
     essid=str(profile.get("essid") or "").strip()
     if proto=="DMR":
