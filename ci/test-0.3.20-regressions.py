@@ -46,7 +46,7 @@ assert "body:JSON.stringify({provider:p})},45000)" in internet
 assert "sec>=150" in dash and "danger=sec>=170" in dash
 assert "tot-warn" in dash and "tot-danger" in dash
 assert "0</span><span>1</span><span>5</span><span>9</span><span>9+30" in dash
-assert "direction==='RF'" in dash and "hasSMeter" in dash
+assert "dir==='RF'" in dash and "hasSMeter" in dash
 assert 'Timeout=180' in text("src/2pny-rf-apply-0.3.15")
 
 # PROTO-029/030 and PERF-004.
