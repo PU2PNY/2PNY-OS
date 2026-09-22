@@ -52,10 +52,10 @@ if "PU2PNY_DSTAR_RADIO_ADMIN_0318" not in bs:
     # had already been built/cleaned, leaving no RepeaterHandler.cpp in /tmp.
     make_i=None
     for i,line in enumerate(lines):
-        if "make -C DStarGateway" in line:
+        if 'make -j"$JOBS" DStarGateway/dstargateway' in line:
             make_i=i;break
     if make_i is None:
-        raise SystemExit("0.3.18: exact DStarGateway make anchor missing")
+        raise SystemExit("0.3.18: exact DStarGateway target make anchor missing")
     hook=[
       '# PU2PNY_DSTAR_RADIO_ADMIN_0318',
       'DSTAR_RF_ADMIN_SRC="$(find /tmp -maxdepth 4 -type f -path "*/Common/RepeaterHandler.cpp" -print -quit)"',

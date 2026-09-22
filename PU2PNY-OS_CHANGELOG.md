@@ -641,3 +641,5 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Corrigida a ordem do hook `SEC-025/REL-012`: o patch de comandos administrativos D-Star agora é aplicado imediatamente antes de `make -C DStarGateway`.
 - O anchor genérico anterior podia executar só depois da compilação/limpeza do fonte e causar `DStarGateway source for PU2PNY radio-admin patch not found`.
 - Escopo: **build/reprodutibilidade apenas**; nenhuma mudança funcional adicional em RF, D-Star, YSF ou DMR.
+
+- Ajuste adicional do gate de build: o alvo real do builder é `make -j"$JOBS" DStarGateway/dstargateway`; o patch SEC-025 agora ancora exatamente nessa chamada, antes da compilação.

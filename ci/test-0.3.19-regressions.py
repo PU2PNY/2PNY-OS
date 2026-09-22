@@ -106,7 +106,7 @@ for marker in ('GatewayPort":"62031"','LocalPort":"62032"','RptPort=62032','Loca
                'TG4000=unlink','voice_dir="/usr/share/2pny/audio/dmrgateway"'):
     assert marker in dmr,marker
 # REL-012 build reproducibility: radio-admin patch must run before DStarGateway compile.
-assert 'if "make -C DStarGateway" in line' in prep18
-assert 'exact DStarGateway make anchor missing' in prep18
+assert 'make -j"$JOBS" DStarGateway/dstargateway' in prep18
+assert 'exact DStarGateway target make anchor missing' in prep18
 assert 'DSTAR_RF_ADMIN_SRC=' in prep18
 print("TEST_0319_REGRESSIONS_OK")
