@@ -53,3 +53,9 @@ Base/Boot → Rede/Wizard → Hardware → RF/MMDVM → DMR → D-Star → YSF/C
 Antes de divulgar imagem: requisito → implementação → teste → resultado → regressão → pendência.
 
 Não liberar como completa com requisito crítico ausente, regressão conhecida de DMR/RF/rede/wizard, build ARM64 incompleto, imagem sem validação estrutural/SHA-256 ou afirmação de hardware sem teste HW.
+
+
+## Identidade canônica aprovada em 2026-09-22
+- Repositório canônico aprovado: `PU2PNY/PU2PNY-OS`.
+- Enquanto a renomeação administrativa não for confirmada pela metadata do GitHub, o caminho observado `PU2PNY/2PNY-OS` continua sendo tratado como estado real atual.
+- Título da aba do navegador: exatamente `PU2PNY-OS`.
