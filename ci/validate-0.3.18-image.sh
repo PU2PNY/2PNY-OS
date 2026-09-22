@@ -1169,6 +1169,28 @@ strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'timezone-request-'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'timezone-result-'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
 
+# SEC-025 / REL-012: restricted radio administration.
+RADIO="$ROOT/usr/local/sbin/2pny-radio-admin"
+RADIOPATH="$ROOT/etc/systemd/system/2pny-radio-admin.path"
+RADIOSVC="$ROOT/etc/systemd/system/2pny-radio-admin.service"
+test -x "$RADIO"
+grep -Fq 'ARM_SECONDS=30' "$RADIO"
+grep -Fq 'configured_owner()' "$RADIO"
+grep -Fq 'if not armed_for(caller)' "$RADIO"
+grep -Fq '2pny-protocol-profiles' "$RADIO"
+grep -Fq 'systemd-run' "$RADIO"
+grep -Fq 'PathExists=/run/2pny/radio-admin-command.request' "$RADIOPATH"
+grep -Fq 'Unit=2pny-radio-admin.service' "$RADIOPATH"
+grep -Fq 'User=root' "$RADIOSVC"
+grep -Fq 'ReadWritePaths=/run/2pny /var/lib/2pny' "$RADIOSVC"
+test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-radio-admin.path"
+test "$(readlink "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-radio-admin.path")" = "../2pny-radio-admin.path"
+for marker in PNYARM PNYOFF PNYRBT PNYDMR PNYDST PNYYSF PNYP25 PNYNXD PNYPOC; do
+  grep -Fq "$marker" "$HOTSPOT"
+done
+strings "$ROOT/usr/local/bin/dstargateway" | grep -Fq 'PU2PNY radio admin request'
+strings "$ROOT/usr/local/bin/dstargateway" | grep -Fq 'radio-admin-command.request'
+
 # REL-010: representative frozen 0.3.16 baselines are still present.
 grep -Fq 'connection.autoconnect-retries 3' "$ROOT/usr/local/sbin/2pny-network-switch"
 grep -Fq 'rotate.aprs2.net' "$ROOT/usr/local/sbin/2pny-aprs"
