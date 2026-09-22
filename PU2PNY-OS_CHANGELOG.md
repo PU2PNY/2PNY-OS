@@ -594,3 +594,13 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Isso impediria respostas de voz/status mesmo com os comandos I/E/U/L reconhecidos pelo gateway.
 - Criado `REL-011`; branch `pu2pny-os-0.3.18-alpha`; rollback `backup/0.3.17-pre-0.3.18-20260922`.
 - Nenhum outro módulo será alterado. Os gates 0.3.18 passam a exigir a presença física de `en_GB.ambe` e `en_GB.indx` dentro da imagem.
+
+## 2026-09-22 — SEC-025 incorporado à 0.3.18 antes da publicação
+- O mantenedor solicitou desligar, reiniciar e trocar perfil pelo próprio rádio D-Star.
+- Criados **SEC-025** e **REL-012**; rollback `backup/0.3.18-pre-sec025-20260922`.
+- Comandos definidos: `PNYARM`, `PNYOFF`, `PNYRBT`, `PNYDMR`, `PNYDST`, `PNYYSF`, `PNYP25`, `PNYNXD`, `PNYPOC`.
+- O DStarGateway somente converte URCALL reservado em request local; ação privilegiada é executada por helper one-shot com allowlist fixa.
+- Toda ação administrativa exige MYCALL do proprietário e janela `PNYARM` de 30 s consumida uma vez.
+- A troca por rádio só ativa perfil já salvo; não altera frequência, offset, servidor ou credenciais.
+- Shutdown por software não é confundido com corte físico de 5 V.
+- REL-011 permanece válido para a correção do pack de voz; REL-012 documenta a ampliação explícita de escopo antes da publicação.
