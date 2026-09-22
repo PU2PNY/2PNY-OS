@@ -1,10 +1,10 @@
 # PU2PNY-OS — RELEASE STATUS
 
-**Branch de trabalho:** `pu2pny-os-0.3.9-alpha`  
-**Base preservada:** `pu2pny-os-0.3.8-alpha`  
-**Backup criado antes das mudanças:** `backup/0.3.8-hw-feedback-20260921`  
-**Data do último feedback físico incorporado:** 2026-09-20  
-**Estado global:** ALPHA / correção. **Não PROD.**
+**Branch de trabalho:** `pu2pny-os-0.3.16-alpha`  
+**Base preservada:** `pu2pny-os-0.3.15-alpha`  
+**Backup criado antes das mudanças:** `backup/0.3.15-pre-0.3.16-20260921`  
+**Data do último feedback físico incorporado:** 2026-09-21  
+**Estado global:** ALPHA / HW-TEST. **Não PROD.**
 
 ## Baseline que não pode regredir
 
@@ -624,3 +624,16 @@ Falhas/ajustes observados:
 - D-Star: ainda não conecta; gerador atual diverge do schema do gateway embarcado em pontos concretos.
 - Rollback: `backup/0.3.15-pre-0.3.16-20260921`.
 - Branch: `pu2pny-os-0.3.16-alpha`.
+
+
+## Publicação 0.3.16-alpha — 2026-09-22
+
+- Commit da imagem publicada: `1c5ec75548374ac13be6948fc86eae46bd9eeddf`.
+- GitHub Actions run final: `35669972163` — source **PASS**, staged source **PASS**, build ARM64 **PASS**, XZ/SHA-256 **PASS**, imagem montada/validação estrutural **PASS**, publicação **PASS**.
+- Release: `v0.3.16-alpha` — prerelease / Alpha / HW-TEST.
+- Artefato: `PU2PNY-OS-0.3.16-alpha-arm64.img.xz` — 614130916 bytes.
+- SHA-256 da imagem: `8329b976c733054787052484974fc86663e337bfdce4b31e461361fbfa465426`.
+- Escopo SW validado: NET-023/024, LIVE-016, UI-030, PROTO-022, P2P-006, APRS-012, DISPLAY-018, SEC-023/UI-031 e PROTO-023 em seus gates determinísticos/estruturais.
+- D-Star atual: identidade local `Band=C`, independente do módulo remoto; `ReloadTimer` e `DStar_Hosts.json` customizado conforme o gateway embarcado.
+- Nextion via modem: caminho nativo MMDVMHost/`Port=modem` restaurado no código e na imagem.
+- **HW PENDENTE:** nenhuma das correções 0.3.16 é promovida a HW PASS até reteste em Raspberry Pi + MMDVM + Nextion/rede real. DMR TX/RX permanece baseline obrigatória de regressão.
