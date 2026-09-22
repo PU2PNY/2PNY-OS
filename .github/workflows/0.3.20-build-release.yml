@@ -192,7 +192,7 @@ jobs:
           PU2PNY-OS 0.3.20 Alpha — manutenção focal sobre a 0.3.19-alpha.
 
           Principais mudanças:
-          - D-Star: módulo local/RPT1 selecionável A-E, padrão PU2PNY B em novas configurações; módulo remoto permanece independente.
+          - D-Star: módulo local/RPT1 selecionável A-D, padrão PU2PNY B em novas configurações; módulo remoto permanece independente.
           - D-Star por rádio: o painel não trata pedido de link como sucesso; XLX é mesclado no catálogo local para que comandos de rádio possam ser realmente resolvidos pelo DStarGateway. REF/XRF/DCS continuam pelo catálogo D-Star embarcado.
           - DMR: XLX aparece primeiro; troca BrandMeister→XLX remove ESSID; controle TG 4000-4026/4099 é aceito nos dois timeslots RF; duplex mantém TS1/TS2 local.
           - Ao Vivo: aviso TOT 2:30 amarelo e 2:50 vermelho; S-meter só aparece com RF real.
