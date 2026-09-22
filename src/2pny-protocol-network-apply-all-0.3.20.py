@@ -369,8 +369,26 @@ User=
         # both HostsFiles and CustomHostsfiles. Preserve the cache and write the
         # selected reflector in that exact schema. XLX links use the DCS
         # transport internally, so XLX entries are reflector_type "DCS".
-        srcp=STATE/"hosts"/"DStar_Hosts.json"
-        if srcp.exists():shutil.copy2(srcp,d/"DStar_Hosts.json")
+        srcp=STATE/"hosts"/"DStar_Hosts.json";xlxp=STATE/"hosts"/"XLXHosts.txt"
+        merged={}
+        if srcp.exists():
+            try:
+                obj=json.loads(srcp.read_text())
+                for row in obj.get("reflectors",[]):
+                    if isinstance(row,dict) and row.get("name"):merged[str(row["name"]).upper()]=row
+            except Exception:pass
+        if xlxp.exists():
+            for raw in xlxp.read_text(errors="ignore").splitlines():
+                line=raw.strip()
+                if not line or line.startswith("#"):continue
+                parts=[x.strip() for x in line.split(";")]
+                if len(parts)<2:continue
+                ident,address_x=parts[0].upper(),parts[1]
+                if not ident or not address_x or not re.fullmatch(r"[A-Z0-9]{3}",ident):continue
+                name="XLX"+ident
+                merged[name]={"name":name,"reflector_type":"DCS","ipv4":address_x}
+        if merged:
+            atomic(d/"DStar_Hosts.json",json.dumps({"reflectors":[merged[k] for k in sorted(merged)]},ensure_ascii=False,indent=2)+"\n",0o644)
         if address:
             host_name=normalized[:6] if len(normalized)>=6 else normalized
             if host_name.startswith("REF"): reflector_type="REF"
