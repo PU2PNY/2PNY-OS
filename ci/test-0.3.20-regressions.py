@@ -105,8 +105,9 @@ assert 'range(0,101,10)' in dcore and 'PU2PNY-OS' in dcore
 assert "Ativo · tela confirmada" in display
 
 # SYS-001/002/003.
-assert 'case "set-time":' in main and 'runClockRequest' in main
-assert '/api/system/timezones' in main and 'timedatectl","list-timezones' in main
+main_compact="".join(main.split())
+assert 'case"set-time":' in main_compact and 'runClockRequest' in main
+assert '/api/system/timezones' in main and 'timedatectl","list-timezones' in main_compact
 assert '/api/diagnostics/errors/download' in main and 'Content-Disposition' in main
 assert 'Baixar logs de erro' in system and 'datetime-local' in system
 
