@@ -727,3 +727,10 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Run ARM64 anterior falhou antes de gerar imagem porque o hook do patch `SEC-025` procurou `RepeaterHandler.cpp` após a compilação do DStarGateway.
 - Correção: anchor determinístico imediatamente antes de `make -C DStarGateway`.
 - Estado: **SW corrigido; novo build ARM64 obrigatório antes de disponibilizar download**.
+
+
+## 2026-09-22 — Identidade canônica e aba do navegador
+- **ARCH-005 / DOC:** nome canônico aprovado: `PU2PNY/PU2PNY-OS`.
+- **GitHub observado antes da renomeação administrativa:** `PU2PNY/2PNY-OS`; não declarar a renomeação concluída até a API do GitHub confirmar o novo nome.
+- **UI-035 / SW fonte:** branch `pu2pny-os-0.3.19-alpha` normaliza o `<title>` para exatamente `PU2PNY-OS` e reforça o mesmo título no JS comum.
+- **HW/PROD:** sem mudança de estado; esta manutenção não altera RF, MMDVM, gateways, rede ou protocolos.
