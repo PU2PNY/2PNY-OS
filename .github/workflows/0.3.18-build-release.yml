@@ -109,6 +109,8 @@ jobs:
             src/2pny-display-apply-0.3.16.py \
             src/2pny-timezone-apply-0.3.16.py \
             src/2pny-timezone-apply-0.3.17.py \
+            src/2pny-radio-admin-0.3.17.py \
+            ci/patch-dstargateway-radio-admin-0.3.17.py \
             src/2pny-ssh-apply-0.3.16.py \
             ci/patch-dmrgateway-voice-arbiter-0.3.16.py \
             src/2pny-protocol-network-apply-0.3.13.py \
@@ -306,7 +308,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/ci/test-0.2.9-live-core.py"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.6-aprs.py"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.16-regressions.py"
-          python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-display-status             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-protocol-profiles             rootfs-overlay/usr/local/sbin/2pny-update-manager             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect
+          python3 -m py_compile             rootfs-overlay/usr/local/lib/2pny-live-core.py             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-display-status             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-protocol-profiles             rootfs-overlay/usr/local/sbin/2pny-update-manager             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-netdiag             rootfs-overlay/usr/local/sbin/2pny-nextion-autodetect             rootfs-overlay/usr/local/sbin/2pny-radio-admin
           bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-network-core rootfs-overlay/usr/local/sbin/2pny-wifi-profiles rootfs-overlay/usr/local/sbin/2pny-auto-maintenance rootfs-overlay/usr/local/sbin/2pny-mdns-guard rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns rootfs-overlay/usr/local/sbin/2pny-mode-apply
           grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.18-alpha"' src/2pnyd/main.go
           grep -Fq 'mqtt_preflight' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
@@ -400,6 +402,15 @@ jobs:
           grep -Fq 'XLX026DL' rootfs-overlay/usr/share/2pny/hotspot.html
           grep -Fq 'PathExistsGlob=/run/2pny/timezone-request-*.json' rootfs-overlay/etc/systemd/system/2pny-timezone-apply.path
           grep -Fq 'timezone-request-' rootfs-overlay/usr/local/sbin/2pny-timezone-apply
+          # SEC-025 radio administration gates
+          grep -Fq 'PathExists=/run/2pny/radio-admin-command.request' rootfs-overlay/etc/systemd/system/2pny-radio-admin.path
+          grep -Fq 'User=root' rootfs-overlay/etc/systemd/system/2pny-radio-admin.service
+          grep -Fq 'ARM_SECONDS=30' rootfs-overlay/usr/local/sbin/2pny-radio-admin
+          grep -Fq '2pny-protocol-profiles' rootfs-overlay/usr/local/sbin/2pny-radio-admin
+          test -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-radio-admin.path
+          for cmd in PNYARM PNYOFF PNYRBT PNYDMR PNYDST PNYYSF PNYP25 PNYNXD PNYPOC; do grep -Fq "$cmd" rootfs-overlay/usr/share/2pny/hotspot.html; done
+          grep -Fq 'PU2PNY_DSTAR_RADIO_ADMIN_0318' builder/build-image.sh
+          grep -Fq 'patch-dstargateway-radio-admin-0.3.17.py' builder/build-image.sh
       - name: Build ARM64 image
         working-directory: legacy-source/2pny-os
         run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
@@ -455,26 +466,34 @@ jobs:
       - name: Write release notes
         run: |
           cat > RELEASE-NOTES.md <<'EOF'
-          PU2PNY-OS 0.3.18 Alpha — candidata de reteste D-Star/timezone.
+          PU2PNY-OS 0.3.18 Alpha — candidata de reteste D-Star/timezone + administração segura pelo rádio.
 
-          Esta imagem substitui a 0.3.17 como candidata de teste físico. A revisão final encontrou e corrigiu somente um defeito adicional: o DStarGateway pinado instala seu pack nativo de voz/status em /usr/local/share/dstargateway.d/, enquanto a 0.3.17 ainda apontava para um diretório vazio do PU2PNY.
+          Baseline preservada:
+          - tudo que não foi reportado como defeito permanece congelado;
+          - Wi-Fi, DMR, APRS, Direct, Nextion, RF, frequências, offsets e demais páginas mantêm a implementação aprovada.
 
-          Preservado da 0.3.17:
-          - módulo D-Star local C no MMDVMHost e Band C no gateway;
-          - módulo remoto A-Z independente;
-          - loopback 20010/20011;
-          - ReflectorReconnect=Never;
-          - comandos nativos pelo rádio I/E/U/L e link/troca de refletor/módulo;
+          D-Star/timezone:
+          - módulo D-Star local C no MMDVMHost e Band C no gateway; módulo remoto A–Z independente;
+          - loopback 20010/20011 e ReflectorReconnect=Never;
+          - comandos nativos I/E/U/L e link/troca de refletor/módulo por URCALL/DR;
           - Ao Vivo reconhece D-Star NETWORK→RF sem inventar RSSI/BER;
-          - timezone com request/result único e helper root restrito ao timedatectl.
+          - pack nativo de voz/status usa /usr/local/share/dstargateway.d/ e a imagem exige os arquivos AMBE/INDX reais;
+          - timezone usa request/result único e helper root restrito a timedatectl.
 
-          Correção adicional 0.3.18:
-          - [Paths] Data=/usr/local/share/dstargateway.d/;
-          - imagem só é publicada se en_GB.ambe, en_GB.indx e DStar_Hosts.json existirem nesse diretório.
+          SEC-025 — comandos PU2PNY pelo rádio:
+          - PNYARM abre uma janela one-shot de 30 s;
+          - PNYRBT reinicia e PNYOFF faz shutdown seguro do Linux;
+          - PNYDMR, PNYDST, PNYYSF, PNYP25, PNYNXD e PNYPOC ativam somente perfis já salvos;
+          - ação exige MYCALL1 igual ao callsign configurado e PNYARM prévio;
+          - o DStarGateway somente cria request local; um helper one-shot executa allowlist restrita;
+          - shutdown por software não corta fisicamente a alimentação 5 V; isso exige hardware externo.
 
-          Todo o restante permanece congelado conforme aprovação do mantenedor.
+          Validação:
+          - source/regressões, ARM64, XZ, SHA-256 e imagem montada são gates;
+          - o binário dstargateway da imagem precisa conter o handler SEC-025 compilado;
+          - D-Star RF real, comandos, voz/status, timezone e comandos administrativos permanecem HW PENDENTE até reteste.
 
-          Estado: ALPHA/HW-TEST. D-Star RF real, comandos de rádio, voz/status e timezone continuam HW PENDENTE até novo teste.
+          Estado: ALPHA/HW-TEST.
           EOF
       - name: Publish prerelease
         uses: softprops/action-gh-release@v3
