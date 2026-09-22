@@ -60,8 +60,9 @@ var dash={},live={},contacts=[],es=null,poll=null,started=0,filterProto='',openA
 function protoName(p){p=String(p||'').toUpperCase();return p==='DSTAR'?'D-Star':p||'—'}
 function freq(){
   var c=dash.config||{},rx=Number(c.rx_hz||0),tx=Number(c.tx_hz||0);
-  if(!rx)return'—';var a=(rx/1e6).toFixed(5),bb=tx?(tx/1e6).toFixed(5):a;
-  return a===bb?a+' MHz':a+' / '+bb+' MHz'
+  if(!rx)return'—';var a=(rx/1e6).toFixed(6),bb=tx?(tx/1e6).toFixed(6):a;
+  if(c.use_mode==='repeater')return 'RX '+a+' MHz · TX '+bb+' MHz';
+  return a+' MHz'
 }
 function gatewayActive(p){
   p=String(p||((dash.config||{}).protocol)||'').toUpperCase();
