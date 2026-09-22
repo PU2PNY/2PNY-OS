@@ -1356,3 +1356,23 @@ O fluxo de fuso continua com helper privilegiado restrito, mas deve ser determin
 - se o path unit não disparar, o sistema pode acionar **somente** o serviço one-shot específico de timezone por mecanismo autorizado e limitado; não conceder sudo genérico ao backend;
 - erro deve indicar causa real e manter o fuso anterior;
 - `America/Sao_Paulo` é caso obrigatório de regressão.
+
+## 2026-09-22 — fechamento corretivo 0.3.18-alpha antes do reteste físico
+
+### REL-011 — 0.3.18-alpha substitui a 0.3.17 como imagem de reteste
+A 0.3.17-alpha chegou a passar os gates SW, porém uma revisão upstream posterior ao build encontrou que o gerador D-Star ainda apontava `[Paths] Data` para `/usr/share/2pny/audio/dstar/`, diretório que não contém o pack AMBE instalado pelo DStarGateway embarcado. Essa imagem não deve ser usada como candidata de reteste.
+
+A 0.3.18-alpha:
+- parte exatamente da 0.3.17-alpha;
+- mantém congelado todo o restante da baseline 0.3.16/0.3.17;
+- corrige exclusivamente o caminho do pack de voz/status D-Star e endurece os gates de imagem;
+- preserva integralmente PROTO-024, LIVE-017, UI-032 e SEC-024;
+- exige ARM64, XZ, SHA-256 e validação estrutural, incluindo a presença real dos arquivos AMBE/INDX do gateway.
+
+### Complemento PROTO-024 — pack nativo de áudio/status do DStarGateway
+Para o DStarGateway pinado no PU2PNY:
+- `[Paths] Data` deve apontar para `/usr/local/share/dstargateway.d/`, diretório instalado pelo próprio build upstream;
+- a imagem deve conter pelo menos `en_GB.ambe` e `en_GB.indx`; sem esses arquivos, o comando `I` e anúncios nativos não podem ser declarados prontos;
+- não copiar, converter ou inventar AMBE; usar somente os assets distribuídos com a versão upstream compilada;
+- quando `Language=Portugues` não possuir pack AMBE específico na revisão pinada, o comportamento nativo do gateway pode usar o fallback de áudio que o próprio upstream implementa; o texto/status de link continua derivado do gateway;
+- manter `ReflectorReconnect=Never`, módulo local C e porta 20010/20011 para que comandos pelo rádio não sejam revertidos pela configuração do painel.
