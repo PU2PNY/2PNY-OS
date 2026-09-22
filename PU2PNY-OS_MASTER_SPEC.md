@@ -1356,3 +1356,27 @@ O fluxo de fuso continua com helper privilegiado restrito, mas deve ser determin
 - se o path unit não disparar, o sistema pode acionar **somente** o serviço one-shot específico de timezone por mecanismo autorizado e limitado; não conceder sudo genérico ao backend;
 - erro deve indicar causa real e manter o fuso anterior;
 - `America/Sao_Paulo` é caso obrigatório de regressão.
+
+### SEC-025 — Administração segura do hotspot por comando D-Star via rádio
+O PU2PNY-OS deve permitir ao mantenedor executar ações administrativas básicas pelo próprio rádio D-Star sem abrir terminal ou painel.
+
+Comandos PU2PNY reservados em URCALL/DR, sempre normalizados para 8 caracteres:
+- `PNYARM` — arma a janela administrativa por 30 segundos;
+- `PNYOFF` — desligamento seguro do sistema operacional;
+- `PNYRBT` — reinicialização segura;
+- `PNYDMR` — ativa o perfil DMR salvo;
+- `PNYDST` — ativa o perfil D-Star salvo;
+- `PNYYSF` — ativa o perfil YSF/C4FM salvo;
+- `PNYP25` — ativa o perfil P25 salvo;
+- `PNYNXD` — ativa o perfil NXDN salvo;
+- `PNYPOC` — ativa o perfil POCSAG salvo.
+
+Regras de segurança e operação:
+- aceitar somente comandos RF cujo MYCALL1 corresponda ao indicativo principal configurado no PU2PNY-OS;
+- toda ação administrativa exige `PNYARM` anterior dentro da janela de 30 s; a janela é one-shot e é consumida pela primeira ação;
+- nenhuma chave, senha ou PIN é transmitido/armazenado como segredo no rádio; a proteção é por indicativo configurado + armamento temporário + execução local restrita;
+- registrar último comando, origem, resultado e horário em runtime local sem logs pesados;
+- o DStarGateway não recebe privilégio novo: ele apenas grava request local; um helper root one-shot com allowlist executa as ações;
+- profile switch usa somente perfis já salvos e validados pelo `2pny-protocol-profiles`; nunca cria perfil pelo rádio;
+- `PNYOFF` executa poweroff seguro do Linux. Corte físico da alimentação 5 V exige hardware externo de power-control e não deve ser prometido pelo software;
+- comandos D-Star padrão `I/E/U/L` e comandos de link de refletor continuam independentes dos comandos administrativos PU2PNY.
