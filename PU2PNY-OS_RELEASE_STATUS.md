@@ -1,10 +1,13 @@
 # PU2PNY-OS — RELEASE STATUS
 
-**Branch de trabalho:** `pu2pny-os-0.3.16-alpha`  
-**Base preservada:** `pu2pny-os-0.3.15-alpha`  
-**Backup criado antes das mudanças:** `backup/0.3.15-pre-0.3.16-20260921`  
-**Data do último feedback físico incorporado:** 2026-09-21  
-**Estado global:** ALPHA / HW-TEST. **Não PROD.**
+**Branch de trabalho:** `pu2pny-os-0.3.20-alpha`  
+**Base preservada:** `pu2pny-os-0.3.19-alpha`  
+**Rollback do ciclo:** `backup/0.3.19-pre-0.3.20-20260922`  
+**Backup pré-organização documental:** `backup/0.3.20-pre-doc-governance-20260922`  
+**Data do último feedback físico incorporado:** 2026-09-22  
+**Estado global:** ALPHA / PARA TESTE FÍSICO. **Não PROD.**
+
+> As seções de versões anteriores abaixo são histórico de validação e regressão. O estado corrente é o bloco 0.3.20-alpha e os documentos canônicos indicados em START_HERE.
 
 ## Baseline que não pode regredir
 
@@ -795,3 +798,11 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Falha D-Star confirmada na 0.3.19:** painel aplicava corretamente mudança manual de refletor (XLX300D comprovado); comando de rádio para troca alterava apenas estado visual sem confirmar execução. PROTO-032 corrige sem promover HW PASS antes do novo teste.
 - **Módulo local D-Star:** padrão de nova configuração B, seletor A–D; upgrades preservam configuração anterior.
 - **Gate de imagem:** source → staging → ARM64 → XZ/SHA-256 → REL-015 preflight → `validate-0.3.20-image.sh` → prerelease. Link só pode ser divulgado após PASS real dessa cadeia.
+
+
+## Governança documental sincronizada — 2026-09-22
+- **ARCH-006:** documentação canônica separada de material histórico/técnico; `docs/README.md` criado como índice.
+- **REL-017:** baseline aprovado passa a ter proteção explícita e permanente; DMR simplex continua baseline crítico e correção duplex não autoriza alteração do simplex.
+- **TEST-008:** VPS/SentinelX, GitHub/CI, plugins/conectores e fontes oficiais devem ser usados conforme aplicabilidade; nível HW continua reservado a hardware real.
+- README e START_HERE foram alinhados ao ciclo 0.3.20-alpha e deixaram de apresentar 0.1.1 como estado atual.
+- Escopo desta organização: documentação/governança. Nenhum estado HW é promovido por esta alteração.
