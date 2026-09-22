@@ -123,7 +123,7 @@ function render(){
   var a=currentActive(),c=dash.config||{},t=dash.telemetry||{},nr=dash.network_runtime||{},box=PNY.q('liveBox'),p=String((a&&a.protocol)||c.protocol||'').toUpperCase();
   PNY.q('radioDot').className='dot '+(dash.radio_active?'good':'bad');PNY.q('radioText').textContent=dash.radio_active?'Rádio ativo':'Rádio parado';
   PNY.q('protocol').textContent=protoName(p);PNY.q('frequency').textContent=freq();
-  var server=nr.server_name||c.server_name||'—',mod=nr.module||c.xlx_module||'';PNY.q('server').textContent=server+(mod?' · '+mod:'');
+  var server=nr.server_name||c.server_name||'—',dstarLinked=p==='DSTAR'&&String(nr.protocol||'').toUpperCase()==='DSTAR'&&nr.link_state==='linked'&&(nr.connected===true||nr.linked===true),mod=p==='DSTAR'?(dstarLinked?(nr.module||''):''):(nr.module||c.xlx_module||'');PNY.q('server').textContent=server+(mod?' · módulo '+mod:'');
   PNY.q('cpuTemp').textContent=(t.cpu_percent==null?'—':t.cpu_percent+'%')+' / '+(Number(t.temperature)>=0?t.temperature+' °C':'—');
   var showDMR=!!a&&p==='DMR';PNY.q('ccFact').classList.toggle('hidden',!showDMR);PNY.q('slotFact').classList.toggle('hidden',!showDMR);
   PNY.q('colorCode').textContent=showDMR?(c.color_code==null?'—':c.color_code):'—';

@@ -179,7 +179,7 @@ async function load(){
  PNY.q('ovRF').textContent=cfg.rx_hz?(hzToMHz(cfg.rx_hz)+' MHz'):'—';
  PNY.q('ovRFSub').textContent=cfg.use_mode==='repeater'&&cfg.tx_hz?('TX '+hzToMHz(cfg.tx_hz)+' MHz'):'Simplex';
  PNY.q('ovNet').textContent=current.server_name||cfg.server_name||'—';
- PNY.q('ovNetSub').textContent=(current.kind||cfg.network_kind||'—')+((current.module||cfg.xlx_module)?(' · módulo '+(current.module||cfg.xlx_module)):'');
+ var liveDstarModule=String(current.protocol||cfg.protocol||'').toUpperCase()==='DSTAR'&&current.connected===true&&current.link_state==='linked'?(current.module||''):'';PNY.q('ovNetSub').textContent=(current.kind||cfg.network_kind||'—')+(String(current.protocol||cfg.protocol||'').toUpperCase()==='DSTAR'?(liveDstarModule?(' · módulo conectado '+liveDstarModule):' · sem módulo remoto confirmado'):((current.module||cfg.xlx_module)?(' · módulo '+(current.module||cfg.xlx_module)):''));
  PNY.q('ovRun').textContent=current.connected?'Conectado':current.active?'Gateway ativo':'Aguardando';
  PNY.q('ovRun').className='big '+(current.connected?'green':current.active?'yellow':'yellow');
  PNY.q('ovRunSub').textContent=current.gateway||'Gateway —';
@@ -189,8 +189,8 @@ async function load(){
  PNY.q('stKind').textContent=current.kind||cfg.network_kind||'—';
  PNY.q('stServer').textContent=current.server_name||cfg.server_name||'—';
  var alias=String(cfg.essid||'');PNY.q('stAlias').textContent=(String(current.protocol||cfg.protocol||'').toUpperCase()==='DMR'&&alias)?('Rádio '+Number(alias)+' ('+alias+')'):'—';
- PNY.q('stModule').textContent=current.module||cfg.xlx_module||'—';
  var isDstar=String(current.protocol||cfg.protocol||'').toUpperCase()==='DSTAR';
+ PNY.q('stModule').textContent=isDstar?(liveDstarModule||'—'):(current.module||cfg.xlx_module||'—');
  PNY.q('stDstarLocal').textContent=isDstar?'C':'—';
  var dc=current.last_command?String(current.last_command).toUpperCase():'';
  if(current.last_command_target)dc+=(dc?' → ':'')+String(current.last_command_target);
