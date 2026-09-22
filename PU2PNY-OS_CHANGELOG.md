@@ -710,7 +710,7 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Registrados UI-037, LIVE-020/021, NET-027, PERF-004, PROTO-029/030/031/032/033, RF-020, UI-038, P2P-008, APRS-014, DISPLAY-020/021, SYS-001/002/003 e UPDATE-007.
 - **D-Star HW observado na 0.3.19:** mudar refletor pelo painel aplicou de fato XLX300D e permitiu comunicação; comandos pelo rádio para trocar refletor alteravam somente o painel. Causa de UI confirmada: o worker promovia `Link command ... issued` a servidor/módulo efetivo antes do `... link ... established`. Causa de resolução XLX: o DStar_Hosts.json pinado não contém a lista XLX completa; o apply adicionava apenas o refletor atualmente selecionado.
 - 0.3.20 separa pedido de link de estado efetivo e mescla a lista XLX validada no catálogo D-Star. Falha/destino desconhecido não é mais mostrado como conectado.
-- Módulo local D-Star/RPT1 deixa de ser fixo C: novas configurações usam B por decisão de produto e podem selecionar A–E; módulo remoto do refletor continua independente. Upgrades preservam o valor efetivo anterior.
+- Módulo local D-Star/RPT1 deixa de ser fixo C: novas configurações usam B por decisão de produto e podem selecionar A–D; módulo remoto do refletor continua independente. Upgrades preservam o valor efetivo anterior.
 - DMR: XLX primeiro; ESSID não vaza BrandMeister→XLX; ordem MMDVMHost→DMRGateway; comandos TG4000–4026/4099 passam a aceitar TS1 e TS2.
 - Ao Vivo: TOT amarelo 2:30–2:49, vermelho 2:50–3:00; S-meter aparece apenas em RF real.
 - UI global oculta indicadores sem dado real; Protocolos separa conectividade IP de link remoto.
