@@ -107,6 +107,8 @@ jobs:
             src/2pny-display-apply-0.3.16.py \
             src/2pny-timezone-apply-0.3.16.py \
             src/2pny-timezone-apply-0.3.17.py \
+            src/2pny-radio-admin-0.3.17.py \
+            ci/patch-dstargateway-radio-admin-0.3.17.py \
             src/2pny-ssh-apply-0.3.16.py \
             ci/patch-dmrgateway-voice-arbiter-0.3.16.py \
             src/2pny-protocol-network-apply-0.3.13.py \
@@ -377,6 +379,10 @@ jobs:
           grep -Fq 'ReloadTime=72' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'DStar_Hosts.json' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           grep -Fq 'PathExistsGlob=/run/2pny/timezone-request-*.json' rootfs-overlay/etc/systemd/system/2pny-timezone-apply.path
+          grep -Fq 'PathExists=/run/2pny/radio-admin-command.request' rootfs-overlay/etc/systemd/system/2pny-radio-admin.path
+          grep -Fq 'ARM_SECONDS=30' rootfs-overlay/usr/local/sbin/2pny-radio-admin
+          grep -Fq 'PNYARM' rootfs-overlay/usr/share/2pny/hotspot.html
+          grep -Fq 'patch-dstargateway-radio-admin-0.3.17.py' builder/build-image.sh
           grep -Fq 'PathExists=/run/2pny/ssh-request.json' rootfs-overlay/etc/systemd/system/2pny-ssh-apply.path
           test -x rootfs-overlay/usr/local/sbin/2pny-timezone-apply
           test -x rootfs-overlay/usr/local/sbin/2pny-rflevel-apply
