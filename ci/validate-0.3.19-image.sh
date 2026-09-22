@@ -179,6 +179,18 @@ bash -n "$ROOT/usr/local/sbin/2pny-display-online-detect"
 test -s "$ROOT/etc/systemd/system/2pny-display-online-detect.service"
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-display-online-detect.service"
 test "$(readlink "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-display-online-detect.service")" = "../2pny-display-online-detect.service"
+# REL-014 / RF-019 / LIVE-019 / PROTO-027 / PROTO-028
+grep -Fq 'CYSFReflectors::findByName' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'startup_name' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'WiresXCommandPassthrough=0' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'GatewayPort":"4200"' "$ROOT/usr/local/sbin/2pny-protocol-network-apply"
+grep -Fq 'duplex=1 if usemode=="repeater" else 0' "$ROOT/usr/local/libexec/2pny-dmr-apply"
+grep -Fq 'slot1=True if duplex' "$ROOT/usr/local/libexec/2pny-dmr-apply"
+grep -Fq 'slot2=True if duplex' "$ROOT/usr/local/libexec/2pny-dmr-apply"
+grep -Fq 'route_slots=(1,2) if duplex' "$ROOT/usr/local/libexec/2pny-dmr-apply"
+grep -Fq 'Slot={remote_slot}' "$ROOT/usr/local/libexec/2pny-dmr-apply"
+grep -Fq 'out.append("Duplex="+duplex)' "$ROOT/usr/local/sbin/2pny-mode-apply"
+grep -Fq "RX '+a+' MHz · TX '+bb+' MHz" "$ROOT/usr/share/2pny/dashboard.html"
 
 echo '[12/15] no leaked user/runtime state'
 for p in \
@@ -491,7 +503,7 @@ grep -Fq 'PathExistsGlob=/run/2pny/timezone-request-*.json' "$ROOT/etc/systemd/s
 grep -Fq 'PathExists=/run/2pny/ssh-request.json' "$ROOT/etc/systemd/system/2pny-ssh-apply.path"
 grep -Fq 'PathChanged=/run/2pny/operational-request.json' "$ROOT/etc/systemd/system/2pny-operational-apply.path"
 grep -Fq 'PathChanged=/run/2pny/display-apply-request.json' "$ROOT/etc/systemd/system/2pny-display-apply-request.path"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'timezone-request-'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/ssh-request.json'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/operational-request.json'
@@ -562,7 +574,7 @@ grep -Fq 'MMDVM confirmada. A Nextion pela porta do modem' "$PROBE"
 grep -Fq 'O assistente avançará automaticamente em 5 segundos.' "$WIZ"
 grep -Fq 'normalizeIncoming' "$LANG"
 grep -Fq 'incomingPT' "$LANG"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 
 echo '[14g/15] 0.3.12 MQTT broker + serial arbitration + i18n gates'
 test -x "$ROOT/usr/sbin/mosquitto"
@@ -579,7 +591,7 @@ grep -Fq 'Sistema Operacional de Rádio Digital' "$ROOT/usr/share/2pny/wizard.ht
 ! grep -Fq 'Digital Radio Operating System' "$ROOT/usr/share/2pny/wizard.html"
 grep -Fq 'Object.assign(D,' "$ROOT/usr/share/2pny/ui-language.js"
 grep -Fq 'A MMDVM ainda está sendo verificada' "$ROOT/usr/share/2pny/ui-language.js"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 
 
 echo '[14h/15] inherited TGIF/i18n + 0.3.16 focused onboarding gates'
@@ -641,7 +653,7 @@ grep -Fq "document.documentElement.classList.remove('pny-i18n-pending')" "$LANG"
 grep -Fq "if(s.state==='applied')" "$WIZ"
 grep -Fq "await loadConclusion();step(4)" "$WIZ"
 grep -Fq "setTimeout(function(){location.href='/dashboard'},5000)" "$WIZ"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'writeRFApplyState'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'provisioned'
 
@@ -945,7 +957,7 @@ grep -Fq 'PathExistsGlob=/run/2pny/timezone-request-*.json' "$ROOT/etc/systemd/s
 grep -Fq 'PathExists=/run/2pny/ssh-request.json' "$ROOT/etc/systemd/system/2pny-ssh-apply.path"
 grep -Fq 'PathChanged=/run/2pny/operational-request.json' "$ROOT/etc/systemd/system/2pny-operational-apply.path"
 grep -Fq 'PathChanged=/run/2pny/display-apply-request.json' "$ROOT/etc/systemd/system/2pny-display-apply-request.path"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'timezone-request-'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/ssh-request.json'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/run/2pny/operational-request.json'
@@ -1013,7 +1025,7 @@ grep -Fq 'MMDVM confirmada. A Nextion pela porta do modem' "$PROBE"
 grep -Fq 'O assistente avançará automaticamente em 5 segundos.' "$WIZ"
 grep -Fq 'normalizeIncoming' "$LANG"
 grep -Fq 'incomingPT' "$LANG"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 
 echo '[14g/15] 0.3.12 MQTT broker + serial arbitration + i18n gates'
 test -x "$ROOT/usr/sbin/mosquitto"
@@ -1030,7 +1042,7 @@ grep -Fq 'Sistema Operacional de Rádio Digital' "$ROOT/usr/share/2pny/wizard.ht
 ! grep -Fq 'Digital Radio Operating System' "$ROOT/usr/share/2pny/wizard.html"
 grep -Fq 'Object.assign(D,' "$ROOT/usr/share/2pny/ui-language.js"
 grep -Fq 'A MMDVM ainda está sendo verificada' "$ROOT/usr/share/2pny/ui-language.js"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 
 
 echo '[14h/15] 0.3.13 MMDVM bootstrap + TGIF + i18n gates'
@@ -1069,7 +1081,7 @@ grep -Fq 'O rádio precisa usar o mesmo código de cor.' "$WIZ"
 grep -Fq 'pny-i18n-pending' "$WIZ"
 grep -Fq "document.documentElement.classList.remove('pny-i18n-pending')" "$LANG"
 grep -Fq 'A MMDVM passou no teste básico' "$LANG"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 
 echo "PU2PNY-OS $VERSION ARM64 image: inherited regressions + 0.3.13 corrective SW/structural gates OK — hardware validation still required"
 
@@ -1115,8 +1127,8 @@ strings "$ROOT/usr/local/bin/DMRGateway" | grep -Fq 'PU2PNY, system voice priori
 test -x "$ROOT/usr/local/bin/2pny-direct-core"
 chroot "$ROOT" /usr/local/bin/2pny-direct-core --selftest | grep -Fq DIRECT_SELFTEST_OK
 
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
-test "$(cat "$ROOT/etc/2pny/version")" = "0.3.18-alpha"
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
+test "$(cat "$ROOT/etc/2pny/version")" = "0.3.19-alpha"
 
 echo '[17/17] 0.3.17 D-Star RX/commands + timezone gates'
 DSTAR="$ROOT/usr/local/sbin/2pny-protocol-network-apply"
@@ -1190,7 +1202,7 @@ grep -Fq 'timedatectl","set-timezone' "$TZ"
 grep -Fq 'effective_timezone' "$TZ"
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'timezone-request-'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'timezone-result-'
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
 
 # SEC-025 / REL-012: restricted radio administration.
 RADIO="$ROOT/usr/local/sbin/2pny-radio-admin"
@@ -1228,8 +1240,8 @@ grep -Fq 'audio_path="/usr/local/share/dstargateway.d/"' "$DSTAR"
 test -s "$ROOT/usr/local/share/dstargateway.d/en_GB.ambe"
 test -s "$ROOT/usr/local/share/dstargateway.d/en_GB.indx"
 test -s "$ROOT/usr/local/share/dstargateway.d/DStar_Hosts.json"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.18-alpha'
-test "$(cat "$ROOT/etc/2pny/version")" = "0.3.18-alpha"
-echo "PU2PNY-OS 0.3.18-alpha: native D-Star AMBE/INDX assets confirmed in configured directory"
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.19-alpha'
+test "$(cat "$ROOT/etc/2pny/version")" = "0.3.19-alpha"
+echo "PU2PNY-OS 0.3.19-alpha: native D-Star AMBE/INDX assets confirmed in configured directory"
 
-echo "PU2PNY-OS 0.3.18-alpha ARM64 image: D-Star native voice data + inherited D-Star/timezone gates OK — hardware validation still required"
+echo "PU2PNY-OS 0.3.19-alpha ARM64 image: D-Star native voice data + inherited D-Star/timezone gates OK — hardware validation still required"

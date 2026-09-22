@@ -16,7 +16,9 @@ online=text("src/2pny-display-online-detect-0.3.19")
 svc=text("src/2pny-display-online-detect-0.3.19.service")
 tz=text("src/2pny-timezone-apply-0.3.19.py")
 ui=text("src/ui-common-0.3.19.js")
-proto=text("src/2pny-protocol-network-apply-all-0.3.18.py")
+proto=text("src/2pny-protocol-network-apply-all-0.3.19.py")
+dmr=text("src/2pny-protocol-network-apply-0.3.19.py")
+mode=text("src/2pny-mode-apply-0.3.19")
 station=text("src/2pny-station-worker-0.3.17.py")
 switch=text("src/2pny-network-switch-0.3.16")
 
@@ -74,8 +76,32 @@ assert 'expertLiveSection' in expert
 assert 'generateSSHKey' in expert and 'ecdsa-sha2-nistp256' in expert
 assert 'pu2pny-erros.txt' in expert and 'Leitura sob demanda' in expert
 
-# DMR/RF baseline must remain untouched by 0.3.19.
-p18=text("src/2pny-protocol-network-apply-all-0.3.18.py")
-assert proto==p18
-assert 'MQTTLevel=0' in proto
+# REL-014 / PROTO-027: YSF local bridge remains the previously established
+# 3200/4200 contract, but Startup is now deterministically resolvable.
+for marker in ('LocalPort":"3200"','GatewayPort":"4200"','WiresXCommandPassthrough=0','Port=42000'):
+    assert marker in proto,marker
+assert 'CYSFReflectors::findByName' in proto
+assert 'selected is None' in proto and 'startup=full_name(selected)' in proto
+assert 'startup_name' in proto
+assert '"Linked to' in station and 'Link has failed, polls lost' in station
+
+# RF-019/LIVE-019: duplex is coherent across activation paths and visible.
+assert 'setsec(cp,"General",{"Duplex":"1" if usemode=="repeater" else "0"})' in proto
+assert 'out.append("Duplex="+duplex)' in mode
+assert "if(c.use_mode==='repeater')return 'RX '+a+' MHz · TX '+bb+' MHz'" in dash
+assert 'toFixed(6)' in dash
+
+# PROTO-028: DMR duplex keeps both local timeslots available, while XLX keeps
+# one remote network slot selected by the operator.
+assert 'MQTTLevel=0' in dmr
+assert 'duplex=1 if usemode=="repeater" else 0' in dmr
+assert 'slot1=True if duplex' in dmr and 'slot2=True if duplex' in dmr
+assert '"Slot1":"1" if slot1 else "0"' in dmr and '"Slot2":"1" if slot2 else "0"' in dmr
+assert 'route_slots=(1,2) if duplex' in dmr
+assert 'Slot={remote_slot}' in dmr
+assert 'DMR duplex candidate did not enable TS1/TS2 local transport' in dmr
+# Preserve critical DMR baseline ports/auth/audio behavior.
+for marker in ('GatewayPort":"62031"','LocalPort":"62032"','RptPort=62032','LocalPort=62031',
+               'TG4000=unlink','voice_dir="/usr/share/2pny/audio/dmrgateway"'):
+    assert marker in dmr,marker
 print("TEST_0319_REGRESSIONS_OK")

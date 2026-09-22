@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply the focused PU2PNY-OS 0.3.19-alpha maintenance overlay.
 
-Everything not explicitly changed by REL-013 stays inherited from 0.3.18.
+Everything not explicitly changed by REL-013/REL-014 stays inherited from 0.3.18.
 """
 from pathlib import Path
 import os, shutil, subprocess, sys
@@ -28,6 +28,9 @@ install("src/2pny-timezone-apply-0.3.19.py","rootfs-overlay/usr/local/sbin/2pny-
 install("src/2pny-display-core-0.3.19.py","rootfs-overlay/usr/local/sbin/2pny-display-core",0o755)
 install("src/2pny-display-online-detect-0.3.19","rootfs-overlay/usr/local/sbin/2pny-display-online-detect",0o755)
 install("src/2pny-display-online-detect-0.3.19.service","rootfs-overlay/etc/systemd/system/2pny-display-online-detect.service")
+install("src/2pny-protocol-network-apply-all-0.3.19.py","rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply",0o755)
+install("src/2pny-protocol-network-apply-0.3.19.py","rootfs-overlay/usr/local/libexec/2pny-dmr-apply",0o755)
+install("src/2pny-mode-apply-0.3.19","rootfs-overlay/usr/local/sbin/2pny-mode-apply",0o755)
 
 wants=root/"rootfs-overlay/etc/systemd/system/multi-user.target.wants"
 wants.mkdir(parents=True,exist_ok=True)
@@ -42,9 +45,12 @@ subprocess.run(["go","test",str(root/"src/2pnyd/main.go")],check=True)
 for p in (
     root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply",
     root/"rootfs-overlay/usr/local/sbin/2pny-display-core",
+    root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply",
+    root/"rootfs-overlay/usr/local/libexec/2pny-dmr-apply",
 ):
     subprocess.run(["python3","-m","py_compile",str(p)],check=True)
 subprocess.run(["bash","-n",str(root/"rootfs-overlay/usr/local/sbin/2pny-display-online-detect")],check=True)
+subprocess.run(["bash","-n",str(root/"rootfs-overlay/usr/local/sbin/2pny-mode-apply")],check=True)
 cache=root/"rootfs-overlay/usr/local/sbin/__pycache__"
 if cache.exists(): shutil.rmtree(cache)
 
@@ -58,6 +64,8 @@ ui=(root/"rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js").read_text()
 displaycore=(root/"rootfs-overlay/usr/local/sbin/2pny-display-core").read_text()
 tz=(root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply").read_text()
 proto=(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply").read_text()
+dmr=(root/"rootfs-overlay/usr/local/libexec/2pny-dmr-apply").read_text()
+mode=(root/"rootfs-overlay/usr/local/sbin/2pny-mode-apply").read_text()
 
 assert '"0.3.19-alpha"' in main
 compact="".join(main.split())
@@ -83,5 +91,13 @@ assert 'drain pending requests' in tz
 assert '"Module":"C" if proto=="DSTAR"' in proto
 assert 'Band=C' in proto and 'LocalPort":"20011"' in proto and 'GatewayPort":"20010"' in proto
 assert 'ReflectorReconnect=Never' in proto
+# REL-014 / RF-019 / PROTO-027 / PROTO-028
+assert 'CYSFReflectors::findByName' in proto and 'startup_name' in proto
+assert 'setsec(cp,"General",{"Duplex":"1" if usemode=="repeater" else "0"})' in proto
+assert 'duplex=1 if usemode=="repeater" else 0' in dmr
+assert 'slot1=True if duplex' in dmr and 'slot2=True if duplex' in dmr
+assert 'route_slots=(1,2) if duplex' in dmr and 'Slot={remote_slot}' in dmr
+assert 'out.append("Duplex="+duplex)' in mode
+assert "RX '+a+' MHz · TX '+bb+' MHz" in dash and 'toFixed(6)' in dash
 assert link.is_symlink() and os.readlink(link)=="../2pny-display-online-detect.service"
 print("PREPARE_0319_OK")

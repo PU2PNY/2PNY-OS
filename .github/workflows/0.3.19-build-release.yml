@@ -113,6 +113,8 @@ jobs:
             src/2pny-radio-admin-0.3.17.py \
             src/2pny-timezone-apply-0.3.19.py \
             src/2pny-display-core-0.3.19.py \
+            src/2pny-protocol-network-apply-all-0.3.19.py \
+            src/2pny-protocol-network-apply-0.3.19.py \
             ci/patch-dstargateway-radio-admin-0.3.17.py \
             src/2pny-ssh-apply-0.3.16.py \
             ci/patch-dmrgateway-voice-arbiter-0.3.16.py \
@@ -142,7 +144,7 @@ jobs:
             ci/test-0.3.16-regressions.py \
             ci/test-0.3.7-features.py
           rm -rf src/__pycache__ ci/__pycache__
-          bash -n src/2pny-rf-apply-0.3.11 src/2pny-rf-apply-0.3.12 src/2pny-rf-apply-0.3.13 src/2pny-rf-apply-0.3.14 src/2pny-rf-apply-0.3.15 src/2pny-network-switch-0.3.6 src/2pny-network-core-0.3.5 src/2pny-wifi-profiles-0.3.6 src/2pny-auto-maintenance-0.3.6 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.6-image.sh ci/validate-0.3.8-image.sh ci/validate-0.3.9-image.sh ci/validate-0.3.10-image.sh ci/validate-0.3.11-image.sh ci/validate-0.3.12-image.sh ci/validate-0.3.13-image.sh ci/validate-0.3.14-image.sh ci/validate-0.3.15-image.sh ci/validate-0.3.16-image.sh ci/validate-0.3.17-image.sh ci/validate-0.3.18-image.sh ci/validate-0.3.19-image.sh src/2pny-network-switch-0.3.9 src/2pny-network-core-0.3.9 src/2pny-network-switch-0.3.16 src/2pny-network-core-0.3.16 src/2pny-direct-start-0.3.7 src/2pny-direct-recover-0.3.7 src/2pny-display-bootstrap-0.3.9 ci/test-0.3.7-direct.sh
+          bash -n src/2pny-rf-apply-0.3.11 src/2pny-rf-apply-0.3.12 src/2pny-rf-apply-0.3.13 src/2pny-rf-apply-0.3.14 src/2pny-rf-apply-0.3.15 src/2pny-network-switch-0.3.6 src/2pny-network-core-0.3.5 src/2pny-wifi-profiles-0.3.6 src/2pny-auto-maintenance-0.3.6 src/2pny-mdns-guard-0.3.3 src/90-pu2pny-mdns-0.3.3 src/2pny-mode-apply-0.3.0 src/2pny-mode-apply-0.3.19 src/2pny-hostfiles-update-0.3.2 ci/validate-0.3.6-image.sh ci/validate-0.3.8-image.sh ci/validate-0.3.9-image.sh ci/validate-0.3.10-image.sh ci/validate-0.3.11-image.sh ci/validate-0.3.12-image.sh ci/validate-0.3.13-image.sh ci/validate-0.3.14-image.sh ci/validate-0.3.15-image.sh ci/validate-0.3.16-image.sh ci/validate-0.3.17-image.sh ci/validate-0.3.18-image.sh ci/validate-0.3.19-image.sh src/2pny-network-switch-0.3.9 src/2pny-network-core-0.3.9 src/2pny-network-switch-0.3.16 src/2pny-network-core-0.3.16 src/2pny-direct-start-0.3.7 src/2pny-direct-recover-0.3.7 src/2pny-display-bootstrap-0.3.9 ci/test-0.3.7-direct.sh
           python3 ci/test-0.2.9-live-core.py
           python3 ci/test-0.3.1-live-core.py
           python3 ci/test-0.3.6-features.py
@@ -496,6 +498,10 @@ jobs:
           - source/regressões, ARM64, XZ, SHA-256 e imagem montada são gates;
           - DMR baseline continua nos gates;
           - D-Star RF real, Nextion real, timezone, DNS/rede e demais correções permanecem HW PENDENTE até reteste físico.
+          - YSF/C4FM resolve o Startup contra o nome real do catálogo antes de iniciar o poll remoto;
+          - modo duplex preserva RX/TX e reforça General.Duplex em todos os protocolos;
+          - DMR duplex mantém TS1/TS2 no transporte local e pass-through dos dois slots em BM/TGIF; XLX preserva um slot remoto escolhido;
+          - Ao Vivo identifica RX e TX separadamente, com seis casas, em modo duplex.
 
           Estado: ALPHA/HW-TEST.
           EOF
