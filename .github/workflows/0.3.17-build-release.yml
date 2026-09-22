@@ -102,6 +102,7 @@ jobs:
             src/2pny-protocol-network-apply-all-0.3.17.py \
             src/2pny-station-worker-0.3.17.py \
             src/2pny-live-core-0.3.16.py \
+            src/2pny-live-core-0.3.17.py \
             src/2pny-aprs-0.3.16.py \
             src/2pny-display-apply-0.3.16.py \
             src/2pny-timezone-apply-0.3.16.py \
