@@ -1412,3 +1412,86 @@ A release 0.3.18 pode portanto conter apenas:
 - SEC-025 e somente o mínimo de UI/CI necessário aos comandos administrativos.
 
 Nenhum outro componente entra no escopo.
+
+
+## 2026-09-22 — manutenção focal 0.3.19-alpha
+
+### REL-013 — Escopo congelado da 0.3.19-alpha
+A 0.3.19-alpha parte exatamente da 0.3.18-alpha. Tudo que não foi citado no feedback de 2026-09-22 permanece congelado. DMR TX/RX funcional continua baseline obrigatória de regressão. Não alterar baud, offsets, RF ou protocolo não citado para solucionar defeito de outra área.
+
+### NET-025 — DNS efetivo sem `device reapply` incompatível
+Ao alterar DNS em um perfil NetworkManager ativo:
+- gravar somente `ipv4.ignore-auto-dns`/`ipv4.dns` no perfil correto;
+- não usar `nmcli device reapply` quando o perfil contiver propriedades `connection.*` não reaplicáveis, incluindo `connection.autoconnect-retries`;
+- reativar o perfil salvo no mesmo dispositivo de forma limitada, confirmar DNS efetivo e manter rollback;
+- preservar prioridades/autoconnect dos perfis Wi-Fi existentes.
+
+### NET-026 — Wi-Fi 1/2, canais e linguagem leiga
+- Rede Wi-Fi 1 representa a rede atualmente conectada;
+- Rede Wi-Fi 2 lista redes alternativas encontradas, sem duplicar a atual;
+- o gráfico de canais deve identificar explicitamente canal atual e melhor sugestão calculada;
+- “Ethernet” na UI do usuário passa a “Conexão via cabo” e “MTR” passa a “Caminho da conexão”;
+- a recomendação de canal é informativa e nunca altera o roteador automaticamente.
+
+### LIVE-018 — Dados transitórios somente durante atividade e TOT regressivo
+- Slot, Color Code, RSSI/sinal RF e métricas equivalentes sem dado real ficam invisíveis em standby;
+- durante RF TX, o painel mostra TOT restante de 180 s regressivo até zero;
+- métricas RF nunca são inventadas para origem NETWORK;
+- no Expert, o bloco Estado Ao Vivo fica invisível sem TX ativo.
+
+### UI-033 — Protocolos, frequência e estado de salvamento
+- o título da página é “Protocolos”;
+- frequências RX/TX são exibidas com exatamente seis casas decimais em MHz;
+- entrada aceita ponto ou vírgula decimal e normaliza para seis casas;
+- ao iniciar uma gravação a UI informa “Salvando”; após persistir e enquanto atualiza estado informa “Atualizando”;
+- nenhuma frequência/offset é mudada fora da intenção do operador.
+
+### PROTO-025 — D-Star DR, módulo real e diagnóstico RF
+- módulo RF local do hotspot permanece C; RPT1 deve corresponder ao indicativo local + C e RPT2 ao gateway + G;
+- módulo remoto do refletor é independente e só pode ser mostrado como conectado quando houver evidência do DStarGateway (`link_state=linked`);
+- comandos nativos D-Star devem ser apresentados um por linha: `_______I`, `_______E`, `_______U`, `_______L`, além de link/troca por `XLXnnn<mod>L`, `REFnnn<mod>L` e retorno a `CQCQCQ`;
+- para rádio Icom em hotspot simplex, a ajuda deve orientar memória DR/repetidora compatível; rejeições `non repeater RF header`, `wrong repeater` e `invalid access attempt` devem ser visíveis no diagnóstico;
+- manter loopback MMDVMHost/DStarGateway 20011/20010, `Band=C`, `ReflectorReconnect=Never` e pack nativo de áudio aprovado.
+
+### PROTO-026 — Ajuda operacional por protocolo sem comandos inventados
+A página Protocolos deve explicar o mecanismo real de seleção/controle disponível:
+- D-Star: URCALL/DR e comandos nativos;
+- DMR: Talkgroup/Private Call e comandos dependentes da rede; TG 4000 pode ser documentado somente no contexto de rede que o suporta;
+- YSF/C4FM: Wires-X/YSF/DG-ID conforme gateway/rede;
+- P25: seleção por Talkgroup;
+- NXDN: seleção por Talkgroup/RAN conforme rede;
+- POCSAG/DAPNET: paging de saída, sem alegar uplink interativo equivalente a D-Star.
+Nunca apresentar como universal um comando específico de uma rede.
+
+### APRS-013 — Aviso de mensagem fora da página APRS
+- alertas internos do painel continuam disponíveis em HTTP local;
+- fora da página APRS, mensagem nova gera balão flutuante por aproximadamente 5 s; clique abre APRS;
+- a página APRS não duplica o balão global;
+- notificação nativa do sistema operacional só pode ser habilitada quando o navegador oferecer contexto seguro/permissão; não burlar a política HTTPS do navegador nem declarar sucesso falso.
+
+### DISPLAY-019 — Detecção conectada à rede e inicialização segura
+- após `network-online`, executar uma detecção limitada/debounced dos displays usando os detectores existentes;
+- confirmação Nextion exige evidência real; não inferir HMI por nome de porta;
+- não fazer upload/flash automático de `.tft`/HMI em tela desconhecida;
+- renderers PU2PNY compatíveis exibem “PU2PNY-OS Inicializando” com progresso 0–100;
+- chamadas devem destacar indicativo/nome do operador quando houver dado real e RF TX deve mostrar TOT regressivo 180→0;
+- comandos da página Display devem continuar usando o apply transacional existente, sem dois writers na mesma serial.
+
+### SEC-026 — Fuso horário sem request preso
+O helper privilegiado de timezone deve drenar requests únicos pendentes numa execução limitada, gerar resultado para cada request, validar zoneinfo e confirmar o resultado efetivo de `timedatectl`. Falha não pode deixar a UI declarando sucesso.
+
+### SEC-027 — SSH por chave gerada no cliente
+- permitir gerar par de chaves no navegador quando WebCrypto estiver disponível;
+- somente a chave pública pode ser enviada ao hotspot;
+- a chave privada deve permanecer no computador do usuário e ser disponibilizada para salvamento local;
+- root/password SSH continuam proibidos; ativação continua pelo helper restrito existente.
+
+### DATA-002 — Registro de erros sob demanda no Expert
+- disponibilizar endpoint somente leitura com erros recentes dos serviços PU2PNY;
+- redigir campos comuns de segredo;
+- não fazer polling contínuo de `journalctl`;
+- permitir baixar o registro em texto;
+- destacar rejeições D-Star RF que ajudem a diagnosticar DR/RPT1/RPT2 sem inventar causa.
+
+### UI-034 — Padrões de voz
+Em instalação sem preferência de voz previamente salva, “Ativar avisos por voz” e “Informar horário de hora em hora” iniciam ativos. Preferência existente do operador nunca é sobrescrita por upgrade.

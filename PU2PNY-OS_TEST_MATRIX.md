@@ -657,3 +657,33 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-SEC-025E | SEC-025 | comando de perfil após armamento | ativa somente perfil salvo/validado correspondente | PENDENTE SW/HW |
 | TEST-SEC-025F | SEC-025 | MYCALL diferente do callsign configurado | recusa sem ação privilegiada | PENDENTE SW/HW |
 | TEST-REL-0318-E | REL-012 | imagem montada | helper/path unit presentes e dstargateway contém handler SEC-025 compilado | PENDENTE CI |
+
+
+## Casos 0.3.19-alpha — manutenção focal
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-NET-025A | NET-025 | aplicar DNS com perfil contendo autoconnect-retries | não usa device reapply; perfil é reativado e DNS efetivo é verificado | PENDENTE CI/HW |
+| TEST-NET-026A | NET-026 | abrir Internet com Wi-Fi conectado + redes próximas | Wi-Fi 1 = atual; Wi-Fi 2 = alternativas; atual/melhor canal identificados | PENDENTE CI/HW |
+| TEST-LIVE-018A | LIVE-018 | standby | Slot/CC/RSSI/Sinal transitórios ficam invisíveis | PENDENTE CI/HW |
+| TEST-LIVE-018B | LIVE-018 | RF TX contínuo | TOT visível regride 180→0 no Ao Vivo e Sistema | PENDENTE CI/HW |
+| TEST-UI-033A | UI-033 | digitar 438,800 ou 438.800 | normaliza/exibe 438.800000 sem alterar intenção | PENDENTE CI/HW |
+| TEST-UI-033B | UI-033 | salvar perfil | mostra Salvando e depois Atualizando | PENDENTE CI/HW |
+| TEST-PROTO-025A | PROTO-025 | D-Star remoto D configurado mas não confirmado | módulo remoto não é mostrado como conectado | PENDENTE CI/HW |
+| TEST-PROTO-025B | PROTO-025 | gateway confirma link D | Ao Vivo/Protocolos mostram módulo remoto D; local continua C | PENDENTE CI/HW |
+| TEST-PROTO-025C | PROTO-025 | RF D-Star com header não-repeater/RPT1 errado | MMDVM rejeita e Expert expõe diagnóstico sem alterar RF | PENDENTE CI/HW |
+| TEST-PROTO-025D | PROTO-025 | DR I/E/U/L e link XLX/REF | comandos chegam ao gateway e módulo local permanece C | PENDENTE HW |
+| TEST-PROTO-026A | PROTO-026 | abrir ajuda DMR/YSF/P25/NXDN/POCSAG | mecanismo real aparece sem comando universal inventado | PENDENTE CI |
+| TEST-APRS-013A | APRS-013 | nova mensagem estando fora de /aprs | balão interno aparece ~5 s e clique abre APRS | PENDENTE CI/HW navegador |
+| TEST-APRS-013B | APRS-013 | Notification em HTTP não seguro | UI não declara permissão nativa; alerta interno continua | PENDENTE CI/HW navegador |
+| TEST-DISPLAY-019A | DISPLAY-019 | network-online | detector roda uma vez, limitado/debounced, sem flash TFT | PENDENTE CI/HW |
+| TEST-DISPLAY-019B | DISPLAY-019 | Nextion compatível | inicialização 0–100, indicativo/nome e TOT RF TX aparecem | PENDENTE HW |
+| TEST-SEC-026A | SEC-026 | dois requests de timezone pendentes | helper drena ambos e produz resultados correspondentes | PENDENTE CI/HW |
+| TEST-SEC-027A | SEC-027 | gerar chave no navegador | privada fica local; apenas pública vai para authorized_keys | PENDENTE CI/HW navegador |
+| TEST-DATA-002A | DATA-002 | atualizar/baixar erros | leitura sob demanda, redaction e download funcionam sem polling | PENDENTE CI/HW |
+| TEST-UI-034A | UI-034 | instalação sem voice-settings | avisos e horário iniciam ativos | PENDENTE CI/HW |
+| TEST-UI-034B | UI-034 | upgrade com preferência de voz existente | preferência existente é preservada | PENDENTE CI/HW |
+| TEST-REL-0319-A | REL-013 | source/regressões | baseline 0.3.18 + gates 0.3.19 passam | PENDENTE CI |
+| TEST-REL-0319-B | REL-013 | ARM64/XZ/SHA-256 | artefato íntegro | PENDENTE CI |
+| TEST-REL-0319-C | REL-013 | imagem montada | overlay 0.3.19 e baselines estruturais presentes | PENDENTE CI |
+| TEST-REL-0319-D | REL-013 | Raspberry Pi + MMDVM + Nextion/rede real | validação física completa do lote | PENDENTE HW |

@@ -604,3 +604,21 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - A troca por rádio só ativa perfil já salvo; não altera frequência, offset, servidor ou credenciais.
 - Shutdown por software não é confundido com corte físico de 5 V.
 - REL-011 permanece válido para a correção do pack de voz; REL-012 documenta a ampliação explícita de escopo antes da publicação.
+
+
+## 2026-09-22 — abertura e implementação 0.3.19-alpha
+
+- Criados REL-013, NET-025/026, LIVE-018, UI-033/034, PROTO-025/026, APRS-013, DISPLAY-019, SEC-026/027 e DATA-002.
+- Criado rollback `backup/0.3.18-pre-0.3.19-20260922`; trabalho em `pu2pny-os-0.3.19-alpha`.
+- DNS: removido `nmcli device reapply` do fluxo de aplicação de DNS; o perfil salvo é reativado no mesmo device e o DNS efetivo continua verificado/rollbackável.
+- Internet: Wi-Fi 1 mostra a conexão ativa, Wi-Fi 2 exclui a atual e oferece alternativas; gráfico identifica canal atual/melhor; rótulos técnicos foram simplificados.
+- Ao Vivo/Sistema: dados RF/DMR transitórios ficam ocultos em standby; TOT 180 s passa a regressivo durante RF TX.
+- Protocolos: título simplificado, MHz com seis casas, entrada ponto/vírgula, estados Salvando/Atualizando e ajuda específica por protocolo.
+- D-Star: ajuda DR em linhas; módulo local C preservado; módulo remoto só aparece conectado com evidência `link_state=linked`; Expert mostra rejeições de header/RPT1.
+- APRS: toast interno de 5 s fora da página APRS; não foi criada tentativa de burlar exigência HTTPS da Notification API.
+- Display: detector limitado após network-online e splash 0–100 no renderer compatível; nenhuma gravação HMI/TFT automática.
+- Timezone: helper passa a drenar requests pendentes de maneira limitada e emitir resultado por request.
+- Voz: defaults avisos/horário ativos somente quando ainda não existe preferência salva.
+- SSH: geração de par no navegador; chave privada fica no cliente e apenas a pública é enviada ao helper existente.
+- Expert: Estado Ao Vivo oculto sem TX; log de erros sob demanda, redaction e download em texto.
+- CI 0.3.19 adicionada sobre a cadeia completa 0.3.18, com gates focais e validação de imagem. Estado CI/HW será atualizado após evidência.

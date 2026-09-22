@@ -682,3 +682,26 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Poweroff é desligamento seguro do Linux. Corte físico da alimentação exige hardware externo.
 - D-Star I/E/U/L/link, correção NETWORK→RF, pack de voz e timezone continuam no mesmo ciclo; todo o restante permanece congelado.
 - Estado: implementação/CI; HW PENDENTE.
+
+
+## 0.3.19-alpha — manutenção focal solicitada em 2026-09-22
+
+- Branch: `pu2pny-os-0.3.19-alpha`.
+- Rollback: `backup/0.3.18-pre-0.3.19-20260922` no commit `453df760fc75e105abda0f22d1d8d2c18fc40fe4`.
+- Base: 0.3.18-alpha integral; componentes não citados permanecem congelados.
+- Requisitos: REL-013, NET-025/026, LIVE-018, UI-033/034, PROTO-025/026, APRS-013, DISPLAY-019, SEC-026/027, DATA-002.
+- Implementado em fonte:
+  - DNS sem `device reapply` incompatível;
+  - Wi-Fi 1 atual / Wi-Fi 2 alternativa + canal atual/melhor;
+  - Live/Expert ocultam dados transitórios em standby e TOT é regressivo;
+  - Protocolos com 6 casas, vírgula/ponto e ajuda por protocolo;
+  - APRS toast global de 5 s fora da página APRS;
+  - display network-online limitado + splash 0–100 em renderer compatível;
+  - timezone drena requests;
+  - voz/horário default-on somente sem preferência salva;
+  - SSH gera chave no navegador e envia somente pública;
+  - Expert possui log de erros sob demanda/download;
+  - D-Star mostra módulo remoto somente com confirmação real do gateway e expõe rejeições RF.
+- D-Star local continua C e portas 20011/20010; DMR/RF baseline não foi alterada.
+- Commits de implementação até o momento: `ccd7b722d7b7a9d7a96c42b831d8d45e2434bb18`, `caa452aff4a18966faf45a0d6fec1b371b9f1653`, `87264ff535b6f7ac87e96855f7604f90e5adf485`, `4cd992d8714438cd4e29b663d91c68a61ff1cacc`.
+- Estado atual: **DOC/implementado em fonte; CI iniciado; HW PENDENTE**. Não promover para HW/PROD sem teste físico.
