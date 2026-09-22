@@ -767,3 +767,19 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Correção staged: copiar o mesmo catálogo pinado para o overlay do diretório de dados antes do build e exigir sua presença/tamanho também no REL-015.
 - Rollback: `backup/0.3.19-pre-dstar-hostfile-fix-20260922`.
 - Estado: **SW corrigido / novo CI obrigatório / publicação bloqueada até PASS**.
+
+
+### Run 35760337205 — 0.3.19 publicada
+- Source: PASS.
+- Staged source: PASS.
+- ARM64: PASS.
+- XZ + SHA-256: PASS.
+- Preflight REL-015: PASS.
+- Validador final: PASS.
+- Artefato: PASS.
+- Publish: PASS.
+- Prerelease: `v0.3.19-alpha`.
+- Imagem: `PU2PNY-OS-0.3.19-alpha-arm64.img.xz` — 597725788 bytes.
+- SHA-256 da imagem: `5f14e62b5811129f42f6dd9b7c637cfaa0944a370db42637abc56d1ac62f2355`.
+- Commit da release: `c4db3e0098e2af1cd0ec1504e8946d30ac8c6391`.
+- Nível: **SW/CI PASS; ALPHA/HW-TEST**. DMR/YSF/D-Star/duplex e demais correções físicas continuam exigindo reteste HW antes de promoção.
