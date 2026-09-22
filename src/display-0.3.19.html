@@ -1,0 +1,72 @@
+<!doctype html><html lang="pt-BR" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PU2PNY — Display</title><link rel="stylesheet" href="/ui-0.3.0.css"><style>
+.displayhero{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:18px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 10%,var(--card)),var(--card));box-shadow:var(--shadow)}.displayhero h1{margin:3px 0 5px}.eyebrow{font-size:12px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}.stateflow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.stateflow span{padding:5px 8px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted)}.stateflow span.active{border-color:var(--blue);color:var(--text);background:color-mix(in srgb,var(--blue) 12%,transparent)}.displaypreview{min-height:160px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(155deg,#071018,#111827);padding:16px;color:#e5f4ff}.displaypreview .screen{border:2px solid #334155;border-radius:10px;min-height:128px;padding:12px;box-shadow:inset 0 0 28px rgba(56,189,248,.08)}.displaypreview .screen b{font-size:20px}.modelgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:10px}.writerpill{display:inline-flex;padding:4px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}@media(max-width:760px){.displayhero{display:block}.displayhero .actions{margin-top:12px}.modelgrid{grid-template-columns:1fr}}
+</style></head><body>
+<header class="topnav"><div class="brand">PU2PNY-OS<small>Display / Nextion</small></div><nav class="nav" id="mainNav"></nav><div class="navtools"><span class="pill"><span id="clockLocal">--:--:--</span></span><button class="btn" id="themeToggle">☀ Claro</button></div></header>
+<main class="main">
+<section class="displayhero"><div><div class="eyebrow">Display Auto-Detection</div><h1>Display</h1><p class="muted">Detecção automática ao entrar na Internet, renderer e integração física sem disputar a serial do MMDVM.</p><div class="stateflow" id="detectFlow"><span data-state="detecting">Detectando</span><span data-state="identified">Identificado</span><span data-state="ready">Pronto</span><span data-state="error">Erro</span></div></div><div class="actions"><button class="btn" id="detectDisplay">Detectar display</button><button class="btn" id="rescanHardware">Redetectar hardware</button></div></section>
+
+<section class="section"><div class="grid2">
+<article class="card"><div class="sectionhead"><h2>Estado atual</h2><span class="writerpill" id="writer">writer —</span></div><div class="big" id="state">Verificando...</div><div class="rows">
+<div class="row"><span>Tipo</span><b id="type">—</b></div><div class="row"><span>Modelo</span><b id="model">—</b></div><div class="row"><span>Resolução</span><b id="resolution">—</b></div><div class="row"><span>Integração</span><b id="integration">—</b></div><div class="row"><span>Driver</span><b id="driver">—</b></div><div class="row"><span>Renderer</span><b id="renderer">—</b></div><div class="row"><span>Porta MMDVM</span><b id="port">—</b></div></div><p id="runtimeMessage" class="statusmsg"></p></article>
+
+<article class="card"><h2>Prévia do Moderno V2</h2><div class="displaypreview"><div class="screen"><small>PU2PNY · STANDBY</small><br><b id="previewProto">DMR</b><p id="previewText">Rastreando sinais<br>Wi-Fi / Ethernet · IP real<br>TX/RX usa indicativo, destino, duração, BER/RSSI quando disponíveis.</p></div></div><p class="muted">A prévia é conceitual. O conteúdo físico usa somente dados reais do snapshot Ao Vivo.</p></article>
+</div></section>
+
+<section class="section"><div class="grid2">
+<article class="card"><h2>Nextion pela MMDVM</h2><p class="muted">A MMDVMHost continua dona da porta serial física. Escolha quem renderiza a tela; o sistema impede dois writers simultâneos.</p>
+<label><input id="enabled" type="checkbox" style="width:auto"> Usar Nextion pela MMDVM</label>
+<label>Renderer</label><select id="rendererSelect"><option value="mmdvmhost-native">MMDVMHost nativo / ON7LDS · recomendado para Nextion via modem</option></select>
+<div class="modelgrid"><div><label>Modelo / tamanho</label><select id="modelSelect">
+<option value="auto|" selected>Auto detectar</option>
+<option value="nextion-24-320x240|320x240">Nextion 2,4" · 320×240</option>
+<option value="nextion-28-320x240|320x240">Nextion 2,8" · 320×240</option>
+<option value="nextion-32-400x240|400x240">Nextion 3,2" · 400×240</option>
+<option value="nextion-35-480x320|480x320">Nextion 3,5" · 480×320</option>
+<option value="nextion-43-480x272|480x272">Nextion 4,3" · 480×272</option>
+<option value="nextion-50-800x480|800x480">Nextion 5,0" · 800×480</option>
+<option value="nextion-70-800x480|800x480">Nextion 7,0" · 800×480</option>
+<option value="nextion-101-1024x600|1024x600">Nextion 10,1" · 1024×600</option>
+</select></div><div id="nativeWrap"><label>Layout nativo</label><select id="nativeLayout"><option value="2">ON7LDS / Pi-Star</option><option value="3">ON7LDS DIY</option></select></div></div>
+<div class="notice" style="margin-top:10px"><b>Nextion via modem:</b> nesta versão o MMDVMHost volta a ser o writer direto, como no caminho validado da 0.3.8. Nenhum TFT/HMI é gravado. Moderno V2 continua disponível para displays diretamente compatíveis, OLED e LCD.</div>
+<button class="btn primary" id="save" style="margin-top:10px">Aplicar Display</button><p id="result" class="statusmsg"></p></article>
+
+<article class="card"><h2>Auto-provisionamento</h2><div class="rows"><div class="row"><span>Detecção</span><b id="detectState">—</b></div><div class="row"><span>HMI PU2PNY</span><b id="hmiStatus">—</b></div><div class="row"><span>Asset recomendado</span><b id="assetStatus">—</b></div></div>
+<p class="muted">Ao conectar à Internet, o PU2PNY executa uma detecção limitada do hardware. O catálogo identifica modelo/resolução quando o equipamento responde com evidência real. Um TFT só poderá ser oferecido quando existir asset oficial publicado com URL + SHA-256. Mesmo assim, a gravação exigirá confirmação explícita no painel.</p>
+<div class="notice"><b>Nunca automático:</b> nenhum HMI/TFT será sobrescrito silenciosamente nesta versão.</div></article>
+</div></section>
+
+<section class="section"><div class="grid2"><article class="card"><h2>OLED / LCD</h2><p><b>OLED 0x3C/0x3D:</b> SSD1306/SH1106 em Moderno V2 compacto. O controlador exato só é afirmado quando o kernel/Device Tree fornece evidência.</p><p><b>LCD 0x27/0x3F:</b> HD44780/PCF8574 tratado como candidato até confirmação.</p></article>
+<article class="card"><h2>Telas genéricas</h2><p>USB, SPI, HDMI/DRM e touch podem ser detectados como hardware real. Nesta Alpha, display genérico é identificado e informado; renderer touch gráfico completo continua fase posterior e não bloqueia o sistema.</p></article></div></section>
+
+<section class="section"><div class="card"><h2>Detalhes técnicos</h2><details><summary>Ver detecção e runtime</summary><pre id="hardware" style="white-space:pre-wrap;overflow-wrap:anywhere">Carregando...</pre></details></div></section>
+</main><script src="/ui-common-0.3.0.js"></script><script>
+PNY.nav('display');PNY.initTheme();var displayDirty=false,displayApplying=false,q=PNY.q;
+['enabled','rendererSelect','modelSelect','nativeLayout'].forEach(function(id){q(id).onchange=function(){displayDirty=true;syncRenderer()}});
+function syncRenderer(){var native=q('rendererSelect').value==='mmdvmhost-native';q('nativeWrap').classList.toggle('hidden',!native)}
+function setFlow(state){document.querySelectorAll('#detectFlow span').forEach(function(x){x.classList.toggle('active',x.dataset.state===state)})}
+function pickDisplay(det){var rows=(det&&det.displays)||[];return rows.find(function(x){return x.detected===true})||rows[0]||{}}
+async function load(){
+ try{
+  var d=await PNY.getj('/api/dashboard',null,6000),dr=d.display_runtime||{},h=await PNY.getj('/api/hardware/status',null,5000),o=await PNY.getj('/api/display/override',null,5000),det=await PNY.getj('/api/display/detection',null,5000).catch(function(){return{}});
+  var dd=pickDisplay(det),active=!!(dr.active||d.display_active),state=dr.state||det.state||'waiting';
+  q('state').textContent=active?'Ativo':state==='configured'?'Configurado':state==='warning'?'Atenção':'Aguardando';q('state').className='big '+(active?'green':state==='warning'?'red':'yellow');
+  q('type').textContent=dr.type||dd.class||o.type||'—';q('model').textContent=dd.model||((h.display||{}).model)||'—';q('resolution').textContent=dr.resolution||dd.resolution||o.resolution||'—';
+  q('integration').textContent=dr.integration||dd.transport||'—';q('driver').textContent=dr.driver||(active?'PU2PNY Display Core':'—');q('renderer').textContent=dr.renderer||o.renderer||'—';q('writer').textContent='writer '+(dr.writer||'—');
+  q('port').textContent=((h.mmdvm||{}).port)||'—';q('runtimeMessage').textContent=dr.message||'';
+  q('detectState').textContent=det.state||'—';q('hmiStatus').textContent=dd.hmi_version?('PU2PNY '+dd.hmi_version):(dd.hmi_status||'—');
+  var asset=dd.recommended_hmi||{};q('assetStatus').textContent=asset.status==='unpublished'?'Ainda não publicado':asset.version||asset.status||'—';
+  setFlow(det.state==='ready'?(dd.detected?'identified':'ready'):(det.state||'ready'));
+  if(!displayDirty&&!displayApplying){
+    q('enabled').checked=!!o.enabled;q('rendererSelect').value=o.renderer||((Number(o.layout)===9)?'pu2pny-modern-v2':'mmdvmhost-native');
+    var target=(o.model_profile||'auto')+'|'+(o.resolution||'');if(Array.from(q('modelSelect').options).some(function(x){return x.value===target}))q('modelSelect').value=target;else q('modelSelect').value='auto|';
+    q('nativeLayout').value=String(Number(o.layout)===3?3:2);syncRenderer()
+  }
+  q('hardware').textContent=JSON.stringify({mmdvm:h.mmdvm||{},hardware_display:h.display||{},detection:det,runtime:dr,override:o},null,2);
+  var cfg=d.config||{};q('previewProto').textContent=String(cfg.protocol||'PU2PNY').replace('DSTAR','D-STAR')
+ }catch(e){q('result').textContent=e.message}
+}
+q('detectDisplay').onclick=async function(){var op=PNY.operation('Detectando display','USB/UART → I2C → SPI → vídeo/touch. Nenhum TFT será gravado.');try{setFlow('detecting');await PNY.getj('/api/display/detection',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'},12000);for(var i=0;i<30;i++){await new Promise(function(r){setTimeout(r,700)});var d=await PNY.getj('/api/display/detection',null,5000);op.step(d.message||'Detectando…');if(d.state==='ready'){op.done('Detecção concluída.');await load();return}if(d.state==='error')throw new Error(d.message||'Falha na detecção')}throw new Error('A detecção ultrapassou o limite seguro.')}catch(e){setFlow('error');op.error(e.message)}};
+q('rescanHardware').onclick=async function(){var op=PNY.operation('Redetectando hardware','Preparando drivers e confirmando MMDVM/display sem alterar RF...');try{await PNY.getj('/api/hardware/scan',{method:'POST',pnySilent:true},12000);for(var i=0;i<45;i++){await new Promise(function(r){setTimeout(r,700)});var h=await PNY.getj('/api/hardware/status',null,6000);op.step(h.message||h.stage||'Detectando hardware…');if(h.state!=='preparing'&&h.state!=='scanning'){op.done('Hardware atualizado.');await load();return}}op.done('Varredura concluída; confira o estado.');load()}catch(e){op.error(e.message)}};
+q('save').onclick=async function(){displayApplying=true;q('save').disabled=true;var renderer=q('rendererSelect').value,parts=q('modelSelect').value.split('|'),layout=renderer==='mmdvmhost-native'?Number(q('nativeLayout').value):9;var op=PNY.operation('Aplicando Display','Ativando Nextion pelo renderer nativo do MMDVMHost…');try{var r=await PNY.getj('/api/display/override',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:q('enabled').checked,layout:layout,renderer:renderer,model_profile:parts[0]||'auto',resolution:parts[1]||''})},50000),rt=r.runtime||{};if(q('enabled').checked&&rt.writer==='none')throw new Error('O writer do display não foi confirmado.');displayDirty=false;q('result').textContent=rt.message||'Display atualizado e confirmado.';op.done(q('result').textContent);setTimeout(load,500)}catch(e){q('result').textContent=e.message;op.error(e.message)}finally{displayApplying=false;q('save').disabled=false}};
+syncRenderer();load();setInterval(function(){if(!document.hidden&&!displayDirty&&!displayApplying)load()},8000);
+</script></body></html>
