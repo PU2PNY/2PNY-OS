@@ -684,3 +684,13 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Falha de pré-validação bloqueia validador/publicação e exige correção no fonte/builder + novo build; não é permitido mascarar o erro alterando a imagem pronta ou removendo o gate.
 - Criados **TEST-REL-015A/B**.
 - Rollback preservado: `backup/0.3.19-pre-prevalidation-rule-20260922b`.
+
+
+### 2026-09-22 — D-Star host catalog após REL-015 PASS
+- O run `35758692012` comprovou a nova ordem: imagem ARM64 → XZ/SHA → preflight REL-015 PASS → validador final.
+- O validador final detectou `DStar_Hosts.json` ausente no diretório `/usr/local/share/dstargateway.d/`; a release não foi publicada.
+- O catálogo não será buscado de uma fonte nova: a correção reaproveita o `DStar_Hosts.json` pinado já seeded pela cadeia 0.3.1 e o coloca no overlay antes da criação da imagem.
+- O preflight REL-015 passa a exigir o mesmo arquivo com tamanho mínimo antes de chamar o validador.
+- Criado `TEST-BUILD-0319-DSTAR-HOSTS`.
+- Rollback: `backup/0.3.19-pre-dstar-hostfile-fix-20260922`.
+- Nenhum parâmetro RF, baud, frequência, offset, DMR, YSF ou rede foi alterado.
