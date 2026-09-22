@@ -68,5 +68,5 @@ Não liberar como completa com requisito crítico ausente, regressão conhecida 
 - Base imutável: `pu2pny-os-0.3.19-alpha`; rollback: `backup/0.3.19-pre-0.3.20-20260922`.
 - Escopo: REL-016 e requisitos associados registrados no MASTER_SPEC.
 - DMR simplex e YSF/C4FM simplex permanecem baseline protegidos.
-- D-Star: módulo local/RPT1 padrão B em novas configurações, selecionável A–E; módulo remoto separado. Comando de rádio só altera estado efetivo após confirmação real do gateway.
+- D-Star: módulo local/RPT1 padrão B em novas configurações, selecionável A–D; módulo remoto separado. Comando de rádio só altera estado efetivo após confirmação real do gateway.
 - Não divulgar link da imagem antes de source + staging + ARM64 + SHA-256 + REL-015 + validador final em PASS.
