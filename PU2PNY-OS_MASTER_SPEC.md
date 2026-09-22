@@ -1565,3 +1565,21 @@ A partir da versão posterior à 0.3.19-alpha, o painel web deve incorporar o lo
 - otimizar dimensões/peso para não degradar carregamento do painel nem aumentar gravações no SD;
 - definir fallback textual `PU2PNY-OS` caso o ativo não carregue;
 - cobrir presença do ativo, referência válida e ausência de regressão visual/funcional em teste.
+
+
+## 2026-09-22 — Pré-validação obrigatória antes do validador final
+
+### REL-015 — Pré-validação obrigatória da imagem
+Toda versão do PU2PNY-OS deve executar uma pré-validação automática **depois** de gerar/normalizar a imagem ARM64 e o SHA-256 e **antes** de chamar o validador final específico da versão.
+
+A pré-validação deve, no mínimo:
+- verificar integridade XZ e correspondência do SHA-256;
+- montar a partição raiz da imagem em modo somente leitura;
+- conferir identidade/versão e componentes essenciais do runtime;
+- verificar os baselines críticos preservados, incluindo DMR e arquivos obrigatórios dos protocolos já incorporados;
+- verificar requisitos estruturais novos da release que possam ser comprovados diretamente na imagem;
+- bloquear o validador final e a publicação ao primeiro erro.
+
+Se a pré-validação falhar, a causa deve ser corrigida no fonte, overlay, builder ou empacotamento correspondente e a imagem deve ser reconstruída. É proibido editar a imagem pronta para mascarar a falha, remover silenciosamente o gate ou enfraquecer o teste apenas para obter PASS.
+
+Esta regra é permanente e deve ser herdada por todos os workflows/releases futuros.
