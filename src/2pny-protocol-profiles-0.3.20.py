@@ -119,11 +119,12 @@ def activate(proto):
         r=rf(merged)
         if r.returncode:die((r.stderr or r.stdout or "falha ao aplicar RF").strip(),5)
     pwd=secret(proto)
+    options=("DSTAR_LOCAL="+str(profile.get("dstar_local_module") or current_dstar_local_module())) if proto=="DSTAR" else ""
     args=[proto,str(profile.get("server_name") or ""),str(profile.get("server_address") or ""),
           str(profile.get("server_port") or 0),pwd,str(profile.get("use_mode") or "hotspot"),
           str(profile.get("color_code") or 1),str(profile.get("dmr_slot") or "2"),
           str(profile.get("xlx_module") or ""),str(profile.get("essid") or ""),
-          str(profile.get("network_kind") or ""),""] 
+          str(profile.get("network_kind") or ""),options] 
     r=subprocess.run(["/usr/local/sbin/2pny-protocol-network-apply",*args],text=True,capture_output=True,timeout=55)
     if r.returncode:
         if rf_changed:
