@@ -145,7 +145,7 @@ server=q(server).strip();address=q(address).strip();password=q(password).strip()
 usemode=q(usemode).lower().strip()
 dstar_local=""
 if proto=="DSTAR":
-    m=re.search(r"(?:^|[;, ])DSTAR_LOCAL=([A-E])(?:$|[;, ])",q(options).upper())
+    m=re.search(r"(?:^|[;, ])DSTAR_LOCAL=([A-D])(?:$|[;, ])",q(options).upper())
     dstar_local=m.group(1) if m else "B"
 if usemode not in ("hotspot","repeater"):die("invalid use mode")
 if not HOST.exists():die("MMDVMHost config missing",3)
