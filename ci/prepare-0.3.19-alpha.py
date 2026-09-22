@@ -60,8 +60,9 @@ tz=(root/"rootfs-overlay/usr/local/sbin/2pny-timezone-apply").read_text()
 proto=(root/"rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply").read_text()
 
 assert '"0.3.19-alpha"' in main
-assert 'exec.Command("nmcli","device","reapply",iface)' not in main
-assert '"connection","up",conn,"ifname",iface' in main
+compact="".join(main.split())
+assert 'exec.Command("nmcli","device","reapply",iface)' not in compact
+assert '"connection","up",conn,"ifname",iface' in compact
 assert '/api/diagnostics/errors' in main
 assert 'connection.autoconnect-retries 3' in (root/"rootfs-overlay/usr/local/sbin/2pny-network-switch").read_text()
 assert 'rede conectada' in internet and 'Nenhuma segunda rede encontrada' in internet

@@ -21,8 +21,9 @@ station=text("src/2pny-station-worker-0.3.17.py")
 switch=text("src/2pny-network-switch-0.3.16")
 
 # NET-025/026: DNS activation and dual Wi-Fi/channel UX.
-assert 'exec.Command("nmcli","device","reapply",iface)' not in main
-assert '"connection","up",conn,"ifname",iface' in main
+compact="".join(main.split())
+assert 'exec.Command("nmcli","device","reapply",iface)' not in compact
+assert '"connection","up",conn,"ifname",iface' in compact
 assert 'connection.autoconnect-retries 3' in switch
 assert 'rede conectada' in internet
 assert 'Nenhuma segunda rede encontrada' in internet
@@ -61,7 +62,7 @@ assert 'timeout -k 2 25 /usr/local/sbin/2pny-display-detector' in online
 assert 'After=NetworkManager-wait-online.service network-online.target' in svc
 assert 'range(0,101,10)' in core and 'PU2PNY-OS' in core
 assert 'tot_left=max(0,180-elapsed) if direction=="RF" and mode=="tx" else None' in core
-for bad in ('NextionUpdater','\.tft','flash'):
+for bad in ('NextionUpdater','.tft','flash'):
     assert bad not in online
 
 # SEC-026/027 and UI-034.
