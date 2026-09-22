@@ -703,3 +703,20 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Imagem: `PU2PNY-OS-0.3.19-alpha-arm64.img.xz`, 597725788 bytes.
 - SHA-256: `5f14e62b5811129f42f6dd9b7c637cfaa0944a370db42637abc56d1ac62f2355`.
 - Estado permanece **ALPHA/HW-TEST**; CI não substitui validação física.
+
+
+## 2026-09-22 — 0.3.20-alpha / REL-016
+- Criado rollback GitHub `backup/0.3.19-pre-0.3.20-20260922` e branch isolada `pu2pny-os-0.3.20-alpha`; a 0.3.19 publicada permaneceu intacta.
+- Registrados UI-037, LIVE-020/021, NET-027, PERF-004, PROTO-029/030/031/032/033, RF-020, UI-038, P2P-008, APRS-014, DISPLAY-020/021, SYS-001/002/003 e UPDATE-007.
+- **D-Star HW observado na 0.3.19:** mudar refletor pelo painel aplicou de fato XLX300D e permitiu comunicação; comandos pelo rádio para trocar refletor alteravam somente o painel. Causa de UI confirmada: o worker promovia `Link command ... issued` a servidor/módulo efetivo antes do `... link ... established`. Causa de resolução XLX: o DStar_Hosts.json pinado não contém a lista XLX completa; o apply adicionava apenas o refletor atualmente selecionado.
+- 0.3.20 separa pedido de link de estado efetivo e mescla a lista XLX validada no catálogo D-Star. Falha/destino desconhecido não é mais mostrado como conectado.
+- Módulo local D-Star/RPT1 deixa de ser fixo C: novas configurações usam B por decisão de produto e podem selecionar A–E; módulo remoto do refletor continua independente. Upgrades preservam o valor efetivo anterior.
+- DMR: XLX primeiro; ESSID não vaza BrandMeister→XLX; ordem MMDVMHost→DMRGateway; comandos TG4000–4026/4099 passam a aceitar TS1 e TS2.
+- Ao Vivo: TOT amarelo 2:30–2:49, vermelho 2:50–3:00; S-meter aparece apenas em RF real.
+- UI global oculta indicadores sem dado real; Protocolos separa conectividade IP de link remoto.
+- Nextion via modem exige COMOK real pela bridge MQTT antes de declarar tela física; Moderno V2 vira layout padrão após confirmação.
+- APRS renomeado e recebe comandos operacionais inspirados na lógica observada em xlx026.net, sem alterar o servidor de referência.
+- Sistema recebe lista completa de timezones, ajuste manual de relógio e download de logs sanitizados.
+- OTA recebe instalar agora/depois e rollback automático em falha de aplicação.
+- Direct recebe gatilho por atividade RF real para D-Star/DMR mantendo pareamento e criptografia.
+- VPS WartyWallaby: regressões Python/Shell/JS e backend Go passaram; a compilação Direct não pôde ser executada nessa VPS porque o Go 1.19 não possui `crypto/ecdh`. O gate oficial usa Go 1.24 no CI.
