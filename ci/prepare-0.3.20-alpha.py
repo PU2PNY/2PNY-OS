@@ -44,6 +44,16 @@ files=[
 ]
 for src,dst,mode in files:install(src,dst,mode)
 
+# UI-035 protected baseline: any 0.3.20 page copied after the 0.3.19
+# normalization must still keep the canonical browser title.
+for page in (root/"rootfs-overlay/usr/share/2pny").glob("*.html"):
+    html=page.read_text()
+    if "<head" not in html.lower():continue
+    normalized,count=re.subn(r"(?is)<title>.*?</title>","<title>PU2PNY-OS</title>",html,count=1)
+    if count==0:
+        normalized=re.sub(r"(?is)(<head[^>]*>)",r"\1<title>PU2PNY-OS</title>",normalized,count=1)
+    page.write_text(normalized)
+
 # DMRGateway RF control patch: replace only the PU2PNY group-control patch;
 # hourly/voice-arbiter patches stay inherited.
 install("ci/patch-dmrgateway-pu2pny-0.3.20.py","builder/patch-dmrgateway-pu2pny-0.3.20.py",0o755)
