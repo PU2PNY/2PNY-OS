@@ -85,7 +85,7 @@ assert "netOnline=conn.internet===true" in hotspot
 assert "Internet disponível / link remoto pendente" in hotspot
 
 # P2P-008: RF-driven Direct only from real RF, D-Star callsign or DMR private ID.
-assert 'Direction))!="RF"' in direct
+assert 'live.Active.Direction' in direct and '"RF"' in direct
 assert 'proto=="DSTAR"' in direct and 'proto=="DMR"' in direct
 assert 'strings.HasPrefix(target,"TG ")' in direct
 assert 'c.call(target)' in direct
