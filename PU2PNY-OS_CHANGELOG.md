@@ -575,3 +575,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Imagem: `PU2PNY-OS-0.3.16-alpha-arm64.img.xz` (614130916 bytes).
 - SHA-256: `8329b976c733054787052484974fc86663e337bfdce4b31e461361fbfa465426`.
 - Estado permanece **Alpha/HW-TEST**. Nenhuma correção 0.3.16 é declarada HW PASS antes do novo teste físico em Raspberry Pi + MMDVM + Nextion/rede real.
+
+## 2026-09-21 — abertura da 0.3.17-alpha: D-Star RX/comandos e timezone
+
+- O mantenedor determinou que tudo que não foi citado como defeito na 0.3.16 deve ser considerado ótimo/perfeito e congelado.
+- Criados `REL-010`, `PROTO-024`, `LIVE-017`, `UI-032` e `SEC-024`.
+- Criados rollback `backup/0.3.16-pre-0.3.17-20260921` e branch `pu2pny-os-0.3.17-alpha`.
+- Feedback HW: DStarGateway já conecta e recebe da rede, porém o tráfego não chega ao RF/MMDVM e não aparece no Hotspot.
+- Diagnóstico de fonte: o gateway 0.3.16 usa `Band=C`, mas MMDVMHost ainda recebe `Module=<módulo remoto>`; isso quebra o contrato de identidade local que deveria ser C/C.
+- Diagnóstico de comandos: `ReflectorReconnect=Fixed` bloqueia o handler de comandos `L/U` no DStarGateway embarcado. O código upstream já implementa `I`, `E`, `L`, `U` e troca de refletor/módulo via URCALL; a correção habilitará esse caminho existente.
+- O fuso continua HW FAIL; o fluxo será corrigido para esperar confirmação real do helper privilegiado e do Timezone aplicado.
+- Nenhuma outra página, protocolo, rede, display, DMR, APRS, Direct, RF, frequência, offset ou baud entra neste ciclo.
