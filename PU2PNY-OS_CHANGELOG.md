@@ -643,3 +643,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Escopo: **build/reprodutibilidade apenas**; nenhuma mudança funcional adicional em RF, D-Star, YSF ou DMR.
 
 - Ajuste adicional do gate de build: o alvo real do builder é `make -j"$JOBS" DStarGateway/dstargateway`; o patch SEC-025 agora ancora exatamente nessa chamada, antes da compilação.
+
+
+## 2026-09-22 — Nome canônico do repositório e título da aba
+- Rollbacks criados: `backup/0.3.19-pre-repo-title-rename-20260922` e, após avanço concorrente da branch, `backup/0.3.19-pre-repo-title-rename-20260922b`.
+- Criado ARCH-005: nome canônico do repositório passa a ser `PU2PNY/PU2PNY-OS`.
+- Criado UI-035: a aba do navegador deve mostrar somente `PU2PNY-OS`, sem versão e sem nome da página.
+- Fontes HTML atuais, JS comum e etapa de preparação da imagem passam a normalizar o título; páginas herdadas também ficam cobertas pelo build.
+- Adicionados TEST-ARCH-005A e TEST-UI-035A.
+- Nenhuma alteração em RF, modem, MMDVMHost, DMRGateway, gateways de protocolo, rede ou boot.
