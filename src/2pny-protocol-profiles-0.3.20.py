@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """PU2PNY-OS 0.3.6 independent protocol RF/network profiles."""
-import datetime,json,os,re,shutil,subprocess,sys,tempfile
+import configparser,datetime,json,os,re,shutil,subprocess,sys,tempfile
 from pathlib import Path
 
 STATE=Path("/var/lib/2pny")
@@ -23,6 +23,15 @@ def atomic_json(p,obj,mode=0o600):
 
 def die(msg,code=2):
     print(msg,file=sys.stderr);raise SystemExit(code)
+
+def current_dstar_local_module():
+    try:
+        cp=configparser.ConfigParser(interpolation=None,strict=False);cp.optionxform=str
+        cp.read(STATE/"mmdvm/MMDVM-Host.ini")
+        m=cp.get("D-Star","Module",fallback="").strip().upper()
+        if re.fullmatch(r"[A-E]",m):return m
+    except Exception:pass
+    return "B"
 
 def validate(profile):
     proto=str(profile.get("protocol") or "").upper()
