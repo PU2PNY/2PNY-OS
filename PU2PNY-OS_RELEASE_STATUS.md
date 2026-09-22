@@ -783,3 +783,15 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - SHA-256 da imagem: `5f14e62b5811129f42f6dd9b7c637cfaa0944a370db42637abc56d1ac62f2355`.
 - Commit da release: `c4db3e0098e2af1cd0ec1504e8946d30ac8c6391`.
 - Nível: **SW/CI PASS; ALPHA/HW-TEST**. DMR/YSF/D-Star/duplex e demais correções físicas continuam exigindo reteste HW antes de promoção.
+
+
+## 0.3.20-alpha — REL-016 — 2026-09-22
+- **Base:** 0.3.19-alpha publicada + rollback `backup/0.3.19-pre-0.3.20-20260922`.
+- **Branch:** `pu2pny-os-0.3.20-alpha`.
+- **Classificação atual:** ALPHA / PARA TESTE FÍSICO.
+- **SW/VPS:** implementação e gates determinísticos em execução; WartyWallaby validou testes Python/Shell/JS e backend Go. Direct requer o CI Go 1.24 porque a VPS possui Go 1.19.
+- **HW:** PENDENTE para D-Star RF real, troca de refletor por rádio, DMR duplex áudio/TX/RX, Nextion física/COMOK/Moderno V2, S-meter/RSSI/BER reais e Direct entre dois hotspots.
+- **Baseline obrigatório:** DMR simplex TX/RX aprovado e YSF/C4FM simplex reportado funcionando perfeitamente não podem regredir.
+- **Falha D-Star confirmada na 0.3.19:** painel aplicava corretamente mudança manual de refletor (XLX300D comprovado); comando de rádio para troca alterava apenas estado visual sem confirmar execução. PROTO-032 corrige sem promover HW PASS antes do novo teste.
+- **Módulo local D-Star:** padrão de nova configuração B, seletor A–E; upgrades preservam configuração anterior.
+- **Gate de imagem:** source → staging → ARM64 → XZ/SHA-256 → REL-015 preflight → `validate-0.3.20-image.sh` → prerelease. Link só pode ser divulgado após PASS real dessa cadeia.
