@@ -124,6 +124,8 @@ for marker in ('GatewayPort":"62031"','LocalPort":"62032"','RptPort=62032','Loca
 assert 'make -j"$JOBS" DStarGateway/dstargateway' in prep18
 assert 'exact DStarGateway target make anchor missing' in prep18
 assert 'DSTAR_RF_ADMIN_SRC=' in prep18
+assert 'PU2PNY_DSTAR_HOSTS_OVERLAY_0318' in prep18
+assert 'staged DStar_Hosts.json catalog missing or too small' in prep18
 # REL-011/PROTO-024: voice assets must be staged from the exact pinned
 # DStarGateway checkout before /tmp/DStarGateway-029 is removed.
 for marker in ('PU2PNY_DSTAR_VOICE_ASSETS_0318',
@@ -140,6 +142,7 @@ assert workflow.index("Pre-validate generated image") < workflow.index("Validate
 for gate in ("PU2PNY_PREVALIDATION_OK",
              "en_GB.ambe",
              "en_GB.indx",
+             "DStar_Hosts.json",
              "DMRGateway",
              "<title>PU2PNY-OS</title>",
              "xz -t"):
