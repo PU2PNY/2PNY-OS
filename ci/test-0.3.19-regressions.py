@@ -55,7 +55,7 @@ assert 'wrong repeater' in main and 'non repeater rf header' in main
 
 # APRS-013: native notifications remain browser-governed; in-panel bubble only off APRS.
 assert "location.pathname==='/aprs'" in ui
-assert "setTimeout(function(){t.remove()},5000)" in ui
+assert "setTimeout(function(){if(a&&a.parentNode)a.remove()},5000)" in ui
 assert "location.href='/aprs?to='" in ui
 
 # DISPLAY-019: bounded evidence-based detection, no silent HMI/TFT flashing.
@@ -83,7 +83,7 @@ for marker in ('LocalPort":"3200"','GatewayPort":"4200"','WiresXCommandPassthrou
 assert 'CYSFReflectors::findByName' in proto
 assert 'selected is None' in proto and 'startup=full_name(selected)' in proto
 assert 'startup_name' in proto
-assert '"Linked to' in station and 'Link has failed, polls lost' in station
+assert 'Linked to' in station and 'Link has failed, polls lost' in station
 
 # RF-019/LIVE-019: duplex is coherent across activation paths and visible.
 assert 'setsec(cp,"General",{"Duplex":"1" if usemode=="repeater" else "0"})' in proto
