@@ -70,7 +70,7 @@ for bad in ('NextionUpdater','.tft','flash'):
 # SEC-026/027 and UI-034.
 assert 'drain pending requests' in tz and 'for _ in range(32)' in tz
 assert '["timedatectl","set-timezone",tz]' in tz
-assert 'ensureVoiceDefaults' in main and '"enabled":true' in main
+assert 'ensureVoiceDefaults' in main and '"enabled":true' in compact
 assert 'voice-hourly.enabled' in main
 assert 'expertLiveSection' in expert
 assert 'generateSSHKey' in expert and 'ecdsa-sha2-nistp256' in expert
