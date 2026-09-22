@@ -755,3 +755,12 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-SYS-002A | SYS-002 | America/Sao_Paulo, Europe/London e outras zonas instaladas aplicam e são confirmadas | SW candidato / VPS/HW PENDENTE | SW/VPS/HW |
 | TEST-SYS-003A | SYS-003 | botão baixa pacote de logs sanitizado sem password/token/api key/secret | SW candidato / VPS PENDENTE | SW/VPS |
 | TEST-UPDATE-007A | UPDATE-007 | download verificado oferece instalar agora/depois; falha após mutação restaura backup e versão e registra rolled_back | SW candidato / VPS PENDENTE | SW/VPS |
+
+
+## Governança permanente — ARCH-006 / REL-017 / TEST-008
+
+| ID | Requisito | Caso | Resultado esperado | Estado | Nível |
+|---|---|---|---|---|---|
+| TEST-ARCH-006A | ARCH-006 | conferir README + documentos canônicos + índice docs | estado atual fica nas fontes canônicas; históricos são identificados sem apagar evidência útil | PASS documental | DOC |
+| TEST-REL-017A | REL-017 | revisar diff de mudança localizada | somente arquivos necessários mudam; baseline aprovado permanece intacto ou alteração possui ordem/justificativa explícita e rollback | PASS para este lote documental; repetir por mudança | DOC/SW/HW conforme área |
+| TEST-TEST-008A | TEST-008 | validar afirmações e nível de teste | VPS/SentinelX usado quando aplicável; CI/plugins/fontes oficiais cruzados quando úteis; HW nunca inferido de SW/VPS | PASS documental; execução por mudança | DOC/SW/VPS/HW |
