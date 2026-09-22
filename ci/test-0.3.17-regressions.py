@@ -33,7 +33,7 @@ assert 'D-Star.Module local não confirmou C' in proto
 assert 'reflector=normalized[:6]+" "+module' in proto
 
 # LIVE-017: feed the actual MMDVMHost D-Star network log form to the parser.
-spec=importlib.util.spec_from_file_location("live0317",ROOT/"src/2pny-live-core-0.3.16.py")
+spec=importlib.util.spec_from_file_location("live0317",ROOT/"src/2pny-live-core-0.3.17.py")
 live=importlib.util.module_from_spec(spec);spec.loader.exec_module(live)
 s=live.LiveState()
 ev=s.ingest("D-Star, received network header from M1ABC /ABCD to CQCQCQ via XLX026 D",ts=1000)
