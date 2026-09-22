@@ -705,3 +705,19 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - D-Star local continua C e portas 20011/20010; DMR/RF baseline não foi alterada.
 - Commits de implementação até o momento: `ccd7b722d7b7a9d7a96c42b831d8d45e2434bb18`, `caa452aff4a18966faf45a0d6fec1b371b9f1653`, `87264ff535b6f7ac87e96855f7604f90e5adf485`, `4cd992d8714438cd4e29b663d91c68a61ff1cacc`.
 - Estado atual: **DOC/implementado em fonte; CI iniciado; HW PENDENTE**. Não promover para HW/PROD sem teste físico.
+
+
+## Ampliação 0.3.19-alpha — YSF/C4FM e duplex — 2026-09-22
+
+- Novo rollback antes de alterar RF/gateways: `backup/0.3.19-pre-ysf-duplex-20260922`, criado no commit `66daecb821b5bb6ded31ed7f1449153ffd4f516b`.
+- Requisitos adicionados: **REL-014, RF-019, LIVE-019, PROTO-027 e PROTO-028**.
+- Feedback HW atual:
+  - YSF/C4FM: serviço local fica ativo, porém o painel permanece em `gateway_active` sem confirmação remota — **HW FAIL de conexão remota**;
+  - DMR duplex: RF→rede e rede→RF não estão funcionais; tráfego chega da Internet ao hotspot mas não é retransmitido ao rádio — **HW FAIL**;
+  - Ao Vivo em duplex precisa exibir RX e TX separadamente.
+- Referência histórica recuperada: o problema YSF foi reportado na 0.3.7 e a cadeia seguinte preservou bridge 3200/4200 e `WiresXCommandPassthrough=0`; isso será usado como referência de implementação, **não** como novo HW PASS.
+- Diagnóstico de código antes da correção:
+  - o gerador YSF pode criar uma entrada cujo nome efetivo vira `YSF-<nome>`, porém manter `Startup=<nome>`; o upstream faz busca exata por nome e então não encontra o refletor;
+  - o helper DMR atual habilita TS1/TS2 conforme o slot salvo mesmo em `Duplex=1`; em repetidora isso pode deixar um dos caminhos locais desabilitado;
+  - o helper de modo recebe `use_mode`, mas não reforça `[General] Duplex`, deixando caminhos de ativação dependentes da ordem anterior.
+- Estado: **implementação iniciada / HW PENDENTE**. DMR simplex funcional permanece baseline e não pode regredir.

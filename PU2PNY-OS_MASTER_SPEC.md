@@ -1495,3 +1495,49 @@ O helper privilegiado de timezone deve drenar requests únicos pendentes numa ex
 
 ### UI-034 — Padrões de voz
 Em instalação sem preferência de voz previamente salva, “Ativar avisos por voz” e “Informar horário de hora em hora” iniciam ativos. Preferência existente do operador nunca é sobrescrita por upgrade.
+
+
+## 2026-09-22 — ampliação explícita da 0.3.19-alpha: YSF/C4FM e duplex
+
+### REL-014 — Inclusão focal de YSF/C4FM e modo duplex na 0.3.19
+Por solicitação posterior do mantenedor, a 0.3.19-alpha também pode corrigir **somente**:
+- regressão de conexão remota YSF/C4FM;
+- coerência do modo duplex/repetidora em todos os protocolos suportados;
+- transporte DMR duplex RF↔rede;
+- exibição RX/TX no Ao Vivo em modo duplex.
+
+Todo o restante continua congelado por REL-013. Antes deste lote existe o rollback `backup/0.3.19-pre-ysf-duplex-20260922`.
+
+### RF-019 — Contrato duplex/repetidora coerente em todos os protocolos
+Quando `use_mode=repeater`:
+- `MMDVMHost [General] Duplex=1` deve ser efetivo e verificado;
+- RX e TX permanecem independentes, nunca são colapsados silenciosamente para a mesma frequência;
+- a ativação por Configuração Básica e por perfil salvo deve produzir o mesmo estado efetivo;
+- D-Star, DMR, YSF/C4FM, P25, NXDN e POCSAG não podem sobrescrever o `Duplex=1` ao aplicar a rede/gateway;
+- quando `use_mode=hotspot`, preservar `Duplex=0` e comportamento simplex aprovado;
+- baud, offsets e frequência escolhida pelo operador não podem ser alterados como efeito colateral.
+
+### LIVE-019 — Frequências RX/TX explícitas no Ao Vivo em duplex
+Em modo repetidora/duplex, Ao Vivo deve exibir separadamente:
+- `RX nnn.nnnnnn MHz`;
+- `TX nnn.nnnnnn MHz`.
+Em simplex, permanece uma única frequência. Sempre usar seis casas decimais, sem inferir valores ausentes.
+
+### PROTO-027 — Restaurar YSF/C4FM com resolução determinística do refletor
+Para o YSFGateway pinado:
+- preservar o bridge local comprovado em código `MMDVMHost 3200 ↔ YSFGateway 4200`;
+- preservar `WiresXCommandPassthrough=0`, `YSF Network Port=42000` e o formato de hosts esperado pelo binário pinado;
+- o `Startup` deve corresponder **exatamente** a um nome que `CYSFReflectors::findByName()` consiga resolver;
+- ao selecionar um servidor, resolver primeiro por nome completo; depois por endereço+porta; depois por designator/ID; se necessário criar uma entrada local e usar o nome completo gerado;
+- nunca declarar conexão remota apenas porque o serviço e a bridge local estão ativos;
+- somente evidência de poll/link do gateway (`Linked to ...`) promove o runtime a conectado;
+- `Unknown reflector`, ausência de destino resolvido ou `Link has failed, polls lost` permanecem erro/aguardando real, não sucesso falso.
+
+### PROTO-028 — DMR duplex com transporte local em ambos os timeslots
+Quando DMR estiver em modo repetidora/duplex:
+- `MMDVMHost [DMR Network]` deve habilitar `Slot1=1` e `Slot2=1` para o transporte local MMDVMHost↔DMRGateway;
+- `DMRGateway [Info]` deve anunciar `Duplex=1`, `Slot1=1` e `Slot2=1`;
+- para redes DMR convencionais suportadas (ex.: BrandMeister/TGIF), regras pass-through devem cobrir TS1 e TS2, mesmo que o perfil de hotspot simplex anteriormente usasse apenas um slot;
+- XLX continua com **um** slot de rede selecionado conforme a configuração do operador; não inventar operação XLX simultânea em dois slots, mas o transporte local duplex permanece com TS1/TS2 disponíveis;
+- tráfego NETWORK→RF e RF→NETWORK deve ser validado nos dois sentidos em hardware;
+- se o modem/firmware não suportar duplex real, apresentar diagnóstico e não mascarar como sucesso.

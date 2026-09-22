@@ -622,3 +622,16 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - SSH: geração de par no navegador; chave privada fica no cliente e apenas a pública é enviada ao helper existente.
 - Expert: Estado Ao Vivo oculto sem TX; log de erros sob demanda, redaction e download em texto.
 - CI 0.3.19 adicionada sobre a cadeia completa 0.3.18, com gates focais e validação de imagem. Estado CI/HW será atualizado após evidência.
+
+
+## 2026-09-22 — 0.3.19 ampliada: YSF/C4FM e duplex
+
+- O mantenedor adicionou regressão YSF/C4FM e modo duplex ao escopo antes de concluir a 0.3.19.
+- Criados **REL-014, RF-019, LIVE-019, PROTO-027 e PROTO-028**.
+- Criado rollback específico `backup/0.3.19-pre-ysf-duplex-20260922` no commit `66daecb821b5bb6ded31ed7f1449153ffd4f516b`.
+- YSF atual: `gateway_active` sem confirmação remota. A investigação do binário pinado mostra que o startup usa busca exata de nome; o gerador pode produzir nome completo diferente do `Startup`. A correção deve resolver o refletor deterministically sem alterar a bridge 3200/4200.
+- DMR duplex atual: helper mantém slots locais derivados do perfil simplex; será corrigido para manter TS1/TS2 disponíveis localmente em `Duplex=1`, preservando semântica de um único slot da rede XLX.
+- Ao Vivo em duplex passará a identificar RX/TX explicitamente com seis casas.
+- O helper de modo passará a reforçar `General.Duplex` conforme `use_mode` para todos os protocolos.
+- Nenhum baud, offset ou frequência será recalculado. DMR simplex permanece baseline obrigatória.
+- Tudo continua **HW PENDENTE** até reteste físico.

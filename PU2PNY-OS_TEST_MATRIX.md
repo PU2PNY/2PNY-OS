@@ -687,3 +687,19 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0319-B | REL-013 | ARM64/XZ/SHA-256 | artefato íntegro | PENDENTE CI |
 | TEST-REL-0319-C | REL-013 | imagem montada | overlay 0.3.19 e baselines estruturais presentes | PENDENTE CI |
 | TEST-REL-0319-D | REL-013 | Raspberry Pi + MMDVM + Nextion/rede real | validação física completa do lote | PENDENTE HW |
+
+
+## Casos adicionais 0.3.19-alpha — YSF/C4FM e duplex
+
+| ID | Requisito | Caso | Resultado esperado | Estado |
+|---|---|---|---|---|
+| TEST-PROTO-027A | PROTO-027 | selecionar YSF por nome/address/port | `Startup` corresponde a nome existente/resolvido no JSON efetivo | PENDENTE CI/HW |
+| TEST-PROTO-027B | PROTO-027 | gateway local ativo sem poll remoto | estado permanece aguardando; não declara conectado | PENDENTE CI/HW |
+| TEST-PROTO-027C | PROTO-027 | YSFGateway recebe poll do refletor | log/runtime confirma `Linked to ...` e conexão remota | PENDENTE HW |
+| TEST-RF-019A | RF-019 | aplicar modo repetidora em D-Star/DMR/YSF/P25/NXDN/POCSAG | `General.Duplex=1`, RX/TX preservados e MMDVMHost ativo | PENDENTE CI/HW |
+| TEST-RF-019B | RF-019 | ativar perfil salvo simplex↔duplex | estado efetivo de Duplex acompanha `use_mode` sem mudar baud/offsets | PENDENTE CI/HW |
+| TEST-LIVE-019A | LIVE-019 | Ao Vivo em duplex | mostra `RX ... MHz · TX ... MHz`, seis casas | PENDENTE CI/HW |
+| TEST-PROTO-028A | PROTO-028 | DMR duplex aplicar rede | MMDVMHost e DMRGateway local ficam com TS1=1/TS2=1 e Duplex=1 | PENDENTE CI/HW |
+| TEST-PROTO-028B | PROTO-028 | DMR duplex BrandMeister/TGIF | pass-through cobre TS1 e TS2; RF→rede e rede→RF funcionam | PENDENTE HW |
+| TEST-PROTO-028C | PROTO-028 | DMR duplex XLX | transporte local TS1/TS2 ativo; XLX mantém apenas slot de rede escolhido | PENDENTE CI/HW |
+| TEST-REL-0319-E | REL-014 | regressão DMR simplex + YSF + duplex | DMR simplex baseline preservada e novo lote passa gates SW antes de imagem | PENDENTE CI |
