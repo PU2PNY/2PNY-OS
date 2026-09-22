@@ -712,3 +712,5 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 
 | TEST-UI-039 | UI-036 | próxima versão carrega logotipo oficial do painel | ativo local existe, carrega sem dependência externa, mantém fallback `PU2PNY-OS` e não altera layout/funcionalidade | PENDENTE próxima versão |
+
+| TEST-PROTO-028D | PROTO-028 / PROTO-019 | DMR TGIF simplex e duplex | preserva `Name=TGIF_Network`, auth legacy/secured e rewrites RF→TS2; duplex gera mapping para TS1 e TS2 locais | PENDENTE CI/HW |

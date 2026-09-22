@@ -109,6 +109,13 @@ assert '"Slot1":"1" if slot1 else "0"' in dmr and '"Slot2":"1" if slot2 else "0"
 assert 'route_slots=(1,2) if duplex' in dmr
 assert 'Slot={remote_slot}' in dmr
 assert 'DMR duplex candidate did not enable TS1/TS2 local transport' in dmr
+# Preserve TGIF 0.3.13 routing/auth baseline while extending it to both local
+# slots in duplex mode.
+for marker in ('Name=TGIF_Network','TGRewrite{idx}={s},1,2,1,9999998',
+               'SrcRewrite{idx}=2,1,{s},1,9999998',
+               'tgif_auth_mode="legacy" if password=="passw0rd" else "secured"',
+               'Password="{password}"','"auth_mode":tgif_auth_mode'):
+    assert marker in dmr,marker
 # Preserve critical DMR baseline ports/auth/audio behavior.
 for marker in ('GatewayPort":"62031"','LocalPort":"62032"','RptPort=62032','LocalPort=62031',
                'TG4000=unlink','voice_dir="/usr/share/2pny/audio/dmrgateway"'):

@@ -734,3 +734,11 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **GitHub observado antes da renomeação administrativa:** `PU2PNY/2PNY-OS`; não declarar a renomeação concluída até a API do GitHub confirmar o novo nome.
 - **UI-035 / SW fonte:** branch `pu2pny-os-0.3.19-alpha` normaliza o `<title>` para exatamente `PU2PNY-OS` e reforça o mesmo título no JS comum.
 - **HW/PROD:** sem mudança de estado; esta manutenção não altera RF, MMDVM, gateways, rede ou protocolos.
+
+
+### Gate TGIF da imagem 0.3.19 — 2026-09-22
+- O run `35754924972` passou source, staging, build ARM64 e SHA-256, mas a validação montada bloqueou a publicação ao detectar ausência da baseline TGIF 0.3.13 no helper DMR 0.3.19.
+- A imagem desse run **não foi publicada**.
+- Correção aplicada: restauração do routing/auth TGIF com extensão duplex limitada aos dois slots RF locais.
+- Rollback: `backup/0.3.19-pre-tgif-duplex-fix-20260922`.
+- Estado: **SW corrigido / novo build+imagem montada obrigatórios / HW PENDENTE**.

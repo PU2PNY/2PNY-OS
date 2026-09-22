@@ -658,3 +658,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Criado **UI-036**: a partir da versão posterior à 0.3.19-alpha, o painel deve incorporar o logotipo oficial fornecido pelo mantenedor.
 - O ativo **não** será introduzido na 0.3.19-alpha durante o build/validação para evitar ampliar novamente o escopo desta release.
 - Criado **TEST-UI-039** para presença do ativo, fallback, carregamento local e ausência de regressão visual.
+
+
+### 2026-09-22 — TGIF preservado no helper duplex da 0.3.19
+- A validação final da imagem detectou uma regressão real antes da publicação: o helper DMR 0.3.19 havia preservado portas/DMR duplex, porém perdido a lógica TGIF já aprovada na 0.3.13.
+- Criado rollback adicional `backup/0.3.19-pre-tgif-duplex-fix-20260922`.
+- Restaurados `Name=TGIF_Network`, `TGRewrite/SrcRewrite` local↔TS2, senha TGIF entre aspas, distinção `legacy/secured` e `auth_mode`.
+- Em duplex, os rewrites TGIF agora são gerados para os dois slots RF locais, mantendo o lado de rede TGIF em TS2. Em simplex, permanece o slot selecionado pelo operador.
+- BrandMeister continua usando pass-through e, em duplex, cobre TS1/TS2. XLX continua com um único slot remoto selecionado.
+- Nenhuma porta, baud, offset, frequência ou credencial foi alterada fora dessa restauração.

@@ -86,10 +86,15 @@ duplex=1 if usemode=="repeater" else 0
 slot1=True if duplex else slot in ("1","both")
 slot2=True if duplex else slot in ("2","both")
 remote_slot="2" if slot=="both" else slot
+tgif_auth_mode=""
 if kind.lower()=="brandmeister" and not password:
     die("BrandMeister requires the Hotspot Security password")
-if kind.lower()=="tgif" and not password:
-    password="passw0rd"
+if kind.lower()=="tgif":
+    if not password:
+        password="passw0rd"
+    if '"' in password:
+        die("TGIF Security Key contém caractere não suportado")
+    tgif_auth_mode="legacy" if password=="passw0rd" else "secured"
 if kind.lower()=="xlx" and not password:
     password="passw0rd"
 
@@ -247,16 +252,48 @@ Enable=0
 """
 else:
     xlx_hosts=""
-    pass_lines=[]
-    # In duplex, a conventional master must be allowed to deliver/receive
-    # traffic on either local timeslot. Simplex retains the operator slot.
+    # PROTO-028: in duplex both LOCAL RF timeslots must reach the gateway.
+    # Keep each network's proven routing semantics instead of replacing them
+    # with a generic pass-through rule.
     route_slots=(1,2) if duplex else ((1,2) if slot=="both" else (int(slot),))
-    for s in route_slots:
-        pass_lines += [f"PassAllTG={s}",f"PassAllPC={s}"]
-    name={"brandmeister":"BM","tgif":"TGIF_Network"}.get(kind.lower(),server.replace(" ","_"))
-    location="1" if kind.lower()=="brandmeister" else "0"
-    optline=f"Options={options}\n" if options else ""
-    gateway_text=base+f"""[XLX Network]
+    if kind.lower()=="tgif":
+        # PROTO-019 baseline: TGIF network side uses TS2. Map every enabled
+        # local RF slot to/from TGIF TS2; in duplex this means both TS1 and TS2
+        # remain usable locally without changing TGIF's upstream contract.
+        rewrite_lines=[]
+        for idx,s in enumerate(route_slots):
+            rewrite_lines += [
+                f"TGRewrite{idx}={s},1,2,1,9999998",
+                f"SrcRewrite{idx}=2,1,{s},1,9999998",
+            ]
+        gateway_text=base+f"""[XLX Network]
+Enabled=0
+
+[DMR Network 1]
+Enabled=1
+Name=TGIF_Network
+Id={network_id}
+{chr(10).join(rewrite_lines)}
+Address={address}
+Password="{password}"
+Port={port}
+Location=0
+Debug=0
+
+[Dynamic TG Control]
+Enable=1
+
+[Remote Commands]
+Enable=0
+"""
+    else:
+        pass_lines=[]
+        for s in route_slots:
+            pass_lines += [f"PassAllTG={s}",f"PassAllPC={s}"]
+        name={"brandmeister":"BM"}.get(kind.lower(),server.replace(" ","_"))
+        location="1" if kind.lower()=="brandmeister" else "0"
+        optline=f"Options={options}\n" if options else ""
+        gateway_text=base+f"""[XLX Network]
 Enabled=0
 
 [DMR Network 1]
@@ -315,9 +352,10 @@ state={
     "slot2":1 if slot2 else 0,"duplex":bool(duplex),"remote_slot":remote_slot if xlx_enabled else "",
     "module":module if xlx_enabled else "",
     "essid":essid,"network_id":network_id,"state":"configured",
-    "gateway":"DMRGateway","voice_enabled":voice_enabled,"voice_language":voice_language,"updated":datetime.datetime.now(datetime.timezone.utc).isoformat()
+    "gateway":"DMRGateway","auth_mode":tgif_auth_mode if kind.lower()=="tgif" else "",
+    "voice_enabled":voice_enabled,"voice_language":voice_language,"updated":datetime.datetime.now(datetime.timezone.utc).isoformat()
 }
 atomic_json(STATEFILE,state)
 
-print(f"NETWORK_APPLY_OK protocol=DMR kind={kind} server={server} slot={slot} module={module or '-'}")
+print(f"NETWORK_APPLY_OK protocol=DMR kind={kind} server={server} slot={slot} module={module or '-'} auth={tgif_auth_mode or '-'}")
 

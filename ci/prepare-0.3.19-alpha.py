@@ -112,6 +112,11 @@ assert 'setsec(cp,"General",{"Duplex":"1" if usemode=="repeater" else "0"})' in 
 assert 'duplex=1 if usemode=="repeater" else 0' in dmr
 assert 'slot1=True if duplex' in dmr and 'slot2=True if duplex' in dmr
 assert 'route_slots=(1,2) if duplex' in dmr and 'Slot={remote_slot}' in dmr
+for marker in ('Name=TGIF_Network','TGRewrite{idx}={s},1,2,1,9999998',
+               'SrcRewrite{idx}=2,1,{s},1,9999998',
+               'tgif_auth_mode="legacy" if password=="passw0rd" else "secured"',
+               'Password="{password}"','"auth_mode":tgif_auth_mode'):
+    assert marker in dmr,marker
 assert 'out.append("Duplex="+duplex)' in mode
 assert "RX '+a+' MHz · TX '+bb+' MHz" in dash and 'toFixed(6)' in dash
 assert link.is_symlink() and os.readlink(link)=="../2pny-display-online-detect.service"
