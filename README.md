@@ -2,35 +2,51 @@
 
 **PU2PNY-OS — Digital Radio Operating System**
 
-Sistema operacional headless para Raspberry Pi destinado a hotspots MMDVM, com foco em baixo consumo, configuração simples, diagnóstico de rede e evolução para operação multiprotocolo.
+Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa de baselines aprovados.
 
 ## Estado atual
 
-**0.1.1 Alpha — fundação de boot, rede e primeiro acesso.**
+- **Ciclo ativo:** `0.3.20-alpha`
+- **Branch:** `pu2pny-os-0.3.20-alpha`
+- **Base preservada:** `0.3.19-alpha`
+- **Classificação:** **ALPHA / para teste físico**
+- **Produção:** não
+- **Repositório observado:** `PU2PNY/2PNY-OS`
+- **Nome canônico aprovado:** `PU2PNY/PU2PNY-OS` — só considerar a renomeação concluída quando a metadata do GitHub confirmar.
 
-Esta versão ainda **não deve ser usada para transmissão RF**. A etapa atual valida boot, Ethernet/Wi‑Fi, painel local, mDNS e provisionamento inicial antes de integrar MMDVMHost e gateways.
+A 0.3.20 ainda exige validação HW para funções dependentes de Raspberry Pi/MMDVM/Nextion/RF real. CI, software ou VPS não substituem teste físico.
 
-## Primeiro acesso da Alpha
+## Primeiro acesso
 
-- Wi‑Fi de configuração: `2PNY-SETUP`
-- Senha temporária: `2pnysetup`
-- URL principal: `http://2pny.local`
-- Fallback durante o setup: `http://10.42.0.1`
+Conforme o requisito atual NET-001:
 
-## Roadmap principal
+- SSID de setup: `pu2pny`
+- endereço local de setup: `10.43.0.1`
+- acesso normal: `http://pu2pny.local/`
+- o AP deve permanecer recuperável se o provisionamento falhar.
 
-- detecção de Raspberry Pi, MMDVM, firmware e capabilities;
-- detecção de displays compatíveis;
-- calibração BER/RXOffset/TXOffset;
-- DMR, D‑Star, YSF/C4FM, P25 e NXDN;
-- XLX026 como perfil recomendado: DMR XLX026-C/TG6, D‑Star XLX026-D e BR‑XLX026/YSF72426;
-- BrandMeister, TGIF, FreeDMR, DMR+, XLX e redes personalizadas;
-- RadioID, QRZ opcional, GPS/APRS e histórico;
-- diagnóstico de Internet, failover Ethernet/Wi‑Fi e reconexão automática;
-- PU2PNY Direct para chamadas ponto a ponto em etapa futura.
+## Baselines protegidos
 
-## Build
+Tudo comprovadamente aprovado deve ser preservado. Em especial, DMR simplex TX/RX funcional é baseline obrigatório: defeitos de duplex devem ser corrigidos sem reescrever ou regredir simplex.
 
-A imagem ARM64 é construída por GitHub Actions em runner ARM64 a partir do Raspberry Pi OS Lite 64-bit e publicada como artefato `.img.xz` acompanhado de SHA‑256.
+## Protocolos e áreas
 
-> Projeto em desenvolvimento. Não use a Alpha como substituto do Pi‑Star/WPSD em operação crítica até a camada RF passar por teste físico.
+O projeto cobre DMR, D-Star, YSF/C4FM e evolução controlada para outros modos suportados, além de rede/wizard, MMDVM, Ao Vivo, painel/API, displays, APRS/DPRS, Direct/P2P, update, backup, rollback e hardening.
+
+## Documentação canônica
+
+Leia nesta ordem antes de alterar o projeto:
+
+1. [PU2PNY-OS_START_HERE.md](PU2PNY-OS_START_HERE.md)
+2. [PU2PNY-OS_MASTER_SPEC.md](PU2PNY-OS_MASTER_SPEC.md)
+3. [PU2PNY-OS_RELEASE_STATUS.md](PU2PNY-OS_RELEASE_STATUS.md)
+4. [PU2PNY-OS_TEST_MATRIX.md](PU2PNY-OS_TEST_MATRIX.md)
+5. [PU2PNY-OS_CHANGELOG.md](PU2PNY-OS_CHANGELOG.md)
+6. [PU2PNY-OS_PROJECT_INSTRUCTIONS.md](PU2PNY-OS_PROJECT_INSTRUCTIONS.md)
+7. [docs/README.md](docs/README.md) para índice da documentação histórica/técnica.
+
+## Regra de release
+
+Uma imagem só pode ser divulgada conforme o estado real dos gates: fonte → staging → ARM64 → XZ/SHA-256 → preflight REL-015 → validador final → artefato/publicação. HW só recebe PASS com hardware real.
+
+> O projeto está em desenvolvimento. Não interpretar estado SW/VPS como aprovação física ou PROD.
