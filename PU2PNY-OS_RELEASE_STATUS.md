@@ -749,3 +749,11 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Correção: copiar somente os packs de voz nativos `.ambe/.indx` para `/usr/local/share/dstargateway.d/` antes de remover o source; hostfiles/configuração PU2PNY não são substituídos.
 - Rollback: `backup/0.3.19-pre-dstar-voice-assets-fix-20260922`.
 - Estado: **SW corrigido / novo build e validação montada obrigatórios / HW PENDENTE**.
+
+
+### REL-015 — pré-validação permanente antes do validador final
+- Regra aprovada em 2026-09-22: toda imagem deve passar por pré-validação montada em modo somente leitura antes do validador final da versão.
+- O preflight verifica XZ/SHA-256, identidade/versão, arquivos essenciais, título canônico, DMR baseline e assets D-Star obrigatórios.
+- Falha no preflight bloqueia o validador final e a publicação; a correção deve ocorrer no fonte/overlay/builder e exigir novo build.
+- Implementação atual: `ci/preflight-image.sh` + etapa `Pre-validate generated image` no workflow 0.3.19.
+- Estado: **implementado em código; CI PENDENTE até o novo run concluir**.
