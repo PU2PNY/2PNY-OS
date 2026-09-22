@@ -353,7 +353,7 @@ jobs:
           test -x rootfs-overlay/usr/local/bin/2pny-direct-core
           test -x rootfs-overlay/usr/local/sbin/2pny-direct-recover
           grep -Fq 'PU2PNY Moderno V2' rootfs-overlay/usr/local/sbin/2pny-display-core
-          grep -Fq 'audio_path="/usr/share/2pny/audio/dstar/"' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
+          grep -Fq 'audio_path="/usr/local/share/dstargateway.d/"' rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply
           "$GITHUB_WORKSPACE/legacy-source/2pny-os/rootfs-overlay/usr/local/bin/2pny-direct-core" --selftest | grep -Fq DIRECT_SELFTEST_OK
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.7-features.py"
           python3 "$GITHUB_WORKSPACE/ci/test-0.3.10-features.py"
