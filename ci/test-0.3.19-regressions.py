@@ -56,7 +56,7 @@ assert 'wrong repeater' in main and 'non repeater rf header' in main
 # APRS-013: native notifications remain browser-governed; in-panel bubble only off APRS.
 assert "location.pathname==='/aprs'" in ui
 assert "setTimeout(function(){if(a&&a.parentNode)a.remove()},5000)" in ui
-assert "location.href='/aprs?to='" in ui
+assert "a.href='/aprs?to='" in ui
 
 # DISPLAY-019: bounded evidence-based detection, no silent HMI/TFT flashing.
 assert 'Detecção automática ao entrar na Internet' in display
