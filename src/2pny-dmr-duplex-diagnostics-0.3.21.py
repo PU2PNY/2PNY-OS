@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
-import json,re,subprocess,time
+import json,re,subprocess,time,sys
 from pathlib import Path
 OUT=Path("/run/2pny/dmr-duplex-diagnostics.json")
+if "--selftest" in sys.argv:
+    sample="Downlink Activate received\nDMR Slot 1, received RF\nDMR Slot 2, received network\n"
+    assert len(re.findall(r"Downlink Activate received",sample,re.I))==1
+    assert len(re.findall(r"DMR Slot [12], received RF",sample,re.I))==1
+    assert len(re.findall(r"DMR Slot [12], received network",sample,re.I))==1
+    print("DMR_DUPLEX_DIAGNOSTICS_OK")
+    raise SystemExit(0)
 def journal(unit):
     p=subprocess.run(["journalctl","-u",unit,"-n","180","--no-pager","-o","cat"],text=True,capture_output=True)
     return p.stdout or ""
