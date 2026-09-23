@@ -1,0 +1,15 @@
+[Unit]
+Description=PU2PNY safe RXOffset calibration apply
+After=2pny-mmdvmhost.service
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/sbin/2pny-rxoffset-apply
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+ReadWritePaths=/run/2pny /var/lib/2pny
