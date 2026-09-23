@@ -93,13 +93,20 @@ visible_signal(){
 auto_select(){
   exists "$PRIMARY" || exit 0
   exists "$SECONDARY" || exit 0
-  local iface pssid sssid ps ss chosen current
+  local iface pssid sssid ps ss chosen current current_sig best_sig
   iface="$(wifi_if)"; test -n "$iface" || exit 0
   pssid="$(profile_ssid "$PRIMARY")"; sssid="$(profile_ssid "$SECONDARY")"
   ps="$(visible_signal "$pssid")"; ss="$(visible_signal "$sssid")"
-  chosen="$PRIMARY"
-  if test "${ss:--1}" -gt "${ps:--1}"; then chosen="$SECONDARY"; fi
-  current="$(active_name)"
+  chosen="$PRIMARY"; best_sig="${ps:--1}"
+  if test "${ss:--1}" -gt "${ps:--1}"; then chosen="$SECONDARY"; best_sig="${ss:--1}"; fi
+  current="$(active_name)"; current_sig=-1
+  test "$current" = "$PRIMARY" && current_sig="${ps:--1}"
+  test "$current" = "$SECONDARY" && current_sig="${ss:--1}"
+  # NET-029: 12-point hysteresis avoids bouncing between similarly strong APs.
+  # A disappeared current SSID (-1) fails over immediately.
+  if test -n "$current" && test "$current_sig" -ge 0 && test "$best_sig" -lt $((current_sig+12)); then
+    chosen="$current"
+  fi
   if test "$current" != "$chosen"; then nm --wait 18 connection up "$chosen" ifname "$iface" >/dev/null; fi
   echo "Seleção automática: $chosen · Wi-Fi 1 ${ps}% · Wi-Fi 2 ${ss}%"
 }
