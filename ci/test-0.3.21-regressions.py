@@ -69,7 +69,7 @@ assert "12-point hysteresis" in wifi and "current_sig+12" in wifi.replace(" ",""
 assert "connectivity-change" in dispatch or "up)" in dispatch
 
 # UI-040 / WIZ-010: language persists server-side and normal post-Wi-Fi resume starts at Hardware.
-assert '"selected":fileExists(path)' in main
+assert re.search(r'"selected"\s*:\s*fileExists\(path\)',main)
 assert "/api/language" in wizard and "languageInfo&&languageInfo.selected" in wizard
 assert "lastConnectivity&&lastConnectivity.internet" in wizard and "step(2);startHardware()" in wizard
 assert "<title>PU2PNY-OS</title>" in wizard
