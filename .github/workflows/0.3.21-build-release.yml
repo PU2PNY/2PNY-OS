@@ -243,6 +243,19 @@ jobs:
           - nenhuma correção RF/Nextion/Direct desta versão é promovida a HW PASS sem novo teste físico.
 
           Estado: ALPHA / PARA TESTE FÍSICO.
+
+          ---
+          English summary:
+          - 0.3.20 remains the protected base; D-Star simplex and DMR simplex were HW-approved on 2026-09-22.
+          - 0.3.21 isolates DMR duplex fixes, keeps TS1/TS2 local transport in repeater mode, fixes voice arbitration and reports the confirmed TG instead of a stale DMR module.
+          - DNS/Wi-Fi state, automatic backup Wi-Fi, one-time language selection, Direct radio-triggered P2P, APRS ACK diagnostics, automatic time/DST display, bounded logs, BER RXOffset guidance and truthful Nextion COMOK state are included.
+          - RF, Nextion and two-hotspot Direct changes remain pending physical retest.
+
+          Resumen en español:
+          - 0.3.20 sigue siendo la base protegida; D-Star simplex y DMR simplex fueron aprobados en hardware el 22/09/2026.
+          - 0.3.21 aísla las correcciones DMR dúplex, mantiene TS1/TS2 locales en modo repetidor, corrige el arbitraje de voz y muestra el TG confirmado en lugar de un módulo DMR obsoleto.
+          - Incluye estado DNS/Wi-Fi más preciso, Wi-Fi de respaldo automático, idioma inicial persistente, Direct P2P iniciado por radio, diagnóstico ACK APRS, reloj automático/DST de presentación, logs limitados, guía BER/RXOffset y estado Nextion COMOK fiel.
+          - RF, Nextion y Direct entre dos hotspots siguen pendientes de prueba física.
           EOF
       - name: Publish prerelease
         uses: softprops/action-gh-release@v3
