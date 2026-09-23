@@ -129,7 +129,7 @@ if ov.get("enabled") is False:
 
 kind=""
 if d.get("class")=="nextion":kind="nextion"
-elif d.get("class")=="nextion_mmdvm" or (d.get("state")=="mmdvm_display_candidate" and m.get("detected")) or ov.get("enabled"):kind="nextion_mmdvm"
+elif m.get("detected") and (d.get("class")=="nextion_mmdvm" or d.get("state")=="mmdvm_display_candidate" or ov.get("enabled")):kind="nextion_mmdvm"
 elif str(d.get("address") or "").lower() in ("0x3c","0x3d"):kind="oled"
 elif str(d.get("address") or "").lower() in ("0x27","0x3f"):kind="lcd"
 
@@ -152,7 +152,9 @@ if requested in (2,3):renderer="mmdvmhost-native"
 tx_only_unconfirmed=False
 if kind=="nextion_mmdvm":
     tx_only_unconfirmed=d.get("physical_confirmed") is not True
-    renderer="pu2pny-modern-v2";requested=9
+    # Preserve an explicit native layout selection. Moderno V2 remains the
+    # default when the user has not selected ON7LDS 2/3.
+    if requested==9:renderer="pu2pny-modern-v2"
 profile=str(ov.get("model_profile") or "auto")
 resolution=str(ov.get("resolution") or "")
 settings=load(SETTINGS)

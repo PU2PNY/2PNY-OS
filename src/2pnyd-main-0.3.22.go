@@ -24,7 +24,7 @@ const (
 	configFile            = "/var/lib/2pny/config.json"
 	provisionedFile       = "/var/lib/2pny/provisioned"
 	listenAddr            = "0.0.0.0:80"
-	appVersion            = "0.3.21-alpha"
+	appVersion            = "0.3.22-alpha"
 	hardwareFile          = "/var/lib/2pny/hardware.json"
 	hardwareProbeFile     = "/var/lib/2pny/hardware-probe.json"
 	hardwareScanStateFile = "/run/2pny/hardware-scan-state.json"

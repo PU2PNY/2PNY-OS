@@ -370,9 +370,34 @@ def main():
     pool=concurrent.futures.ThreadPoolExecutor(max_workers=2,thread_name_prefix="pny")
     probe=None;lookup_job=None;last_lookup=0;next_probe=0;last_write=0;last_seq=-1;dirty=True
     last_contacts=0;last_history_summary=0;last_housekeeping=0;last_telemetry=0;previous_cpu=None
+    dmr_config=Path("/var/lib/2pny/network-radio.json")
+    try:last_dmr_config_mtime=dmr_config.stat().st_mtime_ns
+    except FileNotFoundError:last_dmr_config_mtime=0
+    next_dmr_config_check=0
 
     while True:
         now=time.monotonic();wall=time.time()
+        if now>=next_dmr_config_check:
+            next_dmr_config_check=now+1
+            try:config_mtime=dmr_config.stat().st_mtime_ns
+            except FileNotFoundError:config_mtime=0
+            if config_mtime!=last_dmr_config_mtime:
+                last_dmr_config_mtime=config_mtime
+                config=read_json(dmr_config,{})
+                if str(config.get("protocol") or "").upper()=="DMR":
+                    # An old XLX link/TG must not override the newly selected
+                    # BM profile. Link remains unconfirmed until gateway data.
+                    rt={"protocol":"DMR","kind":config.get("kind"),
+                        "server_name":config.get("server_name"),
+                        "module":config.get("module") or "",
+                        "linked":False,"connected":False,
+                        "link_state":"configured","updated":CORE.iso(wall)}
+                    atomic(NETWORK_RUNTIME,rt)
+                    for direction,event in state.active.items():
+                        if event and str(event.get("protocol") or "").upper()=="DMR":
+                            state.active[direction]=None
+                    state.network={"state":"unknown","message":"network changed","updated":CORE.iso(wall)}
+                    state._touch();dirty=True
         for key,_ in sel.select(timeout=0.10):
             raw=key.fileobj.readline()
             if not raw:continue

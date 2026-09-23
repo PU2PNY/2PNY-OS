@@ -10,7 +10,7 @@ import os,re,shutil,subprocess,sys,tempfile
 
 root=Path(sys.argv[1]).resolve()
 repo=Path(__file__).resolve().parents[1]
-version="0.3.21-alpha"
+version="0.3.22-alpha"
 
 def install(src,dst,mode=0o644):
     target=root/dst
@@ -19,7 +19,7 @@ def install(src,dst,mode=0o644):
     os.chmod(target,mode)
 
 files=[
-("src/2pnyd-main-0.3.21.go","src/2pnyd/main.go",0o644),
+("src/2pnyd-main-0.3.22.go","src/2pnyd/main.go",0o644),
 ("src/ui-common-0.3.21.js","rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js",0o644),
 ("src/ui-language-0.3.21.js","rootfs-overlay/usr/share/2pny/ui-language.js",0o644),
 ("src/dashboard-0.3.21.html","rootfs-overlay/usr/share/2pny/dashboard.html",0o644),
