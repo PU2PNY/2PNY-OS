@@ -823,3 +823,33 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Commit publicado: `0e6063688396ad2a0f1cf60cfe5e60915e711019`.
 - Nível: **SW/CI PASS; ALPHA/PARA TESTE FÍSICO**.
 - Permanecem HW PENDENTE: D-Star RF/comandos por rádio, DMR duplex RF↔rede, regressão física do DMR simplex nesta imagem, Nextion/COMOK/Moderno V2, BER/RSSI/S-meter reais e Direct entre dois hotspots.
+
+## 0.3.21-alpha — correções do teste físico de 22/09/2026
+
+**Base:** 0.3.20-alpha integral. **Baseline HW protegida desta rodada:** D-Star simplex PASS e DMR simplex PASS. Tudo que não foi reportado como falha permanece congelado.
+
+### Implementado em fonte / candidato a SW
+- DMR duplex: TS1/TS2 locais explícitos, MMDVMHost antes do DMRGateway e arbitragem de voz limitada ao estado SENDING para não silenciar áudio NETWORK→RF.
+- DMR TG: separação entre TG solicitado e TG confirmado; Ao Vivo/Protocolos mostram TG real em vez de módulo DMR obsoleto.
+- DNS: confirmação assíncrona verdadeira e recuperação visual; aviso global de perda de Internet.
+- Wi‑Fi: rede atual + uma rede backup, failover e seleção por sinal com histerese; estado identifica Wi‑Fi 1/2.
+- Wizard/idioma: idioma persistente perguntado uma vez; com Internet já configurada, retoma em Hardware.
+- Direct: chamada disparada pelo rádio; D-Star por indicativo/URCALL e DMR por Private Call/Radio ID; payload QSO direct-only, sem relay de servidor.
+- APRS: ACK/REJ por origem+ID, retry limitado, diagnóstico de ACK e coordenadas manuais em HTTP; M-SMS/H-SMS documentados como pesquisa/compatibilidade, sem alegar DMR SMS entregue.
+- Nextion: estado físico permanece não confirmado sem COMOK; caminho TX-only é mostrado como tal.
+- Relógio: NTP/timezone automático; DST manual apenas na apresentação.
+- Logs: journal persistente limitado/comprimido.
+- BER: assistente RXOffset com medida real, melhor valor da sessão, salvar/restaurar e rollback.
+- HMI: boot/progresso, idioma persistente e dados operacionais somente quando reais.
+- CI 0.3.21 inclui regressões da 0.3.20, proteção simplex, preflight REL-015 e validador montado específico.
+
+### Pendências que continuam HW
+- DMR duplex RF→rede e rede→RF com áudio real, timeout, TS/CC e Ao Vivo.
+- Regressão DMR simplex TX/RX e D-Star simplex após a imagem 0.3.21.
+- Nextion física COMOK/render real.
+- Direct RF A↔B entre dois hotspots.
+- BER/RSSI reais e recomendação RXOffset em Raspberry/MMDVM.
+- ACK dos IDs históricos 89018, 70182 e 42231 não pode ser retroativamente confirmado sem log/ACK correspondente.
+
+**Classificação alvo:** ALPHA / PARA TESTE FÍSICO. Não promover itens HW por CI/VPS.
+
