@@ -119,3 +119,5 @@ for page in ("dashboard.html","hotspot.html","internet.html","wizard.html","syst
         finally: os.unlink(tmp)
 
 print("PREPARE_0321_OK")
+
+# CI: release candidate for physical testing.
