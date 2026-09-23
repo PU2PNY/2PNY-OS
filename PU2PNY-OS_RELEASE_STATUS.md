@@ -792,12 +792,12 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Base:** 0.3.19-alpha publicada + rollback `backup/0.3.19-pre-0.3.20-20260922`.
 - **Branch:** `pu2pny-os-0.3.20-alpha`.
 - **Classificação atual:** ALPHA / PARA TESTE FÍSICO.
-- **SW/VPS:** implementação e gates determinísticos em execução; WartyWallaby validou testes Python/Shell/JS e backend Go. Direct requer o CI Go 1.24 porque a VPS possui Go 1.19.
+- **SW/CI:** run `35798691612` PASS em source, staged source, ARM64, XZ/SHA-256, REL-015, validador final, artefato e publish. **VPS:** WartyWallaby validou testes Python/Shell/JS e backend Go; Direct não compilou nessa VPS por Go 1.19, mas o CI oficial usa Go 1.24.
 - **HW:** PENDENTE para D-Star RF real, troca de refletor por rádio, DMR duplex áudio/TX/RX, Nextion física/COMOK/Moderno V2, S-meter/RSSI/BER reais e Direct entre dois hotspots.
 - **Baseline obrigatório:** DMR simplex TX/RX aprovado e YSF/C4FM simplex reportado funcionando perfeitamente não podem regredir.
 - **Falha D-Star confirmada na 0.3.19:** painel aplicava corretamente mudança manual de refletor (XLX300D comprovado); comando de rádio para troca alterava apenas estado visual sem confirmar execução. PROTO-032 corrige sem promover HW PASS antes do novo teste.
 - **Módulo local D-Star:** padrão de nova configuração B, seletor A–D; upgrades preservam configuração anterior.
-- **Gate de imagem:** source → staging → ARM64 → XZ/SHA-256 → REL-015 preflight → `validate-0.3.20-image.sh` → prerelease. Link só pode ser divulgado após PASS real dessa cadeia.
+- **Gate de imagem:** source → staging → ARM64 → XZ/SHA-256 → REL-015 preflight → `validate-0.3.20-image.sh` → prerelease: **PASS no run `35798691612`**.
 
 
 ## Governança documental sincronizada — 2026-09-22
@@ -806,3 +806,20 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **TEST-008:** VPS/SentinelX, GitHub/CI, plugins/conectores e fontes oficiais devem ser usados conforme aplicabilidade; nível HW continua reservado a hardware real.
 - README e START_HERE foram alinhados ao ciclo 0.3.20-alpha e deixaram de apresentar 0.1.1 como estado atual.
 - Escopo desta organização: documentação/governança. Nenhum estado HW é promovido por esta alteração.
+
+
+### Run 35798691612 — 0.3.20 publicada
+- Source: PASS.
+- Staged source: PASS.
+- Build ARM64: PASS.
+- XZ + SHA-256: PASS.
+- Preflight REL-015: PASS.
+- Validador final: PASS.
+- Artefato transferido/verificado: PASS.
+- Publish: PASS.
+- Prerelease: `v0.3.20-alpha`.
+- Imagem: `PU2PNY-OS-0.3.20-alpha-arm64.img.xz` — 614874612 bytes.
+- SHA-256 da imagem: `f42756bfcce537a7890b6296db3da3258fd8e909a45c7856f1530c8b363bed56`.
+- Commit publicado: `0e6063688396ad2a0f1cf60cfe5e60915e711019`.
+- Nível: **SW/CI PASS; ALPHA/PARA TESTE FÍSICO**.
+- Permanecem HW PENDENTE: D-Star RF/comandos por rádio, DMR duplex RF↔rede, regressão física do DMR simplex nesta imagem, Nextion/COMOK/Moderno V2, BER/RSSI/S-meter reais e Direct entre dois hotspots.
