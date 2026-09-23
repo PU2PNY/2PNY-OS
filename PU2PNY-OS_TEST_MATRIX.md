@@ -773,3 +773,29 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0320-A | REL-016 / REL-015 | run oficial 0.3.20 | source, staged source, ARM64, XZ/SHA-256, preflight, validador final e publish concluídos | PASS run 35798691612 | SW/CI |
 | TEST-REL-0320-B | REL-016 | artefato publicado | imagem ARM64 + sidecar SHA-256 presentes na prerelease e hash registrado | PASS | SW/CI |
 | TEST-REL-0320-C | REL-016 / RF-020 / PROTO-032 / DISPLAY-020 | validação física da 0.3.20 | DMR simplex preservado, DMR duplex, D-Star por rádio, Nextion real e demais casos HW confirmados | PENDENTE | HW |
+
+## Matriz 0.3.21-alpha — feedback físico 22/09/2026
+
+| ID | Requisito | Critério de aceite | Estado | Nível |
+|---|---|---|---|---|
+| TEST-REL-018A | REL-018 | D-Star simplex da base permanece funcional após 0.3.21 | **PASS baseline informado / RETESTE 0.3.21 PENDENTE** | HW |
+| TEST-REL-018B | REL-018 | DMR simplex da base permanece funcional após 0.3.21 | **PASS baseline informado / RETESTE 0.3.21 PENDENTE** | HW |
+| TEST-PROTO-034A | PROTO-034 | voz DMR só bloqueia enquanto SENDING; NETWORK→RF não fica sem áudio por espera de voz | SW candidato / HW PENDENTE | SW/HW |
+| TEST-PROTO-036A | PROTO-036 | duplex usa TS1+TS2 localmente; simplex continua protegido | SW candidato / HW PENDENTE | SW/HW |
+| TEST-PROTO-035A | PROTO-035 | TG4005 e demais TGs mostram TG confirmado; nenhum “Módulo C” DMR obsoleto | SW candidato / HW PENDENTE | SW/HW |
+| TEST-UI-039A | UI-039 | operação de perfil acompanha apply local e confirmação remota sem mensagens contraditórias | SW candidato / browser+HW PENDENTE | SW/HW |
+| TEST-NET-028A | NET-028 | DNS só informa rollback quando ocorreu; aviso some após recuperação; perda Internet gera alerta global | SW candidato / HW PENDENTE | SW/VPS/HW |
+| TEST-NET-029A | NET-029 | Wi‑Fi 1 cai → Wi‑Fi 2; ambas disponíveis → troca só com vantagem estável; Ethernet reconhecida rapidamente | SW candidato / HW PENDENTE | SW/HW |
+| TEST-UI-040A | UI-040 | duplex mostra RX/TX separados; cada campo RF necessário fica em linha própria | SW candidato / browser PENDENTE | SW/browser |
+| TEST-UI-041A | UI-041 / WIZ-010 | idioma é perguntado uma vez e painel/display permanecem no idioma escolhido | SW candidato / HW PENDENTE | SW/HW |
+| TEST-WIZ-010A | WIZ-010 | Wi‑Fi já provisionado + Internet → wizard abre Hardware; sem Internet → rede | SW candidato / HW PENDENTE | SW/HW |
+| TEST-P2P-009A | P2P-009 | D-Star URCALL ou DMR Private Call aciona Direct; TG não; payload relay é rejeitado | SW candidato / HW A↔B PENDENTE | SW/VPS/HW |
+| TEST-APRS-015A | APRS-015 | ACK/REJ só casa origem+ID, retries limitados e estado waiting_ack/ack/no_ack verdadeiro | SW candidato / VPS/HW PENDENTE | SW/VPS/HW |
+| TEST-APRS-015B | APRS-015 | latitude/longitude manuais funcionam em HTTP; geolocalização automática só em contexto seguro | SW candidato | SW/browser |
+| TEST-DISPLAY-022A | DISPLAY-022 | sem COMOK real, physical_confirmed=false; writer TX-only não vira falso PASS | SW candidato / HW PENDENTE | SW/HW |
+| TEST-DISPLAY-023A | DISPLAY-023 | boot HMI usa idioma persistido, progresso e dados reais adaptados à tela | SW candidato / HW PENDENTE | SW/HW |
+| TEST-PERF-005A | PERF-005 | journal ≤64 MiB, arquivo ≤8 MiB, retenção ≤7 dias, compressão ativa | SW candidato / VPS PENDENTE | SW/VPS |
+| TEST-RF-022A | RF-022 | RXOffset ±100 Hz mede BER/RSSI reais, recomenda menor BER e salva/restaura com rollback | SW candidato / HW PENDENTE | SW/HW |
+| TEST-SYS-004A | SYS-004 | NTP/timezone automático; DST manual altera apenas apresentação | SW candidato / VPS/HW PENDENTE | SW/VPS/HW |
+| TEST-REL-0321-A | REL-018 / REL-015 | source + staged + ARM64 + SHA + preflight + validador final + publish | PENDENTE CI | SW/CI |
+
