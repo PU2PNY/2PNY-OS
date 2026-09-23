@@ -5,7 +5,7 @@ Adaptive local renderer for Nextion (direct or through MMDVM MQTT bridge),
 SSD1306/SH1106 OLED and HD44780/PCF8574 LCD.  It never owns RF settings and
 never reads radio logs: all live information comes from PU2PNY snapshots.
 """
-import datetime, json, os, re, subprocess, termios, time
+import datetime, json, os, re, subprocess, termios, time, unicodedata
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -89,16 +89,39 @@ class Nextion:
             except Exception:pass
             self.fd=None
     def send(self, commands):
-        payload=b"".join(str(c).encode("ascii","replace")+END for c in commands)
+        frames=[str(c).encode("ascii","replace")+END for c in commands]
         if self.integration=="nextion_mmdvm":
-            p=subprocess.run(["mosquitto_pub","-h","127.0.0.1","-t","host/display-in","-s"],
-                             input=payload,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=2)
-            if p.returncode:raise RuntimeError("MQTT display bridge unavailable")
+            # MMDVMHost has a single 252-byte immediate serial write; larger
+            # messages use a shared delayed buffer. A second MQTT update can
+            # replace that buffer while the first frame is still draining.
+            # Send bounded complete commands in order and pace the modem UART.
+            chunks=[];chunk=bytearray()
+            for frame in frames:
+                if len(frame)>240:raise ValueError("Nextion command exceeds modem frame")
+                if len(chunk)+len(frame)>240:
+                    chunks.append(bytes(chunk));chunk.clear()
+                chunk.extend(frame)
+            if chunk:chunks.append(bytes(chunk))
+            for payload in chunks:
+                p=subprocess.run(["mosquitto_pub","-h","127.0.0.1","-t","host/display-in","-s"],
+                                 input=payload,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=2)
+                if p.returncode:raise RuntimeError("MQTT display bridge unavailable")
+                time.sleep(len(payload)*10/max(9600,self.baud)+.04)
         else:
             if self.fd is None:self.open()
-            os.write(self.fd,payload)
-    def text(self,x,y,w,h,text,color=WHITE,font=0,align=0):
-        return f'xstr {x},{y},{w},{h},{font},{color},{BLACK},{align},1,1,"{safe(text,50)}"'
+            for frame in frames:
+                view=memoryview(frame)
+                while view:
+                    try:n=os.write(self.fd,view)
+                    except BlockingIOError:
+                        time.sleep(.01);continue
+                    view=view[n:]
+    def text(self,x,y,w,h,text,color=WHITE,font=0,align=0,bg=BLACK):
+        # A stock Nextion font is not guaranteed to contain UTF-8 glyphs.
+        # Transliterate instead of sending '?' for accented labels/dashes.
+        plain=unicodedata.normalize("NFKD",safe(text,50).replace("—","-").replace("–","-").replace("·","|").replace("…","..."))
+        plain=plain.encode("ascii","ignore").decode("ascii")
+        return f'xstr {x},{y},{w},{h},{font},{color},{bg},{align},1,1,"{plain}"'
     def flag(self,cc,x,y):
         cc=(cc or "").upper()
         cmds=[f"draw {x},{y},{x+43},{y+27},{GRAY}"]
@@ -173,8 +196,43 @@ class Nextion:
             return
         page=(title,proto)
         cmds=[]
-        if self.first_render or self.last_page!=page:
-            cmds.append("cls 0");self.first_render=False;self.last_page=page
+        # Each frame is self-contained. The previous page can have left
+        # components on the ON7LDS HMI canvas; changing page state alone did
+        # not reliably erase those components on the physical display.
+        cmds.append("cls 0");self.first_render=False;self.last_page=page
+        if w>=320 and h>=240:
+            def box(x,y,bw,bh,color):return f"fill {int(x*w/320)},{int(y*h/240)},{max(1,int(bw*w/320))},{max(1,int(bh*h/240))},{color}"
+            def label(x,y,bw,bh,value,color=WHITE,align=0,bg=BLACK):
+                return self.text(int(x*w/320),int(y*h/240),max(1,int(bw*w/320)),max(1,int(bh*h/240)),value,color,0,align,bg)
+            # Designed on a 320x240 grid; all boxes are clipped by construction.
+            cmds += [box(0,0,320,240,BLACK),box(0,0,320,30,BLUE),
+                     label(10,3,165,24,"PU2PNY-OS",WHITE,0,BLUE),
+                     label(176,3,134,24,proto.upper(),WHITE,1,BLUE)]
+            if mode=="standby":
+                net_online=qual not in ("offline","unknown","")
+                net_label=tr("INTERNET ATIVA","INTERNET ONLINE","INTERNET ACTIVA") if net_online else tr("SEM INTERNET","NO INTERNET","SIN INTERNET") if qual=="offline" else tr("REDE —","NETWORK —","RED —")
+                cmds += [box(10,40,300,116,GRAY),box(12,42,296,112,BLACK),
+                         label(20,45,280,35,own,CYAN,0,1),
+                         label(20,81,280,34,now,WHITE,0,1),
+                         label(20,119,280,27,tr("AGUARDANDO RF","WAITING FOR RF","ESPERANDO RF"),GREEN,0,1),
+                         box(10,166,300,29,GREEN if net_online else RED if qual=="offline" else GRAY),
+                         label(18,168,284,25,net_label,BLACK if net_online else WHITE,1,GREEN if net_online else RED if qual=="offline" else GRAY),
+                         label(14,205,292,26,f"{uplink}  {ip}",WHITE,0,1)]
+            else:
+                net_label=(tr("SEM INTERNET","NO INTERNET","SIN INTERNET") if qual=="offline" else f"{uplink} {ip}")
+                destination=f"TG {dmr_tg}" if is_dmr and dmr_tg else target or "—"
+                cmds += [box(10,39,300,39,header),label(17,44,286,29,source,BLACK,1,header),
+                         label(13,84,294,26,name or ("RF" if direction=="RF" else "NET"),WHITE,0,1),
+                         box(10,114,300,38,GRAY),box(12,116,296,34,BLACK),
+                         label(17,119,286,26,destination,CYAN,0,1),
+                         label(13,158,145,27,f"{origin}  {duration}",YELLOW),
+                         label(162,158,145,27,rfline or "—",WHITE),
+                         box(10,194,300,1,GRAY),label(13,201,294,26,net_label,RED if qual=="offline" else GREEN)]
+                if tot_left is not None and tot_left<=20:
+                    cmds += [box(0,196,320,44,RED if tot_left<=10 else YELLOW),
+                             label(6,199,308,35,f"TOT {tot_left} s",WHITE if tot_left<=10 else BLACK,1,RED if tot_left<=10 else YELLOW)]
+            self.send(cmds)
+            return
         cmds += [f"fill 0,0,{w},38,{header}",self.text(8,5,w-16,28,f"PU2PNY-OS  {own}  {proto}",BLACK if mode!="standby" else WHITE,0,0)]
         if qual=="offline":
             cmds += [f"fill 0,38,{w},25,{RED}",self.text(0,39,w,22,tr("INTERNET SEM CONEXÃO","INTERNET OFFLINE","SIN INTERNET"),WHITE,0,1)]
