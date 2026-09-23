@@ -97,7 +97,8 @@ test -x "$ROOT/usr/local/bin/2pny-direct-core"
 chroot "$ROOT" /usr/local/bin/2pny-direct-core --selftest | grep -Fq DIRECT_SELFTEST_OK
 strings "$ROOT/usr/local/bin/2pny-direct-core" | grep -Fq 'relay desativado'
 strings "$ROOT/usr/local/bin/2pny-direct-core" | grep -Fq 'caminho P2P direto indisponível'
-grep -Fq 'Private' "$ROOT/usr/share/2pny/direct.html"
+grep -Fq 'ID digital' "$ROOT/usr/share/2pny/direct.html"
+! grep -Fq 'Direct/Relay' "$ROOT/usr/share/2pny/direct.html"
 
 echo '[9/10] backend boot/API'
 mkdir -p "$ROOT/proc" "$ROOT/dev" "$ROOT/sys" "$ROOT/run" "$ROOT/var/lib/2pny"
