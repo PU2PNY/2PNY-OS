@@ -85,7 +85,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2 parted
-      - name: Restore 0.3.19 baseline and apply focused 0.3.21 overlay
+      - name: Restore protected chain through 0.3.20 and apply focused 0.3.21 overlay
         run: |
           set -euo pipefail
           bash legacy-source/2pny-os/bootstrap.sh
@@ -127,9 +127,21 @@ jobs:
           set -euo pipefail
           gofmt -w src/2pnyd/main.go
           go test ./...
-          python3 -m py_compile             rootfs-overlay/usr/local/sbin/2pny-station-worker             rootfs-overlay/usr/local/sbin/2pny-display-core             rootfs-overlay/usr/local/sbin/2pny-display-apply             rootfs-overlay/usr/local/sbin/2pny-display-detector             rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply             rootfs-overlay/usr/local/sbin/2pny-protocol-profiles             rootfs-overlay/usr/local/sbin/2pny-update-manager             rootfs-overlay/usr/local/libexec/2pny-dmr-apply             rootfs-overlay/usr/local/sbin/2pny-aprs             rootfs-overlay/usr/local/sbin/2pny-timezone-apply
+          python3 -m py_compile \
+            rootfs-overlay/usr/local/sbin/2pny-station-worker \
+            rootfs-overlay/usr/local/sbin/2pny-display-core \
+            rootfs-overlay/usr/local/sbin/2pny-display-apply \
+            rootfs-overlay/usr/local/sbin/2pny-display-detector \
+            rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply \
+            rootfs-overlay/usr/local/sbin/2pny-protocol-profiles \
+            rootfs-overlay/usr/local/sbin/2pny-update-manager \
+            rootfs-overlay/usr/local/libexec/2pny-dmr-apply \
+            rootfs-overlay/usr/local/sbin/2pny-aprs \
+            rootfs-overlay/usr/local/sbin/2pny-timezone-apply \
+            rootfs-overlay/usr/local/sbin/2pny-dmr-duplex-diagnostics \
+            rootfs-overlay/usr/local/sbin/2pny-rxoffset-apply
           bash -n rootfs-overlay/usr/local/sbin/2pny-hostfiles-update rootfs-overlay/usr/local/sbin/2pny-display-online-detect
-          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.20-alpha"' src/2pnyd/main.go
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\.3\.21-alpha"' src/2pnyd/main.go
           grep -Fq 'simplex-protected' rootfs-overlay/usr/local/libexec/2pny-dmr-apply
           grep -Fq 'connected_tg' rootfs-overlay/usr/local/sbin/2pny-station-worker
           grep -Fq 'Saída ativa · retorno COMOK ainda não confirmado' rootfs-overlay/usr/share/2pny/display.html
