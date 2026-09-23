@@ -26,6 +26,7 @@ for width,height in ((320,240),(480,320),(800,480)):
     assert commands.count(b"cls 0")==2
     assert b"AGUARDANDO RF" in b"".join(commands)
     assert b"REDE ?" not in b"".join(commands)
+    assert b"TG TG" not in b"".join(commands)
     for command in commands:
         if not command.startswith(b"xstr "):continue
         x,y,w,h=(int(v) for v in command[5:].split(b",",4)[:4])

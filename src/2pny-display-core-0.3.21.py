@@ -157,7 +157,7 @@ class Nextion:
         mode=a.get("mode") or "standby"
         direction=str(a.get("direction") or "").upper()
         title="TX" if mode=="tx" else "RX" if mode=="rx" else "STANDBY"
-        header=RED if mode=="tx" else GREEN if mode=="rx" else CYAN
+        header=GREEN if mode=="tx" else RED if mode=="rx" else CYAN
         own=safe(cfg.get("callsign") or "PU2PNY",12)
         source=safe(a.get("source") or own,18)
         op=a.get("operator") or {}
@@ -212,15 +212,15 @@ class Nextion:
                 net_online=qual not in ("offline","unknown","")
                 net_label=tr("INTERNET ATIVA","INTERNET ONLINE","INTERNET ACTIVA") if net_online else tr("SEM INTERNET","NO INTERNET","SIN INTERNET") if qual=="offline" else tr("REDE —","NETWORK —","RED —")
                 cmds += [box(10,40,300,116,GRAY),box(12,42,296,112,BLACK),
-                         label(20,45,280,35,own,CYAN,0,1),
-                         label(20,81,280,34,now,WHITE,0,1),
-                         label(20,119,280,27,tr("AGUARDANDO RF","WAITING FOR RF","ESPERANDO RF"),GREEN,0,1),
+                         label(20,45,280,35,own,CYAN,1),
+                         label(20,81,280,34,now,WHITE,1),
+                         label(20,119,280,27,tr("AGUARDANDO RF","WAITING FOR RF","ESPERANDO RF"),GREEN,1),
                          box(10,166,300,29,GREEN if net_online else RED if qual=="offline" else GRAY),
                          label(18,168,284,25,net_label,BLACK if net_online else WHITE,1,GREEN if net_online else RED if qual=="offline" else GRAY),
-                         label(14,205,292,26,f"{uplink}  {ip}",WHITE,0,1)]
+                         label(14,205,292,26,f"{uplink}  {ip}",WHITE,1)]
             else:
                 net_label=(tr("SEM INTERNET","NO INTERNET","SIN INTERNET") if qual=="offline" else f"{uplink} {ip}")
-                destination=f"TG {dmr_tg}" if is_dmr and dmr_tg else target or "—"
+                destination=(str(dmr_tg) if str(dmr_tg).upper().startswith("TG ") else f"TG {dmr_tg}") if is_dmr and dmr_tg else target or "—"
                 place=" | ".join(v for v in (city,country) if v)
                 cmds += [box(10,39,300,39,header),label(17,44,286,29,source,BLACK,1,header),
                          label(13,81,294,25,name or ("RF" if direction=="RF" else "NET"),WHITE,1),
