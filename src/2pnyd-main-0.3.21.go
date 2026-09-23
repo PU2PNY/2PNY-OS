@@ -2609,6 +2609,22 @@ func runClockRequest(localTime string) (map[string]any, error) {
 	return nil,fmt.Errorf("2pny-timezone-apply não confirmou o relógio dentro do limite")
 }
 
+func languageHandler(w http.ResponseWriter, r *http.Request) {
+	path:=filepath.Join(dataDir,"language")
+	if r.Method==http.MethodGet {
+		lang:="pt"
+		if b,err:=os.ReadFile(path);err==nil { v:=strings.ToLower(strings.TrimSpace(string(b))); if v=="pt"||v=="en"||v=="es" { lang=v } }
+		writeJSON(w,200,map[string]any{"language":lang}); return
+	}
+	if r.Method!=http.MethodPost || !sameOrigin(r) { http.Error(w,"request rejected",403); return }
+	var in struct { Language string `json:"language"` }
+	if json.NewDecoder(http.MaxBytesReader(w,r.Body,1024)).Decode(&in)!=nil { writeJSON(w,400,map[string]any{"error":"idioma inválido"}); return }
+	lang:=strings.ToLower(strings.TrimSpace(in.Language))
+	if lang!="pt"&&lang!="en"&&lang!="es" { writeJSON(w,400,map[string]any{"error":"idioma não suportado"}); return }
+	if err:=os.WriteFile(path,[]byte(lang+"\n"),0600);err!=nil { writeJSON(w,500,map[string]any{"error":"não foi possível salvar o idioma"}); return }
+	writeJSON(w,200,map[string]any{"ok":true,"language":lang})
+}
+
 func systemTimezonesHandler(w http.ResponseWriter,r *http.Request){
 	if r.Method!=http.MethodGet{http.Error(w,"GET required",http.StatusMethodNotAllowed);return}
 	out,err:=exec.Command("timedatectl","list-timezones","--no-pager").Output()
@@ -3216,6 +3232,7 @@ func main() {
 	http.HandleFunc("/api/history/summary", historySummaryHandler)
 	http.HandleFunc("/api/system", systemControlHandler)
 	http.HandleFunc("/api/system/timezones", systemTimezonesHandler)
+	http.HandleFunc("/api/language", languageHandler)
 	http.HandleFunc("/api/update", updateStatusHandler)
 	http.HandleFunc("/api/live", liveStatusHandler)
 	http.HandleFunc("/api/live/events", liveEventsHandler)
