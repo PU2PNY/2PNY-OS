@@ -87,6 +87,9 @@ assert "display_hm" in dcore
 # P2P-009: server may rendezvous, but media relay is rejected; radio starts calls.
 assert "relay desativado" in direct_session
 assert "caminho P2P direto indisponível" in direct_session
+direct_main=text("src/direct-core-0.3.21/direct_main.go")
+assert 'sendSecure("PU2BBB", "message", []byte("relay-must-fail"), true)' in direct_main
+assert "relay rejection failed" in direct_main
 assert 'case "relay-data"' in direct_transport and "deliberately rejected" in direct_transport
 assert 'Direction' in direct_auto and '"RF"' in direct_auto and 'proto=="DSTAR"' in direct_auto.replace(" ","")
 assert "DMR" in direct_auto and "ID digital" in direct_ui
