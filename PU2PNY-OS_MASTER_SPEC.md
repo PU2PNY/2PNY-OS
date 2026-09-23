@@ -1662,3 +1662,62 @@ Tudo explicitamente aprovado, testado ou comprovado funcionando é baseline prot
 
 ### TEST-008 — Evidência cruzada, SentinelX e verdade técnica
 Antes de afirmar correção ou compatibilidade, usar o nível de validação correto. Quando uma mudança puder ser reproduzida sem RF/hardware físico, usar VPS via SentinelX quando disponível e registrar resultado. Usar GitHub/CI, plugins/conectores e fontes oficiais/atuais para validação cruzada quando aplicável. VPS não promove teste para HW. Compilar, instalar ou ler documentação não equivale a teste físico. Sem evidência suficiente, registrar `—`, indisponível, não verificado ou pendente; nunca inventar resultado, BER, RSSI, chamadas, gateways, IDs, localização ou estado.
+
+## 34. Ciclo 0.3.21-alpha — correções do teste físico de 22/09/2026
+
+### REL-018 — Escopo congelado e baseline físico protegido
+A 0.3.21-alpha parte integralmente da 0.3.20-alpha. **D-Star simplex** e **DMR simplex** foram aprovados fisicamente pelo mantenedor nesta rodada e passam a baseline protegida explícita. Tudo que não foi citado como falha permanece congelado. Correções de duplex, TG, rede, UI, Direct, APRS, display, relógio, logs e BER não autorizam alterar comportamento simplex sem necessidade direta e teste de regressão correspondente.
+
+### PROTO-034 — Arbitragem de voz DMR sem silenciar áudio de rede
+Em DMR duplex, avisos de voz do gateway só podem bloquear o caminho de áudio enquanto o gerador de voz estiver efetivamente em estado SENDING. Estado pendente/aguardando não pode mutar NETWORK→RF. O fluxo simplex aprovado permanece inalterado.
+
+### PROTO-035 — Estado DMR deve mostrar TG efetivo, não módulo obsoleto
+Mudanças TG4000/TG4001–4026/TG4099 e TGs de redes como BrandMeister/TGIF devem separar requested_tg de connected_tg. O painel só promove o TG efetivo após evidência do gateway/rede. Quando o conceito aplicável for TG, exibir TG n; nunca converter silenciosamente em “Módulo X”. D-Star usa **refletor + módulo remoto** quando confirmado; YSF/C4FM usa **sala/refletor**.
+
+### PROTO-036 — Correções DMR duplex isoladas do simplex
+Somente quando use_mode=repeater:
+- MMDVMHost↔DMRGateway mantém TS1 e TS2 disponíveis localmente;
+- configuração do DMRGateway anuncia duplex e os dois slots locais;
+- ordem de subida preserva MMDVMHost antes do DMRGateway;
+- diagnóstico deve distinguir timeout RF, transporte local, gateway e áudio NETWORK→RF.
+Quando use_mode=hotspot, preservar integralmente a configuração simplex aprovada.
+
+### UI-039 — Estado de ativação acompanha evidência real
+A operação “salvando/aplicando perfil” só encerra quando o apply local transacional concluir; a confirmação remota permanece observada sem bloquear a UI. Mensagens de “áudio/link conectado” não podem anteceder evidência real nem ficar dessincronizadas com o estado efetivo.
+
+### NET-028 — DNS e perda de Internet com estado verdadeiro
+Troca de DNS deve aguardar a janela real do backend, reler o DNS efetivo e remover automaticamente mensagens transitórias assim que a conectividade se recuperar. Erro/rollback só pode ser informado com evidência. Queda de Internet por Wi‑Fi ou Ethernet deve gerar aviso global visível, sem polling agressivo.
+
+### NET-029 — Wi‑Fi primário + backup e seleção rápida
+A página Internet usa uma única área de gerenciamento: rede atual como Wi‑Fi 1 e uma rede adicional como Wi‑Fi 2/backup. Se a atual falhar, tentar a outra automaticamente. Com ambas disponíveis, trocar somente quando a alternativa tiver vantagem de sinal estável (histerese) para evitar flapping. Ethernet tem prioridade de rota quando presente. O estado deve dizer explicitamente “Wi‑Fi 1” ou “Wi‑Fi 2”.
+
+### UI-040 — Layout duplex e campos RF em linhas independentes
+No Ao Vivo e em Protocolos, RX e TX de modo duplex devem ser visualmente separados. Na configuração RF, cada campo/modo RF ocupa linha própria quando necessário; simplex não ganha complexidade visual de duplex.
+
+### UI-041 — Idioma único e consistente
+A escolha PT-BR / English / Español aparece uma única vez no primeiro provisionamento e persiste no backend. Painel, wizard e display local devem usar o idioma escolhido sem mistura. Conteúdo estático do GitHub não pode inferir o idioma de um hotspot individual; releases deste ciclo devem, quando possível, publicar notas equivalentes em PT/EN/ES, sem transformar documentação estática em estado dinâmico fictício.
+
+### WIZ-010 — Retomar em Hardware após Wi‑Fi já provisionado
+Após o primeiro Wi‑Fi ter sido configurado e haver Internet, novos acessos ao wizard pulam a escolha de idioma/Wi‑Fi e retomam em Hardware. A tela de Wi‑Fi reaparece somente quando a conectividade necessária não existir ou quando o usuário abrir explicitamente a página Internet.
+
+### P2P-009 — Direct acionado pelo rádio, QSO sem relay
+O servidor pode atuar somente em identidade/rendezvous/descoberta. O payload do QSO não pode atravessar relay do servidor. D-Star inicia Direct por URCALL/indicativo pareado; DMR somente por **Private Call** ao Radio ID resolvido para peer pareado; Talkgroup não inicia Direct. A UI mostra alvo, retorno, estado, caminho e erro. UDP hole punching deve ser tentado para NAT/CGNAT; NAT simétrico/restritivo que não permita caminho direto é reportado como bloqueado, sem fingir que foi contornado.
+
+### APRS-015 — Mensagens, ACK e pesquisa M-SMS/H-SMS
+APRS-IS mantém fila persistente, retry limitado e ACK/REJ correspondente por **origem + ID da mensagem**. A UI permite latitude/longitude manual em HTTP e só usa geolocalização automática em contexto seguro. M-SMS (Motorola), H-SMS (Hytera) e DMR Standard podem ser documentados/pesquisados, mas envio DMR nativo não pode ser marcado como entregue sem implementação/ACK comprovados; preservar DMR simplex aprovado.
+
+### DISPLAY-022 — Estado Nextion físico é evidência, não inferência
+nextion_mmdvm, resolução/modelo e writer lógico não equivalem a comunicação física. physical_confirmed exige resposta COMOK real. Se houver caminho de escrita sem retorno, mostrar explicitamente “saída ativa / retorno não confirmado”, nunca “reconhecida” como fato.
+
+### DISPLAY-023 — Boot/HMI adaptativo e idioma persistente
+Display local suportado deve iniciar no idioma persistido, mostrar progresso de boot até a tela principal e, quando houver dados reais, destacar operador, protocolo, indicativo, destino, duração, BER/RSSI, uplink/IP e foto disponível. O renderer adapta conteúdo ao tamanho/tipo da tela e pode usar apresentação semelhante a rádio digital sem copiar HMI proprietário. Gravação de HMI/TFT é sempre ação explícita do usuário e nunca automática.
+
+### PERF-005 — Logs persistentes limitados
+Eventos do sistema são registrados em journal persistente com rotação/compressão e limites adequados a SD. Baseline deste ciclo: máximo global 64 MiB, arquivo individual 8 MiB, retenção máxima 7 dias, sem leitura contínua pesada pelo painel.
+
+### RF-022 — Assistente de BER baseado em medida real
+A calibração altera somente RXOffset, em passos controlados, com o rádio em condição segura/Standby. Exibir BER e RSSI recebidos quando reais, guardar medições da sessão, indicar o menor BER realmente medido e oferecer salvar/restaurar. Cada aplicação possui backup/rollback e não modifica frequência, TXOffset, protocolo ou gateway.
+
+### SYS-004 — Relógio automático + horário de verão somente de apresentação
+A hora base usa NTP. O timezone IANA é obtido do contexto do navegador/rede e aplicado somente após validação; não manter seletor manual arriscado no fluxo comum. A única opção manual simplificada é horário de verão +1 h de **apresentação**, sem adulterar UTC, logs ou protocolos.
+
