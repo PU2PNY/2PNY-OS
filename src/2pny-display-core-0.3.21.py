@@ -5,8 +5,9 @@ Adaptive local renderer for Nextion (direct or through MMDVM MQTT bridge),
 SSD1306/SH1106 OLED and HD44780/PCF8574 LCD.  It never owns RF settings and
 never reads radio logs: all live information comes from PU2PNY snapshots.
 """
-import json, os, re, subprocess, termios, time
+import datetime, json, os, re, subprocess, termios, time
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 STATE=Path("/var/lib/2pny")
 RUN=Path("/run/2pny")
@@ -20,7 +21,7 @@ SETTINGS=STATE/"display-settings.json"
 LANGUAGE=STATE/"language"
 
 BLACK=0; WHITE=65535; CYAN=2047; GREEN=2016; RED=63488; YELLOW=65504; GRAY=33808; BLUE=31
-END=b"\\xff\\xff\\xff"
+END=b"\xff\xff\xff"
 MODERN_V2="PU2PNY Moderno V2"
 
 def read_json(path, default=None):
@@ -48,8 +49,16 @@ def display_hm():
     # SYS-004: UTC/system time stays NTP-correct. Optional manual DST is a
     # presentation-only +1h override so logs/protocol timestamps are untouched.
     clock=read_json(STATE/"settings/clock.json")
-    extra=3600 if bool(clock.get("dst_manual")) else 0
-    return time.strftime("%H:%M",time.localtime(time.time()+extra))
+    zone=str(clock.get("timezone") or "").strip()
+    try:
+        now=datetime.datetime.now(ZoneInfo(zone)) if zone else datetime.datetime.now().astimezone()
+    except (ZoneInfoNotFoundError, ValueError):
+        now=datetime.datetime.now().astimezone()
+    # A Raspberry Pi without an RTC can boot with an invalid epoch before
+    # network time arrives. Do not present that date as a valid clock.
+    if now.year<2024:return "--:--"
+    if bool(clock.get("dst_manual")):now+=datetime.timedelta(hours=1)
+    return now.strftime("%H:%M")
 
 def read_network_status():
     out={}
@@ -107,11 +116,16 @@ class Nextion:
         elif cc:
             cmds += [self.text(x+1,y+3,42,20,cc,WHITE,0,1)]
         return cmds
-    def splash(self):
+    def splash(self, pct=0, status=None):
         w,h=self.w,self.h;y=max(120,h//2+34);barw=max(80,w-60)
-        self.send(["cls 0",f"fill 0,0,{w},{h},{BLACK}",self.text(0,max(28,h//3-24),w,44,"PU2PNY-OS",CYAN,0,1),self.text(0,max(76,h//3+24),w,28,"Inicializando",WHITE,0,1),f"draw 30,{y},{30+barw},{y+18},{GRAY}"])
-        for pct in range(0,101,10):
-            fill=max(1,int((barw-4)*pct/100));self.send([f"fill 32,{y+2},{fill},14,{GREEN}",self.text(0,y+24,w,24,f"{pct}%",WHITE,0,1)]);time.sleep(.06)
+        pct=max(0,min(100,int(pct)))
+        status=status or tr("Inicializando","Starting","Iniciando")
+        fill=int((barw-4)*pct/100)
+        commands=["cls 0",f"fill 0,0,{w},{h},{BLACK}",self.text(0,max(28,h//3-24),w,44,"PU2PNY-OS",CYAN,0,1),
+                  self.text(0,max(76,h//3+24),w,28,status,WHITE,0,1),f"draw 30,{y},{30+barw},{y+18},{GRAY}",
+                  self.text(0,y+24,w,24,f"{pct}%",WHITE,0,1)]
+        if fill:commands.append(f"fill 32,{y+2},{fill},14,{GREEN}")
+        self.send(commands)
         self.first_render=False;self.last_page=("splash","")
 
     def render(self,live,cfg,tel):
@@ -133,7 +147,7 @@ class Nextion:
         started=float(a.get("started_unix_ms") or 0)/1000.0
         elapsed=max(0,int(time.time()-started)) if started else 0
         duration=f"{elapsed//60:02d}:{elapsed%60:02d}"
-        origin="RF" if direction=="RF" else "INTERNET" if direction=="NETWORK" else ""
+        origin="RF" if direction=="RF" else tr("INTERNET","INTERNET","INTERNET") if direction=="NETWORK" else ""
         ber=a.get("ber");rssi=a.get("rssi_avg",a.get("rssi"))
         city=safe(op.get("city") or "",18);country=safe(op.get("country") or "",18)
         name=safe(op.get("name") or "",22)
@@ -147,11 +161,23 @@ class Nextion:
         rfline="  ".join(rfparts)
         tot_left=max(0,180-elapsed) if direction=="RF" and mode=="tx" else None
         w,h=self.w,self.h
+        if tot_left is not None and tot_left<=10:
+            # Reserve the entire screen for the final ten seconds. This is a
+            # display warning; the RF timeout remains enforced by MMDVMHost.
+            countdown=min(10,tot_left)
+            self.send(["cls 0",f"fill 0,0,{w},{h},{RED}",
+                       self.text(0,max(8,h//9),w,30,tr("LIMITE DE TX","TX LIMIT","LIMITE DE TX"),WHITE,0,1),
+                       self.text(0,max(45,h//3),w,70,str(countdown),WHITE,1,1),
+                       self.text(0,h-45,w,30,tr("Solte o PTT","Release PTT","Suelte PTT"),WHITE,0,1)])
+            self.last_page=("tot-countdown",proto)
+            return
         page=(title,proto)
         cmds=[]
         if self.first_render or self.last_page!=page:
             cmds.append("cls 0");self.first_render=False;self.last_page=page
         cmds += [f"fill 0,0,{w},38,{header}",self.text(8,5,w-16,28,f"PU2PNY-OS  {own}  {proto}",BLACK if mode!="standby" else WHITE,0,0)]
+        if qual=="offline":
+            cmds += [f"fill 0,38,{w},25,{RED}",self.text(0,39,w,22,tr("INTERNET SEM CONEXÃO","INTERNET OFFLINE","SIN INTERNET"),WHITE,0,1)]
         if mode=="standby":
             # Clean standby: clock + radar-like concentric circles + network context.
             cx=w//2;cy=96 if h<=260 else 118
@@ -175,14 +201,17 @@ class Nextion:
             cmds += self.flag(op.get("country_code"),30,info_y+62)
             cmds += [self.text(106,50,max(90,w-116),36,source,CYAN,0,0),
                      self.text(106,86,max(90,w-116),28,name or "—",WHITE,0,0),
-                     self.text(106,116,max(90,w-116),22,(" · ".join([x for x in (city,country) if x])) or "Localização —",GRAY,0,0),
+                     self.text(106,116,max(90,w-116),22,(" · ".join([x for x in (city,country) if x])) or tr("Localização —","Location —","Ubicación —"),GRAY,0,0),
                      f"line 10,143,{w-10},143,{GRAY}",
                      self.text(12,149,w-24,24,f"{origin}  {duration}  {proto}",YELLOW if origin=="RF" else CYAN,0,0),
                      self.text(12,177,w-24,23,(f"TG {dmr_tg}" if is_dmr and dmr_tg else f"{target or '-'}"+(f"  · Mód {module}" if module else "")),WHITE,0,0)]
             if rfline:cmds += [self.text(12,202,w-24,20,rfline,WHITE,0,0)]
             if tot_left is not None:
-                cmds += [f"fill 0,{max(224,h-54)},{w},30,{RED}",
-                         self.text(0,max(226,h-52),w,26,f"TOT: corte em {tot_left} s",WHITE,0,1)]
+                # Keep the warning inside a 320x240 Nextion as well as larger
+                # screens; the old lower bound drew it below the 240px edge.
+                alert_y=max(0,h-36)
+                cmds += [f"fill 0,{alert_y},{w},30,{RED if tot_left<=10 else YELLOW}",
+                         self.text(0,alert_y+2,w,26,f"TOT: corte em {tot_left} s",WHITE if tot_left<=10 else BLACK,0,1)]
             else:
                 net_color=GREEN if qual not in ("poor","offline") else RED
                 cmds += [f"line 10,{h-58},{w-10},{h-58},{GRAY}",
@@ -199,21 +228,21 @@ class I2CBase:
         except Exception:pass
 
 class OLED(I2CBase):
-    """Graphical 128x64 renderer for SSD1306/SH1106.
+    """Graphical renderer for SSD1306 128x32/128x64 and SH1106 128x64.
 
     Moderno V2 deliberately renders shapes/status hierarchy instead of a
     terminal-like list. It only consumes PU2PNY snapshots and never polls RF.
     """
-    def __init__(self,bus=1,address=0x3c,sh1106=False):
-        super().__init__(bus,address);self.sh1106=sh1106
+    def __init__(self,bus=1,address=0x3c,sh1106=False,height=64):
+        super().__init__(bus,address);self.sh1106=sh1106;self.w=128;self.h=height
         from PIL import Image,ImageDraw,ImageFont
         self.Image=Image;self.ImageDraw=ImageDraw;self.font=ImageFont.load_default()
-        self.cmd(0xAE,0xD5,0x80,0xA8,0x3F,0xD3,0x00,0x40,0x8D,0x14,0x20,0x00,0xA1,0xC8,0xDA,0x12,0x81,0xCF,0xD9,0xF1,0xDB,0x40,0xA4,0xA6,0xAF)
+        self.cmd(0xAE,0xD5,0x80,0xA8,height-1,0xD3,0x00,0x40,0x8D,0x14,0x20,0x00,0xA1,0xC8,0xDA,0x02 if height==32 else 0x12,0x81,0xCF,0xD9,0xF1,0xDB,0x40,0xA4,0xA6,0xAF)
     def cmd(self,*vals):
         for v in vals:self.bus.write_byte_data(self.addr,0x00,v)
     def show_image(self,img):
         pix=img.load()
-        for page in range(8):
+        for page in range(self.h//8):
             if self.sh1106:self.cmd(0xB0+page,0x02,0x10)
             else:self.cmd(0xB0+page,0x00,0x10)
             data=[]
@@ -240,7 +269,20 @@ class OLED(I2CBase):
         a=live.get("active") or {};mode=str(a.get("mode") or "standby").lower()
         proto=str(a.get("protocol") or cfg.get("protocol") or "PU2PNY").replace("DSTAR","D-STAR")
         op=a.get("operator") or {};ns=read_network_status();net=live.get("internet") or {}
-        img=self.Image.new("1",(128,64));d=self.ImageDraw.Draw(img)
+        img=self.Image.new("1",(128,self.h));d=self.ImageDraw.Draw(img)
+        if self.h==32:
+            d.rectangle((0,0,127,10),fill=255)
+            d.text((2,1),"PU2PNY",font=self.font,fill=0)
+            d.text((91,1),"TX" if mode=="tx" else "RX" if mode=="rx" else "STBY",font=self.font,fill=0)
+            if mode=="standby":
+                self.label(d,(1,12),f"{proto[:10]} {display_hm()}")
+                self.label(d,(1,22),str(ns.get("uplink_type") or "NET").upper()+" "+str(ns.get("default_ip") or "-"))
+            else:
+                self.label(d,(1,12),f"{proto[:6]} {str(a.get('source') or '-')[:13]}")
+                self.label(d,(1,22),str(a.get("target") or "-")[:12])
+                self.bars(d,109,21,a.get("rssi_avg",a.get("rssi")))
+            self.show_image(img)
+            return
         # Header / status pill.
         d.rectangle((0,0,127,12),fill=255)
         d.text((3,2),"PU2PNY",font=self.font,fill=0)
@@ -284,7 +326,7 @@ class LCD(I2CBase):
         for cmd in (0x28,0x08,0x01,0x06,0x0C):self.command(cmd)
     def _nibble(self,n):
         self.bus.write_byte(self.addr,(n&0xF0)|self.bl|0x04);self.bus.write_byte(self.addr,(n&0xF0)|self.bl)
-    def command(self,n):self._nibble(n);self._nibble(n<<4)
+    def command(self,n):self._nibble(n);self._nibble((n<<4)&0xF0)
     def data(self,n):
         self.bus.write_byte(self.addr,(n&0xF0)|self.bl|0x05);self.bus.write_byte(self.addr,(n&0xF0)|self.bl|0x01)
         self.bus.write_byte(self.addr,((n<<4)&0xF0)|self.bl|0x05);self.bus.write_byte(self.addr,((n<<4)&0xF0)|self.bl|0x01)
@@ -297,7 +339,7 @@ class LCD(I2CBase):
         a=live.get("active") or {};mode=a.get("mode") or "standby";proto=str(a.get("protocol") or cfg.get("protocol") or "-").replace("DSTAR","D-STAR");op=a.get("operator") or {}
         if self.rows>=4:
             if mode=="standby":
-                ns=read_network_status();lines=[f"PU2PNY {time.strftime('%H:%M')}",f"{proto} PRONTO",f"RF {float(cfg.get('rx_hz') or 0)/1e6:.5f}",f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"]
+                ns=read_network_status();lines=[f"PU2PNY {display_hm()}",f"{proto} {tr('PRONTO','READY','LISTO')}",f"RF {float(cfg.get('rx_hz') or 0)/1e6:.5f}",f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"]
             else:
                 rv=a.get("rssi_avg",a.get("rssi"));rf=[]
                 if a.get("ber") is not None:rf.append(f"B{a.get('ber')}%")
@@ -314,7 +356,7 @@ class LCD(I2CBase):
 def nextion_size(model,settings=None):
     settings=settings or {}
     manual=str(settings.get("resolution") or "").lower().strip()
-    if re.fullmatch(r"\\d{3,4}x\\d{3,4}",manual):
+    if re.fullmatch(r"\d{3,4}x\d{3,4}",manual):
         try:
             w,h=(int(x) for x in manual.split("x",1))
             if 240<=w<=1920 and 160<=h<=1080:return w,h
@@ -342,7 +384,9 @@ def create_driver(hw):
         except Exception:addr=None
     if addr in (0x3c,0x3d):
         model=str(d.get("model") or "").lower()
-        return OLED(1,addr,"sh1106" in model),"oled"
+        resolution=str(settings.get("resolution") or d.get("resolution") or "128x64").lower()
+        height=32 if resolution=="128x32" and "sh1106" not in model else 64
+        return OLED(int(d.get("bus") or 1),addr,"sh1106" in model,height),"oled"
     if addr in (0x27,0x3f):
         cols=int(settings.get("lcd_cols") or 20);rows=int(settings.get("lcd_rows") or 4)
         return LCD(1,addr,cols,rows),"lcd"
@@ -360,17 +404,28 @@ def main():
                     if driver:
                         if hasattr(driver,"open"):driver.open()
                         if kind.startswith("nextion") and hasattr(driver,"splash"):
-                            try:driver.splash();time.sleep(1.6)
+                            try:
+                                driver.splash(0,tr("Inicializando","Starting","Iniciando"))
+                                driver.splash(25,tr("Interface iniciada","Display started","Pantalla iniciada"))
                             except Exception:pass
                         # Own PU2PNY renderer is authoritative; avoid competing commands.
                         subprocess.run(["systemctl","stop","2pny-display.service"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                         settings=read_json(SETTINGS)
-                        write_status(state="active",active=True,type=kind,driver="pu2pny-display-core",
+                        physical_confirmed=bool(settings.get("physical_confirmed"))
+                        unconfirmed=kind=="nextion_mmdvm" and not physical_confirmed
+                        write_status(state="tx_only_unconfirmed" if unconfirmed else "active",active=True,type=kind,driver="pu2pny-display-core",
                                      renderer="pu2pny-modern-v2",writer="pu2pny-display-core",
+                                     physical_confirmed=physical_confirmed,
                                      model_profile=settings.get("model_profile","auto"),
                                      resolution=settings.get("resolution") or f"{getattr(driver,'w',128)}x{getattr(driver,'h',64)}",
-                                     message="PU2PNY Moderno V2 ativo")
+                                     message="Comandos enviados; resposta COMOK não confirmada" if unconfirmed else "PU2PNY Moderno V2 ativo")
             live=read_json(LIVE,{"standby":True});cfg=read_json(CFG);tel=read_json(TELEM)
+            if driver and kind.startswith("nextion") and driver.last_page==("splash",""):
+                if cfg and live:
+                    driver.splash(75,tr("Dados carregados","Data loaded","Datos cargados"))
+                    driver.splash(100,tr("Pronto","Ready","Listo"))
+                else:
+                    time.sleep(1);continue
             active=live.get("active") or {}
             cadence=int(now) if active else int(now//60)
             sig=(live.get("sequence"),active.get("source"),active.get("target"),active.get("mode"),active.get("direction"),

@@ -4,14 +4,16 @@
 
 Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desenvolvido com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa do que já foi aprovado.
 
-> **Estado atual:** `0.3.21-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
+> **Imagem mais recente:** `0.3.22-alpha` — **ALPHA / PARA TESTE FÍSICO**. Código e documentação desta branch podem avançar depois do commit da imagem; consulte a release para a origem exata do download.
+
+**[Baixar a imagem 0.3.22-alpha](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.22-alpha)** · **[Situação atual e pendências](docs/ESTADO-ATUAL-0.3.22.md)** · **[Instruções para este projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
 
 ## Release atual
 
-- **Versão:** `0.3.21-alpha`
-- **Branch:** `pu2pny-os-0.3.21-alpha`
-- **Base preservada:** `0.3.20-alpha`
-- **GitHub Actions:** workflow de release com publicação validada; consulte Actions para o run mais recente.
+- **Versão da imagem:** `0.3.22-alpha`
+- **Branch:** `pu2pny-os-0.3.22-alpha`; **commit da imagem:** `d9fa3bb6311d9dbb12de15675b5843b28efa9275`.
+- **Base preservada:** `0.3.21-alpha` com histórico desde 0.3.20.
+- **GitHub Actions:** [run 35826908880](https://github.com/PU2PNY/2PNY-OS/actions/runs/35826908880) concluído com sucesso.
 - **Source:** PASS
 - **Staged source:** PASS
 - **Build ARM64:** PASS
@@ -19,16 +21,15 @@ Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desen
 - **Preflight REL-015:** PASS
 - **Validador final:** PASS
 - **Publicação da prerelease:** PASS
-- **Imagem:** `PU2PNY-OS-0.3.21-alpha-arm64.img.xz`
-- **Tamanho:** `610089972` bytes
-- **SHA-256:** `c2ec6b729b3f60153274909c8280fc2f73a07d5e426fdd129a7982d4f9d420ab`
+- **Imagem:** `PU2PNY-OS-0.3.22-alpha-arm64.img.xz`
+- **Tamanho publicado:** `595127140` bytes.
 - **Integridade:** conferir também o arquivo `.sha256` publicado junto da imagem.
 
 ### Download
 
-- [Release PU2PNY-OS 0.3.21 Alpha](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.21-alpha)
-- [Imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.21-alpha/PU2PNY-OS-0.3.21-alpha-arm64.img.xz)
-- [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.21-alpha/PU2PNY-OS-0.3.21-alpha-arm64.img.xz.sha256)
+- [Release PU2PNY-OS 0.3.22 Alpha](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.22-alpha)
+- [Imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.22-alpha/PU2PNY-OS-0.3.22-alpha-arm64.img.xz)
+- [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.22-alpha/PU2PNY-OS-0.3.22-alpha-arm64.img.xz.sha256)
 
 A publicação e os gates acima são validação **SW/CI**. Eles não substituem teste físico em Raspberry Pi + MMDVM + display.
 
@@ -38,7 +39,9 @@ A regra permanente do projeto é:
 
 > **funcionando + aprovado = preservar**
 
-**D-Star simplex** e **DMR simplex** foram aprovados fisicamente na rodada de 22/09/2026 e são baseline protegida. Problemas de duplex devem ser corrigidos sem reescrever ou regredir simplex.
+**D-Star simplex** e **DMR simplex** foram aprovados fisicamente na rodada de 22/09/2026; **YSF/C4FM simplex** foi aprovado em rodada anterior. Problemas de duplex devem ser corrigidos sem reescrever ou regredir simplex. A aprovação anterior não comprova regressão física da 0.3.22.
+
+Na 0.3.22, ajustes de Nextion/OLED/LCD, DNS e limpeza de estado DMR têm validação de software; transmissão real BrandMeister, Nextion CA6JAU, displays touch, YSF ao vivo, tradução integral e demais defeitos relatados ainda exigem confirmação ou implementação. Consulte o quadro de situação para a lista completa.
 
 O mesmo princípio vale para rede, wizard, RF, displays, protocolos, painel, atualização e demais módulos.
 

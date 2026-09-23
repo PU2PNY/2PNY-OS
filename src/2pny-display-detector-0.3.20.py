@@ -150,7 +150,8 @@ def probe_nextion_mmdvm_bridge():
 def confirmed_mmdvm_nextion():
     hw=read_json(HARDWARE);d=hw.get("display") if isinstance(hw.get("display"),dict) else {}
     if not d or d.get("class")!="nextion_mmdvm" or d.get("detected") is not True or d.get("confidence") not in ("protocol","manual"):return None
-    info={"detected":True,"class":"nextion_mmdvm","transport":"mmdvm","state":"identified","port":"modem","model":d.get("model") or "Nextion via MMDVM","confidence":d.get("confidence"),"hmi_status":"unknown","hmi_version":None}
+    # A previous manual selection is a candidate, never a fresh COMOK reply.
+    info={"detected":False,"class":"nextion_mmdvm","transport":"mmdvm","state":"candidate","port":"modem","model":d.get("model") or "Nextion via MMDVM","confidence":"previous_configuration","physical_confirmed":False,"hmi_status":"unknown","hmi_version":None}
     info.update(nextion_dimensions(str(info["model"])));return info
 
 def usb_devices():
