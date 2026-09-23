@@ -80,7 +80,8 @@ grep -Fq 'MaxRetentionSec=7day' "$ROOT/etc/systemd/journald.conf.d/20-pu2pny.con
 echo '[7/10] Nextion and BER'
 DAP="$ROOT/usr/local/sbin/2pny-display-apply"; DCORE="$ROOT/usr/local/sbin/2pny-display-core"; DISP="$ROOT/usr/share/2pny/display.html"
 grep -Eq 'tx_only_unconfirmed|candidate_native_fallback' "$DAP"
-grep -Fq '"physical_confirmed":False' "$DAP"
+grep -Fq '"physical_confirmed":bool(d.get("physical_confirmed"))' "$DAP"
+! grep -Fq '"physical_confirmed":True' "$DAP"
 grep -Fq 'Saída ativa · retorno COMOK ainda não confirmado' "$DISP"
 grep -Fq 'display_hm' "$DCORE"
 test -x "$ROOT/usr/local/sbin/2pny-rxoffset-apply"
