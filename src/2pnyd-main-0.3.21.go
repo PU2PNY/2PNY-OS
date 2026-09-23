@@ -2614,7 +2614,7 @@ func languageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method==http.MethodGet {
 		lang:="pt"
 		if b,err:=os.ReadFile(path);err==nil { v:=strings.ToLower(strings.TrimSpace(string(b))); if v=="pt"||v=="en"||v=="es" { lang=v } }
-		writeJSON(w,200,map[string]any{"language":lang}); return
+		writeJSON(w,200,map[string]any{"language":lang,"selected":fileExists(path)}); return
 	}
 	if r.Method!=http.MethodPost || !sameOrigin(r) { http.Error(w,"request rejected",403); return }
 	var in struct { Language string `json:"language"` }
