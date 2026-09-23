@@ -15,7 +15,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: pu2pny-os-0.3.21-alpha-release
+  group: pu2pny-os-0.3.21-alpha-release-final
   cancel-in-progress: true
 
 jobs:
