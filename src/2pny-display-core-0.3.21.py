@@ -221,12 +221,14 @@ class Nextion:
             else:
                 net_label=(tr("SEM INTERNET","NO INTERNET","SIN INTERNET") if qual=="offline" else f"{uplink} {ip}")
                 destination=f"TG {dmr_tg}" if is_dmr and dmr_tg else target or "—"
+                place=" | ".join(v for v in (city,country) if v)
                 cmds += [box(10,39,300,39,header),label(17,44,286,29,source,BLACK,1,header),
-                         label(13,84,294,26,name or ("RF" if direction=="RF" else "NET"),WHITE,0,1),
-                         box(10,114,300,38,GRAY),box(12,116,296,34,BLACK),
-                         label(17,119,286,26,destination,CYAN,0,1),
-                         label(13,158,145,27,f"{origin}  {duration}",YELLOW),
-                         label(162,158,145,27,rfline or "—",WHITE),
+                         label(13,81,294,25,name or ("RF" if direction=="RF" else "NET"),WHITE,1),
+                         label(13,105,294,21,place or "—",GRAY,1),
+                         box(10,131,300,34,GRAY),box(12,133,296,30,BLACK),
+                         label(17,135,286,26,destination,CYAN,1),
+                         label(13,168,145,25,f"{origin}  {duration}",YELLOW),
+                         label(162,168,145,25,rfline or "—",WHITE),
                          box(10,194,300,1,GRAY),label(13,201,294,26,net_label,RED if qual=="offline" else GREEN)]
                 if tot_left is not None and tot_left<=20:
                     cmds += [box(0,196,320,44,RED if tot_left<=10 else YELLOW),
