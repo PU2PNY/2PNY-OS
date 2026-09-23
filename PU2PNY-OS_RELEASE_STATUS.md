@@ -853,3 +853,19 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 
 **Classificação alvo:** ALPHA / PARA TESTE FÍSICO. Não promover itens HW por CI/VPS.
 
+### Run 35815292900 — 0.3.21-alpha publicada
+- Source: **PASS**.
+- Staged source: **PASS**.
+- Build ARM64: **PASS**.
+- XZ + SHA-256: **PASS**.
+- Preflight REL-015: **PASS**.
+- Validador final 0.3.21: **PASS**.
+- Artefato: **PASS**.
+- Publish: **PASS**.
+- Prerelease: `v0.3.21-alpha`.
+- Commit publicado: `c585b0e6ae10b93f3272f8783eb2832045983194`.
+- Imagem: `PU2PNY-OS-0.3.21-alpha-arm64.img.xz` — **610089972 bytes**.
+- SHA-256 da imagem: `c2ec6b729b3f60153274909c8280fc2f73a07d5e426fdd129a7982d4f9d420ab`.
+- VPS/SentinelX: regressões 0.3.20 + 0.3.21, sintaxe Python/Shell, diagnóstico duplex selftest e limites de journal: **PASS**.
+- Classificação real: **ALPHA / PARA TESTE FÍSICO**. DMR duplex, regressão simplex na nova imagem, Nextion física, Direct A↔B e BER/RSSI reais continuam **HW PENDENTE**.
+
