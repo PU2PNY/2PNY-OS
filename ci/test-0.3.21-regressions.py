@@ -76,7 +76,9 @@ assert "<title>PU2PNY-OS</title>" in wizard
 
 # DISPLAY-022/023: writer can be truthfully active without faking physical confirmation.
 assert "tx_only_unconfirmed" in dapply or "candidate_native_fallback" in dapply
-assert '"physical_confirmed":False' in dapply
+assert '"physical_confirmed":bool(d.get("physical_confirmed"))' in dapply
+assert 'tx_only_unconfirmed=d.get("physical_confirmed") is not True' in dapply
+assert '"physical_confirmed":True' not in dapply
 assert "Saída ativa · retorno COMOK ainda não confirmado" in display
 for marker in ("BOOT","Rastreando","BER","RSSI"):
     assert marker.lower() in dcore.lower()
