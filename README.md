@@ -11,7 +11,7 @@ Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desen
 - **Versão:** `0.3.20-alpha`
 - **Branch:** `pu2pny-os-0.3.20-alpha`
 - **Base preservada:** `0.3.19-alpha`
-- **GitHub Actions:** run `35798691612` — PASS
+- **GitHub Actions:** workflow de release com publicação validada; consulte Actions para o run mais recente.
 - **Source:** PASS
 - **Staged source:** PASS
 - **Build ARM64:** PASS
@@ -20,8 +20,7 @@ Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desen
 - **Validador final:** PASS
 - **Publicação da prerelease:** PASS
 - **Imagem:** `PU2PNY-OS-0.3.20-alpha-arm64.img.xz`
-- **Tamanho:** 614874612 bytes
-- **SHA-256 da imagem:** `f42756bfcce537a7890b6296db3da3258fd8e909a45c7856f1530c8b363bed56`
+- **Integridade:** conferir sempre o arquivo `.sha256` publicado junto da imagem; ele é a referência autoritativa do artefato atual.
 
 ### Download
 
