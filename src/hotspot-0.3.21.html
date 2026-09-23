@@ -72,7 +72,8 @@
 <div data-real-only><small>Endereço</small><b id="stAddress">—</b></div>
 </div>
 <div class="notice hidden" id="dstarRFReject" style="margin-top:12px"></div><div class="notice" style="margin-top:12px">Abrir esta página não reinicia nada. Troca de servidor/módulo reconecta somente o gateway necessário; troca de protocolo reinicia o motor RF e o gateway correspondente.</div>
-</article></div></section></main>
+</article></div></section><section class="section" id="berCalibration"><div class="sectionhead"><h2>Calibração RF / BER</h2><span class="muted">RXOffset · medição real</span></div><article class="card"><p class="muted">Para MMDVM_HS, BER alto costuma ser corrigido pelo RXOffset. Teste em Standby, transmita pelo rádio e compare o BER real. O painel recomenda somente o melhor valor realmente medido nesta sessão.</p><div class="grid3"><div><small class="muted">BER atual</small><div class="big" id="berCalNow">—</div></div><div><small class="muted">RSSI atual</small><div class="big" id="berCalRssi">—</div></div><div><small class="muted">Melhor medição da sessão</small><div class="big" id="berCalBest">—</div></div></div><div class="field" style="margin-top:14px"><label>RXOffset em teste (Hz)</label><input id="berOffset" type="number" min="-10000" max="10000" step="100"></div><div class="actions"><button class="btn" id="berMinus">−100 Hz</button><button class="btn" id="berPlus">+100 Hz</button><button class="btn primary" id="berTest">Aplicar e medir</button><button class="btn good" id="berSave" disabled>Salvar melhor ajuste</button><button class="btn" id="berRestore">Restaurar ajuste salvo</button></div><p id="berCalResult" class="statusmsg"></p><p class="muted">Cada teste altera somente RXOffset, com backup e rollback se o MMDVMHost não voltar. Frequências, TXOffset, protocolo, DMR simplex/duplex e gateway não são reconfigurados por este controle.</p></article></section>
+</main>
 <script src="/ui-common-0.3.0.js"></script><script>
 PNY.nav('hotspot');PNY.initTheme();PNY.startClock();
 var definitions={
@@ -274,5 +275,30 @@ PNY.q('save').onclick=async function(){
    if(r.changed){op.step('Mudança aplicada localmente. Aguardando confirmação…');observeProtocolConnection(selected,op)}else op.done('Nada mudou; nenhum serviço foi reiniciado.',2500);setTimeout(load,1200)
  }catch(e){PNY.q('result').textContent=e.message;op.error(e.message)}finally{PNY.q('save').disabled=false}
 };
+
+// RF-022: browser-assisted BER advisor. It never invents a best offset: only
+// RF samples actually observed after a tested RXOffset may become candidates.
+var berSession={offset:0,saved:0,best:null,es:null};
+async function loadBerCalibration(){
+ try{var b=await PNY.getj('/api/rf/ber-calibration',null,5000);berSession.saved=Number(b.saved_rx_offset_hz||0);if(!berSession.offset){berSession.offset=berSession.saved;PNY.q('berOffset').value=berSession.offset}if(b.ber!=null)PNY.q('berCalNow').textContent=Number(b.ber).toFixed(1)+'%';if(b.rssi!=null)PNY.q('berCalRssi').textContent=Number(b.rssi).toFixed(0)+' dBm'}catch(e){PNY.q('berCalResult').textContent=e.message}
+}
+function recordBerSample(d){
+ var a=d&&d.active||null;if(!a||String(a.direction||'').toUpperCase()!=='RF'||a.ber==null)return;
+ var ber=Number(a.ber),rssi=a.rssi_avg!=null?Number(a.rssi_avg):(a.rssi!=null?Number(a.rssi):NaN);if(!Number.isFinite(ber))return;
+ PNY.q('berCalNow').textContent=ber.toFixed(1)+'%';PNY.q('berCalRssi').textContent=Number.isFinite(rssi)?rssi.toFixed(0)+' dBm':'—';
+ if(!berSession.best||ber<berSession.best.ber){berSession.best={ber:ber,rssi:rssi,offset:Number(berSession.offset)};PNY.q('berCalBest').textContent=ber.toFixed(1)+'% · RXOffset '+berSession.best.offset+' Hz';PNY.q('berSave').disabled=false;PNY.q('berCalResult').textContent='Melhor ajuste observado nesta sessão: '+berSession.best.offset+' Hz.'}
+}
+function startBerStream(){if(berSession.es||!window.EventSource)return;try{berSession.es=new EventSource('/api/live/events');berSession.es.addEventListener('live',function(e){try{recordBerSample(JSON.parse(e.data))}catch(_){}})}catch(_){}}
+async function berApply(action,offset){
+ var op=PNY.operation(action==='save'?'Salvando melhor RXOffset':action==='restore'?'Restaurando RXOffset':'Aplicando RXOffset','Aguardando Standby, atualizando somente RXOffset e confirmando o MMDVMHost…');
+ try{var x=await PNY.getj('/api/rf/ber-calibration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:action,rx_offset_hz:Number(offset)})},30000);berSession.offset=Number(x.rx_offset_hz||0);PNY.q('berOffset').value=berSession.offset;if(action==='save')berSession.saved=berSession.offset;if(action==='restore'){berSession.saved=berSession.offset;berSession.best=null;PNY.q('berCalBest').textContent='—';PNY.q('berSave').disabled=true}PNY.q('berCalResult').textContent=action==='test'?'RXOffset '+berSession.offset+' Hz aplicado. Transmita pelo rádio para medir BER.':action==='save'?'Melhor ajuste salvo: '+berSession.offset+' Hz.':'Ajuste salvo restaurado: '+berSession.offset+' Hz.';op.done(PNY.q('berCalResult').textContent,1800)}catch(e){PNY.q('berCalResult').textContent=e.message;op.error(e.message)}
+}
+PNY.q('berMinus').onclick=function(){PNY.q('berOffset').value=Math.max(-10000,Number(PNY.q('berOffset').value||0)-100)};
+PNY.q('berPlus').onclick=function(){PNY.q('berOffset').value=Math.min(10000,Number(PNY.q('berOffset').value||0)+100)};
+PNY.q('berTest').onclick=function(){berSession.offset=Number(PNY.q('berOffset').value||0);berApply('test',berSession.offset)};
+PNY.q('berSave').onclick=function(){if(!berSession.best)return;berApply('save',berSession.best.offset)};
+PNY.q('berRestore').onclick=function(){berApply('restore',berSession.saved)};
+loadBerCalibration();startBerStream();
+
 load();
 </script></body></html>
