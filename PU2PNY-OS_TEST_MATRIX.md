@@ -797,5 +797,7 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-PERF-005A | PERF-005 | journal ≤64 MiB, arquivo ≤8 MiB, retenção ≤7 dias, compressão ativa | SW candidato / VPS PENDENTE | SW/VPS |
 | TEST-RF-022A | RF-022 | RXOffset ±100 Hz mede BER/RSSI reais, recomenda menor BER e salva/restaura com rollback | SW candidato / HW PENDENTE | SW/HW |
 | TEST-SYS-004A | SYS-004 | NTP/timezone automático; DST manual altera apenas apresentação | SW candidato / VPS/HW PENDENTE | SW/VPS/HW |
-| TEST-REL-0321-A | REL-018 / REL-015 | source + staged + ARM64 + SHA + preflight + validador final + publish | PENDENTE CI | SW/CI |
+| TEST-REL-0321-A | REL-018 / REL-015 | source + staged + ARM64 + SHA + preflight + validador final + publish | **PASS run 35815292900** | SW/CI |
 
+| TEST-REL-0321-B | REL-018 | artefato publicado e integridade registrada | `PU2PNY-OS-0.3.21-alpha-arm64.img.xz`, 610089972 bytes, SHA-256 `c2ec6b729b3f60153274909c8280fc2f73a07d5e426fdd129a7982d4f9d420ab` | **PASS** | SW/CI |
+| TEST-VPS-0321-A | TEST-008 / REL-018 | regressões e helpers reproduzíveis sem RF em WartyWallaby | 0.3.20 + 0.3.21 regressions, DMR duplex selftest, Python/Shell e journal limits | **PASS** | VPS |
