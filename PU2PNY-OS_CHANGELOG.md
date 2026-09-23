@@ -732,3 +732,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Criado `docs/README.md` para separar fontes canônicas de documentos históricos/técnicos.
 - Documentos antigos não foram apagados por idade: permanecem úteis para regressão, auditoria e rastreabilidade.
 - Nenhum teste físico é promovido por esta alteração documental.
+
+
+### 2026-09-22 — 0.3.20-alpha publicada
+- Run GitHub Actions `35798691612`: source, staged source, ARM64, XZ/SHA-256, REL-015, validador final, artefato e publish em PASS.
+- Publicada prerelease `v0.3.20-alpha` no commit `0e6063688396ad2a0f1cf60cfe5e60915e711019`.
+- Imagem: `PU2PNY-OS-0.3.20-alpha-arm64.img.xz`, 614874612 bytes.
+- SHA-256: `f42756bfcce537a7890b6296db3da3258fd8e909a45c7856f1530c8b363bed56`.
+- README principal ampliado para refletir a 0.3.20, seus recursos, download, baselines e pendências reais.
+- Estado permanece **ALPHA / PARA TESTE FÍSICO**; nenhum item RF/Nextion pendente foi promovido para HW PASS.
