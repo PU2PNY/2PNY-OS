@@ -206,5 +206,10 @@ func cryptoSelfTest() error {
 	if _, _, e = b.decrypt(raw); e == nil {
 		return errors.New("replay accepted")
 	}
+	// P2P-009: self-test the policy, not only a string in the binary.
+	// QSO payload must never fall back to rendezvous/server relay.
+	if e = a.sendSecure("PU2BBB", "message", []byte("relay-must-fail"), true); e == nil || !strings.Contains(e.Error(), "relay desativado") {
+		return errors.New("relay rejection failed")
+	}
 	return nil
 }
