@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+export LC_ALL=C
+IFACE="${1:-}"
+ACTION="${2:-}"
+case "$ACTION" in up|down|connectivity-change|dhcp4-change) ;; *) exit 0;; esac
+case "$IFACE" in wlan*|wl*) ;; *) exit 0;; esac
+LOCK=/run/2pny/wifi-autoselect-dispatch.lock
+mkdir -p /run/2pny
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+# Event-driven only. NetworkManager itself performs failover; this pass chooses
+# the stronger of the two saved SSIDs without a continuous polling daemon.
+sleep 1
+/usr/local/sbin/2pny-wifi-profiles auto-select >/dev/null 2>&1 || true
+exit 0
