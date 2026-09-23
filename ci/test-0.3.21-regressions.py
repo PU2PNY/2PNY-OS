@@ -80,7 +80,7 @@ assert '"physical_confirmed":bool(d.get("physical_confirmed"))' in dapply
 assert 'tx_only_unconfirmed=d.get("physical_confirmed") is not True' in dapply
 assert '"physical_confirmed":True' not in dapply
 assert "Saída ativa · retorno COMOK ainda não confirmado" in display
-for marker in ("BOOT","Rastreando","BER","RSSI"):
+for marker in ("Inicializando","Rastreando","BER","RSSI"):
     assert marker.lower() in dcore.lower()
 assert "display_hm" in dcore
 
