@@ -96,7 +96,8 @@ grep -Fq 'M-SMS' "$APRSUI"; grep -Fq 'H-SMS' "$APRSUI"; grep -Fq 'latitude' "$AP
 test -x "$ROOT/usr/local/bin/2pny-direct-core"
 chroot "$ROOT" /usr/local/bin/2pny-direct-core --selftest | grep -Fq DIRECT_SELFTEST_OK
 strings "$ROOT/usr/local/bin/2pny-direct-core" | grep -Fq 'relay desativado'
-strings "$ROOT/usr/local/bin/2pny-direct-core" | grep -Fq 'caminho P2P direto indisponível'
+grep -Fq 'CGNAT/NAT restritivo' "$ROOT/usr/share/2pny/direct.html"
+grep -Fq 'Bloqueado' "$ROOT/usr/share/2pny/direct.html"
 grep -Fq 'ID digital' "$ROOT/usr/share/2pny/direct.html"
 ! grep -Fq 'Direct/Relay' "$ROOT/usr/share/2pny/direct.html"
 
