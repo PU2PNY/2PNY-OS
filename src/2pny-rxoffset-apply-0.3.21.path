@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY watch RXOffset calibration requests
+
+[Path]
+PathChanged=/run/2pny/rxoffset-request.json
+Unit=2pny-rxoffset-apply.service
+
+[Install]
+WantedBy=multi-user.target
