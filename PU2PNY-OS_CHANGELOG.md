@@ -741,3 +741,21 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - SHA-256: `f42756bfcce537a7890b6296db3da3258fd8e909a45c7856f1530c8b363bed56`.
 - README principal ampliado para refletir a 0.3.20, seus recursos, download, baselines e pendências reais.
 - Estado permanece **ALPHA / PARA TESTE FÍSICO**; nenhum item RF/Nextion pendente foi promovido para HW PASS.
+
+## 2026-09-22/23 — abertura da 0.3.21-alpha após teste físico da 0.3.20
+
+- A 0.3.20-alpha publicada permanece rollback/base; criada a linha pu2pny-os-0.3.21-alpha.
+- D-Star simplex e DMR simplex foram aprovados pelo mantenedor e passam a baseline física protegida explícita. Correções duplex não autorizam reescrever simplex.
+- Registrados REL-018, PROTO-034/035/036, UI-039/040/041, NET-028/029, WIZ-010, P2P-009, APRS-015, DISPLAY-022/023, PERF-005, RF-022 e SYS-004.
+- DMR duplex foi isolado por use_mode=repeater: transporte local TS1/TS2 e diagnóstico específico; caminho simplex permanece protegido.
+- Arbitragem de voz DMR foi limitada ao estado efetivo SENDING para evitar silenciar tráfego de rede enquanto a voz apenas aguarda.
+- Estado de TG separa pedido e confirmação; DMR mostra TG real, não módulo obsoleto. D-Star usa refletor/módulo; YSF usa sala/refletor.
+- DNS/Wi‑Fi receberam convergência de estado, alerta de Internet, perfil backup e histerese de sinal.
+- Idioma passa a ser persistido e perguntado apenas no primeiro provisionamento; wizard retoma em Hardware quando a rede já está funcional.
+- Direct passa a direct-only para payload: servidor apenas rendezvous; D-Star/DMR podem iniciar pelo rádio, e relay-data é rejeitado. CGNAT restritivo sem caminho UDP direto é reportado como bloqueado, não mascarado.
+- APRS preserva fila/retry e passa a diagnosticar ACK/REJ por origem+ID; coordenadas manuais ficam disponíveis em HTTP. M-SMS/H-SMS entram como pesquisa/documentação; DMR SMS nativo não é declarado entregue sem confirmação real.
+- Nextion deixa explícito TX-only/unconfirmed sem COMOK; HMI mantém renderer PU2PNY e não grava TFT automaticamente.
+- Relógio passa a automático por NTP/timezone validado, com DST manual somente na apresentação.
+- Journald é limitado/rotacionado; calibração BER recebe helper RXOffset transacional com medição/salvar/restaurar.
+- A release só poderá ser publicada após VPS quando aplicável, regressões 0.3.20, build ARM64, SHA-256, preflight REL-015, validador final e artifact publicado. Itens RF/Nextion continuam HW PENDENTE.
+
