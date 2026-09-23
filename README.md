@@ -4,34 +4,20 @@
 
 Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desenvolvido com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa do que já foi aprovado.
 
-> **Imagem mais recente:** `0.3.22-alpha` — **ALPHA / PARA TESTE FÍSICO**. Código e documentação desta branch podem avançar depois do commit da imagem; consulte a release para a origem exata do download.
+> **Imagem mais recente:** `0.3.23-alpha` — **ALPHA / PARA TESTE FÍSICO**, especialmente Nextion. Não é PROD.
 
-**[Baixar a imagem 0.3.22-alpha](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.22-alpha)** · **[Situação atual e pendências](docs/ESTADO-ATUAL-0.3.22.md)** · **[Instruções para este projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
+**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.23-alpha)** · **[Teste físico da tela](docs/DISPLAY-0.3.23-TESTE-FISICO.md)** · **[Pendências gerais](docs/ESTADO-ATUAL-0.3.22.md)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
 
 ## Release atual
 
-- **Versão da imagem:** `0.3.22-alpha`
-- **Branch:** `pu2pny-os-0.3.22-alpha`; **commit da imagem:** `d9fa3bb6311d9dbb12de15675b5843b28efa9275`.
-- **Base preservada:** `0.3.21-alpha` com histórico desde 0.3.20.
-- **GitHub Actions:** [run 35826908880](https://github.com/PU2PNY/2PNY-OS/actions/runs/35826908880) concluído com sucesso.
-- **Source:** PASS
-- **Staged source:** PASS
-- **Build ARM64:** PASS
-- **XZ + SHA-256:** PASS
-- **Preflight REL-015:** PASS
-- **Validador final:** PASS
-- **Publicação da prerelease:** PASS
-- **Imagem:** `PU2PNY-OS-0.3.22-alpha-arm64.img.xz`
-- **Tamanho publicado:** `595127140` bytes.
-- **Integridade:** conferir também o arquivo `.sha256` publicado junto da imagem.
+- **Versão:** `0.3.23-alpha`; branch `pu2pny-os-0.3.23-alpha`.
+- **Commit da imagem:** `90ca9b5f829d7a1a5d6b591a1212d3c361acb037`.
+- **GitHub Actions:** [run 35832041581](https://github.com/PU2PNY/2PNY-OS/actions/runs/35832041581) — código, ARM64, XZ, SHA-256, preflight e validação da imagem **PASS (SW/CI)**.
+- **Correção focal:** remover sobreposição na Nextion, reduzir comandos por quadro e ajustar standby/RX/TX. HMI original preservado; layout visual e RF exigem teste físico.
+- **Imagem:** [PU2PNY-OS-0.3.23-alpha-arm64.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.23-alpha/PU2PNY-OS-0.3.23-alpha-arm64.img.xz) — 598088936 bytes.
+- **Integridade:** [arquivo SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.23-alpha/PU2PNY-OS-0.3.23-alpha-arm64.img.xz.sha256).
 
-### Download
-
-- [Release PU2PNY-OS 0.3.22 Alpha](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.22-alpha)
-- [Imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.22-alpha/PU2PNY-OS-0.3.22-alpha-arm64.img.xz)
-- [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.22-alpha/PU2PNY-OS-0.3.22-alpha-arm64.img.xz.sha256)
-
-A publicação e os gates acima são validação **SW/CI**. Eles não substituem teste físico em Raspberry Pi + MMDVM + display.
+O sucesso do CI não confirma aparência física, modem, áudio, BER/RSSI ou regressão simplex na nova imagem.
 
 ## Baseline protegido
 
