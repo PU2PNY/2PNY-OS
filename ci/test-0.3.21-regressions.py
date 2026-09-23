@@ -89,7 +89,7 @@ assert "relay desativado" in direct_session
 assert "caminho P2P direto indisponível" in direct_session
 assert 'case "relay-data"' in direct_transport and "deliberately rejected" in direct_transport
 assert 'Direction' in direct_auto and '"RF"' in direct_auto and 'proto=="DSTAR"' in direct_auto.replace(" ","")
-assert "DMR" in direct_auto and "Private" in direct_ui
+assert "DMR" in direct_auto and "ID digital" in direct_ui
 assert "Chamada pelo rádio" in direct_ui or "rádio" in direct_ui.lower()
 
 # APRS-015: exact source+ID ACK matching, manual location and M/H-SMS documentation.
