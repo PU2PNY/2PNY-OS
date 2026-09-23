@@ -4,13 +4,13 @@
 
 Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desenvolvido com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa do que já foi aprovado.
 
-> **Estado atual:** `0.3.20-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
+> **Estado atual:** `0.3.21-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
 
 ## Release atual
 
-- **Versão:** `0.3.20-alpha`
-- **Branch:** `pu2pny-os-0.3.20-alpha`
-- **Base preservada:** `0.3.19-alpha`
+- **Versão:** `0.3.21-alpha`
+- **Branch:** `pu2pny-os-0.3.21-alpha`
+- **Base preservada:** `0.3.20-alpha`
 - **GitHub Actions:** workflow de release com publicação validada; consulte Actions para o run mais recente.
 - **Source:** PASS
 - **Staged source:** PASS
@@ -19,14 +19,16 @@ Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desen
 - **Preflight REL-015:** PASS
 - **Validador final:** PASS
 - **Publicação da prerelease:** PASS
-- **Imagem:** `PU2PNY-OS-0.3.20-alpha-arm64.img.xz`
-- **Integridade:** conferir sempre o arquivo `.sha256` publicado junto da imagem; ele é a referência autoritativa do artefato atual.
+- **Imagem:** `PU2PNY-OS-0.3.21-alpha-arm64.img.xz`
+- **Tamanho:** `610089972` bytes
+- **SHA-256:** `c2ec6b729b3f60153274909c8280fc2f73a07d5e426fdd129a7982d4f9d420ab`
+- **Integridade:** conferir também o arquivo `.sha256` publicado junto da imagem.
 
 ### Download
 
-- [Release PU2PNY-OS 0.3.20 Alpha](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.20-alpha)
-- [Imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.20-alpha/PU2PNY-OS-0.3.20-alpha-arm64.img.xz)
-- [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.20-alpha/PU2PNY-OS-0.3.20-alpha-arm64.img.xz.sha256)
+- [Release PU2PNY-OS 0.3.21 Alpha](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.21-alpha)
+- [Imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.21-alpha/PU2PNY-OS-0.3.21-alpha-arm64.img.xz)
+- [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.21-alpha/PU2PNY-OS-0.3.21-alpha-arm64.img.xz.sha256)
 
 A publicação e os gates acima são validação **SW/CI**. Eles não substituem teste físico em Raspberry Pi + MMDVM + display.
 
@@ -36,11 +38,29 @@ A regra permanente do projeto é:
 
 > **funcionando + aprovado = preservar**
 
-DMR simplex TX/RX comprovadamente funcional é baseline obrigatório. Problemas de duplex devem ser corrigidos sem reescrever ou regredir simplex.
+**D-Star simplex** e **DMR simplex** foram aprovados fisicamente na rodada de 22/09/2026 e são baseline protegida. Problemas de duplex devem ser corrigidos sem reescrever ou regredir simplex.
 
 O mesmo princípio vale para rede, wizard, RF, displays, protocolos, painel, atualização e demais módulos.
 
-## Principais mudanças da 0.3.20
+## Principais mudanças da 0.3.21
+
+- correções DMR duplex isoladas do simplex aprovado, com TS1/TS2 locais no modo repetidora;
+- arbitragem de voz DMR ajustada para não silenciar áudio NETWORK→RF enquanto o anúncio apenas aguarda;
+- estado DMR passa a separar TG solicitado de TG confirmado e evita mostrar “Módulo C” quando o conceito real é TG;
+- RX/TX duplex separados no Ao Vivo e na configuração de protocolo;
+- DNS com confirmação real e recuperação visual automática;
+- Wi-Fi 1 + Wi-Fi 2/backup, failover automático e seleção por sinal com histerese;
+- aviso global quando a Internet cai;
+- idioma persistente perguntado uma vez; com Internet já configurada, wizard retoma em Hardware;
+- PU2PNY Direct acionado pelo rádio, com payload QSO direct-only e sem relay de servidor;
+- APRS com diagnóstico ACK/REJ por origem + ID, coordenadas manuais em HTTP e documentação M-SMS/H-SMS sem fingir entrega DMR;
+- Nextion continua sem falso positivo: sem COMOK real, comunicação física permanece não confirmada;
+- relógio por NTP/timezone automático, com horário de verão manual apenas na apresentação;
+- journald limitado a 64 MiB / 7 dias;
+- assistente BER/RXOffset com medição real, melhor valor da sessão, salvar e restaurar;
+- release notes em PT/EN/ES e gates completos de CI/imagem.
+
+## Base herdada da 0.3.20
 
 ### D-Star
 
@@ -107,16 +127,17 @@ O mesmo princípio vale para rede, wizard, RF, displays, protocolos, painel, atu
 
 ## O que ainda precisa de teste físico
 
-Continuam **HW PENDENTE** na 0.3.20:
+Continuam **HW PENDENTE** na 0.3.21:
 
-- D-Star RF real e troca de refletor por comando do rádio;
-- DMR duplex TX/RX e áudio em ambos os sentidos;
-- regressão física completa do DMR simplex nesta imagem;
-- Nextion física e confirmação COMOK;
-- PU2PNY Moderno V2 em display real;
-- BER/RSSI/S-meter reais;
-- Direct entre dois hotspots reais;
-- demais comportamentos explicitamente marcados como HW PENDENTE na TEST_MATRIX.
+- regressão de D-Star simplex e DMR simplex **na nova imagem 0.3.21**, preservando a baseline aprovada;
+- DMR duplex: RF→rede, rede→RF com áudio, timeout, TS/CC e atualização do Ao Vivo;
+- troca real de TG/módulo pelo rádio e confirmação correta no painel;
+- Wi-Fi 1↔Wi-Fi 2 e reconhecimento rápido de Ethernet em Raspberry real;
+- Nextion física, COMOK e renderer/HMI real;
+- PU2PNY Direct entre dois hotspots reais, inclusive comportamento sob NAT/CGNAT;
+- BER/RSSI reais e recomendação RXOffset em MMDVM;
+- ACK real das mensagens APRS; os IDs históricos 89018, 70182 e 42231 permanecem não confirmados sem evidência de ACK correspondente;
+- demais comportamentos marcados como HW PENDENTE na TEST_MATRIX.
 
 Não promover esses itens para HW PASS apenas porque CI/VPS passou.
 
