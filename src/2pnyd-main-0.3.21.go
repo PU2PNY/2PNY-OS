@@ -840,10 +840,12 @@ func wifiProfilesHandler(w http.ResponseWriter, r *http.Request) {
 		out,err:=exec.Command("/usr/local/sbin/2pny-wifi-profiles","save-secondary",in.SSID,in.Password,in.BSSID).CombinedOutput()
 		if err!=nil { writeJSON(w,503,map[string]any{"error":friendlyNetworkError(string(out))}); return }
 		writeState("saved","Segunda rede salva e pronta para uso."); writeJSON(w,200,map[string]any{"ok":true,"message":strings.TrimSpace(string(out))})
+	case "auto-select":
+		writeState("selecting","Comparando Rede Wi-Fi 1 e Rede Wi-Fi 2 pelo sinal disponível.")
+		go func(){ time.Sleep(250*time.Millisecond); out,err:=exec.Command("/usr/local/sbin/2pny-wifi-profiles","auto-select").CombinedOutput(); invalidateConnectivityCache(); if err!=nil { writeState("error",friendlyNetworkError(string(out))); return }; _=exec.Command("/usr/local/sbin/2pny-mdns-guard").Run(); writeState("connected",strings.TrimSpace(string(out))) }()
+		writeJSON(w,202,map[string]any{"ok":true,"state":"selecting"})
 	case "switch":
-		writeState("switching","Trocando para a rede reserva. A anterior será restaurada automaticamente se a nova falhar.")
-		go func(){ time.Sleep(600*time.Millisecond); out,err:=exec.Command("/usr/local/sbin/2pny-wifi-profiles","switch").CombinedOutput(); invalidateConnectivityCache(); if err!=nil { writeState("error",friendlyNetworkError(string(out))); return }; _=exec.Command("/usr/local/sbin/2pny-mdns-guard").Run(); writeState("connected",strings.TrimSpace(string(out))) }()
-		writeJSON(w,202,map[string]any{"ok":true,"state":"switching"})
+		writeJSON(w,409,map[string]any{"error":"troca manual removida; o PU2PNY escolhe automaticamente a rede salva com melhor sinal"})
 	case "remove-secondary":
 		out,err:=exec.Command("/usr/local/sbin/2pny-wifi-profiles","remove-secondary").CombinedOutput(); if err!=nil { writeJSON(w,503,map[string]any{"error":friendlyNetworkError(string(out))}); return }; writeState("idle","Segunda rede removida."); writeJSON(w,200,map[string]any{"ok":true})
 	default: writeJSON(w,400,map[string]any{"error":"ação Wi-Fi inválida"})
@@ -1201,6 +1203,7 @@ func diagnosticsHandler(w http.ResponseWriter, r *http.Request) {
 		"boot_restore": readPublicJSON(filepath.Join(dataDir, "last-boot-restore.json")),
 		"last_rollback": readPublicJSON(filepath.Join(dataDir, "last-protocol-rollback.json")),
 		"network_connect": readPublicJSON(filepath.Join(dataDir, "network-connect.json")),
+		"dmr_duplex": readPublicJSON("/run/2pny/dmr-duplex-diagnostics.json"),
 		"updated": time.Now().UTC().Format(time.RFC3339),
 	})
 }
@@ -2631,7 +2634,8 @@ func systemControlHandler(w http.ResponseWriter, r *http.Request) {
 			return b
 		}()))
 		voice,voiceHourly := ensureVoiceDefaults()
-		writeJSON(w, 200, map[string]any{"timezone": tz, "ntp_synchronized": syncv == "yes", "local": time.Now().Format(time.RFC3339), "utc": time.Now().UTC().Format(time.RFC3339), "operational": serviceActive("2pny-mmdvmhost.service"), "voice": voice, "voice_hourly": voiceHourly})
+		clockSettings:=readPublicJSON(filepath.Join(dataDir,"settings","clock.json"))
+		writeJSON(w, 200, map[string]any{"timezone": tz, "ntp_synchronized": syncv == "yes", "local": time.Now().Format(time.RFC3339), "utc": time.Now().UTC().Format(time.RFC3339), "operational": serviceActive("2pny-mmdvmhost.service"), "voice": voice, "voice_hourly": voiceHourly, "clock_settings":clockSettings})
 		return
 	}
 	if r.Method != http.MethodPost || !sameOrigin(r) {
@@ -2645,13 +2649,25 @@ func systemControlHandler(w http.ResponseWriter, r *http.Request) {
 		Enabled  bool   `json:"enabled"`
 		Hourly   bool   `json:"hourly"`
 		Language string `json:"language"`
+		DSTManual bool `json:"dst_manual"`
 	}
 	if json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&in) != nil {
 		http.Error(w, "JSON inválido", 400)
 		return
 	}
 	switch in.Action {
+	case "auto-time":
+		tz := strings.TrimSpace(in.Timezone)
+		if tz == "" || strings.Contains(tz, "..") || strings.HasPrefix(tz, "/") || !fileExists(filepath.Join("/usr/share/zoneinfo", tz)) {
+			writeJSON(w,400,map[string]any{"error":"o navegador não forneceu um fuso IANA válido"}); return
+		}
+		if _,err:=runTimezoneRequest(tz); err!=nil { writeJSON(w,500,map[string]any{"error":"não foi possível aplicar automaticamente o fuso horário","detail":err.Error()}); return }
+		_ = exec.Command("timedatectl","set-ntp","true").Run()
+		_ = os.MkdirAll(filepath.Join(dataDir,"settings"),0700)
+		raw,_:=json.Marshal(map[string]any{"timezone_source":"browser-iana","timezone":tz,"dst_manual":in.DSTManual,"updated":time.Now().UTC().Format(time.RFC3339)})
+		_ = os.WriteFile(filepath.Join(dataDir,"settings","clock.json"),raw,0600)
 	case "timezone":
+		writeJSON(w,409,map[string]any{"error":"seleção manual de fuso foi desativada; use ajuste automático"}); return
 		tz := strings.TrimSpace(in.Timezone)
 		if tz == "" || strings.Contains(tz, "..") || strings.HasPrefix(tz, "/") || !fileExists(filepath.Join("/usr/share/zoneinfo", tz)) {
 			writeJSON(w, 400, map[string]any{"error": "fuso horário inválido"})
@@ -2669,6 +2685,7 @@ func systemControlHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "set-time":
+		writeJSON(w,409,map[string]any{"error":"ajuste manual do relógio foi desativado; o PU2PNY usa NTP"}); return
 		local:=strings.TrimSpace(in.LocalTime)
 		if _,err:=time.Parse("2006-01-02T15:04",local);err!=nil {
 			if _,err2:=time.Parse("2006-01-02T15:04:05",local);err2!=nil { writeJSON(w,400,map[string]any{"error":"data/hora inválida"});return }
