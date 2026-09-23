@@ -764,3 +764,12 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-ARCH-006A | ARCH-006 | conferir README + documentos canônicos + índice docs | estado atual fica nas fontes canônicas; históricos são identificados sem apagar evidência útil | PASS documental | DOC |
 | TEST-REL-017A | REL-017 | revisar diff de mudança localizada | somente arquivos necessários mudam; baseline aprovado permanece intacto ou alteração possui ordem/justificativa explícita e rollback | PASS para este lote documental; repetir por mudança | DOC/SW/HW conforme área |
 | TEST-TEST-008A | TEST-008 | validar afirmações e nível de teste | VPS/SentinelX usado quando aplicável; CI/plugins/fontes oficiais cruzados quando úteis; HW nunca inferido de SW/VPS | PASS documental; execução por mudança | DOC/SW/VPS/HW |
+
+
+## Gate de publicação 0.3.20-alpha
+
+| ID | Requisito | Caso | Resultado esperado | Estado | Nível |
+|---|---|---|---|---|---|
+| TEST-REL-0320-A | REL-016 / REL-015 | run oficial 0.3.20 | source, staged source, ARM64, XZ/SHA-256, preflight, validador final e publish concluídos | PASS run 35798691612 | SW/CI |
+| TEST-REL-0320-B | REL-016 | artefato publicado | imagem ARM64 + sidecar SHA-256 presentes na prerelease e hash registrado | PASS | SW/CI |
+| TEST-REL-0320-C | REL-016 / RF-020 / PROTO-032 / DISPLAY-020 | validação física da 0.3.20 | DMR simplex preservado, DMR duplex, D-Star por rádio, Nextion real e demais casos HW confirmados | PENDENTE | HW |
