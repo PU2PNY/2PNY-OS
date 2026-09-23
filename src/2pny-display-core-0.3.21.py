@@ -44,6 +44,13 @@ def selected_language():
 def tr(pt,en,es):
     return {"pt":pt,"en":en,"es":es}.get(selected_language(),pt)
 
+def display_hm():
+    # SYS-004: UTC/system time stays NTP-correct. Optional manual DST is a
+    # presentation-only +1h override so logs/protocol timestamps are untouched.
+    clock=read_json(STATE/"settings/clock.json")
+    extra=3600 if bool(clock.get("dst_manual")) else 0
+    return time.strftime("%H:%M",time.localtime(time.time()+extra))
+
 def read_network_status():
     out={}
     try:
@@ -122,7 +129,7 @@ class Nextion:
         internet=live.get("internet") or {};qual=internet.get("quality") or "unknown"
         lat=internet.get("latency_ms");loss=internet.get("loss_percent")
         ns=read_network_status();uplink=(ns.get("uplink_type") or "rede").upper();ip=ns.get("default_ip") or "-"
-        now=time.strftime("%H:%M")
+        now=display_hm()
         started=float(a.get("started_unix_ms") or 0)/1000.0
         elapsed=max(0,int(time.time()-started)) if started else 0
         duration=f"{elapsed//60:02d}:{elapsed%60:02d}"
@@ -242,7 +249,7 @@ class OLED(I2CBase):
         d.text((101,2),state,font=self.font,fill=255)
         d.line((0,14,127,14),fill=255)
         if mode=="standby":
-            now=time.strftime("%H:%M")
+            now=display_hm()
             self.label(d,(3,18),f"{proto}  {now}")
             # Small radar / scanning visual.
             d.ellipse((7,31,31,55),outline=255);d.ellipse((13,37,25,49),outline=255)
