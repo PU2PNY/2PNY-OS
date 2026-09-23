@@ -1801,6 +1801,37 @@ func rfApplyHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusAccepted, map[string]any{"ok": true, "state": "applying"})
 }
 
+func rfBERCalibrationHandler(w http.ResponseWriter, r *http.Request) {
+	var cfg Config
+	b,err:=os.ReadFile(configFile)
+	if err!=nil || json.Unmarshal(b,&cfg)!=nil { writeJSON(w,503,map[string]any{"error":"configuração RF indisponível"});return }
+	live:=readPublicJSON("/run/2pny/live-state.json")
+	activeRF:=false;ber:=any(nil);rssi:=any(nil)
+	if a,ok:=live["active"].(map[string]any);ok && a!=nil {
+		if strings.EqualFold(fmt.Sprint(a["direction"]),"RF") { activeRF=true;ber=a["ber"];if a["rssi_avg"]!=nil{rssi=a["rssi_avg"]}else{rssi=a["rssi"]} }
+	}
+	if r.Method==http.MethodGet {
+		writeJSON(w,200,map[string]any{"saved_rx_offset_hz":cfg.RXOffsetHz,"active_rf":activeRF,"ber":ber,"rssi":rssi,"step_hz":100,"safe_min_hz":-10000,"safe_max_hz":10000})
+		return
+	}
+	if r.Method!=http.MethodPost || !sameOrigin(r){http.Error(w,"request rejected",403);return}
+	if activeRF { writeJSON(w,409,map[string]any{"error":"há atividade RF em andamento; aguarde Standby para alterar RXOffset"});return }
+	var in struct{Action string `json:"action"`; RXOffset int `json:"rx_offset_hz"`}
+	if json.NewDecoder(http.MaxBytesReader(w,r.Body,2048)).Decode(&in)!=nil { writeJSON(w,400,map[string]any{"error":"pedido de calibração inválido"});return }
+	action:=strings.ToLower(strings.TrimSpace(in.Action))
+	if action!="test"&&action!="save"&&action!="restore" { writeJSON(w,400,map[string]any{"error":"ação de calibração inválida"});return }
+	offset:=in.RXOffset
+	if action=="restore"{offset=int(cfg.RXOffsetHz)}
+	if offset < -10000 || offset > 10000 { writeJSON(w,400,map[string]any{"error":"RXOffset deve ficar entre -10000 e 10000 Hz"});return }
+	res,e:=runPrivilegedRequest("2pny-rxoffset-apply.service","/run/2pny/rxoffset-request.json","/run/2pny/rxoffset-result.json",map[string]any{"rx_offset_hz":offset})
+	if e!=nil { writeJSON(w,503,map[string]any{"error":e.Error(),"result":res});return }
+	if action=="save" {
+		cfg.RXOffsetHz=int64(offset)
+		if e:=saveConfig(cfg);e!=nil { writeJSON(w,500,map[string]any{"error":"RXOffset aplicado, mas não foi possível persistir a configuração"});return }
+	}
+	writeJSON(w,200,map[string]any{"ok":true,"action":action,"rx_offset_hz":offset,"saved":action=="save","result":res})
+}
+
 func rfPowerHandler(w http.ResponseWriter, r *http.Request) {
 	readLevel := func() (int, bool) {
 		b, err := os.ReadFile("/var/lib/2pny/mmdvm/MMDVM-Host.ini")
@@ -3254,6 +3285,7 @@ func main() {
 	http.HandleFunc("/api/rf", rfStatusHandler)
 	http.HandleFunc("/api/rf/apply", rfApplyHandler)
 	http.HandleFunc("/api/rf/power", rfPowerHandler)
+	http.HandleFunc("/api/rf/ber-calibration", rfBERCalibrationHandler)
 	http.HandleFunc("/api/modules", moduleStatusHandler)
 	http.HandleFunc("/api/ap", apControlHandler)
 	http.HandleFunc("/healthz", healthzHandler)
