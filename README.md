@@ -1,3 +1,11 @@
+# PU2PNY-OS — versão atual
+
+**Imagem para teste físico:** [0.3.22-alpha ARM64](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.22-alpha). **Código da versão:** [branch 0.3.22-alpha](https://github.com/PU2PNY/2PNY-OS/tree/pu2pny-os-0.3.22-alpha). **[Estado real e pendências](https://github.com/PU2PNY/2PNY-OS/blob/pu2pny-os-0.3.22-alpha/docs/ESTADO-ATUAL-0.3.22.md)** · **[Configuração do projeto](https://github.com/PU2PNY/2PNY-OS/blob/pu2pny-os-0.3.22-alpha/docs/CONFIGURACAO-DESTE-PROJETO.md)**.
+
+A branch padrão `main` abaixo é um registro histórico da fundação 0.1.1; não corresponde à imagem 0.3.22. D-Star e DMR simplex previamente aprovados permanecem baseline; testes físicos na imagem nova continuam necessários.
+
+---
+
 # 2PNY OS
 
 **2PNY — Digital Radio Operating System**
