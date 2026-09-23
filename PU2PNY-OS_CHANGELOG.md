@@ -759,3 +759,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Journald é limitado/rotacionado; calibração BER recebe helper RXOffset transacional com medição/salvar/restaurar.
 - A release só poderá ser publicada após VPS quando aplicável, regressões 0.3.20, build ARM64, SHA-256, preflight REL-015, validador final e artifact publicado. Itens RF/Nextion continuam HW PENDENTE.
 
+### 2026-09-23 — 0.3.21-alpha publicada
+- Run GitHub Actions `35815292900` concluiu source, staged source, ARM64, XZ/SHA-256, preflight REL-015, validador final, artefato e publish em **PASS**.
+- Publicada prerelease `v0.3.21-alpha` no commit `c585b0e6ae10b93f3272f8783eb2832045983194`.
+- Imagem: `PU2PNY-OS-0.3.21-alpha-arm64.img.xz`, 610089972 bytes.
+- SHA-256: `c2ec6b729b3f60153274909c8280fc2f73a07d5e426fdd129a7982d4f9d420ab`.
+- O gate final confirmou a política Direct sem relay por selftest executável, além dos gates de rede, idioma, Nextion/COMOK, APRS ACK, BER, journald e proteção simplex.
+- Estado permanece **ALPHA / PARA TESTE FÍSICO**. Nenhum item RF/Nextion/Direct foi promovido de SW/VPS para HW sem teste real.
+
