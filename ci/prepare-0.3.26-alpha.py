@@ -63,7 +63,7 @@ assert 'connection.autoconnect-priority 150' in profiles
 assert '12-point hysteresis' in profiles
 assert 'id="wifiSearchSecond"' in internet
 assert "PNY.q('wifiSearchSecond').onclick=wifiScan" in internet
-assert "PNY.operation('Reiniciando hotspot'" in system
+assert "PNY.operation(rt,rt)" in system
 
 # Explicit non-goals: this overlay does not install any protocol/RF/Direct/clock helper.
 installed=[x[1] for x in [
