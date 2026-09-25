@@ -869,3 +869,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - VPS/SentinelX: regressões 0.3.20 + 0.3.21, sintaxe Python/Shell, diagnóstico duplex selftest e limites de journal: **PASS**.
 - Classificação real: **ALPHA / PARA TESTE FÍSICO**. DMR duplex, regressão simplex na nova imagem, Nextion física, Direct A↔B e BER/RSSI reais continuam **HW PENDENTE**.
 
+## 0.3.24-alpha — candidata em validação — 2026-09-25
+- **Base/rollback:** 0.3.23-alpha preservada; backup `backup/0.3.23-pre-0.3.24-20260925`.
+- **Branch:** `pu2pny-os-0.3.24-alpha`.
+- **Escopo:** relógio/fuso regional + ajuste manual seguro; idioma PT/EN/ES integral/persistente; Direct primeiro com relay criptografado para NAT/CGNAT e aceitação pelo rádio.
+- **Baseline preservada:** o ajuste aprovado do ícone `i` do Gateway na atividade 24h e as correções Nextion 0.3.23 não foram alterados pelo overlay 0.3.24. DMR/D-Star/YSF simplex permanecem protegidos.
+- **Evidência SW já obtida:** regressões 0.3.20/0.3.21, layout 0.3.23, integração Direct direta + relay forçado + espera de aceitação e inventário PT/EN/ES das páginas instaladas passaram no pipeline durante a preparação.
+- **Servidor Direct:** o código 0.3.24 implementa rendezvous + encaminhamento opaco de pacote já criptografado. A porta pública/serviço deve ser validada externamente antes de declarar CGNAT real operacional.
+- **Classificação:** ALPHA / PARA TESTE FÍSICO. Build ARM64 final, SHA-256, preflight, validador de imagem e publish permanecem obrigatórios antes de fornecer a imagem.
+- **HW PENDENTE:** RF real, regressão simplex na nova imagem, Direct entre dois hotspots/CGNAT real, retorno exato ao destino anterior, Nextion/COMOK e BER/RSSI.
+
