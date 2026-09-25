@@ -1721,3 +1721,18 @@ A calibração altera somente RXOffset, em passos controlados, com o rádio em c
 ### SYS-004 — Relógio automático + horário de verão somente de apresentação
 A hora base usa NTP. O timezone IANA é obtido do contexto do navegador/rede e aplicado somente após validação; não manter seletor manual arriscado no fluxo comum. A única opção manual simplificada é horário de verão +1 h de **apresentação**, sem adulterar UTC, logs ou protocolos.
 
+## 35. Ciclo 0.3.24-alpha — relógio, idioma integral e Direct/CGNAT — 2026-09-25
+
+### SYS-005 — Fuso regional automático com controle manual persistente
+No primeiro uso do painel, o hotspot deve usar o timezone IANA informado pelo navegador quando não houver escolha manual anterior. A seleção manual de timezone é permitida, validada pelo helper privilegiado e passa a ter prioridade persistente após reload/reboot. O usuário também pode definir data/hora manualmente; isso desativa NTP até nova sincronização automática explícita. UTC, logs e protocolos não podem ser adulterados por ajuste apenas de apresentação.
+
+### UI-042 — PT/EN/ES integral, persistente e sem mistura
+Ao selecionar PT-BR, English ou Español, menus, botões, formulários, alertas, erros, estados, mensagens de servidor apresentadas na UI, telas de configuração e textos de atualização automática devem aparecer integralmente no idioma escolhido. A seleção persiste no backend e navegador após reload/reboot. Datas, horas e números usam locale correspondente e o atributo `lang` da página acompanha a seleção. Fallback que produza frase híbrida é proibido; a release deve executar inventário/gate sobre as páginas efetivamente instaladas.
+
+### P2P-010 — Direct primeiro, relay criptografado em CGNAT e aceitação pelo rádio
+Esta decisão substitui somente a restrição `direct-only` de P2P-009. A chamada tenta UDP ponto a ponto primeiro. Se NAT/CGNAT impedir o caminho direto, pode usar relay autenticado que transporta apenas o pacote já criptografado ponta a ponta; o servidor não recebe nem deriva chaves de sessão. D-Star usa indicativo/URCALL pareado e DMR usa Private Call/Radio ID pareado; TG não inicia Direct.
+Uma chamada recebida entra em estado pendente e **não pode parar nem trocar o gateway/TG/refletor atual antes da aceitação pelo rádio**. A aceitação ocorre quando o operador endereça o mesmo peer pelo rádio. Só então a ponte RF entra em Direct/Relay. Ao encerrar, expirar ou perder o peer, o serviço/gateway anterior deve ser restaurado sem alterar a configuração persistida. O painel mostra estado real `Direct`, `Relay` ou `Offline`.
+
+### REL-019 — 0.3.24 é overlay corretivo sobre 0.3.23
+A 0.3.24-alpha deve preservar integralmente a 0.3.23 e o ajuste aprovado da atividade 24h em que o ícone de informações de Gateway só aparece quando Gateway difere do indicativo e há identificação real de repetidora. O overlay 0.3.24 limita-se a SYS-005, UI-042 e P2P-010, sem substituir RF/MMDVM/DMR/D-Star/YSF. DMR simplex, D-Star simplex e YSF/C4FM simplex permanecem baseline protegida e exigem reteste físico antes de promoção.
+
