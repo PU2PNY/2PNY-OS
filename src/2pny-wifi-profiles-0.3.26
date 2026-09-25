@@ -85,10 +85,21 @@ save_secondary(){
   trap - ERR INT TERM
   echo "Rede Wi-Fi 2 salva: $ssid"
 }
-visible_signal(){
-  local want="$1"
-  test -n "$want" || { echo -1; return; }
-  nm -t -f SSID,SIGNAL device wifi list --rescan yes 2>/dev/null | awk -F: -v s="$want" '$1==s{if(($2+0)>m)m=$2+0}END{if(m>0)print m;else print -1}'
+scan_signal(){
+  local blob="$1" want="$2"
+  python3 - "$blob" "$want" <<'PY'
+import sys
+blob,want=sys.argv[1],sys.argv[2]
+ssid=None
+best=-1
+for raw in blob.splitlines():
+    if raw.startswith("SSID:"):
+        ssid=raw.split(":",1)[1]
+    elif raw.startswith("SIGNAL:") and ssid==want:
+        try: best=max(best,int(float(raw.split(":",1)[1])))
+        except Exception: pass
+print(best)
+PY
 }
 auto_select(){
   exists "$PRIMARY" || exit 0
@@ -96,9 +107,9 @@ auto_select(){
   local iface pssid sssid ps ss chosen current current_sig best_sig
   iface="$(wifi_if)"; test -n "$iface" || exit 0
   pssid="$(profile_ssid "$PRIMARY")"; sssid="$(profile_ssid "$SECONDARY")"
-  scan="$(nm -t --escape no -f SSID,SIGNAL device wifi list --rescan yes 2>/dev/null || true)"
-  ps="$(printf '%s\n' "$scan" | awk -F: -v s="$pssid" '$1==s{if(($2+0)>m)m=$2+0}END{if(m>0)print m;else print -1}')"
-  ss="$(printf '%s\n' "$scan" | awk -F: -v s="$sssid" '$1==s{if(($2+0)>m)m=$2+0}END{if(m>0)print m;else print -1}')"
+  scan="$(nm -m multiline --escape no -f SSID,SIGNAL device wifi list --rescan yes 2>/dev/null || true)"
+  ps="$(scan_signal "$scan" "$pssid")"
+  ss="$(scan_signal "$scan" "$sssid")"
   chosen="$PRIMARY"; best_sig="${ps:--1}"
   if test "${ss:--1}" -gt "${ps:--1}"; then chosen="$SECONDARY"; best_sig="${ss:--1}"; fi
   current="$(active_name)"; current_sig=-1
