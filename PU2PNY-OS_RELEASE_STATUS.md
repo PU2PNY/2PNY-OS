@@ -882,3 +882,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Classificação real:** **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
 - **HW PENDENTE:** DMR/D-Star/YSF simplex na nova imagem, RF real, duplex, Direct A↔B entre dois hotspots inclusive CGNAT real, retorno exato ao destino anterior, Nextion/COMOK e BER/RSSI.
 
+
+
+## 0.3.25-alpha — correção exclusiva de rede — 2026-09-25
+- **Base/rollback:** 0.3.24-alpha preservada; backup `backup/0.3.24-pre-0.3.25-20260925`.
+- **Branch:** `pu2pny-os-0.3.25-alpha`.
+- **Problemas HW reportados:** após salvar Wi-Fi a tela ficou aguardando embora posteriormente o Wi-Fi aparecesse conectado; `pu2pny.local/wizard` não resolveu pela Ethernet; Ethernet com Internet deve pular a etapa Internet como o Wi-Fi.
+- **Escopo permitido:** NET-030, WIZ-011 e NET-031. Nenhuma alteração RF/protocolo/relógio/voz/display/Direct.
+- **Baseline HW confirmada nesta rodada e congelada:** relógio 0.3.24; YSF/C4FM simplex TX/RX; troca de módulo/TG DMR pelo rádio; aviso de voz após conexão DMR. O fluxo Ethernet “idioma → configuração” também foi confirmado correto.
+- **Diagnóstico de fonte:** 0.3.23 e 0.3.24 usam o mesmo wizard Wi-Fi e o mesmo `2pny-network-switch`; a 0.3.24 alterou backend apenas em relógio e versão. A evidência é compatível com falha de redescoberta/mDNS após handoff, não com reescrita da associação Wi-Fi.
+- **Estado:** EM TESTE. Imagem só pode ser oferecida após source/staging/ARM64/SHA/preflight/validador/publish.
