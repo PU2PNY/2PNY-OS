@@ -34,7 +34,7 @@ const ptLeak=/[ãõç]|(?:não|sim|aplicar|salvar|fuso|horário|relógio|rede|s
 const genericEN='System message.',genericES='Mensaje del sistema.';
 const tagRe=/<(h1|h2|h3|button|label|option|summary|small|span)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/gi;
 const files=fs.readdirSync(path.join(root,'src')).filter(f=>f.endsWith('.html'));
-let checked=0;
+let checked=0;const failures=[];
 for(const file of files){
  const html=fs.readFileSync(path.join(root,'src',file),'utf8').replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<style[\s\S]*?<\/style>/gi,'');
  let m;
@@ -43,8 +43,8 @@ for(const file of files){
    if(!text||!ptLeak.test(text))continue;
    checked++;
    const a=en(text),b=es(text);
-   if(ptLeak.test(a)||ptLeak.test(b))throw new Error(file+': mixed-language leak: '+text+' => '+a+' / '+b);
-   if((a===genericEN||b===genericES)&&text.length<100)throw new Error(file+': actionable text lacks full translation: '+text);
+   if(ptLeak.test(a)||ptLeak.test(b))failures.push(file+': mixed-language leak: '+text+' => '+a+' / '+b);
+   if((a===genericEN||b===genericES)&&text.length<100)failures.push(file+': actionable text lacks full translation: '+text);
  }
 }
 for(const sample of [
@@ -58,5 +58,6 @@ for(const sample of [
  const a=en(sample),b=es(sample);
  if(ptLeak.test(a)||ptLeak.test(b)||a===sample||b===sample)throw new Error('required translation failed: '+sample+' => '+a+' / '+b);
 }
-if(checked<20)throw new Error('i18n inventory unexpectedly small: '+checked);
+if(checked<20)failures.push('i18n inventory unexpectedly small: '+checked);
+if(failures.length){console.error(failures.join('\n'));process.exit(1)}
 console.log('I18N_0324_OK actionable='+checked);
