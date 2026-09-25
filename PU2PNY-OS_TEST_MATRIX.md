@@ -813,7 +813,9 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-P2P-010A | P2P-010 | caminho direto: peer chamado fica `incoming` e `radio_active=false` até aceitação; após aceitar, QSO bilateral de teste passa | PASS em integração CI | SW/CI |
 | TEST-P2P-010B | P2P-010 | caminho relay forçado: pacote permanece criptografado, peer chamado não toma RF antes da aceitação e tráfego bilateral passa | PASS em integração CI | SW/CI |
 | TEST-P2P-010C | P2P-010 | dois hotspots reais, inclusive atrás de CGNAT, completam chamada e restauram gateway/TG/refletor anterior após fim | PENDENTE | HW |
-| TEST-REL-0324-A | REL-019 / REL-015 | source + staging + ARM64 + SHA-256 + preflight + validador final + artifact + publish | EM TESTE | SW/CI |
+| TEST-REL-0324-A | REL-019 / REL-015 | source + staging + ARM64 + SHA-256 + preflight + validador final + artifact + publish | **PASS run 36134610081** | SW/CI |
 | TEST-REL-0324-B | REL-019 | DMR simplex, D-Star simplex e YSF/C4FM simplex preservados na 0.3.24 | PENDENTE | HW |
 
 | TEST-P2P-010D | P2P-010 | servidor público xlx026.net:43070 recebe registros de dois peers externos e encaminha envelope opaco A→B; firewall limita abertura à porta Direct | **PASS em VPS/rede externa** | VPS/NET |
+
+| TEST-REL-0324-C | REL-019 | artefato publicado e integridade registrada | `PU2PNY-OS-0.3.24-alpha-arm64.img.xz`, 592789908 bytes, SHA-256 `996dd6c4a08eae9cb332f66e4a19cc83957ad314d1de5aa552825115504eb1ef` | **PASS** | SW/CI |
