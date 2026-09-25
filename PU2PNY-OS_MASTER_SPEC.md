@@ -1751,3 +1751,21 @@ O hostname canônico `pu2pny.local` deve ser anunciado por mDNS em toda interfac
 
 ### REL-020 — 0.3.25 é overlay de rede sobre a 0.3.24 testada
 A 0.3.25-alpha altera somente primeiro acesso Ethernet, wizard para autoavanço Ethernet e robustez mDNS. Relógio 0.3.24, YSF/C4FM simplex, troca de módulo/TG DMR pelo rádio, anúncio de voz DMR após conexão, Direct, RF, displays e demais funções ficam congelados salvo necessidade direta comprovada. O ajuste aprovado do ícone de Gateway na atividade 24h também permanece intocado.
+
+
+## 37. Ciclo 0.3.26-alpha — MMDVM e Wi-Fi rápido/backup — 2026-09-25
+
+### HW-004 — Detecção MMDVM abrangente sem alterar RF
+A detecção deve reconhecer MMDVM compatível conectado por aliases persistentes e classes seriais usuais do Raspberry/Linux, incluindo `/dev/serial/by-id/*`, `/dev/serial/by-path/*`, `serial0`, `ttyAMA*`, `ttyS*`, `ttyACM*`, `ttyUSB*`, `ttyXRUSB*` e `ttyGS*`. A identificação deve usar somente o comando MMDVM `GET_VERSION`, aceitar as velocidades UART suportadas pelo MMDVMHost upstream quando disponíveis no kernel (1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800 e 500000) e nunca escrever frequência, offset, inversão, potência, modo ou firmware. Dispositivos CDC-ACM que reiniciam ao abrir a serial recebem uma espera curta antes do handshake. Se MMDVMHost já estiver ativo, o probe preserva ownership e não disputa a UART.
+
+### NET-032 — Wi-Fi rápido preservando validação e rollback
+A qualidade funcional existente — senha persistida, associação real, IPv4 real, autoconnect, mDNS e rollback para a conexão anterior/AP — permanece obrigatória. A aceleração deve remover espera ociosa e scans duplicados, não remover confirmações. Uma busca explícita usa uma varredura NetworkManager fresca + snapshot `iw` e no máximo uma repetição quando houver menos de duas redes. O dispatcher permanece event-driven e reage ao evento de link sem daemon de polling contínuo. O orçamento fixo de esperas da associação deve ser reduzido em pelo menos ~3x em relação à implementação anterior, sem prometer que DHCP/roteador físico terá exatamente a mesma proporção.
+
+### NET-033 — Wi-Fi 2 realmente utilizável e failover automático
+A página Internet deve possuir botão visível específico **Escanear Rede Wi‑Fi 2**. Rede Wi‑Fi 1 e Rede Wi‑Fi 2 são perfis persistentes; a primária tem prioridade de autoconnect superior à backup, e a backup deve ser tentada automaticamente quando a primária desaparecer. A decisão de sinal usa uma única varredura compartilhada, preserva a histerese de 12 pontos e não troca por pequenas oscilações. SSID visível não deve ser salvo como rede oculta; SSID manual realmente oculto continua suportado. Falha de troca restaura a rede anterior.
+
+### UI-043 — Feedback de reinício imediato
+Após confirmação do usuário para reiniciar, a página Sistema deve pintar imediatamente um overlay/estado **Reiniciando hotspot** antes de enviar/aguardar a ação de reboot. A melhoria é apenas de feedback visual; não altera sequência de shutdown, serviços, RF nem boot.
+
+### REL-021 — 0.3.26 é correção focal
+A 0.3.26-alpha herda integralmente a 0.3.25. O overlay pode substituir somente detector MMDVM, helpers/dispatcher Wi-Fi, página Internet, handler de feedback de reinício na página Sistema, backend de scan/versão e seus testes/build/docs. DMR, D-Star, YSF/C4FM, Direct, relógio, Nextion, frequências, offsets, baud efetivo do MMDVMHost, gateways e demais funções aprovadas ficam congelados. Toda imagem exige source/staging/ARM64/SHA/preflight/validador final antes de ser oferecida para HW.
