@@ -236,6 +236,10 @@ else:
 PY
 }
 
+ssid_is_visible(){
+  local want="$1"
+  nmcli -t --escape no -f SSID device wifi list --rescan no 2>/dev/null | grep -Fxq "$want"
+}
 create_candidate(){
   local iface="$1" ssid="$2" pass="$3" keymgmt="$4" hidden="${5:-no}"
   nmcli connection delete PU2PNY-WIFI-CANDIDATE >/dev/null 2>&1 || true
@@ -263,7 +267,8 @@ stage_wifi(){
   test -n "$SSID" || { echo "Selecione uma rede Wi-Fi" >&2; exit 2; }
   IFACE="$(pick_client)"
   test -n "$IFACE" || { echo "Nenhuma interface Wi-Fi encontrada" >&2; exit 3; }
-  HIDDEN=no
+  HIDDEN=yes
+  if test -n "$BSSID" || ssid_is_visible "$SSID"; then HIDDEN=no; fi
 
   nmcli connection delete PU2PNY-WIFI-CANDIDATE >/dev/null 2>&1 || true
   nmcli connection delete PU2PNY-WIFI-NEXT >/dev/null 2>&1 || true
@@ -313,7 +318,8 @@ connect_wifi(){
   test -n "$SSID" || { echo 'Selecione uma rede Wi-Fi' >&2; exit 2; }
   AP_IF="$(ap_iface)"; IFACE="$(pick_client)"
   test -n "$IFACE" || { echo 'Nenhuma interface Wi-Fi encontrada' >&2; exit 3; }
-  HIDDEN=no
+  HIDDEN=yes
+  if test -n "$BSSID" || ssid_is_visible "$SSID"; then HIDDEN=no; fi
 
   OLD_UUID="$(nmcli -g GENERAL.CON-UUID device show "$IFACE" 2>/dev/null || true)"
   SAME=0; AP_WAS_ACTIVE=0
