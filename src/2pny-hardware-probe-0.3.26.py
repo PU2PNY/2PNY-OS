@@ -200,9 +200,10 @@ def parse_mmdvm(raw):
     return None
 
 
-def probe_mmdvm(dev):
+def probe_mmdvm(dev, driver=""):
     errors = []
     baud_order = (115200, 460800, 230400, 500000, 57600, 38400, 19200, 9600, 4800, 2400, 1200)
+    usb_reset_prone = ("ttyACM" in os.path.realpath(dev)) or ("cdc_acm" in str(driver).lower())
     for baud in baud_order:
         if not hasattr(termios, "B" + str(baud)):
             continue
@@ -212,6 +213,11 @@ def probe_mmdvm(dev):
             errors.append(str(exc))
             continue
         try:
+            # CDC-ACM boards can reboot when their serial device is opened.
+            # Upstream MMDVMHost gives the modem time before GET_VERSION; use
+            # the delay only for reset-prone USB CDC devices so GPIO HATs stay fast.
+            if usb_reset_prone:
+                time.sleep(1.8)
             request = bytes((0xE0, 0x03, 0x00))
             os.write(fd, request)
             result = parse_mmdvm(read_for(fd, 0.18))
@@ -454,7 +460,7 @@ save(state)
 
 mmdvm_real = None
 for item in state["serial_ports"]:
-    result, error = probe_mmdvm(item["path"])
+    result, error = probe_mmdvm(item["path"], item.get("driver", ""))
     item["mmdvm_probe"] = "ok" if result else ("error" if error else "no_response")
     if result:
         result["port"] = item["path"]
