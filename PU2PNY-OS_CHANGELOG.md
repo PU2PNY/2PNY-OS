@@ -810,3 +810,10 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Internet recebe botão dedicado para escanear Wi-Fi 2.
 - Sistema mostra reinício imediatamente antes da chamada ao backend.
 - Nenhum comportamento de protocolo/RF aprovado é alterado por este ciclo.
+
+### 2026-09-25 — 0.3.26-alpha publicada
+- GitHub Actions run `36190497369` concluiu source, ARM64, XZ/SHA-256, preflight, validador final e publish em **PASS**.
+- VPS WartyWallaby confirmou teste focal, sintaxe Python/Shell, backend Go e JavaScript das telas em **PASS**.
+- Publicada prerelease `v0.3.26-alpha` no commit `fad9d4c7ca147e04520a9a09b64d2aa797d4e766`.
+- Imagem: `PU2PNY-OS-0.3.26-alpha-arm64.img.xz`, 606220720 bytes; SHA-256 `ffa6f4d89dbc5d7c08791d81b82a366636a33207a3ff274742dbf4c7867851da`.
+- MMDVM real específica e failover físico Wi-Fi 1→2 continuam **HW PENDENTE**; não foram promovidos por CI/VPS.
