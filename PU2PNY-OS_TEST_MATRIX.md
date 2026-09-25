@@ -801,3 +801,18 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 | TEST-REL-0321-B | REL-018 | artefato publicado e integridade registrada | `PU2PNY-OS-0.3.21-alpha-arm64.img.xz`, 610089972 bytes, SHA-256 `c2ec6b729b3f60153274909c8280fc2f73a07d5e426fdd129a7982d4f9d420ab` | **PASS** | SW/CI |
 | TEST-VPS-0321-A | TEST-008 / REL-018 | regressões e helpers reproduzíveis sem RF em WartyWallaby | 0.3.20 + 0.3.21 regressions, DMR duplex selftest, Python/Shell e journal limits | **PASS** | VPS |
+
+## Matriz 0.3.24-alpha — 25/09/2026
+
+| ID | Requisito | Critério de aceite | Estado | Nível |
+|---|---|---|---|---|
+| TEST-SYS-005A | SYS-005 | timezone IANA do navegador é aplicado automaticamente quando não há escolha manual; escolha manual persiste e tem prioridade | PASS em fonte/staging; HW/browser PENDENTE | SW/CI/HW |
+| TEST-SYS-005B | SYS-005 | data/hora manual aplica por helper validado, desativa NTP; sincronização automática pode reativar | PASS estrutural/fonte; HW PENDENTE | SW/CI/HW |
+| TEST-UI-042A | UI-042 | páginas atuais e páginas efetivamente staged não apresentam texto acionável híbrido em EN/ES e mantêm PT | PASS em gate de fonte/staging; browser/HW PENDENTE | SW/CI/HW |
+| TEST-UI-042B | UI-042 | idioma do backend/navegador persiste reload/reboot; `lang`, datas/horas/números acompanham seleção | PASS estrutural; reboot real PENDENTE | SW/CI/HW |
+| TEST-P2P-010A | P2P-010 | caminho direto: peer chamado fica `incoming` e `radio_active=false` até aceitação; após aceitar, QSO bilateral de teste passa | PASS em integração CI | SW/CI |
+| TEST-P2P-010B | P2P-010 | caminho relay forçado: pacote permanece criptografado, peer chamado não toma RF antes da aceitação e tráfego bilateral passa | PASS em integração CI | SW/CI |
+| TEST-P2P-010C | P2P-010 | dois hotspots reais, inclusive atrás de CGNAT, completam chamada e restauram gateway/TG/refletor anterior após fim | PENDENTE | HW |
+| TEST-REL-0324-A | REL-019 / REL-015 | source + staging + ARM64 + SHA-256 + preflight + validador final + artifact + publish | EM TESTE | SW/CI |
+| TEST-REL-0324-B | REL-019 | DMR simplex, D-Star simplex e YSF/C4FM simplex preservados na 0.3.24 | PENDENTE | HW |
+
