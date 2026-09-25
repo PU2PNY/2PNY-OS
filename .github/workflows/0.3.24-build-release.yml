@@ -132,7 +132,7 @@ jobs:
       - name: Validate staged source
         working-directory: legacy-source/2pny-os
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           gofmt -w src/2pnyd/main.go
           go test ./...
           python3 -m py_compile \
