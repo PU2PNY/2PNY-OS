@@ -1736,3 +1736,18 @@ Uma chamada recebida entra em estado pendente e **não pode parar nem trocar o g
 ### REL-019 — 0.3.24 é overlay corretivo sobre 0.3.23
 A 0.3.24-alpha deve preservar integralmente a 0.3.23 e o ajuste aprovado da atividade 24h em que o ícone de informações de Gateway só aparece quando Gateway difere do indicativo e há identificação real de repetidora. O overlay 0.3.24 limita-se a SYS-005, UI-042 e P2P-010, sem substituir RF/MMDVM/DMR/D-Star/YSF. DMR simplex, D-Star simplex e YSF/C4FM simplex permanecem baseline protegida e exigem reteste físico antes de promoção.
 
+
+
+## 36. Ciclo 0.3.25-alpha — correção exclusiva de rede/primeiro acesso — 2026-09-25
+
+### NET-030 — Baseline Wi-Fi 0.3.23 protegida
+A associação, validação de senha, obtenção de IPv4, persistência do perfil e recuperação do AP implementadas no fluxo Wi-Fi usado pela 0.3.23 são baseline protegida. A 0.3.25 não pode reescrever o `2pny-network-switch` nem o bloco de conexão/reconexão Wi-Fi do wizard. O defeito relatado na 0.3.24 deve ser tratado como falha de retomada/descoberta local enquanto não houver evidência de falha de associação. Após o handoff, o navegador deve reencontrar o hotspot automaticamente quando ambos estiverem na LAN.
+
+### WIZ-011 — Ethernet com Internet equivale a uplink Wi-Fi no primeiro acesso
+Em equipamento ainda não provisionado, qualquer uplink real com Internet — Ethernet ou Wi-Fi — deve pular a etapa “Internet” e continuar em Hardware/Configuração básica. O backend não pode exigir o marcador `uplink-ssid` para reconhecer Ethernet. Se o usuário abrir explicitamente `?step=1`, a tela de Internet permanece disponível para alteração manual.
+
+### NET-031 — `pu2pny.local` em Ethernet e Wi-Fi
+O hostname canônico `pu2pny.local` deve ser anunciado por mDNS em toda interface LAN ativa compatível, tanto Ethernet quanto Wi-Fi. O guard deve manter hostname `pu2pny`, domínio `local`, publicação de endereços, serviço HTTP e Avahi ativo; após restart deve confirmar listener UDP 5353. A execução é event-driven/oneshot, sem polling contínuo. Acesso por IP continua fallback, não fluxo normal.
+
+### REL-020 — 0.3.25 é overlay de rede sobre a 0.3.24 testada
+A 0.3.25-alpha altera somente primeiro acesso Ethernet, wizard para autoavanço Ethernet e robustez mDNS. Relógio 0.3.24, YSF/C4FM simplex, troca de módulo/TG DMR pelo rádio, anúncio de voz DMR após conexão, Direct, RF, displays e demais funções ficam congelados salvo necessidade direta comprovada. O ajuste aprovado do ícone de Gateway na atividade 24h também permanece intocado.
