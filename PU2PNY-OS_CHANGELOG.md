@@ -792,3 +792,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - SHA-256: `996dd6c4a08eae9cb332f66e4a19cc83957ad314d1de5aa552825115504eb1ef`.
 - O servidor público Direct no XLX026 e UDP 43070 tiveram teste externo VPS/NET **PASS**; RF/CGNAT real entre dois hotspots continua HW PENDENTE.
 - Estado: **ALPHA / PARA TESTE FÍSICO**, sem promoção para PROD antes das regressões físicas exigidas.
+
+
+## 2026-09-25 — abertura da 0.3.25-alpha
+- Feedback físico da 0.3.24: relógio **APROVADO**; YSF/C4FM simplex TX/RX **APROVADO**; troca de módulo/TG DMR pelo rádio **APROVADA**; aviso de voz após conexão DMR **APROVADO**. Esses itens entram em baseline protegido.
+- Falha observada: após seleção do Wi-Fi a página ficou aguardando; posteriormente a tela Internet mostrou Wi-Fi conectado. Fonte confirma que o helper Wi-Fi e o fluxo de conexão do wizard são os mesmos da 0.3.23; portanto a correção não reescreve Wi-Fi.
+- Falha observada: por Ethernet, `http://pu2pny.local/wizard` não resolveu, embora acesso pelo IP LAN funcionasse.
+- Correção autorizada: Ethernet com Internet equivale a Wi-Fi no primeiro acesso e robustez de publicação `pu2pny.local`/mDNS.
+- Criado rollback `backup/0.3.24-pre-0.3.25-20260925`.
