@@ -869,19 +869,16 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - VPS/SentinelX: regressões 0.3.20 + 0.3.21, sintaxe Python/Shell, diagnóstico duplex selftest e limites de journal: **PASS**.
 - Classificação real: **ALPHA / PARA TESTE FÍSICO**. DMR duplex, regressão simplex na nova imagem, Nextion física, Direct A↔B e BER/RSSI reais continuam **HW PENDENTE**.
 
-## 0.3.24-alpha — candidata em validação — 2026-09-25
+## 0.3.24-alpha — publicada / para teste físico — 2026-09-25
 - **Base/rollback:** 0.3.23-alpha preservada; backup `backup/0.3.23-pre-0.3.24-20260925`.
-- **Branch:** `pu2pny-os-0.3.24-alpha`.
+- **Branch/commit publicado:** `pu2pny-os-0.3.24-alpha` / `1a25e43e6997ea514c407f29e0e396d82d4c0bcb`.
+- **GitHub Actions:** run `36134610081` — source **PASS**, staged source **PASS**, ARM64 **PASS**, XZ/SHA-256 **PASS**, preflight **PASS**, validador final **PASS**, artifact **PASS**, publish **PASS**.
+- **Prerelease:** `v0.3.24-alpha`.
+- **Imagem:** `PU2PNY-OS-0.3.24-alpha-arm64.img.xz` — **592789908 bytes**.
+- **SHA-256:** `996dd6c4a08eae9cb332f66e4a19cc83957ad314d1de5aa552825115504eb1ef`.
 - **Escopo:** relógio/fuso regional + ajuste manual seguro; idioma PT/EN/ES integral/persistente; Direct primeiro com relay criptografado para NAT/CGNAT e aceitação pelo rádio.
 - **Baseline preservada:** o ajuste aprovado do ícone `i` do Gateway na atividade 24h e as correções Nextion 0.3.23 não foram alterados pelo overlay 0.3.24. DMR/D-Star/YSF simplex permanecem protegidos.
-- **Evidência SW já obtida:** regressões 0.3.20/0.3.21, layout 0.3.23, integração Direct direta + relay forçado + espera de aceitação e inventário PT/EN/ES das páginas instaladas passaram no pipeline durante a preparação.
-- **Servidor Direct:** o código 0.3.24 implementa rendezvous + encaminhamento opaco de pacote já criptografado. A porta pública/serviço deve ser validada externamente antes de declarar CGNAT real operacional.
-- **Classificação:** ALPHA / PARA TESTE FÍSICO. Build ARM64 final, SHA-256, preflight, validador de imagem e publish permanecem obrigatórios antes de fornecer a imagem.
-- **HW PENDENTE:** RF real, regressão simplex na nova imagem, Direct entre dois hotspots/CGNAT real, retorno exato ao destino anterior, Nextion/COMOK e BER/RSSI.
+- **Servidor Direct público:** `pu2pny-direct-relay.service` ativo no XLX026, UDP 43070 liberado; código em produção corresponde ao servidor 0.3.24. Teste externo WartyWallaby com dois peers sintéticos e encaminhamento `relay-data` A→B: **PASS (VPS/NET)**.
+- **Classificação real:** **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
+- **HW PENDENTE:** DMR/D-Star/YSF simplex na nova imagem, RF real, duplex, Direct A↔B entre dois hotspots inclusive CGNAT real, retorno exato ao destino anterior, Nextion/COMOK e BER/RSSI.
 
-### Direct público 0.3.24 — evidência de rede
-- Em 25/09/2026 o host `xlx026.net` não possuía processo/unit nem listener UDP 43070 antes da implantação; esse estado foi registrado como rollback.
-- Instalado `pu2pny-direct-relay.service` com DynamicUser, NoNewPrivileges, proteção de filesystem/kernel, limites de memória/CPU e código correspondente ao blob Git `9daabadced308ad7d5c097d34b4ce57d2a2ae8ff`.
-- UFW: aberta **somente UDP 43070** para o PU2PNY Direct, preservando as portas existentes do XLXD; cópias pré-alteração das regras ficaram no diretório de rollback.
-- Teste externo a partir da VPS WartyWallaby: dois peers sintéticos registraram em `xlx026.net:43070` e um envelope opaco enviado por A foi recebido por B como `relay-data`: **PASS**.
-- Isso comprova rendezvous/encaminhamento público no nível VPS/rede. Não promove Direct RF/CGNAT entre dois hotspots para HW PASS.
