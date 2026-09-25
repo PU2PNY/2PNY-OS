@@ -109,7 +109,7 @@ auto_select(){
   if test -n "$current" && test "$current_sig" -ge 0 && test "$best_sig" -lt $((current_sig+12)); then
     chosen="$current"
   fi
-  if test "$current" != "$chosen"; then nm --wait 8 connection up "$chosen" ifname "$iface" >/dev/null; fi
+  if test "$current" != "$chosen"; then nm --wait 6 connection up "$chosen" ifname "$iface" >/dev/null; fi
   echo "Seleção automática: $chosen · Wi-Fi 1 ${ps}% · Wi-Fi 2 ${ss}%"
 }
 switch_profiles(){
@@ -118,18 +118,18 @@ switch_profiles(){
   local iface old_uuid target_ssid out rc ip actual temp=PU2PNY-WIFI-SWAP
   iface="$(wifi_if)"; test -n "$iface" || { echo "Interface Wi-Fi não encontrada." >&2; exit 3; }
   old_uuid="$(profile_uuid "$PRIMARY")"; target_ssid="$(profile_ssid "$SECONDARY")"
-  set +e; out="$(nm --wait 10 connection up "$SECONDARY" ifname "$iface" 2>&1)"; rc=$?; set -e
+  set +e; out="$(nm --wait 8 connection up "$SECONDARY" ifname "$iface" 2>&1)"; rc=$?; set -e
   if test "$rc" -ne 0; then
-    test -n "$old_uuid" && nm --wait 8 connection up uuid "$old_uuid" ifname "$iface" >/dev/null 2>&1 || true
+    test -n "$old_uuid" && nm --wait 6 connection up uuid "$old_uuid" ifname "$iface" >/dev/null 2>&1 || true
     echo "Não foi possível entrar na rede Wi-Fi 2. A rede anterior foi restaurada." >&2; exit 5
   fi
-  for _ in $(seq 1 12); do
+  for _ in $(seq 1 8); do
     actual="$(active_ssid)"; ip="$(active_ip)"
     test "$actual" = "$target_ssid" && test -n "$ip" && break
     sleep 0.5
   done
   if test "${actual:-}" != "$target_ssid" || test -z "${ip:-}"; then
-    test -n "$old_uuid" && nm --wait 8 connection up uuid "$old_uuid" ifname "$iface" >/dev/null 2>&1 || true
+    test -n "$old_uuid" && nm --wait 6 connection up uuid "$old_uuid" ifname "$iface" >/dev/null 2>&1 || true
     echo "A rede Wi-Fi 2 não permaneceu associada. A rede anterior foi restaurada." >&2; exit 5
   fi
   nm connection delete "$temp" >/dev/null 2>&1 || true
