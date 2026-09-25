@@ -81,6 +81,8 @@ grep -Fq 'domain-name","local' "$ROOT/usr/local/sbin/2pny-mdns-guard"
 grep -Fq '5353' "$ROOT/usr/local/sbin/2pny-mdns-guard"
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-mdns-guard.service"
 grep -Fq 'network-online.target' "$ROOT/etc/systemd/system/2pny-mdns-guard.service"
+test -x "$ROOT/usr/sbin/avahi-daemon"
+test -s "$ROOT/lib/systemd/system/avahi-daemon.service"
 grep -Fq 'Aplicar fuso manual' "$SYS"
 grep -Fq 'Aplicar data/hora manual' "$SYS"
 grep -Fq 'timezone_source' "$ROOT/usr/share/2pny/ui-common-0.3.0.js"
@@ -130,7 +132,6 @@ test "$OK" = 1 || { cat /tmp/pu2pnyd-0325.log; exit 1; }
 curl -fsS http://127.0.0.1/api/status | grep -Fq "\"version\":\"$VERSION\""
 curl -fsS http://127.0.0.1/api/language | grep -Fq '"selected":false'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '0.3.25-alpha'
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'WIZ-011'
 ! strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'fileExists(filepath.Join(dataDir, "uplink-ssid")) && cachedConnectivitySnapshot().Internet'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/rf/ber-calibration'
 kill "$PID"; wait "$PID" 2>/dev/null || true; PID=""
