@@ -60,8 +60,9 @@ print(json.dumps({
 PY
 }
 save_secondary(){
-  local ssid="$1" pass="$2" bssid="${3:-}" iface hidden=no cand=PU2PNY-WIFI-SECONDARY-CANDIDATE backup=PU2PNY-WIFI-SECONDARY-BACKUP secret="" old=0
+  local ssid="$1" pass="$2" bssid="${3:-}" iface hidden=yes cand=PU2PNY-WIFI-SECONDARY-CANDIDATE backup=PU2PNY-WIFI-SECONDARY-BACKUP secret="" old=0
   test -n "$ssid" || { echo "Informe o SSID da rede Wi-Fi 2." >&2; exit 2; }
+  if test -n "$bssid" || nm -t --escape no -f SSID device wifi list --rescan no 2>/dev/null | grep -Fxq "$ssid"; then hidden=no; fi
   [[ -z "$bssid" || "$bssid" =~ ^([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}$ ]] || { echo "BSSID inválido." >&2; exit 2; }
   iface="$(wifi_if)"; test -n "$iface" || { echo "Interface Wi-Fi não encontrada." >&2; exit 3; }
   nm connection delete "$cand" >/dev/null 2>&1 || true
