@@ -819,3 +819,18 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-P2P-010D | P2P-010 | servidor público xlx026.net:43070 recebe registros de dois peers externos e encaminha envelope opaco A→B; firewall limita abertura à porta Direct | **PASS em VPS/rede externa** | VPS/NET |
 
 | TEST-REL-0324-C | REL-019 | artefato publicado e integridade registrada | `PU2PNY-OS-0.3.24-alpha-arm64.img.xz`, 592789908 bytes, SHA-256 `996dd6c4a08eae9cb332f66e4a19cc83957ad314d1de5aa552825115504eb1ef` | **PASS** | SW/CI |
+
+
+## Matriz 0.3.25-alpha — 25/09/2026
+
+| ID | Requisito | Critério de aceite | Estado | Nível |
+|---|---|---|---|---|
+| TEST-NET-030A | NET-030 | `2pny-network-switch` staged permanece byte a byte igual ao baseline 0.3.23; bloco Wi-Fi do wizard permanece igual | EM TESTE | SW/CI |
+| TEST-WIZ-011A | WIZ-011 | Ethernet + Internet em primeiro acesso pula Internet e avança; `?step=1` explícito não é forçado a sair | EM TESTE | SW/CI/HW |
+| TEST-NET-031A | NET-031 | imagem contém mDNS guard, serviço habilitado no boot, hostname `pu2pny`, Avahi e verificação UDP 5353 | EM TESTE | SW/CI/HW |
+| TEST-REL-0325-A | REL-020 | source + staging + ARM64 + SHA-256 + preflight + validador final + artifact + publish | EM TESTE | SW/CI |
+| TEST-REL-0325-B | REL-020 | nenhum arquivo RF/MMDVM/DMR/D-Star/YSF/Direct/clock é substituído pelo overlay 0.3.25 | EM TESTE | SW/CI |
+| TEST-HW-0325-Y1 | PROTO-YSF baseline | YSF/C4FM simplex transmite e recebe corretamente na 0.3.24 | **APROVADO pelo mantenedor** | HW |
+| TEST-HW-0325-C1 | SYS-005 | relógio 0.3.24 se comporta corretamente | **APROVADO pelo mantenedor** | HW |
+| TEST-HW-0325-D1 | PROTO-033 | troca de módulo/TG DMR pelo rádio funciona corretamente | **APROVADO pelo mantenedor** | HW |
+| TEST-HW-0325-D2 | PROTO-013 | aviso de voz DMR após conexão confirmada funciona corretamente | **APROVADO pelo mantenedor** | HW |
