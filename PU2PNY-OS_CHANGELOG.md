@@ -800,3 +800,13 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Falha observada: por Ethernet, `http://pu2pny.local/wizard` não resolveu, embora acesso pelo IP LAN funcionasse.
 - Correção autorizada: Ethernet com Internet equivale a Wi-Fi no primeiro acesso e robustez de publicação `pu2pny.local`/mDNS.
 - Criado rollback `backup/0.3.24-pre-0.3.25-20260925`.
+
+
+## 2026-09-25 — abertura da 0.3.26-alpha
+- Criado rollback `backup/0.3.25-pre-0.3.26-20260925`.
+- Escopo solicitado limitado a detecção MMDVM, velocidade/precisão Wi-Fi, Wi-Fi 2/failover e feedback imediato de reboot.
+- Pesquisa upstream MMDVMHost confirmou GET_VERSION e velocidades UART suportadas; detector passou a cobrir aliases persistentes e classes GPIO/USB adicionais, com espera apenas para CDC-ACM reset-prone.
+- Wi-Fi: removidas varreduras redundantes; NetworkManager continua autoritativo, com autoconnect/retries, prioridade maior para Wi-Fi 1 e backup para Wi-Fi 2, histerese preservada e rollback em falha.
+- Internet recebe botão dedicado para escanear Wi-Fi 2.
+- Sistema mostra reinício imediatamente antes da chamada ao backend.
+- Nenhum comportamento de protocolo/RF aprovado é alterado por este ciclo.
