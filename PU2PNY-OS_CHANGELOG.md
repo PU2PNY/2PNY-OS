@@ -784,3 +784,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - UFW recebeu somente a regra UDP 43070 para Direct, com backup das regras anteriores e instrução de rollback.
 - WartyWallaby, externamente ao XLX026, registrou dois peers sintéticos e confirmou encaminhamento opaco `relay-data` A→B em `xlx026.net:43070`: PASS de rede/VPS.
 - O teste não equivale a RF real; Direct A↔B com rádios/hotspots e restauração do destino anterior continua HW PENDENTE.
+
+### 2026-09-25 — 0.3.24-alpha publicada
+- Run GitHub Actions `36134610081` concluiu source, staged source, ARM64, XZ/SHA-256, preflight, validador final, artifact e publish em **PASS**.
+- Publicada prerelease `v0.3.24-alpha` no commit `1a25e43e6997ea514c407f29e0e396d82d4c0bcb`.
+- Imagem: `PU2PNY-OS-0.3.24-alpha-arm64.img.xz`, 592789908 bytes.
+- SHA-256: `996dd6c4a08eae9cb332f66e4a19cc83957ad314d1de5aa552825115504eb1ef`.
+- O servidor público Direct no XLX026 e UDP 43070 tiveram teste externo VPS/NET **PASS**; RF/CGNAT real entre dois hotspots continua HW PENDENTE.
+- Estado: **ALPHA / PARA TESTE FÍSICO**, sem promoção para PROD antes das regressões físicas exigidas.
