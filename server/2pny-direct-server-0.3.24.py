@@ -11,7 +11,8 @@ CALL_RE=re.compile(r"^[A-Z0-9]{3,8}(?:-[A-Z0-9]{1,2})?$")
 MAX_PACKET=65535
 TTL=90
 RATE_WINDOW=10
-RATE_MAX=160
+RATE_MAX=2000
+MAX_RELAY_B64=8192
 
 class DirectServer:
     def __init__(self,host="0.0.0.0",port=43070):
@@ -81,7 +82,7 @@ class DirectServer:
             if not CALL_RE.fullmatch(to):return
             dest=self.nodes.get(to)
             packet=str(m.get("packet") or "")
-            if not dest or now-dest["seen"]>TTL or not packet or len(packet)>90000:return
+            if not dest or now-dest["seen"]>TTL or not packet or len(packet)>MAX_RELAY_B64:return
             # Packet is already end-to-end encrypted by the two hotspots.
             # The relay forwards opaque bytes and never derives session keys.
             self.send(dest["addr"],{"t":"relay-data","from":fr,"to":to,"packet":packet,"ts":int(time.time())})
