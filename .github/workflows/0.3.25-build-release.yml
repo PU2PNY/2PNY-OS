@@ -70,8 +70,8 @@ jobs:
           grep -Fq 'SENDING' ci/patch-dmrgateway-voice-arbiter-0.3.21.py
           bash ci/test-0.3.24-direct.sh
           node ci/test-0.3.24-i18n.cjs
-          grep -Fq 'Encrypted relay fallback' src/direct-core-0.3.25/direct_session.go
-          grep -Fq 'acceptIncoming' src/direct-core-0.3.25/direct_autocall.go
+          grep -Fq 'Encrypted relay fallback' src/direct-core-0.3.24/direct_session.go
+          grep -Fq 'acceptIncoming' src/direct-core-0.3.24/direct_autocall.go
           grep -Fq 'Aplicar fuso manual' src/system-0.3.24.html
           ! grep -Fq 'seleção manual de fuso foi desativada' src/2pnyd-main-0.3.25.go
           grep -Fq 'ethernetAutoAdvanced' src/wizard-0.3.25.html
