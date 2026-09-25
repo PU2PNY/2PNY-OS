@@ -767,3 +767,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - O gate final confirmou a política Direct sem relay por selftest executável, além dos gates de rede, idioma, Nextion/COMOK, APRS ACK, BER, journald e proteção simplex.
 - Estado permanece **ALPHA / PARA TESTE FÍSICO**. Nenhum item RF/Nextion/Direct foi promovido de SW/VPS para HW sem teste real.
 
+## 2026-09-25 — abertura da 0.3.24-alpha
+- O mantenedor confirmou como **concluído e ótimo** o ajuste da atividade 24h: o ícone de informações de Gateway só aparece quando Gateway difere do indicativo e há identificação real de repetidora. Esse comportamento passa a baseline protegida e não é alterado no overlay 0.3.24.
+- Criado rollback `backup/0.3.23-pre-0.3.24-20260925` antes das mudanças.
+- Criados **SYS-005**, **UI-042**, **P2P-010** e **REL-019**.
+- Relógio: removido o bloqueio artificial ao timezone/data-hora manual; o helper seguro já existente continua autoritativo. O navegador fornece timezone IANA automático somente quando não existe escolha manual persistida.
+- Idioma: PT/EN/ES passa a sincronizar backend + navegador, atributo `lang`, locale de data/hora/número e gate contra frases híbridas nas páginas staged.
+- Direct: P2P-010 substitui apenas a política `direct-only` de P2P-009. O cliente tenta UDP direto e, quando necessário, encaminha pelo relay somente o pacote já criptografado ponta a ponta.
+- Chamada Direct recebida não toma RF/gateway antes da aceitação pelo rádio. Encerramento/timeout restaura o serviço anterior preservando a configuração persistida.
+- O servidor 0.3.24 recebe limite específico para envelope relay e cadência compatível com tráfego de voz, mantendo rate limiting.
+- O overlay 0.3.24 não substitui fontes RF/MMDVM/DMR/D-Star/YSF. Baselines simplex e Nextion 0.3.23 permanecem congeladas; validação HW continua obrigatória.
+
