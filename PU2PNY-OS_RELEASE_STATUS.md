@@ -879,3 +879,9 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Classificação:** ALPHA / PARA TESTE FÍSICO. Build ARM64 final, SHA-256, preflight, validador de imagem e publish permanecem obrigatórios antes de fornecer a imagem.
 - **HW PENDENTE:** RF real, regressão simplex na nova imagem, Direct entre dois hotspots/CGNAT real, retorno exato ao destino anterior, Nextion/COMOK e BER/RSSI.
 
+### Direct público 0.3.24 — evidência de rede
+- Em 25/09/2026 o host `xlx026.net` não possuía processo/unit nem listener UDP 43070 antes da implantação; esse estado foi registrado como rollback.
+- Instalado `pu2pny-direct-relay.service` com DynamicUser, NoNewPrivileges, proteção de filesystem/kernel, limites de memória/CPU e código correspondente ao blob Git `9daabadced308ad7d5c097d34b4ce57d2a2ae8ff`.
+- UFW: aberta **somente UDP 43070** para o PU2PNY Direct, preservando as portas existentes do XLXD; cópias pré-alteração das regras ficaram no diretório de rollback.
+- Teste externo a partir da VPS WartyWallaby: dois peers sintéticos registraram em `xlx026.net:43070` e um envelope opaco enviado por A foi recebido por B como `relay-data`: **PASS**.
+- Isso comprova rendezvous/encaminhamento público no nível VPS/rede. Não promove Direct RF/CGNAT entre dois hotspots para HW PASS.
