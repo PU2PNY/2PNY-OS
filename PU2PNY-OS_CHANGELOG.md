@@ -778,3 +778,9 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - O servidor 0.3.24 recebe limite específico para envelope relay e cadência compatível com tráfego de voz, mantendo rate limiting.
 - O overlay 0.3.24 não substitui fontes RF/MMDVM/DMR/D-Star/YSF. Baselines simplex e Nextion 0.3.23 permanecem congeladas; validação HW continua obrigatória.
 
+### 2026-09-25 — servidor público Direct 0.3.24
+- Confirmado pré-estado no XLX026: nenhuma unit/processo/listener em UDP 43070.
+- Implantado serviço isolado `pu2pny-direct-relay.service`; nenhuma porta/serviço do XLXD foi substituído.
+- UFW recebeu somente a regra UDP 43070 para Direct, com backup das regras anteriores e instrução de rollback.
+- WartyWallaby, externamente ao XLX026, registrou dois peers sintéticos e confirmou encaminhamento opaco `relay-data` A→B em `xlx026.net:43070`: PASS de rede/VPS.
+- O teste não equivale a RF real; Direct A↔B com rádios/hotspots e restauração do destino anterior continua HW PENDENTE.
