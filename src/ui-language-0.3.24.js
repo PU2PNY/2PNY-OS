@@ -157,6 +157,46 @@ Object.assign(D,{
 "Esperando aceitação":["Waiting for acceptance","Esperando aceptación"],
 "Expirou sem aceitação":["Expired without acceptance","Expiró sin aceptación"]
 });
+Object.assign(D,{
+"Notificações":["Notifications","Notificaciones"],
+"Ativar notificações do navegador":["Enable browser notifications","Activar notificaciones del navegador"],
+"A localização só é acessada após sua permissão.":["Location is accessed only after your permission.","La ubicación solo se accede después de su permiso."],
+"Endereço para receber mensagens":["Address to receive messages","Dirección para recibir mensajes"],
+"Sem transmissão":["No transmission","Sin transmisión"],
+"Conexão":["Connection","Conexión"],
+"Aguardando transmissões":["Waiting for transmissions","Esperando transmisiones"],
+"Autorização do contato":["Contact authorization","Autorización del contacto"],
+"Estado de validação":["Validation status","Estado de validación"],
+"Resolução":["Resolution","Resolución"],
+"Detecção":["Detection","Detección"],
+"Ver detecção e runtime":["View detection and runtime","Ver detección y runtime"],
+"Aplicar mudança de rede":["Apply network change","Aplicar cambio de red"],
+"RXOffset · medição real":["RXOffset · real measurement","RXOffset · medición real"],
+"Melhor medição da sessão":["Best session measurement","Mejor medición de la sesión"],
+"Conexão via cabo":["Wired connection","Conexión por cable"],
+"Caminho da conexão":["Connection path","Ruta de la conexión"],
+"Mede e só altera com sua confirmação":["Measures and changes only with your confirmation","Mide y cambia solo con su confirmación"],
+"Última comparação":["Last comparison","Última comparación"],
+"Nova comparação":["New comparison","Nueva comparación"],
+"Última atualização":["Last update","Última actualización"],
+"Versão —":["Version —","Versión —"],
+"versão...":["version...","versión..."],
+"Horário de verão manual (+1 h apenas na exibição)":["Manual daylight saving time (+1 h display only)","Horario de verano manual (+1 h solo en pantalla)"],
+"Baixar atualização":["Download update","Descargar actualización"],
+"Conexão confirmada.":["Connection confirmed.","Conexión confirmada."],
+"Repetidora Operação duplex":["Repeater Duplex operation","Repetidor Operación dúplex"],
+"Não autentica o hotspot. Serve apenas para funções de gerenciamento no painel.":["Does not authenticate the hotspot. It is used only for management functions in the panel.","No autentica el hotspot. Se usa solo para funciones de administración en el panel."],
+"França":["France","Francia"],
+"Suíça":["Switzerland","Suiza"],
+"Japão":["Japan","Japón"],
+"AP manutenção":["Maintenance AP","AP de mantenimiento"],
+"Serviços críticos e estado do gateway.":["Critical services and gateway status.","Servicios críticos y estado del gateway."],
+"Serviços essenciais":["Essential services","Servicios esenciales"],
+"Sistema / recepção":["System / reception","Sistema / recepción"],
+"Um indicativo por linha · use + para abrir as transmissões":["One callsign per row · use + to open transmissions","Un indicativo por fila · use + para abrir las transmisiones"],
+"Saúde dos serviços":["Service health","Salud de los servicios"],
+"+ abre todas as transmissões armazenadas para aquele indicativo":["+ opens all stored transmissions for that callsign","+ abre todas las transmisiones almacenadas para ese indicativo"]
+});
 let language=localStorage.getItem('pu2pny-language')||'pt', originals=new WeakMap();
 const loose={
 en:[
