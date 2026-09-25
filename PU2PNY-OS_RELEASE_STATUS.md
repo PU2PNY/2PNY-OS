@@ -892,3 +892,12 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Baseline HW confirmada nesta rodada e congelada:** relógio 0.3.24; YSF/C4FM simplex TX/RX; troca de módulo/TG DMR pelo rádio; aviso de voz após conexão DMR. O fluxo Ethernet “idioma → configuração” também foi confirmado correto.
 - **Diagnóstico de fonte:** 0.3.23 e 0.3.24 usam o mesmo wizard Wi-Fi e o mesmo `2pny-network-switch`; a 0.3.24 alterou backend apenas em relógio e versão. A evidência é compatível com falha de redescoberta/mDNS após handoff, não com reescrita da associação Wi-Fi.
 - **Estado:** EM TESTE. Imagem só pode ser oferecida após source/staging/ARM64/SHA/preflight/validador/publish.
+
+
+## 0.3.26-alpha — MMDVM + Wi-Fi rápido/backup — 2026-09-25
+- **Base/rollback:** 0.3.25-alpha preservada; backup `backup/0.3.25-pre-0.3.26-20260925`.
+- **Branch:** `pu2pny-os-0.3.26-alpha`.
+- **Relatos a corrigir:** MMDVM não reconhecida em alguns equipamentos; Wi-Fi 2 não assumiu após queda do Wi-Fi 1; faltava botão dedicado para escanear Wi-Fi 2; feedback visual de reboot demorava; conexão/scan Wi-Fi precisava reagir muito mais rápido sem perder qualidade.
+- **Implementação focal em andamento:** detector serial MMDVM ampliado; espera CDC-ACM antes de GET_VERSION; varredura Wi-Fi sem scans redundantes; prioridades/autoconnect primária/backup; botão Wi-Fi 2; feedback imediato de reboot.
+- **Escopo congelado:** nenhum ajuste em RF operacional, DMR/D-Star/YSF, Direct, relógio, Nextion, frequências, offsets ou gateways.
+- **Estado real:** EM TESTE SW/VPS. MMDVM real e failover Wi-Fi físico permanecem HW PENDENTE.
