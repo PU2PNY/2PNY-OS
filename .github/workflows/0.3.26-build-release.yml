@@ -81,7 +81,7 @@ jobs:
           grep -Fq '5353' src/2pny-mdns-guard-0.3.25
           grep -Fq '/dev/ttyACM*' src/2pny-hardware-probe-0.3.26.py
           grep -Fq 'id="wifiSearchSecond"' src/internet-0.3.26.html
-          grep -Fq "PNY.operation('Reiniciando hotspot'" src/system-0.3.26.html
+          grep -Fq "PNY.operation(rt,rt" src/system-0.3.26.html
           # REL-021: 0.3.26 may touch only the explicitly authorized detector/network/UI files.
           git diff --name-only v0.3.25-alpha...HEAD > /tmp/changed-0326.txt
           python3 - <<'PY'
@@ -190,7 +190,7 @@ jobs:
           grep -Fq 'connection.autoconnect-priority 200' rootfs-overlay/usr/local/sbin/2pny-wifi-profiles
           grep -Fq 'connection.autoconnect-priority 150' rootfs-overlay/usr/local/sbin/2pny-wifi-profiles
           grep -Fq 'id="wifiSearchSecond"' rootfs-overlay/usr/share/2pny/internet.html
-          grep -Fq "PNY.operation('Reiniciando hotspot'" rootfs-overlay/usr/share/2pny/system.html
+          grep -Fq "PNY.operation(rt,rt" rootfs-overlay/usr/share/2pny/system.html
           grep -Fq 'ethernetAutoAdvanced' rootfs-overlay/usr/share/2pny/wizard.html
           grep -Fq '5353' rootfs-overlay/usr/local/sbin/2pny-mdns-guard
           test -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-mdns-guard.service
