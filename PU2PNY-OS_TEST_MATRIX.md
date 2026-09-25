@@ -816,3 +816,4 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0324-A | REL-019 / REL-015 | source + staging + ARM64 + SHA-256 + preflight + validador final + artifact + publish | EM TESTE | SW/CI |
 | TEST-REL-0324-B | REL-019 | DMR simplex, D-Star simplex e YSF/C4FM simplex preservados na 0.3.24 | PENDENTE | HW |
 
+| TEST-P2P-010D | P2P-010 | servidor público xlx026.net:43070 recebe registros de dois peers externos e encaminha envelope opaco A→B; firewall limita abertura à porta Direct | **PASS em VPS/rede externa** | VPS/NET |
