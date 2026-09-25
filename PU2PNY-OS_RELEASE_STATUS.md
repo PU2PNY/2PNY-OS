@@ -894,10 +894,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Estado:** EM TESTE. Imagem só pode ser oferecida após source/staging/ARM64/SHA/preflight/validador/publish.
 
 
-## 0.3.26-alpha — MMDVM + Wi-Fi rápido/backup — 2026-09-25
+## 0.3.26-alpha — publicada / para teste físico — 2026-09-25
 - **Base/rollback:** 0.3.25-alpha preservada; backup `backup/0.3.25-pre-0.3.26-20260925`.
-- **Branch:** `pu2pny-os-0.3.26-alpha`.
-- **Relatos a corrigir:** MMDVM não reconhecida em alguns equipamentos; Wi-Fi 2 não assumiu após queda do Wi-Fi 1; faltava botão dedicado para escanear Wi-Fi 2; feedback visual de reboot demorava; conexão/scan Wi-Fi precisava reagir muito mais rápido sem perder qualidade.
-- **Implementação focal em andamento:** detector serial MMDVM ampliado; espera CDC-ACM antes de GET_VERSION; varredura Wi-Fi sem scans redundantes; prioridades/autoconnect primária/backup; botão Wi-Fi 2; feedback imediato de reboot.
+- **Imagem/commit:** `fad9d4c7ca147e04520a9a09b64d2aa797d4e766`; prerelease `v0.3.26-alpha`.
+- **GitHub Actions:** run `36190497369` — source, ARM64, XZ/SHA-256, preflight, validador final e publish **PASS**.
+- **VPS WartyWallaby:** probe Python, helpers shell, TEST-0326 focal, backend Go e JavaScript das páginas Internet/Sistema **PASS**.
+- **Correções focais:** detecção serial MMDVM ampliada sem escrita RF; Wi-Fi scan/conexão com esperas redundantes reduzidas; Wi-Fi 2 com botão dedicado e failover por perfis autoconnect; feedback visual de reboot imediato.
 - **Escopo congelado:** nenhum ajuste em RF operacional, DMR/D-Star/YSF, Direct, relógio, Nextion, frequências, offsets ou gateways.
-- **Estado real:** EM TESTE SW/VPS. MMDVM real e failover Wi-Fi físico permanecem HW PENDENTE.
+- **Imagem:** `PU2PNY-OS-0.3.26-alpha-arm64.img.xz` — 606220720 bytes.
+- **SHA-256:** `ffa6f4d89dbc5d7c08791d81b82a366636a33207a3ff274742dbf4c7867851da`.
+- **Estado real:** **ALPHA / PARA TESTE FÍSICO**. Reconhecimento da MMDVM específica e failover Wi-Fi 1→2 permanecem HW PENDENTE.
