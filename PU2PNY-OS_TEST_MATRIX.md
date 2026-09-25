@@ -834,3 +834,17 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-HW-0325-C1 | SYS-005 | relógio 0.3.24 se comporta corretamente | **APROVADO pelo mantenedor** | HW |
 | TEST-HW-0325-D1 | PROTO-033 | troca de módulo/TG DMR pelo rádio funciona corretamente | **APROVADO pelo mantenedor** | HW |
 | TEST-HW-0325-D2 | PROTO-013 | aviso de voz DMR após conexão confirmada funciona corretamente | **APROVADO pelo mantenedor** | HW |
+
+
+## Matriz 0.3.26-alpha — 25/09/2026
+
+| ID | Requisito | Critério de aceite | Estado | Nível |
+|---|---|---|---|---|
+| TEST-HW-004A | HW-004 | probe cobre aliases/classes seriais + velocidades UART upstream e usa apenas GET_VERSION | EM TESTE | SW/CI |
+| TEST-HW-004B | HW-004 | MMDVM real antes não detectada é identificada e MMDVMHost inicia com porta/baud detectados | PENDENTE | HW |
+| TEST-NET-032A | NET-032 | scan usa uma varredura fresca + no máximo um retry; esperas fixas caem >=3x sem remover confirmação/rollback | EM TESTE | SW/CI/VPS |
+| TEST-NET-033A | NET-033 | Wi-Fi 2 possui scan dedicado, perfil backup autoconnect e histerese preservada | EM TESTE | SW/CI |
+| TEST-NET-033B | NET-033 | desligar Wi-Fi 1 faz hotspot migrar sozinho para Wi-Fi 2 e continuar acessível | PENDENTE | HW |
+| TEST-UI-043A | UI-043 | overlay “Reiniciando hotspot” é renderizado antes da chamada de reboot | EM TESTE | SW/CI |
+| TEST-REL-0326-A | REL-021 | diff contra v0.3.25 contém apenas arquivos autorizados | EM TESTE | SW/CI |
+| TEST-REL-0326-B | REL-021 | source + staging + ARM64 + XZ/SHA + preflight + validador + publish | EM TESTE | SW/CI |
