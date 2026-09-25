@@ -64,7 +64,8 @@ assert 'id="wifiSearchSecond"' in internet
 assert "PNY.q('wifiSearchSecond').onclick=wifiScan" in internet
 assert 'deadline=Date.now()+18000' in internet
 assert 'setTimeout(r,400)' in internet
-assert "PNY.operation('Reiniciando hotspot'" in system
+assert "PNY.operation(rt,rt)" in system
+assert "PNYT('Reiniciar hotspot')" in system
 assert 'requestAnimationFrame(function(){requestAnimationFrame(r)})' in system
 assert "await action('reboot',null,5000)" in system
 
