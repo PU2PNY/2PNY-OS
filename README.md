@@ -4,20 +4,21 @@
 
 Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desenvolvido com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa do que já foi aprovado.
 
-> **Imagem mais recente:** `0.3.23-alpha` — **ALPHA / PARA TESTE FÍSICO**, especialmente Nextion. Não é PROD.
+> **Imagem mais recente:** `0.3.24-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
 
-**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.23-alpha)** · **[Teste físico da tela](docs/DISPLAY-0.3.23-TESTE-FISICO.md)** · **[Pendências gerais](docs/ESTADO-ATUAL-0.3.22.md)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
+**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.24-alpha)** · **[Teste físico da tela](docs/DISPLAY-0.3.23-TESTE-FISICO.md)** · **[Pendências gerais](docs/ESTADO-ATUAL-0.3.22.md)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
 
 ## Release atual
 
-- **Versão:** `0.3.23-alpha`; branch `pu2pny-os-0.3.23-alpha`.
-- **Commit da imagem:** `90ca9b5f829d7a1a5d6b591a1212d3c361acb037`.
-- **GitHub Actions:** [run 35832041581](https://github.com/PU2PNY/2PNY-OS/actions/runs/35832041581) — código, ARM64, XZ, SHA-256, preflight e validação da imagem **PASS (SW/CI)**.
-- **Correção focal:** remover sobreposição na Nextion, reduzir comandos por quadro e ajustar standby/RX/TX. HMI original preservado; layout visual e RF exigem teste físico.
-- **Imagem:** [PU2PNY-OS-0.3.23-alpha-arm64.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.23-alpha/PU2PNY-OS-0.3.23-alpha-arm64.img.xz) — 598088936 bytes.
-- **Integridade:** [arquivo SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.23-alpha/PU2PNY-OS-0.3.23-alpha-arm64.img.xz.sha256).
+- **Versão:** `0.3.24-alpha`; branch `pu2pny-os-0.3.24-alpha`.
+- **Commit da imagem:** `1a25e43e6997ea514c407f29e0e396d82d4c0bcb`.
+- **GitHub Actions:** [run 36134610081](https://github.com/PU2PNY/2PNY-OS/actions/runs/36134610081) — source, staging, ARM64, XZ/SHA-256, preflight, imagem final e publish **PASS (SW/CI)**.
+- **Correções focais:** relógio/fuso automático e manual seguro; idioma PT/EN/ES sem mistura; Direct primeiro com fallback relay criptografado e aceitação pelo rádio.
+- **Imagem:** [PU2PNY-OS-0.3.24-alpha-arm64.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.24-alpha/PU2PNY-OS-0.3.24-alpha-arm64.img.xz) — 592789908 bytes.
+- **SHA-256:** `996dd6c4a08eae9cb332f66e4a19cc83957ad314d1de5aa552825115504eb1ef`.
+- **Direct público:** serviço XLX026/UDP 43070 validado externamente em VPS/NET; RF/CGNAT real entre dois hotspots permanece HW PENDENTE.
 
-O sucesso do CI não confirma aparência física, modem, áudio, BER/RSSI ou regressão simplex na nova imagem.
+O sucesso do CI não confirma RF, áudio, BER/RSSI, Nextion física, duplex nem a regressão simplex na nova imagem.
 
 ## Baseline protegido
 
