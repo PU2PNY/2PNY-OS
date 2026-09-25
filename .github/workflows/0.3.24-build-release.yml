@@ -28,7 +28,7 @@ jobs:
         with:
           go-version: '1.24.x'
           cache: false
-      - name: Validate protected baseline and 0.3.21 sources
+      - name: Validate protected baseline and 0.3.24 sources
         run: |
           set -euo pipefail
           gofmt -w src/2pnyd-main-0.3.24.go src/direct-core-0.3.24/*.go
@@ -168,6 +168,10 @@ jobs:
           grep -Fq 'Internet desconectada' rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
           test -x rootfs-overlay/usr/local/bin/2pny-direct-core
           rootfs-overlay/usr/local/bin/2pny-direct-core --selftest | grep -Fq DIRECT_SELFTEST_OK
+          node "$GITHUB_WORKSPACE/ci/test-0.3.24-i18n.cjs" \
+            rootfs-overlay/usr/share/2pny \
+            rootfs-overlay/usr/share/2pny/ui-language.js \
+            rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
           grep -Fq 'patch-dmrgateway-pu2pny-0.3.20.py' builder/build-image.sh
           grep -Fq 'patch-dmrgateway-voice-arbiter-0.3.21.py' builder/build-image.sh
       - name: Build ARM64 image
