@@ -918,3 +918,16 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **VPS/SentinelX WartyWallaby:** auditoria de protocolos, regressões 0.3.20/0.3.21, display 0.3.23, rede 0.3.25, foco 0.3.26, Go/Python/JS e testes APRS ACK/REJ **PASS**.
 - **Classificação real:** **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
 - **HW/NET PENDENTE:** Wires-X real e TX/RX YSF na nova imagem; regressão D-Star/DMR simplex na nova imagem; DMR duplex TX/RX/áudio/timeout; autenticação BrandMeister real/persistência após reboot; APRS-IS/ACK externo real.
+
+
+## 0.3.27-alpha — REJEITADA NO TESTE FÍSICO — 2026-09-26
+- **HW FAIL:** Wi-Fi configurado no AP não reconectou após reboot.
+- **HW FAIL:** Ethernet recebeu IPv4 (observado 192.168.100.8), porém o fluxo não reencontrou/abriu automaticamente o painel; foi necessário localizar o IP manualmente.
+- **HW FAIL:** protocolos reportados sem TX/RX na imagem 0.3.27.
+- A classificação anterior SW/CI PASS continua válida apenas para build/estrutura; **não equivale a funcionamento HW**.
+- A 0.3.27 deixa de ser candidata recomendada. Linha corretiva: `pu2pny-os-0.3.28-alpha`. Rollback: `backup/0.3.27-rejected-pre-0.3.28-20260926`.
+
+## 0.3.28-alpha — EM CORREÇÃO — 2026-09-26
+- Escopo: restaurar confiabilidade Wi-Fi 0.3.23, handoff local Wi-Fi/Ethernet, Wi-Fi 2→Ao Vivo, atualização hostfiles ao conectar + a cada 8 h, retomada segura do perfil selecionado e aviso no box TX.
+- DMR/D-Star/YSF helpers/RF ficam congelados; APRS message-only e BrandMeister Security permanecem.
+- Imagem só será publicada após VPS/CI/ARM64/XZ/SHA/preflight/validador final.
