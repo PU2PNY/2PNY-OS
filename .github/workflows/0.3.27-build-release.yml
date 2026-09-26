@@ -1,0 +1,323 @@
+name: Build and release PU2PNY-OS 0.3.27 Alpha
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.27-alpha ]
+    paths:
+      - 'src/**'
+      - 'ci/**'
+      - '.github/workflows/0.3.27-build-release.yml'
+      - 'PU2PNY-OS_*.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.27-alpha-release-final
+  cancel-in-progress: true
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Audit protected protocols and validate 0.3.27 sources
+        run: |
+          set -euo pipefail
+          gofmt -w src/2pnyd-main-0.3.27.go src/direct-core-0.3.24/*.go
+          go test src/2pnyd-main-0.3.27.go
+          go test src/direct-core-0.3.24/*.go
+          python3 -m py_compile src/2pny-hardware-probe-0.3.26.py
+          python3 ci/test-0.3.25-network.py
+          python3 ci/test-0.3.26-focus.py
+          python3 ci/test-0.3.27-protocol-audit.py
+          python3 ci/test-0.3.20-regressions.py
+          python3 ci/test-0.3.21-regressions.py
+          python3 ci/test-0.3.23-display-layout.py
+          python3 -m py_compile \
+            src/2pny-protocol-network-apply-0.3.21.py \
+            src/2pny-station-worker-0.3.21.py \
+            src/2pny-aprs-0.3.27.py \
+            src/2pny-display-apply-0.3.21.py \
+            src/2pny-display-core-0.3.21.py \
+            src/2pny-dmr-duplex-diagnostics-0.3.21.py \
+            src/2pny-rxoffset-apply-0.3.21.py \
+            ci/patch-dmrgateway-voice-arbiter-0.3.21.py \
+            ci/prepare-0.3.27-alpha.py \
+            ci/test-0.3.27-protocol-audit.py \
+            ci/test-0.3.25-network.py \
+            ci/test-0.3.26-focus.py \
+            server/2pny-direct-server-0.3.24.py \
+            ci/test-0.3.21-regressions.py
+          bash -n src/2pny-network-switch-0.3.26 src/2pny-wifi-profiles-0.3.26 src/90-pu2pny-wifi-choice-0.3.26 src/2pny-mdns-guard-0.3.25 ci/test-0.3.24-direct.sh ci/validate-0.3.27-image.sh
+          node --check src/ui-common-0.3.24.js
+          node --check src/ui-language-0.3.27.js
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const f of ['src/internet-0.3.26.html','src/hotspot-0.3.27.html','src/dashboard-0.3.21.html','src/wizard-0.3.25.html','src/aprs-0.3.27.html','src/system-0.3.26.html','src/display-0.3.21.html','src/direct-0.3.24.html']){
+            const h=fs.readFileSync(f,'utf8');
+            for(const m of h.matchAll(/<script>([\s\S]*?)<\/script>/g)) new Function(m[1]);
+          }
+          NODE
+          grep -Fq 'TG conectado' src/hotspot-0.3.27.html
+          grep -Fq 'Salvar melhor ajuste' src/hotspot-0.3.27.html
+          grep -Fq 'simplex-protected' src/2pny-protocol-network-apply-0.3.21.py
+          grep -Fq 'connected_tg' src/2pny-station-worker-0.3.21.py
+          grep -Fq 'SENDING' ci/patch-dmrgateway-voice-arbiter-0.3.21.py
+          bash ci/test-0.3.24-direct.sh
+          node ci/test-0.3.24-i18n.cjs
+          grep -Fq 'Encrypted relay fallback' src/direct-core-0.3.24/direct_session.go
+          grep -Fq 'acceptIncoming' src/direct-core-0.3.24/direct_autocall.go
+          grep -Fq 'Aplicar fuso manual' src/system-0.3.24.html
+          ! grep -Fq 'seleção manual de fuso foi desativada' src/2pnyd-main-0.3.27.go
+          grep -Fq 'ethernetAutoAdvanced' src/wizard-0.3.25.html
+          grep -Fq '5353' src/2pny-mdns-guard-0.3.25
+          grep -Fq '/dev/ttyACM*' src/2pny-hardware-probe-0.3.26.py
+          grep -Fq 'id="wifiSearchSecond"' src/internet-0.3.26.html
+          grep -Fq "PNY.operation(rt,rt" src/system-0.3.26.html
+          grep -Fq 'id="bmSecurityPassword"' src/hotspot-0.3.27.html
+          grep -Fq 'BrandMeister Hotspot Security Password' src/hotspot-0.3.27.html
+          grep -Fq 'message_only' src/2pnyd-main-0.3.27.go
+          ! grep -Fq 'cfg.get("latitude")' src/2pny-aprs-0.3.27.py
+          ! grep -Fq 'cfg.get("longitude")' src/2pny-aprs-0.3.27.py
+          # REL-022: protected protocol runtime cannot be modified in this cycle.
+          git diff --name-only v0.3.26-alpha...HEAD > /tmp/changed-0327.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          allowed={
+              '.github/workflows/0.3.27-build-release.yml',
+              'ci/prepare-0.3.27-alpha.py','ci/test-0.3.27-protocol-audit.py','ci/validate-0.3.27-image.sh',
+              'src/2pnyd-main-0.3.27.go','src/hotspot-0.3.27.html','src/aprs-0.3.27.html',
+              'src/2pny-aprs-0.3.27.py','src/ui-language-0.3.27.js',
+              'PU2PNY-OS_MASTER_SPEC.md','PU2PNY-OS_RELEASE_STATUS.md',
+              'PU2PNY-OS_TEST_MATRIX.md','PU2PNY-OS_CHANGELOG.md','README.md',
+              'docs/PROTOCOL-AUDIT-0.3.27.md',
+          }
+          changed=[x.strip() for x in Path('/tmp/changed-0327.txt').read_text().splitlines() if x.strip()]
+          bad=[x for x in changed if x not in allowed]
+          if bad: raise SystemExit('0.3.27 scope violation: '+', '.join(bad))
+          print('SCOPE_0327_OK',len(changed))
+          PY
+
+  build-arm64:
+    needs: source
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    env:
+      VERSION: 0.3.27-alpha
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file iproute2 parted
+      - name: Restore protected chain through 0.3.26 and apply audited 0.3.27 overlay
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in             ci/prepare-0.1.2.sh             ci/prepare-0.1.3.sh             ci/prepare-0.1.4-ui.sh             ci/prepare-0.1.5-hardware.sh             ci/prepare-0.1.5-fixes.sh             ci/prepare-0.1.6-rf.sh             ci/prepare-0.1.6-build-fix.sh             ci/prepare-0.1.7-modules.sh             ci/prepare-0.1.7-hotfix1-ethernet.sh             ci/prepare-0.1.7-hotfix2-listener-prep.sh             ci/prepare-0.1.7-hotfix2-captive-responsive.sh             ci/prepare-0.1.7-hotfix2-review-fixes.sh             ci/prepare-0.1.7-hotfix2-route-dedupe.sh             ci/prepare-0.1.7-hotfix3-network-stability.sh             ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh             ci/prepare-0.1.7-hotfix4-dual-network.sh             ci/prepare-0.1.7-hotfix4-validator-fix.sh             ci/prepare-0.1.7-hotfix5-bookworm-network.sh             ci/prepare-0.1.7-hotfix5-base-fix.sh             ci/prepare-0.1.7-hotfix5-validator-compat.sh             ci/prepare-0.1.8-anchor-compat.sh             ci/prepare-0.1.8-network-core.sh             ci/prepare-0.1.8-builder-service-fix.sh             ci/prepare-0.1.9-pu2pny-hardware-ui.sh             ci/prepare-0.1.9-network-pid-fix.sh             ci/prepare-0.1.9-build-metadata-fix.sh             ci/prepare-0.1.9-hotfix1-hardware-status.sh             ci/prepare-0.2.0-onboarding.sh             ci/prepare-0.2.1-network-ux.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+          python3 ci/prepare-0.2.2-stability.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.3-dashboard.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.4-network-display.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.5-protocol-network.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.7-radio-live.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.8-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.2.9-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.0-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.1-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.2-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.3-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.4-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.5-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.6-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.7-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.8-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.9-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.10-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.11-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.12-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.13-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.14-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.15-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.16-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.17-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.18-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.19-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.20-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.23-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.24-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.25-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.26-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.27-alpha.py legacy-source/2pny-os
+      - name: Validate staged source
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euxo pipefail
+          gofmt -w src/2pnyd/main.go
+          go test ./...
+          python3 -m py_compile \
+            rootfs-overlay/usr/local/sbin/2pny-station-worker \
+            rootfs-overlay/usr/local/sbin/2pny-display-core \
+            rootfs-overlay/usr/local/sbin/2pny-display-apply \
+            rootfs-overlay/usr/local/sbin/2pny-display-detector \
+            rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply \
+            rootfs-overlay/usr/local/sbin/2pny-protocol-profiles \
+            rootfs-overlay/usr/local/sbin/2pny-update-manager \
+            rootfs-overlay/usr/local/libexec/2pny-dmr-apply \
+            rootfs-overlay/usr/local/sbin/2pny-aprs \
+            rootfs-overlay/usr/local/sbin/2pny-timezone-apply \
+            rootfs-overlay/usr/local/sbin/2pny-dmr-duplex-diagnostics \
+            rootfs-overlay/usr/local/sbin/2pny-rxoffset-apply
+          bash -n rootfs-overlay/usr/local/sbin/2pny-hostfiles-update rootfs-overlay/usr/local/sbin/2pny-display-online-detect
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\\.3\\.27-alpha"' src/2pnyd/main.go
+          grep -Fq 'id="bmSecurityPassword"' rootfs-overlay/usr/share/2pny/hotspot.html
+          grep -Fq 'BrandMeister Hotspot Security Password' rootfs-overlay/usr/share/2pny/hotspot.html
+          grep -Fq 'message_only' src/2pnyd/main.go
+          ! grep -Fq 'cfg.get("latitude")' rootfs-overlay/usr/local/sbin/2pny-aprs
+          ! grep -Fq 'cfg.get("longitude")' rootfs-overlay/usr/local/sbin/2pny-aprs
+          ! grep -Fqi 'id="lat"' rootfs-overlay/usr/share/2pny/aprs.html
+          ! grep -Fqi 'id="lon"' rootfs-overlay/usr/share/2pny/aprs.html
+          cmp -s rootfs-overlay/usr/local/sbin/2pny-protocol-network-apply "$GITHUB_WORKSPACE/src/2pny-protocol-network-apply-all-0.3.20.py"
+          cmp -s rootfs-overlay/usr/local/libexec/2pny-dmr-apply "$GITHUB_WORKSPACE/src/2pny-protocol-network-apply-0.3.21.py"
+          python3 "$GITHUB_WORKSPACE/ci/test-0.3.26-focus.py"
+          python3 -m py_compile rootfs-overlay/usr/local/sbin/2pny-hardware-probe
+          bash -n rootfs-overlay/usr/local/sbin/2pny-network-switch rootfs-overlay/usr/local/sbin/2pny-wifi-profiles rootfs-overlay/etc/NetworkManager/dispatcher.d/90-pu2pny-wifi-choice
+          grep -Fq '/dev/ttyACM*' rootfs-overlay/usr/local/sbin/2pny-hardware-probe
+          grep -Fq 'nmcli --wait 14 connection up PU2PNY-WIFI-CANDIDATE' rootfs-overlay/usr/local/sbin/2pny-network-switch
+          grep -Fq 'connection.autoconnect-priority 200' rootfs-overlay/usr/local/sbin/2pny-wifi-profiles
+          grep -Fq 'connection.autoconnect-priority 150' rootfs-overlay/usr/local/sbin/2pny-wifi-profiles
+          grep -Fq 'id="wifiSearchSecond"' rootfs-overlay/usr/share/2pny/internet.html
+          grep -Fq "PNY.operation(rt,rt" rootfs-overlay/usr/share/2pny/system.html
+          grep -Fq 'ethernetAutoAdvanced' rootfs-overlay/usr/share/2pny/wizard.html
+          grep -Fq '5353' rootfs-overlay/usr/local/sbin/2pny-mdns-guard
+          test -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-mdns-guard.service
+          grep -Fq 'STRICT_I18N_FALLBACK' rootfs-overlay/usr/share/2pny/ui-language.js
+          grep -Fq 'Aplicar fuso manual' rootfs-overlay/usr/share/2pny/system.html
+          grep -Fq 'Direct primeiro · Relay automático' rootfs-overlay/usr/share/2pny/direct.html
+          strings rootfs-overlay/usr/local/bin/2pny-direct-core | grep -Fq 'Encrypted relay fallback'
+          grep -Fq 'simplex-protected' rootfs-overlay/usr/local/libexec/2pny-dmr-apply
+          grep -Fq 'connected_tg' rootfs-overlay/usr/local/sbin/2pny-station-worker
+          grep -Fq 'Saída ativa · retorno COMOK ainda não confirmado' rootfs-overlay/usr/share/2pny/display.html
+          grep -Fq 'Salvar melhor ajuste' rootfs-overlay/usr/share/2pny/hotspot.html
+          grep -Fq 'Salvar rede de backup' rootfs-overlay/usr/share/2pny/internet.html
+          grep -Fq 'Aguardando confirmação real do gateway/rede' rootfs-overlay/usr/share/2pny/hotspot.html
+          grep -Eq 'tx_only_unconfirmed|candidate_native_fallback' rootfs-overlay/usr/local/sbin/2pny-display-apply
+          test -x rootfs-overlay/usr/local/sbin/2pny-rxoffset-apply
+          test -L rootfs-overlay/etc/systemd/system/multi-user.target.wants/2pny-rxoffset-apply.path
+          grep -Fq 'SystemMaxUse=64M' rootfs-overlay/etc/systemd/journald.conf.d/20-pu2pny.conf
+          grep -Fq 'ACKDIAG' rootfs-overlay/usr/local/sbin/2pny-aprs
+          grep -Fq 'Internet desconectada' rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
+          test -x rootfs-overlay/usr/local/bin/2pny-direct-core
+          rootfs-overlay/usr/local/bin/2pny-direct-core --selftest | grep -Fq DIRECT_SELFTEST_OK
+          node "$GITHUB_WORKSPACE/ci/test-0.3.24-i18n.cjs" \
+            rootfs-overlay/usr/share/2pny \
+            rootfs-overlay/usr/share/2pny/ui-language.js \
+            rootfs-overlay/usr/share/2pny/ui-common-0.3.0.js
+          grep -Fq 'patch-dmrgateway-pu2pny-0.3.20.py' builder/build-image.sh
+          grep -Fq 'patch-dmrgateway-voice-arbiter-0.3.21.py' builder/build-image.sh
+      - name: Build ARM64 image
+        working-directory: legacy-source/2pny-os
+        run: sudo -E VERSION="$VERSION" ./builder/build-image.sh
+      - name: Normalize image and checksum
+        working-directory: legacy-source/2pny-os
+        run: |
+          set -euo pipefail
+          OLD="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
+          IMAGE="dist/PU2PNY-OS-$VERSION-arm64.img.xz"
+          test -n "$OLD"
+          if [[ "$OLD" != "$IMAGE" ]]; then sudo mv "$OLD" "$IMAGE"; fi
+          sudo rm -f dist/*.img.xz.sha256
+          HASH="$(sudo sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" | sudo tee "$IMAGE.sha256" >/dev/null
+          sudo chown "$USER:$USER" "$IMAGE" "$IMAGE.sha256" dist/BUILD-INFO.txt
+          xz -t "$IMAGE"
+          test "$(sha256sum "$IMAGE" | awk '{print $1}')" = "$HASH"
+      - name: Pre-validate generated image
+        working-directory: legacy-source/2pny-os
+        run: sudo bash "$GITHUB_WORKSPACE/ci/preflight-image.sh" "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$VERSION"
+      - name: Validate final image
+        working-directory: legacy-source/2pny-os
+        run: bash "$GITHUB_WORKSPACE/ci/validate-0.3.27-image.sh" "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$VERSION"
+      - name: Stage validated artifact
+        working-directory: legacy-source/2pny-os
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/release-artifact"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz" "$GITHUB_WORKSPACE/release-artifact/"
+          cp "dist/PU2PNY-OS-$VERSION-arm64.img.xz.sha256" "$GITHUB_WORKSPACE/release-artifact/"
+          cp dist/BUILD-INFO.txt "$GITHUB_WORKSPACE/release-artifact/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.27-arm64
+          path: release-artifact/*
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      VERSION: 0.3.27-alpha
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.27-arm64
+          path: release
+      - name: Verify transferred image
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.27 Alpha — auditoria de protocolos, APRS message-only e BrandMeister Hotspot Security.
+
+          - YSF/C4FM: runtime preservado byte a byte; MMDVMHost 3200/4200, YSFGateway e Wires-X local mantidos. Wires-X real pelo rádio continua pendente de teste físico.
+          - D-Star: runtime preservado byte a byte; simplex aprovado, loopback 20011/20010 e DPlus/DExtra/DCS/XLX mantidos.
+          - DMR: runtime/patches preservados byte a byte. Simplex continua protegido; duplex continua isolado e exige teste físico.
+          - BrandMeister: campo dedicado Hotspot Security Password, armazenamento privado 0600, reutilização do segredo salvo e API retornando apenas o estado, nunca o valor.
+          - APRS: exclusivamente mensagens. Envio/recebimento, fila, ACK/REJ e retries preservados; posição, beacon, GPS, mapa, latitude e longitude removidos do emissor e da UI.
+          - PT/EN/ES preservado nas telas modificadas.
+          - Wi-Fi, detecção MMDVM, relógio, Direct, Nextion, Ao Vivo e demais baselines da 0.3.26 são herdados sem alteração.
+          - Classificação: ALPHA / PARA TESTE FÍSICO.
+
+          English: protocol audit with protected runtimes, APRS message-only, and secure BrandMeister Hotspot Security handling.
+          Español: auditoría de protocolos con runtimes protegidos, APRS solo mensajes y manejo seguro de Hotspot Security de BrandMeister.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.27-alpha
+          target_commitish: ${{ github.sha }}
+          name: PU2PNY-OS 0.3.27 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.27-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.3.27-alpha-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
