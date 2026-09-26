@@ -848,3 +848,23 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-UI-043A | UI-043 | overlay “Reiniciando hotspot” é renderizado antes da chamada de reboot | **PASS** | SW/CI/VPS |
 | TEST-REL-0326-A | REL-021 | diff contra v0.3.25 contém apenas arquivos autorizados | **PASS** | SW/CI |
 | TEST-REL-0326-B | REL-021 | source + staging + ARM64 + XZ/SHA + preflight + validador + publish | **PASS run 36190497369** | SW/CI |
+
+
+## Matriz 0.3.27-alpha — 26/09/2026
+
+| ID | Requisito | Critério | Estado | Nível |
+|---|---|---|---|---|
+| TEST-PROTO-042A | PROTO-042 | helper YSF + service + patches protegidos iguais à v0.3.26 e contrato Wires-X/3200/4200 presente | PASS | SW/VPS |
+| TEST-PROTO-042B | PROTO-042 | Wires-X pelo rádio troca/lista/refletor e TX/RX YSF na imagem nova | PENDENTE | HW |
+| TEST-PROTO-043A | PROTO-043 | helper/service D-Star iguais à v0.3.26; 20011/20010 e DPlus/DExtra/DCS/XLX presentes | PASS | SW/VPS |
+| TEST-PROTO-043B | PROTO-043 | regressão D-Star simplex na imagem nova | PENDENTE | HW |
+| TEST-PROTO-044A | PROTO-044 | helper DMR/patches iguais à v0.3.26; simplex-protected e duplex isolado por repeater | PASS | SW/VPS |
+| TEST-PROTO-044B | PROTO-044 | regressão DMR simplex na imagem nova | PENDENTE | HW |
+| TEST-PROTO-044C | PROTO-044 | DMR duplex TX/RX/áudio/timeout TS/CC | PENDENTE | HW |
+| TEST-APRS-016A | APRS-016 | daemon não possui beacon/lat/lon; mensagem/ACK/REJ/outbox/retry preservados | PASS | SW/VPS |
+| TEST-APRS-016B | APRS-016 | UI sem mapa/GPS/lat/lon/beacon e com mensagens | PASS | SW/VPS |
+| TEST-APRS-016C | APRS-016 | mensagem/ACK real com APRS-IS externo | PENDENTE | HW/NET |
+| TEST-PROTO-041A | PROTO-041 | campo BM type=password, segredo 0600, booleano somente e reutilização segura | PASS | SW/VPS |
+| TEST-PROTO-041B | PROTO-041 | autenticação real BrandMeister e persistência após reboot | PENDENTE | HW/NET |
+| TEST-REL-0327-A | REL-022 | diff/overlay restrito aos arquivos autorizados | EM TESTE | SW/CI |
+| TEST-REL-0327-B | REL-022 | source → staging → ARM64 → SHA → preflight → validador → publish | PENDENTE | SW/CI |
