@@ -870,3 +870,19 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0327-B | REL-022 | source → staging → ARM64 → SHA → preflight → validador → publish | **PASS run 36254445940** | SW/CI |
 | TEST-REL-0327-C | REL-022 | artefato publicado e integridade registrada | `PU2PNY-OS-0.3.27-alpha-arm64.img.xz`, 606874868 bytes, SHA-256 `a8077ae3f2855e37ff25124aa56f0de6c318e3bf272a0429f18418a438bd84c5` | **PASS** | SW/CI |
 | TEST-VPS-0327-A | TEST-008 / REL-022 | regressões/auditoria reproduzíveis sem RF em WartyWallaby | protocolos protegidos + regressões 0.3.20/0.3.21 + display 0.3.23 + rede 0.3.25 + foco 0.3.26 + Go/Python/JS + APRS ACK/REJ | **PASS** | VPS |
+
+
+## Matriz 0.3.28-alpha — 26/09/2026
+
+| ID | Requisito | Critério | Estado | Nível |
+|---|---|---|---|---|
+| TEST-NET-034A | NET-034 | conexão primária restaura janelas confiáveis da 0.3.23, perfil autoconnect persiste e mDNS roda em evento de link | EM TESTE | SW/VPS/CI |
+| TEST-NET-034B | NET-034 | Wi-Fi AP→LAN continua wizard automaticamente em Raspberry real | PENDENTE | HW |
+| TEST-NET-034C | NET-034 | Ethernet com sessão aberta reencontra `pu2pny.local` e continua configuração sem buscar IP manualmente | PENDENTE | HW |
+| TEST-NET-034D | NET-034 | Wi-Fi 2 assume e sessão aberta redireciona para `/dashboard` | PENDENTE | HW |
+| TEST-NET-035A | NET-035 | hostfiles atualizam no evento online e timer Persistent executa a cada 8 h sem restart de gateway | EM TESTE | SW/VPS/CI |
+| TEST-PROTO-045A | PROTO-045 | perfil salvo é reativado somente quando gateway/MMDVM necessários estão inativos | EM TESTE | SW/VPS/CI |
+| TEST-PROTO-045B | PROTO-045 | DMR/D-Star/YSF TX/RX após reboot/rede na imagem nova | PENDENTE | HW |
+| TEST-LIVE-022A | LIVE-022 | box TX mostra perfil inativo ou servidor desconectado com ação para Protocolos usando estado real | EM TESTE | SW/CI |
+| TEST-REL-0328-A | REL-023 | helpers RF/DMR/D-Star/YSF permanecem iguais ao baseline protegido | EM TESTE | SW/CI |
+| TEST-REL-0328-B | REL-023 | ARM64 + XZ/SHA + preflight + validador + publish | PENDENTE | SW/CI |
