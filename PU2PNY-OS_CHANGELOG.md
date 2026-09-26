@@ -843,3 +843,16 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Investigação mostrou que a 0.3.26 havia encurtado associação NetworkManager de 45 s para 14 s, DHCP candidato de 30 s para 12 s e retries persistentes de 3 para 2. Essa otimização deixa de ser baseline: confiabilidade da 0.3.23 volta a prevalecer.
 - Criado rollback `backup/0.3.27-rejected-pre-0.3.28-20260926` e branch `pu2pny-os-0.3.28-alpha`.
 - Novos requisitos permanentes: NET-034, NET-035, PROTO-045, LIVE-022 e REL-023.
+
+
+## 2026-09-26 — 0.3.28-alpha publicada
+- Recuperada a janela de associação Wi-Fi comprovada da 0.3.23 sem remover as melhorias de scan/UI e Wi-Fi 2.
+- Criado reconciliador event-driven para mDNS, atualização de hostfiles e retomada segura do perfil selecionado.
+- Hostfiles/listas públicas passam a atualizar ao ficar online e a cada 8 horas (3 vezes/dia), com `Persistent=true`, lock e preservação do cache anterior.
+- Ao Vivo agora informa dentro do box TX quando o perfil selecionado não está ativo ou quando não há conexão confirmada com o servidor.
+- Gate estrutural mantém helpers RF/DMR/D-Star/YSF byte a byte protegidos contra a base anterior.
+- GitHub Actions run `36260579797`: build ARM64, SHA-256, preflight, validador final e publish **PASS**.
+- SentinelX/VPS na tag exata: **PASS**.
+- Publicada `v0.3.28-alpha`, commit da imagem `6924abcc74e946f41c83a98c341c335c75855171`.
+- Imagem `PU2PNY-OS-0.3.28-alpha-arm64.img.xz`, 594602484 bytes, SHA-256 `ea3d5619e891089e287ceea355d0c638222fa5d4ecbc223fdc119b791feecb6c`.
+- Estado correto: **ALPHA / PARA TESTE FÍSICO**. 0.3.27 continua rejeitada em HW.
