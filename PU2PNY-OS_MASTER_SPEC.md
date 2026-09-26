@@ -1790,3 +1790,21 @@ DMR simplex mantém caminho `simplex-protected`; ramo duplex continua restrito a
 
 ### REL-022 — 0.3.27 é overlay limitado
 A 0.3.27 herda integralmente a 0.3.26. Só pode substituir backend necessário a APRS/segredo DMR, UI Protocolos/APRS, cliente APRS, catálogo i18n dessas telas, testes, workflow e documentação. É proibido substituir helpers de protocolo, binários/patches DMR, serviços YSF/D-Star/MMDVMHost, RF, Wi-Fi, relógio, Direct, display/Nextion ou Ao Vivo. Build exige comparação do baseline, VPS, ARM64, SHA-256, descompressão/preflight e validador final.
+
+
+## 39. Ciclo 0.3.28-alpha — regressão de rede/protocolos e atualização de hosts — 2026-09-26
+
+### NET-034 — handoff local obrigatório sem sacrificar associação
+A associação Wi-Fi comprovada na 0.3.23 volta a ser o baseline de confiabilidade: timeout de associação/DHCP e tentativas não podem ser encurtados a ponto de impedir conexão/reboot. Scan e feedback podem ser rápidos, mas a associação real mantém a janela comprovada. Em uma sessão de navegador já aberta no wizard/painel, após Wi-Fi 1 ou Ethernet ganhar LAN o navegador deve reencontrar o hotspot por `pu2pny.local`/IPv4 e continuar automaticamente na configuração; quando Wi-Fi 2 assumir a conexão em sistema provisionado, a sessão aberta deve ir automaticamente para `/dashboard` (Ao Vivo). mDNS deve ser renovado a cada evento de link Ethernet/Wi-Fi. Um servidor não pode abrir um navegador que esteja fechado no computador do usuário; por isso o requisito técnico é handoff automático da sessão aberta + endpoints de captive portal/mDNS disponíveis sem ação manual.
+
+### NET-035 — listas públicas ao conectar e três vezes por dia
+Quando surgir conectividade de rede, iniciar em segundo plano a atualização validada das listas/hostfiles. Repetir automaticamente a cada 8 horas (3 vezes por dia), com lock para impedir execuções simultâneas, cache anterior preservado em falha e sem reiniciar MMDVMHost/gateways nem derrubar conexão ativa. Downloads continuam validados antes de substituir cache.
+
+### PROTO-045 — perfil selecionado volta automaticamente após boot/rede
+Em sistema provisionado, o protocolo salvo deve voltar à operação após boot e após recuperação da rede. Um reconciliador oneshot/event-driven só pode ativar o perfil salvo quando MMDVM/gateway correspondente não estiver ativo; se já estiver ativo, não reaplica e não reinicia. Helpers RF/gateways aprovados permanecem congelados.
+
+### LIVE-022 — box TX mostra ausência de servidor/perfil
+No Ao Vivo, dentro do box TX e sem TX ativo, mostrar estado real quando o gateway do protocolo selecionado estiver inativo ou sem conexão remota: `Perfil selecionado não está ativo` / ação para ativar, ou `Não conectado ao servidor`. Nunca mostrar conectado sem evidência real.
+
+### REL-023 — 0.3.27 rejeitada em HW; 0.3.28 é correção focal
+O teste físico de 26/09/2026 rejeitou a 0.3.27: Wi-Fi salvo não reconectou após reboot, handoff Ethernet não ocorreu automaticamente e protocolos não enviaram/receberam. A 0.3.28 corrige NET-034/035, PROTO-045 e LIVE-022 preservando DMR/D-Star/YSF aprovados e os requisitos APRS message-only/BrandMeister Security. Nenhuma aprovação SW da 0.3.27 pode sobrepor esse HW FAIL.
