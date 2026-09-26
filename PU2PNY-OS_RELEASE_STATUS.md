@@ -906,11 +906,15 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Estado real:** **ALPHA / PARA TESTE FÍSICO**. Reconhecimento da MMDVM específica e failover Wi-Fi 1→2 permanecem HW PENDENTE.
 
 
-## 0.3.27-alpha — auditoria de protocolos + APRS/BM Security — 2026-09-26
+## 0.3.27-alpha — publicada / para teste físico — 2026-09-26
 - **Base/rollback:** v0.3.26-alpha preservada; `backup/0.3.26-pre-0.3.27-20260926`.
-- **Escopo:** auditoria YSF/D-Star/DMR; correção APRS message-only; BrandMeister Hotspot Security segura/persistente.
+- **Commit da imagem:** `928bc063aeecabf6462469629fa18edef313c2c1`; prerelease `v0.3.27-alpha`.
+- **GitHub Actions:** run `36254445940` — source, staged source, ARM64, XZ/SHA-256, preflight, validador final, artefato e publish **PASS**.
+- **Imagem:** `PU2PNY-OS-0.3.27-alpha-arm64.img.xz` — **606874868 bytes**.
+- **SHA-256:** `a8077ae3f2855e37ff25124aa56f0de6c318e3bf272a0429f18418a438bd84c5`.
 - **YSF/D-Star/DMR runtime:** congelado byte a byte contra v0.3.26; nenhuma reescrita de gateways/RF.
-- **APRS:** daemon e UI passam a message-only; mensagens/ACK/REJ/retry permanecem.
-- **BrandMeister:** campo dedicado password, persistência privada, booleano de estado somente, reutilização segura e rollback.
-- **VPS parcial:** Go/Python/JS e auditoria byte a byte passaram; CI/imagem ainda PENDENTES neste ponto.
-- **HW:** Wires-X real, regressão simplex da imagem nova, DMR duplex e autenticação/ACK reais permanecem PENDENTES.
+- **APRS:** daemon/API/UI message-only; envio, recebimento, fila, ACK/REJ, retry e identificação preservados; posição/mapa/GPS/latitude/longitude/beacon removidos.
+- **BrandMeister:** campo dedicado Hotspot Security Password, type=password, persistência privada 0700/0600, reutilização segura; API/browser recebem somente booleano de estado, nunca o segredo.
+- **VPS/SentinelX WartyWallaby:** auditoria de protocolos, regressões 0.3.20/0.3.21, display 0.3.23, rede 0.3.25, foco 0.3.26, Go/Python/JS e testes APRS ACK/REJ **PASS**.
+- **Classificação real:** **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
+- **HW/NET PENDENTE:** Wires-X real e TX/RX YSF na nova imagem; regressão D-Star/DMR simplex na nova imagem; DMR duplex TX/RX/áudio/timeout; autenticação BrandMeister real/persistência após reboot; APRS-IS/ACK externo real.
