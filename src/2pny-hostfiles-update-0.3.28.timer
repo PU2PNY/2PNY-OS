@@ -1,0 +1,12 @@
+[Unit]
+Description=PU2PNY refresh public server and host lists three times a day
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=8h
+Persistent=true
+AccuracySec=1min
+Unit=2pny-hostfiles-update.service
+
+[Install]
+WantedBy=timers.target
