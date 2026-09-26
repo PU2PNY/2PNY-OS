@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+mkdir -p /run/2pny
+exec 9>/run/2pny/network-online-actions.lock
+flock -n 9 || exit 0
+
+# Let NetworkManager finish committing the address/route before local discovery.
+sleep 0.35
+/usr/local/sbin/2pny-mdns-guard >/dev/null 2>&1 || true
+
+# No polling loop: work is triggered by boot/NetworkManager events.
+if ip -4 route show default 2>/dev/null | grep -q '^default '; then
+  systemctl start --no-block 2pny-hostfiles-update.service >/dev/null 2>&1 || true
+  systemctl start --no-block 2pny-profile-autostart.service >/dev/null 2>&1 || true
+fi
+exit 0
