@@ -904,3 +904,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **Imagem:** `PU2PNY-OS-0.3.26-alpha-arm64.img.xz` — 606220720 bytes.
 - **SHA-256:** `ffa6f4d89dbc5d7c08791d81b82a366636a33207a3ff274742dbf4c7867851da`.
 - **Estado real:** **ALPHA / PARA TESTE FÍSICO**. Reconhecimento da MMDVM específica e failover Wi-Fi 1→2 permanecem HW PENDENTE.
+
+
+## 0.3.27-alpha — auditoria de protocolos + APRS/BM Security — 2026-09-26
+- **Base/rollback:** v0.3.26-alpha preservada; `backup/0.3.26-pre-0.3.27-20260926`.
+- **Escopo:** auditoria YSF/D-Star/DMR; correção APRS message-only; BrandMeister Hotspot Security segura/persistente.
+- **YSF/D-Star/DMR runtime:** congelado byte a byte contra v0.3.26; nenhuma reescrita de gateways/RF.
+- **APRS:** daemon e UI passam a message-only; mensagens/ACK/REJ/retry permanecem.
+- **BrandMeister:** campo dedicado password, persistência privada, booleano de estado somente, reutilização segura e rollback.
+- **VPS parcial:** Go/Python/JS e auditoria byte a byte passaram; CI/imagem ainda PENDENTES neste ponto.
+- **HW:** Wires-X real, regressão simplex da imagem nova, DMR duplex e autenticação/ACK reais permanecem PENDENTES.
