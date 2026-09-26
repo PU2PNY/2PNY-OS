@@ -1,0 +1,12 @@
+[Unit]
+Description=PU2PNY network-online reconciliation
+After=NetworkManager.service avahi-daemon.service
+Wants=avahi-daemon.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-network-online
+TimeoutStartSec=90
+
+[Install]
+WantedBy=multi-user.target
