@@ -1,0 +1,11 @@
+[Unit]
+Description=PU2PNY public server and host list refresh
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-hostfiles-update
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=8min
