@@ -876,13 +876,15 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 | ID | Requisito | Critério | Estado | Nível |
 |---|---|---|---|---|
-| TEST-NET-034A | NET-034 | conexão primária restaura janelas confiáveis da 0.3.23, perfil autoconnect persiste e mDNS roda em evento de link | EM TESTE | SW/VPS/CI |
+| TEST-NET-034A | NET-034 | conexão primária restaura janelas confiáveis da 0.3.23, perfil autoconnect persiste e mDNS roda em evento de link | **PASS** | SW/VPS/CI |
 | TEST-NET-034B | NET-034 | Wi-Fi AP→LAN continua wizard automaticamente em Raspberry real | PENDENTE | HW |
 | TEST-NET-034C | NET-034 | Ethernet com sessão aberta reencontra `pu2pny.local` e continua configuração sem buscar IP manualmente | PENDENTE | HW |
 | TEST-NET-034D | NET-034 | Wi-Fi 2 assume e sessão aberta redireciona para `/dashboard` | PENDENTE | HW |
-| TEST-NET-035A | NET-035 | hostfiles atualizam no evento online e timer Persistent executa a cada 8 h sem restart de gateway | EM TESTE | SW/VPS/CI |
-| TEST-PROTO-045A | PROTO-045 | perfil salvo é reativado somente quando gateway/MMDVM necessários estão inativos | EM TESTE | SW/VPS/CI |
+| TEST-NET-035A | NET-035 | hostfiles atualizam no evento online e timer Persistent executa a cada 8 h sem restart de gateway | **PASS** | SW/VPS/CI |
+| TEST-PROTO-045A | PROTO-045 | perfil salvo é reativado somente quando gateway/MMDVM necessários estão inativos | **PASS** | SW/VPS/CI |
 | TEST-PROTO-045B | PROTO-045 | DMR/D-Star/YSF TX/RX após reboot/rede na imagem nova | PENDENTE | HW |
-| TEST-LIVE-022A | LIVE-022 | box TX mostra perfil inativo ou servidor desconectado com ação para Protocolos usando estado real | EM TESTE | SW/CI |
-| TEST-REL-0328-A | REL-023 | helpers RF/DMR/D-Star/YSF permanecem iguais ao baseline protegido | EM TESTE | SW/CI |
-| TEST-REL-0328-B | REL-023 | ARM64 + XZ/SHA + preflight + validador + publish | PENDENTE | SW/CI |
+| TEST-LIVE-022A | LIVE-022 | box TX mostra perfil inativo ou servidor desconectado com ação para Protocolos usando estado real | **PASS** | SW/CI |
+| TEST-REL-0328-A | REL-023 | helpers RF/DMR/D-Star/YSF permanecem iguais ao baseline protegido | **PASS** | SW/CI |
+| TEST-REL-0328-B | REL-023 | ARM64 + XZ/SHA + preflight + validador + publish | **PASS — run 36260579797** | SW/CI |
+| TEST-REL-0328-C | REL-023 | artefato publicado e hash registrados | 594602484 bytes · SHA-256 `ea3d5619e891089e287ceea355d0c638222fa5d4ecbc223fdc119b791feecb6c` | **PASS** | SW/CI |
+| TEST-VPS-0328-A | REL-023 / TEST-008 | regressões e contratos 0.3.28 na tag exata | `NETWORK_RELIABILITY_0328_OK`, `REGRESSION_0328_OK`, `VPS_0328_ISOLATED_PASS`, `VPS_0328_PASS` | **PASS** | VPS |
