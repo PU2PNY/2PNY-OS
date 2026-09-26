@@ -836,3 +836,10 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Imagem: `PU2PNY-OS-0.3.27-alpha-arm64.img.xz`, 606874868 bytes.
 - SHA-256: `a8077ae3f2855e37ff25124aa56f0de6c318e3bf272a0429f18418a438bd84c5`.
 - Estado: **ALPHA / PARA TESTE FÍSICO**. Wires-X real, regressão simplex da nova imagem, DMR duplex, autenticação BrandMeister real e ACK APRS externo continuam pendentes de evidência HW/NET real.
+
+
+## 2026-09-26 — 0.3.27 rejeitada em HW e abertura da 0.3.28
+- Teste físico rejeitou a 0.3.27: Wi-Fi salvo não voltou após reboot; Ethernet exigiu localizar manualmente o IPv4 192.168.100.8; protocolos ficaram sem TX/RX.
+- Investigação mostrou que a 0.3.26 havia encurtado associação NetworkManager de 45 s para 14 s, DHCP candidato de 30 s para 12 s e retries persistentes de 3 para 2. Essa otimização deixa de ser baseline: confiabilidade da 0.3.23 volta a prevalecer.
+- Criado rollback `backup/0.3.27-rejected-pre-0.3.28-20260926` e branch `pu2pny-os-0.3.28-alpha`.
+- Novos requisitos permanentes: NET-034, NET-035, PROTO-045, LIVE-022 e REL-023.
