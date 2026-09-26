@@ -4,9 +4,22 @@
 
 Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desenvolvido com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa do que já foi aprovado.
 
-> **Imagem mais recente:** `0.3.27-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
+> **Imagem mais recente:** `0.3.28-alpha` — **ALPHA / PARA TESTE FÍSICO**. A 0.3.27 foi rejeitada em teste físico e não é baseline.
 
-**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.27-alpha/PU2PNY-OS-0.3.27-alpha-arm64.img.xz)** · **[Release 0.3.27](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.27-alpha)** · **[Auditoria dos protocolos](docs/PROTOCOL-AUDIT-0.3.27.md)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
+**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.28-alpha/PU2PNY-OS-0.3.28-alpha-arm64.img.xz)** · **[Release 0.3.28](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.28-alpha)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
+
+### Release 0.3.28-alpha
+
+- Commit da imagem: `6924abcc74e946f41c83a98c341c335c75855171`.
+- GitHub Actions: run `36260579797` — source, ARM64, XZ/SHA-256, preflight, validador final e publish **PASS**.
+- Rede: janelas de associação confiáveis restauradas; mDNS/eventos de link; Wi-Fi 2 preservado; hostfiles ao conectar + a cada 8 h.
+- Protocolos: runtime RF/gateways protegidos; perfil selecionado pode ser restaurado por reconciliador somente quando necessário.
+- Ao Vivo: estado real de perfil/servidor dentro do box TX.
+- APRS message-only e BrandMeister Hotspot Security permanecem na release.
+- Imagem: `PU2PNY-OS-0.3.28-alpha-arm64.img.xz` — 594602484 bytes.
+- SHA-256: `ea3d5619e891089e287ceea355d0c638222fa5d4ecbc223fdc119b791feecb6c`.
+
+O sucesso SW/CI/VPS não confirma TX/RX RF, Wires-X real, DMR duplex nem o handoff físico de rede. Esses pontos exigem seu teste no Raspberry/MMDVM.
 
 ## Release atual
 
