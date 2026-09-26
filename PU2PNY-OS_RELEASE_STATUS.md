@@ -931,3 +931,17 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Escopo: restaurar confiabilidade Wi-Fi 0.3.23, handoff local Wi-Fi/Ethernet, Wi-Fi 2→Ao Vivo, atualização hostfiles ao conectar + a cada 8 h, retomada segura do perfil selecionado e aviso no box TX.
 - DMR/D-Star/YSF helpers/RF ficam congelados; APRS message-only e BrandMeister Security permanecem.
 - Imagem só será publicada após VPS/CI/ARM64/XZ/SHA/preflight/validador final.
+
+
+## 0.3.28-alpha — PUBLICADA / PARA TESTE FÍSICO — 2026-09-26
+- **Commit exato da imagem:** `6924abcc74e946f41c83a98c341c335c75855171`.
+- **GitHub Actions:** run `36260579797` — source, staged source, build ARM64, XZ/SHA-256, preflight montado, validador final, artefato e publish **PASS**.
+- **VPS/SentinelX WartyWallaby:** tag exata `v0.3.28-alpha`; `NETWORK_RELIABILITY_0328_OK`, `REGRESSION_0328_OK`, `VPS_0328_ISOLATED_PASS` e `VPS_0328_PASS`.
+- **Imagem:** `PU2PNY-OS-0.3.28-alpha-arm64.img.xz` — 594602484 bytes.
+- **SHA-256:** `ea3d5619e891089e287ceea355d0c638222fa5d4ecbc223fdc119b791feecb6c`.
+- **NET-034:** associação Wi-Fi recupera as janelas comprovadas da 0.3.23 (45 s para associação, DHCP 30 s, retries 3), preservando scan/UI rápidos, Wi-Fi 2 e rollback.
+- **NET-035:** listas públicas/hostfiles iniciam em background quando a rede fica online e repetem a cada 8 horas com timer Persistent e lock; não reiniciam gateways/MMDVMHost.
+- **PROTO-045:** reconciliador event-driven tenta restaurar o perfil selecionado após boot/rede somente quando MMDVM/gateway necessário não está ativo; se já está saudável, não toca.
+- **LIVE-022:** box TX/Ao Vivo mostra `Perfil selecionado não está ativo` ou `Não conectado ao servidor` e oferece ativação do perfil quando aplicável.
+- **0.3.27:** permanece **REJEITADA EM HW** e não pode ser usada como baseline.
+- **Classificação:** **ALPHA / PARA TESTE FÍSICO**. Wi-Fi/Ethernet handoff real, Wi-Fi 2→Ao Vivo e TX/RX DMR/D-Star/YSF ainda dependem da validação física.
