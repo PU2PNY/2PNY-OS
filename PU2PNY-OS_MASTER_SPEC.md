@@ -1769,3 +1769,24 @@ Após confirmação do usuário para reiniciar, a página Sistema deve pintar im
 
 ### REL-021 — 0.3.26 é correção focal
 A 0.3.26-alpha herda integralmente a 0.3.25. O overlay pode substituir somente detector MMDVM, helpers/dispatcher Wi-Fi, página Internet, handler de feedback de reinício na página Sistema, backend de scan/versão e seus testes/build/docs. DMR, D-Star, YSF/C4FM, Direct, relógio, Nextion, frequências, offsets, baud efetivo do MMDVMHost, gateways e demais funções aprovadas ficam congelados. Toda imagem exige source/staging/ARM64/SHA/preflight/validador final antes de ser oferecida para HW.
+
+
+## 38. Ciclo 0.3.27-alpha — auditoria de protocolos, APRS message-only e BrandMeister Security — 2026-09-26
+
+### PROTO-041 — BrandMeister Hotspot Security persistente e não exposta
+Em Protocolos → DMR → BrandMeister deve existir campo visível `BrandMeister Hotspot Security Password`, tipo password. O segredo é persistido em armazenamento privado (diretório 0700, arquivo 0600), nunca integra Config pública, nunca é retornado por API/browser e nunca é registrado em logs. API pode informar somente booleano “configurada”. Campo vazio preserva/reutiliza o segredo existente; novo valor substitui apenas após aplicação válida. Backup/rollback transacional inclui o segredo. O runtime DMR simplex não pode ser alterado por esta função.
+
+### APRS-016 — APRS exclusivamente para mensagens
+A distribuição PU2PNY-OS usa APRS-IS somente para mensagens: envio, recebimento, fila persistente, ACK/REJ, retry limitado, identificação/callsign+SSID e notificações. Interface e daemon não podem publicar posição/beacon nem oferecer mapa, GPS, geolocalização, latitude, longitude ou tracking. Configuração legada deve ser sanitizada sem apagar campos necessários às mensagens.
+
+### PROTO-042 — YSF/C4FM/Wires-X auditado e congelado
+YSF/C4FM mantém o contrato aprovado MMDVMHost 3200↔4200 YSFGateway, `WiresXCommandPassthrough=0`, Startup resolvível por host real, `Reconnect=0`, `Revert=0`, suporte YSF/FCS. A auditoria 0.3.27 não encontrou regressão de fonte que justifique substituir esse runtime. Wires-X real pelo rádio na imagem nova permanece HW PENDENTE.
+
+### PROTO-043 — D-Star simplex e gateway auditados/congelados
+D-Star mantém loopback 20011↔20010, módulo RF local separado do remoto, DPlus/DExtra/DCS/XLX e hostfiles existentes. D-Star simplex fisicamente aprovado permanece baseline protegida; auditoria sem evidência de regressão não autoriza reescrita.
+
+### PROTO-044 — DMR auditado com isolamento simplex/duplex
+DMR simplex mantém caminho `simplex-protected`; ramo duplex continua restrito a `use_mode=repeater` com TS1/TS2 locais. DMRGateway, patches TG/voz, MMDVMHost e helpers de protocolo permanecem byte a byte iguais à v0.3.26 nesta release. DMR duplex TX/RX/áudio/timeout real permanece HW PENDENTE.
+
+### REL-022 — 0.3.27 é overlay limitado
+A 0.3.27 herda integralmente a 0.3.26. Só pode substituir backend necessário a APRS/segredo DMR, UI Protocolos/APRS, cliente APRS, catálogo i18n dessas telas, testes, workflow e documentação. É proibido substituir helpers de protocolo, binários/patches DMR, serviços YSF/D-Star/MMDVMHost, RF, Wi-Fi, relógio, Direct, display/Nextion ou Ao Vivo. Build exige comparação do baseline, VPS, ARM64, SHA-256, descompressão/preflight e validador final.
