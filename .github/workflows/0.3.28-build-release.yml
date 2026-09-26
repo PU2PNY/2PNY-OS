@@ -344,3 +344,15 @@ jobs:
             release/PU2PNY-OS-0.3.28-alpha-arm64.img.xz
             release/PU2PNY-OS-0.3.28-alpha-arm64.img.xz.sha256
             release/BUILD-INFO.txt
+      - name: Remove rejected 0.3.27 downloadable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view v0.3.27-alpha >/dev/null 2>&1; then
+            gh release delete v0.3.27-alpha --yes
+          fi
+          if gh release view v0.3.27-alpha >/dev/null 2>&1; then
+            echo "Rejected 0.3.27 release is still downloadable" >&2
+            exit 1
+          fi
