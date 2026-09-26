@@ -866,5 +866,7 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-APRS-016C | APRS-016 | mensagem/ACK real com APRS-IS externo | PENDENTE | HW/NET |
 | TEST-PROTO-041A | PROTO-041 | campo BM type=password, segredo 0600, booleano somente e reutilização segura | PASS | SW/VPS |
 | TEST-PROTO-041B | PROTO-041 | autenticação real BrandMeister e persistência após reboot | PENDENTE | HW/NET |
-| TEST-REL-0327-A | REL-022 | diff/overlay restrito aos arquivos autorizados | EM TESTE | SW/CI |
-| TEST-REL-0327-B | REL-022 | source → staging → ARM64 → SHA → preflight → validador → publish | PENDENTE | SW/CI |
+| TEST-REL-0327-A | REL-022 | diff/overlay restrito aos arquivos autorizados | **PASS** | SW/CI |
+| TEST-REL-0327-B | REL-022 | source → staging → ARM64 → SHA → preflight → validador → publish | **PASS run 36254445940** | SW/CI |
+| TEST-REL-0327-C | REL-022 | artefato publicado e integridade registrada | `PU2PNY-OS-0.3.27-alpha-arm64.img.xz`, 606874868 bytes, SHA-256 `a8077ae3f2855e37ff25124aa56f0de6c318e3bf272a0429f18418a438bd84c5` | **PASS** | SW/CI |
+| TEST-VPS-0327-A | TEST-008 / REL-022 | regressões/auditoria reproduzíveis sem RF em WartyWallaby | protocolos protegidos + regressões 0.3.20/0.3.21 + display 0.3.23 + rede 0.3.25 + foco 0.3.26 + Go/Python/JS + APRS ACK/REJ | **PASS** | VPS |
