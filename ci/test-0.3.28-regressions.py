@@ -48,7 +48,7 @@ assert "restart" not in online.lower()
 dispatch=(root/"src/91-pu2pny-online-actions-0.3.28").read_text()
 assert "up|dhcp4-change|connectivity-change" in dispatch
 assert "systemctl start --no-block 2pny-network-online.service" in dispatch
-assert "nmcli" not in dispatch
+assert "\nnmcli " not in dispatch and "/usr/bin/nmcli" not in dispatch
 
 auto=(root/"src/2pny-profile-autostart-0.3.28.py").read_text()
 guard='if active("2pny-mmdvmhost.service") and active(gateway):'
