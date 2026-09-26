@@ -4,21 +4,22 @@
 
 Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desenvolvido com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa do que já foi aprovado.
 
-> **Imagem mais recente:** `0.3.24-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
+> **Imagem mais recente:** `0.3.27-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é PROD.
 
-**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.24-alpha)** · **[Teste físico da tela](docs/DISPLAY-0.3.23-TESTE-FISICO.md)** · **[Pendências gerais](docs/ESTADO-ATUAL-0.3.22.md)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
+**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.27-alpha/PU2PNY-OS-0.3.27-alpha-arm64.img.xz)** · **[Release 0.3.27](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.27-alpha)** · **[Auditoria dos protocolos](docs/PROTOCOL-AUDIT-0.3.27.md)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
 
 ## Release atual
 
-- **Versão:** `0.3.24-alpha`; branch `pu2pny-os-0.3.24-alpha`.
-- **Commit da imagem:** `1a25e43e6997ea514c407f29e0e396d82d4c0bcb`.
-- **GitHub Actions:** [run 36134610081](https://github.com/PU2PNY/2PNY-OS/actions/runs/36134610081) — source, staging, ARM64, XZ/SHA-256, preflight, imagem final e publish **PASS (SW/CI)**.
-- **Correções focais:** relógio/fuso automático e manual seguro; idioma PT/EN/ES sem mistura; Direct primeiro com fallback relay criptografado e aceitação pelo rádio.
-- **Imagem:** [PU2PNY-OS-0.3.24-alpha-arm64.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.24-alpha/PU2PNY-OS-0.3.24-alpha-arm64.img.xz) — 592789908 bytes.
-- **SHA-256:** `996dd6c4a08eae9cb332f66e4a19cc83957ad314d1de5aa552825115504eb1ef`.
-- **Direct público:** serviço XLX026/UDP 43070 validado externamente em VPS/NET; RF/CGNAT real entre dois hotspots permanece HW PENDENTE.
+- **Versão:** `0.3.27-alpha`; branch `pu2pny-os-0.3.27-alpha`.
+- **Commit da imagem:** `928bc063aeecabf6462469629fa18edef313c2c1`.
+- **GitHub Actions:** [run 36254445940](https://github.com/PU2PNY/2PNY-OS/actions/runs/36254445940) — source, staging, ARM64, XZ/SHA-256, preflight, validador final, artefato e publish **PASS (SW/CI)**.
+- **Auditoria:** runtimes YSF/C4FM, D-Star e DMR permaneceram byte a byte protegidos; nenhuma reescrita de gateway/RF foi necessária.
+- **APRS:** somente mensagens; envio/recebimento, fila, ACK/REJ e retry preservados; posição/mapa/GPS/beacon removidos.
+- **BrandMeister:** campo Hotspot Security Password visível e seguro, segredo privado 0700/0600, reutilização sem devolver o valor ao navegador.
+- **Imagem:** [PU2PNY-OS-0.3.27-alpha-arm64.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.27-alpha/PU2PNY-OS-0.3.27-alpha-arm64.img.xz) — 606874868 bytes.
+- **SHA-256:** `a8077ae3f2855e37ff25124aa56f0de6c318e3bf272a0429f18418a438bd84c5`.
 
-O sucesso do CI não confirma RF, áudio, BER/RSSI, Nextion física, duplex nem a regressão simplex na nova imagem.
+O sucesso do CI/VPS não confirma RF, Wires-X real, áudio duplex, autenticação BrandMeister real nem ACK APRS externo. Esses itens permanecem **PENDENTES DE TESTE FÍSICO/REDE REAL**.
 
 ## Baseline protegido
 
