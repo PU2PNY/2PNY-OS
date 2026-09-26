@@ -98,7 +98,7 @@ jobs:
           ! grep -Fq 'cfg.get("latitude")' src/2pny-aprs-0.3.27.py
           ! grep -Fq 'cfg.get("longitude")' src/2pny-aprs-0.3.27.py
           # REL-023: 0.3.28 is a focal recovery overlay on the rejected 0.3.27 image.
-          git diff --name-only v0.3.28-alpha...HEAD > /tmp/changed-0328.txt
+          git diff --name-only v0.3.27-alpha...HEAD > /tmp/changed-0328.txt
           python3 - <<'PY'
           from pathlib import Path
           allowed={
