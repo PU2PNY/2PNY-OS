@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+IFACE="${1:-}"
+ACTION="${2:-}"
+case "$ACTION" in
+  up|dhcp4-change|connectivity-change) ;;
+  *) exit 0 ;;
+esac
+case "$IFACE" in
+  lo|"") exit 0 ;;
+esac
+# Never perform nmcli changes inside NetworkManager's dispatcher context.
+# Queue the reconciliation and return immediately.
+systemctl start --no-block 2pny-network-online.service >/dev/null 2>&1 || true
+exit 0
