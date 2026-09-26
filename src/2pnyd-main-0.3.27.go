@@ -2435,7 +2435,12 @@ func brandmeisterAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
 		return err == nil && st.Mode().IsRegular() && st.Size() > 0
 	}
 	if r.Method == http.MethodGet {
-		writeJSON(w, 200, map[string]any{"configured": configured()})
+		securityPath := filepath.Join(dataDir, "protocol-secrets", "dmr.secret")
+		securityConfigured := false
+		if st, err := os.Stat(securityPath); err == nil && st.Mode().IsRegular() && st.Size() > 0 {
+			securityConfigured = true
+		}
+		writeJSON(w, 200, map[string]any{"configured": configured(), "hotspot_security_configured": securityConfigured})
 		return
 	}
 	if r.Method != http.MethodPost || !sameOrigin(r) {
