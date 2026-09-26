@@ -817,3 +817,13 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Publicada prerelease `v0.3.26-alpha` no commit `fad9d4c7ca147e04520a9a09b64d2aa797d4e766`.
 - Imagem: `PU2PNY-OS-0.3.26-alpha-arm64.img.xz`, 606220720 bytes; SHA-256 `ffa6f4d89dbc5d7c08791d81b82a366636a33207a3ff274742dbf4c7867851da`.
 - MMDVM real específica e failover físico Wi-Fi 1→2 continuam **HW PENDENTE**; não foram promovidos por CI/VPS.
+
+
+## 2026-09-26 — abertura da 0.3.27-alpha
+- Criado rollback `backup/0.3.26-pre-0.3.27-20260926`.
+- Auditoria histórica/código de YSF/C4FM, D-Star e DMR concluiu que os runtimes atuais aprovados não devem ser reescritos; gates comparam helpers/serviços/patches à v0.3.26.
+- YSF: Wires-X local, portas e resolução de Startup preservados; operação real pelo rádio continua HW PENDENTE.
+- D-Star simplex e DMR simplex permanecem baselines físicas protegidas; DMR duplex continua isolado e HW PENDENTE.
+- APRS convertido para message-only no daemon/API/UI, preservando inbox/outbox/ACK/REJ/retries.
+- BrandMeister Hotspot Security recebe campo dedicado, persistência privada/rollback e reutilização sem devolver o segredo ao navegador.
+- Novo documento: `docs/PROTOCOL-AUDIT-0.3.27.md`.
