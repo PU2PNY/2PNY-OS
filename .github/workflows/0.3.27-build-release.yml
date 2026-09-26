@@ -190,7 +190,7 @@ jobs:
             rootfs-overlay/usr/local/sbin/2pny-dmr-duplex-diagnostics \
             rootfs-overlay/usr/local/sbin/2pny-rxoffset-apply
           bash -n rootfs-overlay/usr/local/sbin/2pny-hostfiles-update rootfs-overlay/usr/local/sbin/2pny-display-online-detect
-          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0\\.3\\.27-alpha"' src/2pnyd/main.go
+          grep -Eq 'appVersion[[:space:]]*=[[:space:]]*"0[.]3[.]27-alpha"' src/2pnyd/main.go
           grep -Fq 'id="bmSecurityPassword"' rootfs-overlay/usr/share/2pny/hotspot.html
           grep -Fq 'BrandMeister Hotspot Security Password' rootfs-overlay/usr/share/2pny/hotspot.html
           grep -Fq 'message_only' src/2pnyd/main.go
