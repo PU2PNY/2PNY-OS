@@ -827,3 +827,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - APRS convertido para message-only no daemon/API/UI, preservando inbox/outbox/ACK/REJ/retries.
 - BrandMeister Hotspot Security recebe campo dedicado, persistência privada/rollback e reutilização sem devolver o segredo ao navegador.
 - Novo documento: `docs/PROTOCOL-AUDIT-0.3.27.md`.
+
+### 2026-09-26 — 0.3.27-alpha publicada
+- O primeiro run 0.3.27 foi bloqueado antes da construção da imagem por um regex de versão incorretamente escapado no workflow; o gate foi corrigido sem alterar runtime de rádio.
+- GitHub Actions run `36254445940` concluiu source, staged source, build ARM64, XZ/SHA-256, preflight montado, validador final, artefato e publish em **PASS**.
+- VPS/SentinelX WartyWallaby confirmou auditoria byte a byte dos runtimes protegidos, regressões herdadas, sintaxe Go/Python/JS e testes APRS de mensagem/ACK/REJ em **PASS**.
+- Publicada prerelease `v0.3.27-alpha` no commit de imagem `928bc063aeecabf6462469629fa18edef313c2c1`.
+- Imagem: `PU2PNY-OS-0.3.27-alpha-arm64.img.xz`, 606874868 bytes.
+- SHA-256: `a8077ae3f2855e37ff25124aa56f0de6c318e3bf272a0429f18418a438bd84c5`.
+- Estado: **ALPHA / PARA TESTE FÍSICO**. Wires-X real, regressão simplex da nova imagem, DMR duplex, autenticação BrandMeister real e ACK APRS externo continuam pendentes de evidência HW/NET real.
