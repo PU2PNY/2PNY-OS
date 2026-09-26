@@ -32,7 +32,6 @@ w=replace_exact(w,'nm --wait 6 connection up uuid "$old_uuid" ifname "$iface"','
 w=replace_exact(w,"for _ in $(seq 1 8); do","for _ in $(seq 1 15); do","secondary confirm loop",1)
 w=replace_exact(w,"    sleep 0.5\n  done","    sleep 1\n  done","secondary confirm interval",1)
 w=replace_exact(w,"connection.autoconnect-priority 200 connection.autoconnect-retries 2","connection.autoconnect-priority 200 connection.autoconnect-retries 3","swapped primary retries")
-w=replace_exact(w,"connection.autoconnect-priority 150 connection.autoconnect-retries 2","connection.autoconnect-priority 150 connection.autoconnect-retries 3","swapped secondary retries")
 wifi.write_text(w)
 
 print("NETWORK_RELIABILITY_0328_OK")
