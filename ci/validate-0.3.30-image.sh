@@ -167,7 +167,12 @@ grep -Fq 'ScreenLayout 2' "$DISP"
 grep -Fq 'ScreenLayout 3' "$DISP"
 grep -Fq 'Modelo físico não identifica o HMI/layout' "$DISP"
 grep -Fq 'NextionDriver/L3 HS' "$DISP"
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'DISPLAY-024'
+# Go comments are not retained in the compiled binary. Validate the compiled
+# display-handler contract using runtime strings, while source/staged gates
+# separately require DISPLAY-024 and execute the patched handler build.
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'pu2pny-modern-v2'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'mmdvmhost-native'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'renderer de display inválido'
 test -x "$ROOT/usr/local/sbin/2pny-rxoffset-apply"
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-rxoffset-apply.path"
 grep -Fq '/api/rf/ber-calibration' "$ROOT/usr/share/2pny/hotspot.html" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/rf/ber-calibration'
