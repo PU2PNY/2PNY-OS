@@ -1,13 +1,12 @@
 # PU2PNY-OS — RELEASE STATUS
 
-**Branch de trabalho:** `pu2pny-os-0.3.20-alpha`  
-**Base preservada:** `pu2pny-os-0.3.19-alpha`  
-**Rollback do ciclo:** `backup/0.3.19-pre-0.3.20-20260922`  
-**Backup pré-organização documental:** `backup/0.3.20-pre-doc-governance-20260922`  
-**Data do último feedback físico incorporado:** 2026-09-22  
+**Branch de trabalho:** `pu2pny-os-0.3.29-alpha`  
+**Base preservada:** `pu2pny-os-0.3.28-alpha`  
+**Rollback do ciclo:** `backup/0.3.28-pre-0.3.29-20260927`  
+**Data do último ciclo incorporado:** 2026-09-27  
 **Estado global:** ALPHA / PARA TESTE FÍSICO. **Não PROD.**
 
-> As seções de versões anteriores abaixo são histórico de validação e regressão. O estado corrente é o bloco 0.3.20-alpha e os documentos canônicos indicados em START_HERE.
+> As seções de versões anteriores abaixo são histórico de validação e regressão. O estado corrente é o bloco 0.3.29-alpha e os documentos canônicos indicados em START_HERE.
 
 ## Baseline que não pode regredir
 
@@ -950,7 +949,7 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 ## 2026-09-27 — ciclo 0.3.29-alpha
 
 ### Estado
-**0.3.29-alpha — EM TESTE / ainda não classificada como HW aprovada.**
+**0.3.29-alpha — PUBLICADA / ALPHA / PARA TESTE FÍSICO.**
 
 - Base: branch `pu2pny-os-0.3.28-alpha`, com rollback `backup/0.3.28-pre-0.3.29-20260927`.
 - DMR simplex e D-Star simplex: baselines protegidas; nenhuma mudança de runtime autorizada.
@@ -960,3 +959,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Cross-mode: documentação/matriz e gate de hardware; nenhum daemon é habilitado na ausência do MMDVM-Transcoder.
 - Favicon: **BLOQUEADO** nesta rodada porque o repositório não contém um asset inequívoco do logo aprovado; não foi inventado novo logo.
 - Pendências HW: boot/AP/Wi-Fi, YSF Wires-X real, DMR/D-Star regressão RF, duplex, displays/Nextion, BER/RSSI e qualquer cross-mode de áudio.
+
+
+### 0.3.29-alpha — build/publicação concluídos — 2026-09-27
+- **Commit da imagem:** `db72b293246cdcfebd9a09c4d9d40eb1d91bad5e`.
+- **GitHub Actions:** run `36328999571` — source, staged source, ARM64, XZ/SHA-256, preflight montado, validador final, artefato e publish **PASS**.
+- **VPS/SentinelX:** `PATCH_0329_OK`, `REGRESSION_0329_OK`, diff protegido `PROTECTED_IDENTICAL` e sintaxe do JavaScript inline do Expert `EXPERT_INLINE_JS_OK`.
+- **Imagem:** `PU2PNY-OS-0.3.29-alpha-arm64.img.xz` — **598139288 bytes**.
+- **SHA-256:** `7135ef22a374cda74d7c4fd0d78cfa0a14460c1d6fc23b538d9e86a15c81d132`.
+- **Link verificado:** resposta final HTTP 200 e `Content-Length: 598139288`.
+- **Estado real:** SW/CI/VPS PASS. **Não é HW PASS**. Boot/AP→Wi-Fi, regressão DMR/D-Star/YSF RF, Wires-X real, duplex, display/Nextion e cross-mode de áudio permanecem pendentes/bloqueados conforme TEST_MATRIX.
