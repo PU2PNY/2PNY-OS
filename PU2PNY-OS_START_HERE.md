@@ -68,12 +68,13 @@ Não liberar como completa com requisito crítico ausente, regressão conhecida 
 - Enquanto a metadata do GitHub retornar `PU2PNY/2PNY-OS`, esse é o caminho real observado.
 - Título da aba: exatamente `PU2PNY-OS`.
 
-## Ciclo ativo — 0.3.20-alpha — 2026-09-22
+## Ciclo ativo — 0.3.29-alpha — 2026-09-27
 
-- Branch: `pu2pny-os-0.3.20-alpha`.
-- Base: `pu2pny-os-0.3.19-alpha`.
-- Rollback pré-ciclo: `backup/0.3.19-pre-0.3.20-20260922`.
-- Backup pré-organização documental: `backup/0.3.20-pre-doc-governance-20260922`.
-- DMR simplex e YSF/C4FM simplex permanecem baseline protegidos.
-- D-Star: novas configurações usam módulo local/RPT1 B, selecionável A–D; módulo remoto do refletor é independente; comando de rádio só promove estado efetivo após confirmação real do gateway.
-- 0.3.20 não pode ser divulgado como HW PASS sem os testes físicos pendentes.
+- Branch: `pu2pny-os-0.3.29-alpha`.
+- Base: `pu2pny-os-0.3.28-alpha`.
+- Rollback pré-ciclo: `backup/0.3.28-pre-0.3.29-20260927`.
+- Classificação: **ALPHA / PARA TESTE FÍSICO**; não é PROD.
+- Build/release SW/CI: **PASS** no run `36328999571`; imagem ARM64, XZ/SHA-256, preflight montado, validador final e publicação concluídos.
+- DMR simplex e D-Star simplex permanecem baselines protegidas; YSF/C4FM simplex aprovado anteriormente permanece congelado.
+- SSID de setup/recuperação: `PU2PNY-OS`; hostname normal `pu2pny.local`; fallback `10.43.0.1`.
+- Cross-mode de áudio não é habilitado sem MMDVM-Transcoder; Wires-X real, duplex, display e regressões RF da nova imagem continuam **HW PENDENTE**.
