@@ -46,22 +46,24 @@ if text.count(old_version)!=1:
     raise SystemExit("0.3.30 appVersion anchor missing/ambiguous")
 text=text.replace(old_version,new_version,1)
 
-handler_marker='\t\tif in.Renderer != "pu2pny-modern-v2" && in.Renderer != "mmdvmhost-native" {'
-model_marker='\t\tin.ModelProfile = strings.TrimSpace(in.ModelProfile)'
-handler_start=text.find(handler_marker)
-model_pos=text.find(model_marker,handler_start)
-if handler_start<0 or model_pos<0:
-    raise SystemExit("0.3.30 display handler boundary missing")
-segment=text[handler_start:model_pos]
-enabled_marker='\t\tif in.Enabled {'
-enabled_pos=segment.find(enabled_marker)
-if enabled_pos<0 or segment.count('in.Renderer = "mmdvmhost-native"')!=1:
-    raise SystemExit("0.3.30 forced-renderer block missing/ambiguous")
-prefix=segment[:enabled_pos]
-old_default='if in.Layout == 2 || in.Layout == 3 {'
-if prefix.count(old_default)!=1:
+default_old='if in.Layout == 2 || in.Layout == 3 { in.Renderer = "mmdvmhost-native" } else { in.Renderer = "pu2pny-modern-v2" }'
+default_new='if in.Layout == 0 || in.Layout == 2 || in.Layout == 3 { in.Renderer = "mmdvmhost-native" } else { in.Renderer = "pu2pny-modern-v2" }'
+if text.count(default_old)!=1:
     raise SystemExit("0.3.30 renderer default condition missing/ambiguous")
-prefix=prefix.replace(old_default,'if in.Layout == 0 || in.Layout == 2 || in.Layout == 3 {',1)
+text=text.replace(default_old,default_new,1)
+
+forced_old='''\t\tif in.Enabled {
+\t\t\t// DISPLAY-018: this endpoint controls Nextion through the modem.
+\t\t\t// Hardware validation regressed with the MQTT/vector bridge, so the
+\t\t\t// proven MMDVMHost-native writer is authoritative here.
+\t\t\tin.Renderer = "mmdvmhost-native"
+\t\t\tif in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }
+\t\t} else if in.Renderer == "pu2pny-modern-v2" {
+\t\t\tin.Layout = 9
+\t\t} else if in.Layout != 2 && in.Layout != 3 {
+\t\t\tin.Layout = 2
+\t\t}
+'''
 new_block='''\t\t// DISPLAY-024: honor the explicit display renderer selection. Both modes
 \t\t// keep MMDVMHost as the modem UART owner; 2pny-display-apply guarantees
 \t\t// exactly one logical writer and rolls back a failed transition.
@@ -77,7 +79,10 @@ new_block='''\t\t// DISPLAY-024: honor the explicit display renderer selection. 
 \t\t\tin.Layout = 2
 \t\t}
 '''
-text=text[:handler_start]+prefix+new_block+text[model_pos:]
+if text.count(forced_old)!=1:
+    raise SystemExit("0.3.30 forced-renderer block missing/ambiguous")
+text=text.replace(forced_old,new_block,1)
+
 main.write_text(text)
 
 (root/"rootfs-overlay/etc/2pny/version").write_text(version+"\n")
