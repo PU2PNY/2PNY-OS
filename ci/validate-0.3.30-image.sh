@@ -172,7 +172,7 @@ grep -Fq 'NextionDriver/L3 HS' "$DISP"
 # separately require DISPLAY-024 and execute the patched handler build.
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'pu2pny-modern-v2'
 strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'mmdvmhost-native'
-strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq 'renderer de display inválido'
+strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/display/override'
 test -x "$ROOT/usr/local/sbin/2pny-rxoffset-apply"
 test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-rxoffset-apply.path"
 grep -Fq '/api/rf/ber-calibration' "$ROOT/usr/share/2pny/hotspot.html" || strings "$ROOT/usr/local/bin/2pnyd" | grep -Fq '/api/rf/ber-calibration'
