@@ -1,8 +1,8 @@
 # PU2PNY-OS — RELEASE STATUS
 
-**Branch de trabalho:** `pu2pny-os-0.3.29-alpha`  
-**Base preservada:** `pu2pny-os-0.3.28-alpha`  
-**Rollback do ciclo:** `backup/0.3.28-pre-0.3.29-20260927`  
+**Branch de trabalho:** `pu2pny-os-0.3.30-alpha`  
+**Base preservada:** `pu2pny-os-0.3.29-alpha`  
+**Rollback do ciclo:** `backup/0.3.29-pre-0.3.30-display-20260927`  
 **Data do último ciclo incorporado:** 2026-09-27  
 **Estado global:** ALPHA / PARA TESTE FÍSICO. **Não PROD.**
 
@@ -969,3 +969,18 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **SHA-256:** `7135ef22a374cda74d7c4fd0d78cfa0a14460c1d6fc23b538d9e86a15c81d132`.
 - **Link verificado:** resposta final HTTP 200 e `Content-Length: 598139288`.
 - **Estado real:** SW/CI/VPS PASS. **Não é HW PASS**. Boot/AP→Wi-Fi, regressão DMR/D-Star/YSF RF, Wires-X real, duplex, display/Nextion e cross-mode de áudio permanecem pendentes/bloqueados conforme TEST_MATRIX.
+
+
+## 2026-09-27 — ciclo 0.3.30-alpha — display only
+
+### Estado
+**EM TESTE SW/CI/VPS — ainda sem imagem liberada.**
+
+- Base: head documentado da `pu2pny-os-0.3.29-alpha`.
+- Rollback: `backup/0.3.29-pre-0.3.30-display-20260927`.
+- Escopo autorizado: somente Display/Nextion/OLED/LCD, handler específico `/api/display/override`, CI/testes e documentação.
+- Protegido: DMR simplex, D-Star simplex, YSF/C4FM e todos os demais runtimes fora de display.
+- Diagnóstico: `cls 0` era emitido em todo render ativo; UI e backend discordavam sobre o renderer selecionado.
+- Implementação candidata: atualização incremental por componente, `COMOK` com metadados de hardware, hardware ≠ HMI, renderer selecionável e writer exclusivo.
+- TFT/HMI: nenhuma gravação automática.
+- HW: flicker, COMOK real, Nextion via modem/direta, OLED/LCD e persistência após reboot continuam **PENDENTE**.
