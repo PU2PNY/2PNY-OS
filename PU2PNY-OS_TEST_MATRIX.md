@@ -894,17 +894,22 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 | ID | Área | Teste | Nível | Estado | Evidência/critério |
 |---|---|---|---|---|---|
-| TEST-NET-036A | Rede | hostapd/API/wizard usam SSID `PU2PNY-OS`; hostname `pu2pny.local` preservado | SW/CI/VPS | EM TESTE | patch e gate 0.3.29; teste físico do AP ainda obrigatório |
+| TEST-NET-036A | Rede | hostapd/API/wizard usam SSID `PU2PNY-OS`; hostname `pu2pny.local` preservado | SW/CI/VPS | **PASS** | run `36328999571` + validador final; teste físico do AP ainda obrigatório |
 | TEST-NET-036B | Rede | boot limpo → AP `PU2PNY-OS` → Wi-Fi → retomada automática | HW | PENDENTE | somente Raspberry Pi real |
-| TEST-PROTO-046A | YSF | helpers/serviços YSF protegidos sem diff funcional vs 0.3.28 | SW/CI/VPS | EM TESTE | comparação byte a byte + regressões |
+| TEST-PROTO-046A | YSF | helpers/serviços YSF protegidos sem diff funcional vs 0.3.28 | SW/CI/VPS | **PASS** | `PROTECTED_IDENTICAL` + gates do run `36328999571` |
 | TEST-PROTO-046B | YSF/Wires-X | lista/comando/conectar/trocar/desconectar room pelo rádio, TX/RX e áudio | HW | PENDENTE | rádio + MMDVM real |
-| TEST-PROTO-047A | Cross-mode | sem transcoder, cross-mode permanece inativo e UI informa `Transcoder necessário` | SW/CI/VPS | EM TESTE | ausência de binário/serviço ativo + UI |
+| TEST-PROTO-047A | Cross-mode | sem transcoder, cross-mode permanece inativo e UI informa `Transcoder necessário` | SW/CI/VPS | **PASS** | imagem valida ausência de binário/serviço e presença do aviso; áudio continua HW BLOQUEADO |
 | TEST-PROTO-047B | Cross-mode | DMR↔YSF DN / DMR↔D-Star / YSF DN↔D-Star, dois sentidos, áudio/metadados | HW | BLOQUEADO | requer MMDVM-Transcoder/AMBE compatível |
 | TEST-RF-0329-DMR-S | DMR simplex | TX/RX/TG/CC/áudio sem regressão | HW | PENDENTE | baseline protegida deve ser revalidada na imagem nova |
 | TEST-RF-0329-DSTAR-S | D-Star simplex | TX/RX/reflector/áudio sem regressão | HW | PENDENTE | baseline protegida deve ser revalidada na imagem nova |
 | TEST-RF-0329-DUPLEX | Duplex | DMR TS1/TS2, D-Star e YSF duplex em hardware compatível | HW | PENDENTE | não inferir por service status |
 | TEST-DISPLAY-0329 | Display | autodetecção/COMOK/modelo desconhecido/reboot/persistência | HW | PENDENTE | Nextion/display físico |
-| TEST-UI-045A | Suporte | prévia local, identificador, copiar/baixar e ausência de envio automático | SW/CI/VPS | EM TESTE | gate da imagem + teste DOM/JS |
-| TEST-SEC-0329 | Segurança | relatório não contém password/passwd/token/secret/api_key | SW/CI/VPS | EM TESTE | validação automatizada do fluxo sanitizado |
-| TEST-UI-046 | UI | títulos das páginas = `PU2PNY-OS` | SW/CI/VPS | EM TESTE | varredura de HTML da imagem |
+| TEST-UI-045A | Suporte | prévia local, identificador, copiar/baixar e ausência de envio automático | SW/CI/VPS | **PASS** | gate da imagem + `EXPERT_INLINE_JS_OK`; uso no navegador físico ainda pode ser retestado |
+| TEST-SEC-0329 | Segurança | relatório usa somente campos públicos selecionados + endpoint de erros sanitizado; segredos não são retornados pela API | SW/CI/VPS | **PASS** | gates de segredo existentes + relatório local sem envio automático |
+| TEST-UI-046 | UI | títulos das páginas = `PU2PNY-OS` | SW/CI/VPS | **PASS** | varredura de todos os HTML da imagem no validador final |
 | TEST-FAV-0329 | UI | favicon usa logo aprovado | SW/HW | BLOQUEADO | nenhum arquivo de logo aprovado identificável no repositório atual; não inventar asset |
+
+
+| TEST-REL-0329-A | REL-024 | diff 0.3.28→0.3.29 limitado à allowlist; runtimes protegidos sem alteração | SW/CI/VPS | **PASS** | `PROTECTED_IDENTICAL`; 9 arquivos no diff pré-build |
+| TEST-REL-0329-B | REL-024 | source → staged → ARM64 → SHA → preflight → validador → publish | SW/CI | **PASS — run 36328999571** | todos os jobs concluídos com success |
+| TEST-REL-0329-C | REL-024 | artefato publicado, link HTTP 200 e hash confirmado | SW/CI/VPS | **PASS** | 598139288 bytes · SHA-256 `7135ef22a374cda74d7c4fd0d78cfa0a14460c1d6fc23b538d9e86a15c81d132` |
