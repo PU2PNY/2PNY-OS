@@ -22,13 +22,13 @@ Baixo uso de CPU/RAM, pouca escrita em SD, logs limitados/rotacionados, sem poll
 ## 2. Primeiro acesso, rede e wizard
 
 ### NET-001 — Acesso de setup
-SSID de setup: `pu2pny`; endereço local de setup `10.43.0.1`; acesso normal `http://pu2pny.local/`. O AP deve continuar recuperável se o provisionamento falhar.
+SSID de setup: `PU2PNY-OS`; endereço local de setup `10.43.0.1`; acesso normal `http://pu2pny.local/`. O AP deve continuar recuperável se o provisionamento falhar.
 
 ### NET-002 — Wi-Fi salvo precisa voltar conectado
 Ao selecionar SSID, informar senha e salvar, o sistema deve validar/salvar de forma transacional, reiniciar quando necessário e voltar conectado ao Wi-Fi escolhido. Em falha, preservar a configuração anterior e restaurar AP sem perda de acesso.
 
 ### NET-003 — Estado AP deve refletir a realidade
-Se o SSID `pu2pny` estiver efetivamente transmitindo, API/UI não podem afirmar "AP desligado". O estado deve ser derivado do runtime real, não apenas de arquivo de intenção.
+Se o SSID `PU2PNY-OS` estiver efetivamente transmitindo, API/UI não podem afirmar "AP desligado". O estado deve ser derivado do runtime real, não apenas de arquivo de intenção.
 
 ### NET-004 — Ethernet hotplug e mDNS
 Ethernet ligada depois do boot deve obter DHCP, atualizar o painel e anunciar `pu2pny.local` sem exigir descoberta manual do IP. O IP direto permanece fallback.
@@ -1808,3 +1808,24 @@ No Ao Vivo, dentro do box TX e sem TX ativo, mostrar estado real quando o gatewa
 
 ### REL-023 — 0.3.27 rejeitada em HW; 0.3.28 é correção focal
 O teste físico de 26/09/2026 rejeitou a 0.3.27: Wi-Fi salvo não reconectou após reboot, handoff Ethernet não ocorreu automaticamente e protocolos não enviaram/receberam. A 0.3.28 corrige NET-034/035, PROTO-045 e LIVE-022 preservando DMR/D-Star/YSF aprovados e os requisitos APRS message-only/BrandMeister Security. Nenhuma aprovação SW da 0.3.27 pode sobrepor esse HW FAIL.
+
+
+## 2026-09-27 — ciclo 0.3.29-alpha: identidade de setup, suporte e gate cross-mode
+
+### NET-036 — SSID canônico do primeiro acesso
+**APROVADO COMO REQUISITO / validação HW pendente.** A partir da 0.3.29-alpha, o AP de setup e recuperação deve anunciar exatamente `PU2PNY-OS`. O hostname normal continua `pu2pny.local` e o fallback local continua `10.43.0.1`. Esta mudança não autoriza alterar a lógica de associação/DHCP recuperada na 0.3.28.
+
+### PROTO-046 — YSF/C4FM permanece baseline protegida
+A 0.3.29 não altera os helpers/serviços YSF aprovados fisicamente na 0.3.24. Permanecem o contrato MMDVMHost 3200 ↔ YSFGateway 4200, `WiresXCommandPassthrough=0`, Startup resolvível e `Reconnect=0`/`Revert=0`. Wires-X real no rádio continua **HW PENDENTE**.
+
+### PROTO-047 — Gate de cross-mode e transcoder
+Cross-mode é complementar e nunca pode interceptar DMR/D-Star/YSF nativos quando não selecionado. A implementação nova upstream MMDVM-CrossMode depende de MMDVM-Transcoder; sem transcoder/vocoder fisicamente detectado e validado, a UI deve informar **Transcoder necessário** e o runtime cross-mode deve permanecer desabilitado. A versão inicial upstream cobre D-Star, DMR e YSF DN (além de FM); P25/NXDN não podem ser anunciados como disponíveis nessa fase. Qualquer direção exige validação HW dos dois sentidos antes de APROVADO.
+
+### UI-045 — Suporte e diagnóstico sob consentimento
+Expert deve oferecer o grupo de suporte PU2PNY-OS e geração local, sob demanda, de prévia sanitizada com identificador `PU2PNY-DIAG-...`. Nada é enviado automaticamente. O usuário revisa antes de copiar ou baixar; senha Wi-Fi, senha BrandMeister, tokens, API keys e secrets não podem ser incluídos.
+
+### UI-046 — Título canônico da aba
+Toda página operacional com elemento `<title>` deve usar exatamente `PU2PNY-OS`, sem versão, protocolo ou nome da página.
+
+### REL-024 — Escopo da 0.3.29-alpha
+Overlay cirúrgico sobre 0.3.28: NET-036, UI-045, UI-046 e documentação/gates de PROTO-047. Arquivos de runtime RF/DMR/D-Star/YSF ficam protegidos. Duplex, Wires-X físico, display físico e cross-mode de áudio permanecem HW PENDENTE até evidência real.
