@@ -945,3 +945,18 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **LIVE-022:** box TX/Ao Vivo mostra `Perfil selecionado não está ativo` ou `Não conectado ao servidor` e oferece ativação do perfil quando aplicável.
 - **0.3.27:** permanece **REJEITADA EM HW** e não pode ser usada como baseline.
 - **Classificação:** **ALPHA / PARA TESTE FÍSICO**. Wi-Fi/Ethernet handoff real, Wi-Fi 2→Ao Vivo e TX/RX DMR/D-Star/YSF ainda dependem da validação física.
+
+
+## 2026-09-27 — ciclo 0.3.29-alpha
+
+### Estado
+**0.3.29-alpha — EM TESTE / ainda não classificada como HW aprovada.**
+
+- Base: branch `pu2pny-os-0.3.28-alpha`, com rollback `backup/0.3.28-pre-0.3.29-20260927`.
+- DMR simplex e D-Star simplex: baselines protegidas; nenhuma mudança de runtime autorizada.
+- YSF/C4FM simplex: baseline HW anterior preservada; runtime não é reimplementado.
+- Setup: SSID canônico passa de `pu2pny` para `PU2PNY-OS`; `pu2pny.local` e `10.43.0.1` permanecem.
+- Suporte: Expert recebe link do grupo e relatório local sanitizado, com prévia antes de copiar/baixar e sem envio automático.
+- Cross-mode: documentação/matriz e gate de hardware; nenhum daemon é habilitado na ausência do MMDVM-Transcoder.
+- Favicon: **BLOQUEADO** nesta rodada porque o repositório não contém um asset inequívoco do logo aprovado; não foi inventado novo logo.
+- Pendências HW: boot/AP/Wi-Fi, YSF Wires-X real, DMR/D-Star regressão RF, duplex, displays/Nextion, BER/RSSI e qualquer cross-mode de áudio.
