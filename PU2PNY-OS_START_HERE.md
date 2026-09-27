@@ -68,13 +68,13 @@ Não liberar como completa com requisito crítico ausente, regressão conhecida 
 - Enquanto a metadata do GitHub retornar `PU2PNY/2PNY-OS`, esse é o caminho real observado.
 - Título da aba: exatamente `PU2PNY-OS`.
 
-## Ciclo ativo — 0.3.29-alpha — 2026-09-27
+## Ciclo ativo — 0.3.30-alpha — 2026-09-27
 
-- Branch: `pu2pny-os-0.3.29-alpha`.
-- Base: `pu2pny-os-0.3.28-alpha`.
-- Rollback pré-ciclo: `backup/0.3.28-pre-0.3.29-20260927`.
-- Classificação: **ALPHA / PARA TESTE FÍSICO**; não é PROD.
-- Build/release SW/CI: **PASS** no run `36328999571`; imagem ARM64, XZ/SHA-256, preflight montado, validador final e publicação concluídos.
-- DMR simplex e D-Star simplex permanecem baselines protegidas; YSF/C4FM simplex aprovado anteriormente permanece congelado.
-- SSID de setup/recuperação: `PU2PNY-OS`; hostname normal `pu2pny.local`; fallback `10.43.0.1`.
-- Cross-mode de áudio não é habilitado sem MMDVM-Transcoder; Wires-X real, duplex, display e regressões RF da nova imagem continuam **HW PENDENTE**.
+- Branch: `pu2pny-os-0.3.30-alpha`.
+- Base preservada: `pu2pny-os-0.3.29-alpha`.
+- Rollback pré-ciclo: `backup/0.3.29-pre-0.3.30-display-20260927`.
+- Escopo: **somente displays**. RF, DMR, D-Star, YSF/C4FM, rede, wizard, APRS, Direct, gateways, áudio, boot/update e demais runtimes ficam congelados.
+- Objetivo: atualização incremental sem flicker, identidade física por `connect/comok`, separação hardware ≠ HMI/layout, um writer por vez e fallback nativo G4KLX/ON7LDS 2/3.
+- Nenhum TFT/HMI é gravado automaticamente.
+- Estado inicial do ciclo: **EM TESTE SW/CI/VPS**. A release só pode virar ALPHA / PARA TESTE FÍSICO após ARM64 + SHA-256 + preflight + validador final + publicação.
+- Ausência de flicker, COMOK real, modelos físicos e comportamento no Nextion/OLED/LCD continuam **HW PENDENTE** até Raspberry Pi/MMDVM/display reais.
