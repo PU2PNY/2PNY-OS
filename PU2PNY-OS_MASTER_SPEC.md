@@ -1829,3 +1829,18 @@ Toda página operacional com elemento `<title>` deve usar exatamente `PU2PNY-OS`
 
 ### REL-024 — Escopo da 0.3.29-alpha
 Overlay cirúrgico sobre 0.3.28: NET-036, UI-045, UI-046 e documentação/gates de PROTO-047. Arquivos de runtime RF/DMR/D-Star/YSF ficam protegidos. Duplex, Wires-X físico, display físico e cross-mode de áudio permanecem HW PENDENTE até evidência real.
+
+
+## 2026-09-27 — ciclo 0.3.30-alpha: correção exclusiva de displays
+
+### DISPLAY-024 — Atualização incremental + identidade física/HMI separadas
+- O renderer Nextion PU2PNY deve executar limpeza total somente na primeira entrada ou em mudança real de página/estado. Dentro da mesma página, enviar somente componentes cujo conteúdo/estilo mudou.
+- `connect/comok` é a prova de comunicação física e deve expor, quando presentes na resposta real: modelo, firmware, MCU, serial e tamanho da flash. Esses dados **não identificam** o HMI/layout gravado.
+- Modelo físico e HMI/layout são estados separados. Layout desconhecido deve ser mostrado como desconhecido; nunca inferir PU2PNY/G4KLX/ON7LDS/WPSD apenas pelo modelo.
+- Nextion via MMDVM mantém a UART sob propriedade do MMDVMHost. Exatamente um renderer lógico pode estar ativo: `pu2pny-display-core` ou `mmdvmhost-native`.
+- O painel deve permitir PU2PNY Moderno V2 e fallback nativo G4KLX/ScreenLayout 0, ON7LDS L2/2 e ON7LDS L3/3. NextionDriver/L3 HS só pode ser oferecido quando o driver estiver realmente instalado e validado.
+- OLED/LCD existentes permanecem no Display Core; nenhuma alteração de RF/protocolo é autorizada.
+- Nenhum TFT/HMI pode ser gravado automaticamente. Futuro flash continua exigindo arquivo/modelo compatível, SHA-256 e confirmação explícita.
+
+### REL-025 — Escopo cirúrgico da 0.3.30-alpha
+A 0.3.30 é um overlay **display-only** sobre a 0.3.29. Somente fontes/helpers/UI de display, o trecho do handler `/api/display/override`, metadado de versão, testes/CI e documentação podem mudar. DMR simplex, D-Star simplex, YSF/C4FM, MMDVM/RF, rede/wizard, APRS, Direct, gateways, áudio, update/restore e demais runtimes devem permanecer byte-identical quando aplicável. Build exige gate de escopo, hashes de protegidos, testes SW/VPS, ARM64, SHA-256, preflight montado e validador final. Display físico permanece HW PENDENTE.
