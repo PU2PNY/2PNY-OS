@@ -919,10 +919,10 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 
 | ID | Área | Teste | Nível | Estado | Evidência/critério |
 |---|---|---|---|---|---|
-| TEST-DISPLAY-0330A | DISPLAY-024 | mesma página/estado não envia `cls`; somente campo alterado é enviado | SW/VPS | EM TESTE | teste automatizado `ci/test-0.3.30-display.py` |
-| TEST-DISPLAY-0330B | DISPLAY-024 | mudança real standby↔RX↔TX/TOT limpa uma vez e mantém frames MQTT ≤240 bytes | SW/VPS | EM TESTE | teste automatizado |
-| TEST-DISPLAY-0330C | DISPLAY-017/020/024 | parser `comok` separa modelo/firmware/MCU/serial/flash de HMI/layout desconhecido | SW/VPS | EM TESTE | teste automatizado |
-| TEST-DISPLAY-0330D | DISPLAY-016/018/024 | seleção PU2PNY vs MMDVMHost nativo 0/2/3 mantém um único writer | SW/CI/HW | EM TESTE | gate estrutural; confirmação física ainda obrigatória |
+| TEST-DISPLAY-0330A | DISPLAY-024 | mesma página/estado não envia `cls`; somente campo alterado é enviado | SW/VPS | PASS | `ci/test-0.3.30-display.py` + WartyWallaby |
+| TEST-DISPLAY-0330B | DISPLAY-024 | mudança real standby↔RX↔TX/TOT limpa uma vez e mantém frames MQTT ≤240 bytes | SW/VPS | PASS | teste automatizado + WartyWallaby |
+| TEST-DISPLAY-0330C | DISPLAY-017/020/024 | parser `comok` separa modelo/firmware/MCU/serial/flash de HMI/layout desconhecido | SW/VPS | PASS | teste automatizado + WartyWallaby |
+| TEST-DISPLAY-0330D | DISPLAY-016/018/024 | seleção PU2PNY vs MMDVMHost nativo 0/2/3 mantém um único writer | SW/CI/HW | PASS SW/CI / HW PENDENTE | staging `PROTECTED_IDENTICAL` + CI run 36341170897; confirmação física ainda obrigatória |
 | TEST-DISPLAY-0330E | DISPLAY-024 | boot/standby/RX/TX/TOT sem flicker e sem dados presos | HW | PENDENTE | Raspberry Pi + MMDVM + Nextion real |
 | TEST-DISPLAY-0330F | DISPLAY-017/024 | COMOK/modelo/tamanho/resolução/firmware/MCU/serial/flash reais | HW | PENDENTE | display real |
 | TEST-DISPLAY-0330G | DISPLAY-012/024 | OLED SSD1306/SH1106 e LCD HD44780/PCF8574 mantêm comportamento existente sem regressão | HW | PENDENTE | hardware real correspondente |
