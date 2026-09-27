@@ -913,3 +913,19 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0329-A | REL-024 | diff 0.3.28→0.3.29 limitado à allowlist; runtimes protegidos sem alteração | SW/CI/VPS | **PASS** | `PROTECTED_IDENTICAL`; 9 arquivos no diff pré-build |
 | TEST-REL-0329-B | REL-024 | source → staged → ARM64 → SHA → preflight → validador → publish | SW/CI | **PASS — run 36328999571** | todos os jobs concluídos com success |
 | TEST-REL-0329-C | REL-024 | artefato publicado, link HTTP 200 e hash confirmado | SW/CI/VPS | **PASS** | 598139288 bytes · SHA-256 `7135ef22a374cda74d7c4fd0d78cfa0a14460c1d6fc23b538d9e86a15c81d132` |
+
+
+## 2026-09-27 — ciclo 0.3.30-alpha — display only
+
+| ID | Área | Teste | Nível | Estado | Evidência/critério |
+|---|---|---|---|---|---|
+| TEST-DISPLAY-0330A | DISPLAY-024 | mesma página/estado não envia `cls`; somente campo alterado é enviado | SW/VPS | EM TESTE | teste automatizado `ci/test-0.3.30-display.py` |
+| TEST-DISPLAY-0330B | DISPLAY-024 | mudança real standby↔RX↔TX/TOT limpa uma vez e mantém frames MQTT ≤240 bytes | SW/VPS | EM TESTE | teste automatizado |
+| TEST-DISPLAY-0330C | DISPLAY-017/020/024 | parser `comok` separa modelo/firmware/MCU/serial/flash de HMI/layout desconhecido | SW/VPS | EM TESTE | teste automatizado |
+| TEST-DISPLAY-0330D | DISPLAY-016/018/024 | seleção PU2PNY vs MMDVMHost nativo 0/2/3 mantém um único writer | SW/CI/HW | EM TESTE | gate estrutural; confirmação física ainda obrigatória |
+| TEST-DISPLAY-0330E | DISPLAY-024 | boot/standby/RX/TX/TOT sem flicker e sem dados presos | HW | PENDENTE | Raspberry Pi + MMDVM + Nextion real |
+| TEST-DISPLAY-0330F | DISPLAY-017/024 | COMOK/modelo/tamanho/resolução/firmware/MCU/serial/flash reais | HW | PENDENTE | display real |
+| TEST-DISPLAY-0330G | DISPLAY-012/024 | OLED SSD1306/SH1106 e LCD HD44780/PCF8574 mantêm comportamento existente sem regressão | HW | PENDENTE | hardware real correspondente |
+| TEST-REL-0330A | REL-025 | diff 0.3.29→0.3.30 limitado à allowlist de display/CI/docs; protegidos byte-identical | SW/CI/VPS | EM TESTE | gate de escopo + `PROTECTED_IDENTICAL` |
+| TEST-REL-0330B | REL-025 | source → staged → ARM64 → SHA → preflight → validador → publish | SW/CI | PENDENTE | GitHub Actions |
+| TEST-REL-0330C | REL-025 | imagem publicada, link acessível e SHA-256 correspondente | SW/CI | PENDENTE | release final |
