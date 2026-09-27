@@ -69,3 +69,5 @@ assert "NextionDriver/L3 HS" in html
 print("DISPLAY_0330_INCREMENTAL_OK")
 print("DISPLAY_0330_COMOK_METADATA_OK")
 print("DISPLAY_0330_FALLBACK_OK")
+
+# CI trigger: workflow added after initial display-only commits.
