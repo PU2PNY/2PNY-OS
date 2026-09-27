@@ -46,11 +46,11 @@ if text.count(old_version)!=1:
     raise SystemExit("0.3.30 appVersion anchor missing/ambiguous")
 text=text.replace(old_version,new_version,1)
 
-default_old='if in.Layout == 2 || in.Layout == 3 { in.Renderer = "mmdvmhost-native" } else { in.Renderer = "pu2pny-modern-v2" }'
-default_new='if in.Layout == 0 || in.Layout == 2 || in.Layout == 3 { in.Renderer = "mmdvmhost-native" } else { in.Renderer = "pu2pny-modern-v2" }'
-if text.count(default_old)!=1:
+default_pattern=r'if\\s+in\\.Layout\\s*==\\s*2\\s*\\|\\|\\s*in\\.Layout\\s*==\\s*3\\s*\\{'
+default_repl='if in.Layout == 0 || in.Layout == 2 || in.Layout == 3 {'
+text,n=re.subn(default_pattern,default_repl,text,count=1)
+if n!=1:
     raise SystemExit("0.3.30 renderer default condition missing/ambiguous")
-text=text.replace(default_old,default_new,1)
 
 forced_old='''\t\tif in.Enabled {
 \t\t\t// DISPLAY-018: this endpoint controls Nextion through the modem.
