@@ -78,8 +78,8 @@ support_html = r'''
 </div></section>
 '''
 e=expert.read_text()
-marker='<section class="section"><div class="card"><h2>Detalhes técnicos</h2>'
-if marker not in e: raise SystemExit("expert insertion marker not found")
+marker='</main>'
+if marker not in e: raise SystemExit("expert main closing marker not found")
 e=e.replace(marker,support_html+"\n"+marker,1)
 js = r'''
 var diagText='',diagId='';
