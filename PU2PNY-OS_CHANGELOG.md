@@ -890,4 +890,6 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - UI passa a oferecer Moderno V2 ou fallback MMDVMHost nativo G4KLX/0, ON7LDS L2/2 e L3/3. NextionDriver/L3 HS não é anunciado como disponível sem instalação/validação.
 - Aplicador reforça exclusividade de writer. TFT/HMI permanece sem gravação automática.
 - Overlay calcula hashes de DMR/D-Star/YSF/rede/APRS/Direct e aborta se qualquer protegido mudar.
-- Estado: **EM TESTE**. Nenhum resultado físico foi promovido para PASS.
+- Validação concluída em SW/CI/VPS: WartyWallaby passou testes incrementais/COMOK/fallback/JS e staging `PROTECTED_IDENTICAL`; GitHub Actions run `36341170897` passou source, staging, ARM64, SHA-256, preflight, validador final, artifact e publish.
+- Publicada prerelease `v0.3.30-alpha` no commit `3ec9b8cd1228f1e722595ff5ff1e1de5bd70bb60`, SHA-256 da imagem `fa1cbb43c7497432972e4da852c3ce49277e8bebe9a18f4bdbdc52bf3423437b`.
+- Estado: **ALPHA / PARA TESTE FÍSICO**. Nenhum resultado físico foi promovido para PASS; flicker real, COMOK, Nextion/OLED/LCD, reboot/persistência e regressões RF permanecem HW PENDENTE.
