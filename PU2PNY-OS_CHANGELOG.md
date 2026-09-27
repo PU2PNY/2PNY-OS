@@ -867,3 +867,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Decisão UI-045: relatório técnico é local, sanitizado e sob ação explícita; sem telemetria/envio oculto.
 - Decisão UI-046: título de aba canônico `PU2PNY-OS`.
 - Nenhum favicon novo foi criado sem o asset aprovado.
+
+
+### 2026-09-27 — 0.3.29-alpha publicada
+- Primeiro run `36328675011` falhou antes do build da imagem porque o patch procurava um marcador visual antigo do Expert; nenhum artefato foi publicado nesse run.
+- O marcador foi corrigido para a estrutura staged real do Expert 0.3.19 sem tocar em runtime RF/gateways.
+- Run final `36328999571`: source, staging, ARM64, XZ/SHA-256, preflight, validador final, artefato e publish **PASS**.
+- SentinelX/VPS confirmou `PATCH_0329_OK`, `REGRESSION_0329_OK`, `PROTECTED_IDENTICAL` e `EXPERT_INLINE_JS_OK`.
+- Link da imagem validado por HTTP 200 com `Content-Length: 598139288`.
+- Imagem: `PU2PNY-OS-0.3.29-alpha-arm64.img.xz`.
+- SHA-256: `7135ef22a374cda74d7c4fd0d78cfa0a14460c1d6fc23b538d9e86a15c81d132`.
+- Classificação permanece **ALPHA / PARA TESTE FÍSICO**. Nenhum item RF/duplex/Wires-X/display/cross-mode foi promovido a HW PASS por CI.
