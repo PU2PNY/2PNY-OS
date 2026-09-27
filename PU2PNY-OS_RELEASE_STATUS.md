@@ -974,13 +974,16 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 ## 2026-09-27 — ciclo 0.3.30-alpha — display only
 
 ### Estado
-**EM TESTE SW/CI/VPS — ainda sem imagem liberada.**
+**ALPHA / PARA TESTE FÍSICO — SW/CI/VPS PASS; HW PENDENTE.**
 
 - Base: head documentado da `pu2pny-os-0.3.29-alpha`.
 - Rollback: `backup/0.3.29-pre-0.3.30-display-20260927`.
 - Escopo autorizado: somente Display/Nextion/OLED/LCD, handler específico `/api/display/override`, CI/testes e documentação.
 - Protegido: DMR simplex, D-Star simplex, YSF/C4FM e todos os demais runtimes fora de display.
 - Diagnóstico: `cls 0` era emitido em todo render ativo; UI e backend discordavam sobre o renderer selecionado.
-- Implementação candidata: atualização incremental por componente, `COMOK` com metadados de hardware, hardware ≠ HMI, renderer selecionável e writer exclusivo.
+- Implementação: atualização incremental por componente, `COMOK` com metadados de hardware, hardware ≠ HMI, renderer selecionável e writer exclusivo.
+- VPS: `DISPLAY_0330_INCREMENTAL_OK`, `DISPLAY_0330_COMOK_METADATA_OK`, `DISPLAY_0330_FALLBACK_OK`, JavaScript PASS e staging `PROTECTED_IDENTICAL`.
+- CI autoritativo: run `36341170897`, commit `3ec9b8cd1228f1e722595ff5ff1e1de5bd70bb60`; source, staging, ARM64, SHA-256, preflight, validador final, artifact e publish **PASS**.
+- Release: `v0.3.30-alpha`, prerelease publicada em 2026-09-27; imagem ARM64 593681200 bytes; SHA-256 `fa1cbb43c7497432972e4da852c3ce49277e8bebe9a18f4bdbdc52bf3423437b`.
 - TFT/HMI: nenhuma gravação automática.
-- HW: flicker, COMOK real, Nextion via modem/direta, OLED/LCD e persistência após reboot continuam **PENDENTE**.
+- HW: flicker real, COMOK físico, Nextion via modem/direta, OLED/LCD, persistência após reboot e regressão RF nesta imagem continuam **PENDENTE**. Nenhum item físico foi promovido para PASS.
