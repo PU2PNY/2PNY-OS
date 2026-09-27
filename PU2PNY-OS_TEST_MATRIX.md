@@ -888,3 +888,23 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0328-B | REL-023 | ARM64 + XZ/SHA + preflight + validador + publish | **PASS — run 36260579797** | SW/CI |
 | TEST-REL-0328-C | REL-023 | artefato publicado e hash registrados | 594602484 bytes · SHA-256 `ea3d5619e891089e287ceea355d0c638222fa5d4ecbc223fdc119b791feecb6c` | **PASS** | SW/CI |
 | TEST-VPS-0328-A | REL-023 / TEST-008 | regressões e contratos 0.3.28 na tag exata | `NETWORK_RELIABILITY_0328_OK`, `REGRESSION_0328_OK`, `VPS_0328_ISOLATED_PASS`, `VPS_0328_PASS` | **PASS** | VPS |
+
+
+## 2026-09-27 — ciclo 0.3.29-alpha
+
+| ID | Área | Teste | Nível | Estado | Evidência/critério |
+|---|---|---|---|---|---|
+| TEST-NET-036A | Rede | hostapd/API/wizard usam SSID `PU2PNY-OS`; hostname `pu2pny.local` preservado | SW/CI/VPS | EM TESTE | patch e gate 0.3.29; teste físico do AP ainda obrigatório |
+| TEST-NET-036B | Rede | boot limpo → AP `PU2PNY-OS` → Wi-Fi → retomada automática | HW | PENDENTE | somente Raspberry Pi real |
+| TEST-PROTO-046A | YSF | helpers/serviços YSF protegidos sem diff funcional vs 0.3.28 | SW/CI/VPS | EM TESTE | comparação byte a byte + regressões |
+| TEST-PROTO-046B | YSF/Wires-X | lista/comando/conectar/trocar/desconectar room pelo rádio, TX/RX e áudio | HW | PENDENTE | rádio + MMDVM real |
+| TEST-PROTO-047A | Cross-mode | sem transcoder, cross-mode permanece inativo e UI informa `Transcoder necessário` | SW/CI/VPS | EM TESTE | ausência de binário/serviço ativo + UI |
+| TEST-PROTO-047B | Cross-mode | DMR↔YSF DN / DMR↔D-Star / YSF DN↔D-Star, dois sentidos, áudio/metadados | HW | BLOQUEADO | requer MMDVM-Transcoder/AMBE compatível |
+| TEST-RF-0329-DMR-S | DMR simplex | TX/RX/TG/CC/áudio sem regressão | HW | PENDENTE | baseline protegida deve ser revalidada na imagem nova |
+| TEST-RF-0329-DSTAR-S | D-Star simplex | TX/RX/reflector/áudio sem regressão | HW | PENDENTE | baseline protegida deve ser revalidada na imagem nova |
+| TEST-RF-0329-DUPLEX | Duplex | DMR TS1/TS2, D-Star e YSF duplex em hardware compatível | HW | PENDENTE | não inferir por service status |
+| TEST-DISPLAY-0329 | Display | autodetecção/COMOK/modelo desconhecido/reboot/persistência | HW | PENDENTE | Nextion/display físico |
+| TEST-UI-045A | Suporte | prévia local, identificador, copiar/baixar e ausência de envio automático | SW/CI/VPS | EM TESTE | gate da imagem + teste DOM/JS |
+| TEST-SEC-0329 | Segurança | relatório não contém password/passwd/token/secret/api_key | SW/CI/VPS | EM TESTE | validação automatizada do fluxo sanitizado |
+| TEST-UI-046 | UI | títulos das páginas = `PU2PNY-OS` | SW/CI/VPS | EM TESTE | varredura de HTML da imagem |
+| TEST-FAV-0329 | UI | favicon usa logo aprovado | SW/HW | BLOQUEADO | nenhum arquivo de logo aprovado identificável no repositório atual; não inventar asset |
