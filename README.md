@@ -4,35 +4,25 @@
 
 Sistema operacional/appliance próprio para Raspberry Pi e hotspots MMDVM, desenvolvido com foco em baixo consumo, configuração sem terminal, operação multiprotocolo, diagnóstico, rollback e preservação rigorosa do que já foi aprovado.
 
-> **Imagem mais recente:** `0.3.28-alpha` — **ALPHA / PARA TESTE FÍSICO**. A 0.3.27 foi rejeitada em teste físico e não é baseline.
+> **Imagem mais recente:** `0.3.29-alpha` — **ALPHA / PARA TESTE FÍSICO**. Não é HW PASS nem PROD.
 
-**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.28-alpha/PU2PNY-OS-0.3.28-alpha-arm64.img.xz)** · **[Release 0.3.28](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.28-alpha)** · **[Configuração do projeto](docs/CONFIGURACAO-DESTE-PROJETO.md)**
+**[Baixar imagem ARM64](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.29-alpha/PU2PNY-OS-0.3.29-alpha-arm64.img.xz)** · **[SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.29-alpha/PU2PNY-OS-0.3.29-alpha-arm64.img.xz.sha256)** · **[Release 0.3.29](https://github.com/PU2PNY/2PNY-OS/releases/tag/v0.3.29-alpha)**
 
-### Release 0.3.28-alpha
+### Release 0.3.29-alpha
 
-- Commit da imagem: `6924abcc74e946f41c83a98c341c335c75855171`.
-- GitHub Actions: run `36260579797` — source, ARM64, XZ/SHA-256, preflight, validador final e publish **PASS**.
-- Rede: janelas de associação confiáveis restauradas; mDNS/eventos de link; Wi-Fi 2 preservado; hostfiles ao conectar + a cada 8 h.
-- Protocolos: runtime RF/gateways protegidos; perfil selecionado pode ser restaurado por reconciliador somente quando necessário.
-- Ao Vivo: estado real de perfil/servidor dentro do box TX.
-- APRS message-only e BrandMeister Hotspot Security permanecem na release.
-- Imagem: `PU2PNY-OS-0.3.28-alpha-arm64.img.xz` — 594602484 bytes.
-- SHA-256: `ea3d5619e891089e287ceea355d0c638222fa5d4ecbc223fdc119b791feecb6c`.
+- Commit da imagem: `db72b293246cdcfebd9a09c4d9d40eb1d91bad5e`.
+- GitHub Actions: run `36328999571` — source, staged source, ARM64, XZ/SHA-256, preflight, validador final e publish **PASS**.
+- VPS/SentinelX: patch/regressão, proteção de runtimes e JavaScript inline do Expert **PASS**.
+- Setup: SSID inicial/recuperação agora é exatamente `PU2PNY-OS`; `pu2pny.local` e `10.43.0.1` foram preservados.
+- DMR simplex, D-Star simplex e runtime YSF/C4FM permanecem protegidos; nenhuma correção deste ciclo reescreveu esses caminhos.
+- Expert: grupo de suporte + diagnóstico local sanitizado com prévia, copiar/baixar e sem envio automático.
+- Cross-mode: **não habilitado sem MMDVM-Transcoder**; a UI informa `Transcoder necessário` em vez de fingir áudio compatível.
+- Título das abas: `PU2PNY-OS`.
+- Favicon: não alterado porque nenhum asset inequívoco do logo aprovado foi localizado no repositório.
+- Imagem: `PU2PNY-OS-0.3.29-alpha-arm64.img.xz` — **598139288 bytes**.
+- SHA-256: `7135ef22a374cda74d7c4fd0d78cfa0a14460c1d6fc23b538d9e86a15c81d132`.
 
-O sucesso SW/CI/VPS não confirma TX/RX RF, Wires-X real, DMR duplex nem o handoff físico de rede. Esses pontos exigem seu teste no Raspberry/MMDVM.
-
-## Release atual
-
-- **Versão:** `0.3.27-alpha`; branch `pu2pny-os-0.3.27-alpha`.
-- **Commit da imagem:** `928bc063aeecabf6462469629fa18edef313c2c1`.
-- **GitHub Actions:** [run 36254445940](https://github.com/PU2PNY/2PNY-OS/actions/runs/36254445940) — source, staging, ARM64, XZ/SHA-256, preflight, validador final, artefato e publish **PASS (SW/CI)**.
-- **Auditoria:** runtimes YSF/C4FM, D-Star e DMR permaneceram byte a byte protegidos; nenhuma reescrita de gateway/RF foi necessária.
-- **APRS:** somente mensagens; envio/recebimento, fila, ACK/REJ e retry preservados; posição/mapa/GPS/beacon removidos.
-- **BrandMeister:** campo Hotspot Security Password visível e seguro, segredo privado 0700/0600, reutilização sem devolver o valor ao navegador.
-- **Imagem:** [PU2PNY-OS-0.3.27-alpha-arm64.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.27-alpha/PU2PNY-OS-0.3.27-alpha-arm64.img.xz) — 606874868 bytes.
-- **SHA-256:** `a8077ae3f2855e37ff25124aa56f0de6c318e3bf272a0429f18418a438bd84c5`.
-
-O sucesso do CI/VPS não confirma RF, Wires-X real, áudio duplex, autenticação BrandMeister real nem ACK APRS externo. Esses itens permanecem **PENDENTES DE TESTE FÍSICO/REDE REAL**.
+Continuam **HW PENDENTE/BLOQUEADO**: boot limpo/AP→Wi-Fi no Raspberry real, regressão RF DMR/D-Star/YSF na nova imagem, Wires-X pelo rádio, DMR/D-Star/YSF duplex, displays/Nextion, BER/RSSI real e qualquer cross-mode de áudio.
 
 ## Baseline protegido
 
@@ -149,7 +139,7 @@ Não promover esses itens para HW PASS apenas porque CI/VPS passou.
 
 Conforme `NET-001`:
 
-- SSID de setup: `pu2pny`
+- SSID de setup: `PU2PNY-OS`
 - endereço local do setup: `10.43.0.1`
 - acesso normal: `http://pu2pny.local/`
 - o AP deve permanecer recuperável se o provisionamento falhar.
