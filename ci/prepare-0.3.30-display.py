@@ -52,18 +52,16 @@ text,n=re.subn(default_pattern,default_repl,text,count=1)
 if n!=1:
     raise SystemExit("0.3.30 renderer default condition missing/ambiguous")
 
-forced_old='''\t\tif in.Enabled {
-\t\t\t// DISPLAY-018: this endpoint controls Nextion through the modem.
-\t\t\t// Hardware validation regressed with the MQTT/vector bridge, so the
-\t\t\t// proven MMDVMHost-native writer is authoritative here.
-\t\t\tin.Renderer = "mmdvmhost-native"
-\t\t\tif in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }
-\t\t} else if in.Renderer == "pu2pny-modern-v2" {
-\t\t\tin.Layout = 9
-\t\t} else if in.Layout != 2 && in.Layout != 3 {
-\t\t\tin.Layout = 2
-\t\t}
-'''
+forced_comment='// DISPLAY-018: this endpoint controls Nextion through the modem.'
+comment_pos=text.find(forced_comment)
+forced_start=text.rfind('\t\tif in.Enabled {',0,comment_pos)
+model_marker='\t\tin.ModelProfile = strings.TrimSpace(in.ModelProfile)'
+forced_end=text.find(model_marker,comment_pos)
+if comment_pos<0 or forced_start<0 or forced_end<0:
+    raise SystemExit("0.3.30 forced-renderer block missing/ambiguous")
+forced_segment=text[forced_start:forced_end]
+if forced_segment.count('in.Renderer = "mmdvmhost-native"')!=1:
+    raise SystemExit("0.3.30 forced-renderer assignment missing/ambiguous")
 new_block='''\t\t// DISPLAY-024: honor the explicit display renderer selection. Both modes
 \t\t// keep MMDVMHost as the modem UART owner; 2pny-display-apply guarantees
 \t\t// exactly one logical writer and rolls back a failed transition.
@@ -79,9 +77,7 @@ new_block='''\t\t// DISPLAY-024: honor the explicit display renderer selection. 
 \t\t\tin.Layout = 2
 \t\t}
 '''
-if text.count(forced_old)!=1:
-    raise SystemExit("0.3.30 forced-renderer block missing/ambiguous")
-text=text.replace(forced_old,new_block,1)
+text=text[:forced_start]+new_block+text[forced_end:]
 
 main.write_text(text)
 
