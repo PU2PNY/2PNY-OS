@@ -926,6 +926,6 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-DISPLAY-0330E | DISPLAY-024 | boot/standby/RX/TX/TOT sem flicker e sem dados presos | HW | PENDENTE | Raspberry Pi + MMDVM + Nextion real |
 | TEST-DISPLAY-0330F | DISPLAY-017/024 | COMOK/modelo/tamanho/resolução/firmware/MCU/serial/flash reais | HW | PENDENTE | display real |
 | TEST-DISPLAY-0330G | DISPLAY-012/024 | OLED SSD1306/SH1106 e LCD HD44780/PCF8574 mantêm comportamento existente sem regressão | HW | PENDENTE | hardware real correspondente |
-| TEST-REL-0330A | REL-025 | diff 0.3.29→0.3.30 limitado à allowlist de display/CI/docs; protegidos byte-identical | SW/CI/VPS | EM TESTE | gate de escopo + `PROTECTED_IDENTICAL` |
-| TEST-REL-0330B | REL-025 | source → staged → ARM64 → SHA → preflight → validador → publish | SW/CI | PENDENTE | GitHub Actions |
-| TEST-REL-0330C | REL-025 | imagem publicada, link acessível e SHA-256 correspondente | SW/CI | PENDENTE | release final |
+| TEST-REL-0330A | REL-025 | diff 0.3.29→0.3.30 limitado à allowlist de display/CI/docs; protegidos byte-identical | SW/CI/VPS | PASS | compare + `PROTECTED_IDENTICAL` na VPS e CI |
+| TEST-REL-0330B | REL-025 | source → staged → ARM64 → SHA → preflight → validador → publish | SW/CI | PASS | GitHub Actions run `36341170897` |
+| TEST-REL-0330C | REL-025 | imagem publicada, link acessível e SHA-256 correspondente | SW/CI | PASS | prerelease `v0.3.30-alpha`; SHA-256 `fa1cbb43c7497432972e4da852c3ce49277e8bebe9a18f4bdbdc52bf3423437b` |
