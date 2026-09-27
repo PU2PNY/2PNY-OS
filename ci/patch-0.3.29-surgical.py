@@ -90,7 +90,7 @@ async function buildSupportDiagnostic(){
     var dash=await PNY.getj('/api/dashboard',null,6000), dg=await PNY.getj('/api/diagnostics',null,6000);
     var err='';try{var rr=await fetch('/api/diagnostics/errors/download',{cache:'no-store'});if(rr.ok)err=await rr.text()}catch(_){}
     var now=new Date(),cfg=dash.config||{},hw=dash.hardware||{},m=hw.mmdvm||{},cn=dash.connectivity||{},dr=dash.display_runtime||{};
-    diagId='PU2PNY-DIAG-'+now.toISOString().slice(0,10).replaceAll('-','')+'-'+now.toISOString().slice(11,19).replaceAll(':','');
+    diagId='PU2PNY-DIAG-'+now.toISOString().slice(0,10).replace(/-/g,'')+'-'+now.toISOString().slice(11,19).replace(/:/g,'');
     var lines=[
       diagId,'generated_utc: '+now.toISOString(),'version: '+diagScalar(dash.version),
       'callsign: '+diagScalar(cfg.callsign),'protocol: '+diagScalar(cfg.protocol),'use_mode: '+diagScalar(cfg.use_mode),
