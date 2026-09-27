@@ -76,5 +76,5 @@ Não liberar como completa com requisito crítico ausente, regressão conhecida 
 - Escopo: **somente displays**. RF, DMR, D-Star, YSF/C4FM, rede, wizard, APRS, Direct, gateways, áudio, boot/update e demais runtimes ficam congelados.
 - Objetivo: atualização incremental sem flicker, identidade física por `connect/comok`, separação hardware ≠ HMI/layout, um writer por vez e fallback nativo G4KLX/ON7LDS 2/3.
 - Nenhum TFT/HMI é gravado automaticamente.
-- Estado inicial do ciclo: **EM TESTE SW/CI/VPS**. A release só pode virar ALPHA / PARA TESTE FÍSICO após ARM64 + SHA-256 + preflight + validador final + publicação.
-- Ausência de flicker, COMOK real, modelos físicos e comportamento no Nextion/OLED/LCD continuam **HW PENDENTE** até Raspberry Pi/MMDVM/display reais.
+- Estado atual: **ALPHA / PARA TESTE FÍSICO**. SW/CI/VPS PASS no run `36341170897`; ARM64, SHA-256, preflight, validador final, artifact e publish passaram. Release `v0.3.30-alpha` aponta ao commit validado `3ec9b8cd1228f1e722595ff5ff1e1de5bd70bb60`.
+- Ausência de flicker, COMOK real, modelos físicos e comportamento no Nextion/OLED/LCD continuam **HW PENDENTE** até Raspberry Pi/MMDVM/display reais. DMR/D-Star/YSF e demais baselines RF também exigem regressão física nesta imagem antes de qualquer promoção para HW PASS.
