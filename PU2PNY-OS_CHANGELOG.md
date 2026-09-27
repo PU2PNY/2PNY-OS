@@ -856,3 +856,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Publicada `v0.3.28-alpha`, commit da imagem `6924abcc74e946f41c83a98c341c335c75855171`.
 - Imagem `PU2PNY-OS-0.3.28-alpha-arm64.img.xz`, 594602484 bytes, SHA-256 `ea3d5619e891089e287ceea355d0c638222fa5d4ecbc223fdc119b791feecb6c`.
 - Estado correto: **ALPHA / PARA TESTE FÍSICO**. 0.3.27 continua rejeitada em HW.
+
+
+## 2026-09-27 — 0.3.29-alpha
+
+- Criado rollback `backup/0.3.28-pre-0.3.29-20260927` e branch `pu2pny-os-0.3.29-alpha`.
+- Decisão NET-036: SSID de setup/recuperação passa a `PU2PNY-OS`, preservando hostname `pu2pny.local`, IP `10.43.0.1` e lógica de rede da 0.3.28.
+- Decisão PROTO-046: YSF/C4FM funcional permanece congelado; Wires-X físico continua pendente.
+- Decisão PROTO-047: não habilitar MMDVM-CrossMode sem MMDVM-Transcoder comprovado; não declarar P25/NXDN no programa inicial upstream.
+- Decisão UI-045: relatório técnico é local, sanitizado e sob ação explícita; sem telemetria/envio oculto.
+- Decisão UI-046: título de aba canônico `PU2PNY-OS`.
+- Nenhum favicon novo foi criado sem o asset aprovado.
