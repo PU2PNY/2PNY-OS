@@ -878,3 +878,16 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Imagem: `PU2PNY-OS-0.3.29-alpha-arm64.img.xz`.
 - SHA-256: `7135ef22a374cda74d7c4fd0d78cfa0a14460c1d6fc23b538d9e86a15c81d132`.
 - Classificação permanece **ALPHA / PARA TESTE FÍSICO**. Nenhum item RF/duplex/Wires-X/display/cross-mode foi promovido a HW PASS por CI.
+
+
+## 2026-09-27 — abertura 0.3.30-alpha — somente displays
+
+- Criados rollback `backup/0.3.29-pre-0.3.30-display-20260927` e branch `pu2pny-os-0.3.30-alpha`.
+- Registrados **DISPLAY-024** e **REL-025**.
+- Diagnóstico objetivo: o renderer PU2PNY 0.3.21 executava `cls 0` em toda atualização ativa, produzindo redesenho integral e risco direto de flicker. A UI de Display também forçava Moderno V2 enquanto o handler backend ainda forçava o renderer nativo, tornando a seleção incoerente.
+- Correção proposta: cache de componentes Nextion com limpeza somente em transição de página/estado; campos inalterados não são retransmitidos.
+- Detector passa a publicar metadados reais da resposta `comok` (modelo/firmware/MCU/serial/flash) sem inferir HMI/layout.
+- UI passa a oferecer Moderno V2 ou fallback MMDVMHost nativo G4KLX/0, ON7LDS L2/2 e L3/3. NextionDriver/L3 HS não é anunciado como disponível sem instalação/validação.
+- Aplicador reforça exclusividade de writer. TFT/HMI permanece sem gravação automática.
+- Overlay calcula hashes de DMR/D-Star/YSF/rede/APRS/Direct e aborta se qualquer protegido mudar.
+- Estado: **EM TESTE**. Nenhum resultado físico foi promovido para PASS.
