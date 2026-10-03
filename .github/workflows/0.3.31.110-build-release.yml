@@ -154,9 +154,15 @@ jobs:
           sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart src/2pny-profile-autostart-0.3.31.110.py
           sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-proven src/2pny-profile-proven-0.3.31.110.py
           sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.110'
-          sudo python3 -m py_compile \
-            /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart \
-            /mnt/pu2pny-root/usr/local/sbin/2pny-profile-proven
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          for p in (
+              Path('/mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart'),
+              Path('/mnt/pu2pny-root/usr/local/sbin/2pny-profile-proven'),
+          ):
+              compile(p.read_text(), str(p), 'exec')
+          print('READONLY_PYTHON_SYNTAX_OK')
+          PY
           sudo umount /mnt/pu2pny-root
           sudo losetup -d "$LOOP"
           trap - EXIT
