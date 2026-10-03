@@ -1,0 +1,220 @@
+name: Build and release PU2PNY-OS 0.3.31.110
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.31.110 ]
+    paths:
+      - 'ci/patch-image-0.3.31.110.sh'
+      - 'ci/test-0.3.31.110-mmdvm-autostart.py'
+      - '.github/workflows/0.3.31.110-build-release.yml'
+      - 'docs/HOTFIX-0.3.31.110.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.31.110
+  cancel-in-progress: true
+
+env:
+  VERSION: 0.3.31.110
+  BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31-alpha/PU2PNY-OS-0.3.31-alpha-arm64.img.xz
+  BASE_SHA256: 81df6dc69f10b48ddd8bf0d0f87a927664609e29e3d830975f9fe0babf507ea3
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Static hotfix gates
+        run: |
+          set -euo pipefail
+          python3 ci/test-0.3.31.110-mmdvm-autostart.py
+          python3 -m py_compile src/2pny-profile-autostart-0.3.28.py src/2pny-profile-autostart-0.3.31.py
+          bash -n ci/patch-image-0.3.31.110.sh
+          git fetch origin pu2pny-os-0.3.31-alpha
+          git diff --name-only origin/pu2pny-os-0.3.31-alpha...HEAD > /tmp/changed-031110.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          allowed={
+            '.github/workflows/0.3.31.110-build-release.yml',
+            'ci/patch-image-0.3.31.110.sh',
+            'ci/test-0.3.31.110-mmdvm-autostart.py',
+            'docs/HOTFIX-0.3.31.110.md',
+          }
+          changed=[x.strip() for x in Path('/tmp/changed-031110.txt').read_text().splitlines() if x.strip()]
+          bad=[x for x in changed if x not in allowed]
+          if bad: raise SystemExit('0.3.31.110 scope violation: '+', '.join(bad))
+          print('SCOPE_031110_OK',len(changed))
+          PY
+
+      - name: Build version-identical backend logic
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('src/2pnyd-main-0.3.27.go').read_text()
+          old='appVersion            = "0.3.27-alpha"'
+          if src.count(old)!=1: raise SystemExit('backend version anchor missing/ambiguous')
+          Path('/tmp/2pnyd-main.go').write_text(src.replace(old,'appVersion            = "0.3.31.110"',1))
+          PY
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          go build -trimpath -o /tmp/2pnyd-0.3.31.110 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-0.3.31.110 | grep -Eq 'ARM aarch64|ARM64|aarch64'
+          strings /tmp/2pnyd-0.3.31.110 | grep -Fq '0.3.31.110'
+
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux e2fsprogs file
+
+      - name: Download and verify immutable 0.3.31 baseline
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base.img.xz "$BASE_URL"
+          echo "$BASE_SHA256  base.img.xz" | sha256sum -c -
+          xz -t base.img.xz
+          xz -dk base.img.xz
+          mv base.img "PU2PNY-OS-$VERSION-arm64.img"
+
+      - name: Apply only MMDVM autostart hotfix
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          cleanup(){ set +e; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p /mnt/pu2pny-root
+          sudo mount "$ROOTDEV" /mnt/pu2pny-root
+
+          for f in \
+            usr/local/bin/MMDVM-Host \
+            usr/local/libexec/2pny-dmr-apply \
+            usr/local/sbin/2pny-protocol-network-apply \
+            usr/local/sbin/2pny-display-apply \
+            usr/local/sbin/2pny-network-online \
+            usr/local/sbin/2pny-profile-proven \
+            usr/share/2pny/hotspot.html; do
+              sudo sha256sum "/mnt/pu2pny-root/$f"
+          done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.before
+
+          sudo bash ci/patch-image-0.3.31.110.sh /mnt/pu2pny-root
+          sudo install -m 0755 /tmp/2pnyd-0.3.31.110 /mnt/pu2pny-root/usr/local/bin/2pnyd
+
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart src/2pny-profile-autostart-0.3.28.py
+          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.110'
+          test -e /mnt/pu2pny-root/etc/systemd/system/2pny-profile-autostart.service
+          test -e /mnt/pu2pny-root/etc/systemd/system/2pny-profile-proven.path
+          test -e /mnt/pu2pny-root/etc/systemd/system/2pny-profile-proven.service
+
+          for f in \
+            usr/local/bin/MMDVM-Host \
+            usr/local/libexec/2pny-dmr-apply \
+            usr/local/sbin/2pny-protocol-network-apply \
+            usr/local/sbin/2pny-display-apply \
+            usr/local/sbin/2pny-network-online \
+            usr/local/sbin/2pny-profile-proven \
+            usr/share/2pny/hotspot.html; do
+              sudo sha256sum "/mnt/pu2pny-root/$f"
+          done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+
+          sudo sync
+          sudo umount /mnt/pu2pny-root
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+
+          # REL-015: mounted read-only pre-validation before publication.
+          sudo mount -o ro "$ROOTDEV" /mnt/pu2pny-root
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart src/2pny-profile-autostart-0.3.28.py
+          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.110'
+          sudo python3 -m py_compile /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart
+          sudo umount /mnt/pu2pny-root
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+
+      - name: Compress, verify and checksum
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          HASH="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" > "$IMAGE.sha256"
+          cat > BUILD-INFO.txt <<EOF
+          PU2PNY-OS $VERSION
+          base=v0.3.31-alpha
+          base_sha256=$BASE_SHA256
+          commit=$GITHUB_SHA
+          scope=MMDVM profile autostart regression only
+          validation=SW/CI + read-only image preflight
+          hardware_validation=PENDENTE
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.110-arm64
+          path: |
+            PU2PNY-OS-0.3.31.110-arm64.img.xz
+            PU2PNY-OS-0.3.31.110-arm64.img.xz.sha256
+            BUILD-INFO.txt
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.110-arm64
+          path: release
+      - name: Verify transferred artifact
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.31.110 — hotfix cirúrgico para a regressão de restauração do MMDVMHost/perfil no boot.
+
+          - Base imutável: imagem publicada v0.3.31-alpha.
+          - Correção única: restaura o comportamento comprovado da 0.3.30 para `2pny-profile-autostart`, permitindo reativar o perfil salvo mesmo quando `last-active-profile.json` ainda não existe.
+          - Mantém o snapshot `last-active-profile.json` da 0.3.31 para uso futuro, mas ele deixa de ser pré-condição para o rádio voltar.
+          - DMR, D-Star, YSF/C4FM, RF, frequências, offsets, gateways, display, rede, áudio e UI são protegidos por hash e não são alterados por este hotfix.
+          - A regressão foi reproduzida por teste determinístico: 0.3.30 ativa o perfil salvo; 0.3.31 não ativa sem `last-active-profile.json`.
+          - Validação física Raspberry Pi + MMDVM continua obrigatória antes de promover para HW PASS.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.31.110
+          target_commitish: ${{ github.sha }}
+          name: PU2PNY-OS 0.3.31.110
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.31.110-arm64.img.xz
+            release/PU2PNY-OS-0.3.31.110-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
