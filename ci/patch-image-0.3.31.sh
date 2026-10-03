@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 ROOT="${1:?root mount required}"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 install -m 0755 "$REPO/src/2pny-profile-autostart-0.3.31.py" "$ROOT/usr/local/sbin/2pny-profile-autostart"
