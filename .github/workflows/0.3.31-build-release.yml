@@ -1,0 +1,154 @@
+name: Build and release PU2PNY-OS 0.3.31 Alpha
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.31-alpha ]
+    paths:
+      - 'src/2pny-profile-*-0.3.31*'
+      - 'ci/patch-image-0.3.31.sh'
+      - '.github/workflows/0.3.31-build-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.31-alpha
+  cancel-in-progress: true
+
+env:
+  VERSION: 0.3.31-alpha
+  BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.30-alpha/PU2PNY-OS-0.3.30-alpha-arm64.img.xz
+  BASE_SHA256: fa1cbb43c7497432972e4da852c3ce49277e8bebe9a18f4bdbdc52bf3423437b
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static source gates
+        run: |
+          set -euo pipefail
+          python3 -m py_compile src/2pny-profile-autostart-0.3.31.py src/2pny-profile-proven-0.3.31.py ci/prepare-0.3.31-alpha.py
+          bash -n ci/patch-image-0.3.31.sh
+          grep -Fq 'PathChanged=/var/lib/2pny/network-radio.json' src/2pny-profile-proven-0.3.31.path
+          grep -Fq "draft!=proven_cfg" src/2pny-profile-autostart-0.3.31.py
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux e2fsprogs file nodejs
+      - name: Download and verify immutable 0.3.30 baseline
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base.img.xz "$BASE_URL"
+          echo "$BASE_SHA256  base.img.xz" | sha256sum -c -
+          xz -t base.img.xz
+          xz -dk base.img.xz
+          mv base.img "PU2PNY-OS-$VERSION-arm64.img"
+      - name: Apply surgical 0.3.31 overlay
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          cleanup(){ set +e; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p /mnt/pu2pny-root
+          sudo mount "$ROOTDEV" /mnt/pu2pny-root
+          DMR_BEFORE="$(sudo sha256sum /mnt/pu2pny-root/usr/local/libexec/2pny-dmr-apply | awk '{print $1}')"
+          sudo bash ci/patch-image-0.3.31.sh /mnt/pu2pny-root
+          DMR_AFTER="$(sudo sha256sum /mnt/pu2pny-root/usr/local/libexec/2pny-dmr-apply | awk '{print $1}')"
+          test "$DMR_BEFORE" = "$DMR_AFTER"
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31-alpha'
+          ! sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.30-alpha'
+          sudo python3 - <<'PY'
+          import re
+          from pathlib import Path
+          h=Path('/mnt/pu2pny-root/usr/share/2pny/hotspot.html').read_text()
+          assert 'EDITANDO PERFIL' in h and 'ATIVO NO RÁDIO' in h and 'COMO USAR PELO RÁDIO' in h
+          for body in re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',h,re.I|re.S):
+              if body.strip():
+                  Path('/tmp/0331-inline.js').write_text(body)
+                  import subprocess; subprocess.run(['node','--check','/tmp/0331-inline.js'],check=True)
+          PY
+          sudo sync
+          sudo umount /mnt/pu2pny-root
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+      - name: Compress, verify and checksum
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          HASH="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" > "$IMAGE.sha256"
+          cat > BUILD-INFO.txt <<EOF
+          PU2PNY-OS $VERSION
+          base=v0.3.30-alpha
+          base_sha256=$BASE_SHA256
+          commit=$GITHUB_SHA
+          classification=ALPHA / PARA TESTE FISICO
+          hw_validation=PENDENTE
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31-arm64
+          path: |
+            PU2PNY-OS-0.3.31-alpha-arm64.img.xz
+            PU2PNY-OS-0.3.31-alpha-arm64.img.xz.sha256
+            BUILD-INFO.txt
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31-arm64
+          path: release
+      - name: Verify transferred artifact
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.31 Alpha — imagem para teste físico, derivada byte-for-byte da imagem publicada 0.3.30-alpha e alterada somente pelo overlay 0.3.31.
+
+          - D-Star: preserva o schema Homebrew já funcional (HBPort 20010 / repetidor 20011 / Type=HB) e a espera de bridge UDP de até 12 s, mais conservadora que o mínimo solicitado de 5 s.
+          - YSF/C4FM: ativa o mecanismo Reconnect nativo do YSFGateway; perda transitória mantém o destino, enquanto Disconnect manual via Wires-X limpa o destino e não força reconexão da sala.
+          - Reboot: salva atomicamente o último perfil ativo comprovado somente quando network-radio.json muda após apply bem-sucedido; no boot, restaura esse perfil e aguarda uplink sem polling agressivo.
+          - Perfil: Salvar continua separado de Ativar; o rascunho salvo é preservado mesmo quando o autostart restaura o último perfil comprovado.
+          - Display: Native-First; MMDVMHost é o renderer padrão para Nextion físico, com G4KLX/ON7LDS e um writer. Nenhum TFT/HMI é gravado automaticamente.
+          - UI: diferencia EDITANDO PERFIL de ATIVO NO RÁDIO e adiciona guia contextual DMR/D-Star/YSF em PT/EN/ES.
+          - Proteção: 2pny-dmr-apply é verificado byte-for-byte antes/depois do overlay; RF/frequências/offsets não são modificados pelo patch.
+          - Branding: o novo arquivo de logotipo oficial não existe no repositório nesta branch; o asset anterior foi preservado, sem inventar/substituir uma marca não fornecida.
+          - Classificação: ALPHA / PARA TESTE FÍSICO. DMR/D-Star/YSF RF real, BER/RSSI e display físico permanecem PENDENTES até teste no Raspberry/MMDVM.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.31-alpha
+          target_commitish: ${{ github.sha }}
+          name: PU2PNY-OS 0.3.31 Alpha
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.31-alpha-arm64.img.xz
+            release/PU2PNY-OS-0.3.31-alpha-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
