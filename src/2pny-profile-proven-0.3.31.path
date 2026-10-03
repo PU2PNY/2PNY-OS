@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch PU2PNY proven protocol state
+
+[Path]
+PathChanged=/var/lib/2pny/network-radio.json
+Unit=2pny-profile-proven.service
+
+[Install]
+WantedBy=multi-user.target
