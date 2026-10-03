@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY snapshot last proven active profile
+After=2pny-mmdvmhost.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-profile-proven
+Nice=10
+IOSchedulingClass=idle
