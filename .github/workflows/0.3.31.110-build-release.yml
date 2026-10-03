@@ -4,6 +4,8 @@ on:
   push:
     branches: [ pu2pny-os-0.3.31.110 ]
     paths:
+      - 'src/2pny-profile-autostart-0.3.31.110.py'
+      - 'src/2pny-profile-proven-0.3.31.110.py'
       - 'ci/patch-image-0.3.31.110.sh'
       - 'ci/test-0.3.31.110-mmdvm-autostart.py'
       - '.github/workflows/0.3.31.110-build-release.yml'
@@ -40,7 +42,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 ci/test-0.3.31.110-mmdvm-autostart.py
-          python3 -m py_compile src/2pny-profile-autostart-0.3.28.py src/2pny-profile-autostart-0.3.31.py
+          python3 -m py_compile \
+            src/2pny-profile-autostart-0.3.31.py \
+            src/2pny-profile-proven-0.3.31.py \
+            src/2pny-profile-autostart-0.3.31.110.py \
+            src/2pny-profile-proven-0.3.31.110.py
           bash -n ci/patch-image-0.3.31.110.sh
           git fetch origin pu2pny-os-0.3.31-alpha
           git diff --name-only origin/pu2pny-os-0.3.31-alpha...HEAD > /tmp/changed-031110.txt
@@ -48,6 +54,8 @@ jobs:
           from pathlib import Path
           allowed={
             '.github/workflows/0.3.31.110-build-release.yml',
+            'src/2pny-profile-autostart-0.3.31.110.py',
+            'src/2pny-profile-proven-0.3.31.110.py',
             'ci/patch-image-0.3.31.110.sh',
             'ci/test-0.3.31.110-mmdvm-autostart.py',
             'docs/HOTFIX-0.3.31.110.md',
@@ -58,7 +66,7 @@ jobs:
           print('SCOPE_031110_OK',len(changed))
           PY
 
-      - name: Build version-identical backend logic
+      - name: Build backend with version identity only
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -88,7 +96,7 @@ jobs:
           xz -dk base.img.xz
           mv base.img "PU2PNY-OS-$VERSION-arm64.img"
 
-      - name: Apply only MMDVM autostart hotfix
+      - name: Apply only proven-profile MMDVM hotfix
         run: |
           set -euo pipefail
           IMG="PU2PNY-OS-$VERSION-arm64.img"
@@ -107,8 +115,10 @@ jobs:
             usr/local/sbin/2pny-protocol-network-apply \
             usr/local/sbin/2pny-display-apply \
             usr/local/sbin/2pny-network-online \
-            usr/local/sbin/2pny-profile-proven \
-            usr/share/2pny/hotspot.html; do
+            usr/share/2pny/hotspot.html \
+            etc/systemd/system/2pny-profile-autostart.service \
+            etc/systemd/system/2pny-profile-proven.path \
+            etc/systemd/system/2pny-profile-proven.service; do
               sudo sha256sum "/mnt/pu2pny-root/$f"
           done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.before
 
@@ -116,11 +126,9 @@ jobs:
           sudo install -m 0755 /tmp/2pnyd-0.3.31.110 /mnt/pu2pny-root/usr/local/bin/2pnyd
 
           test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
-          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart src/2pny-profile-autostart-0.3.28.py
+          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart src/2pny-profile-autostart-0.3.31.110.py
+          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-proven src/2pny-profile-proven-0.3.31.110.py
           sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.110'
-          test -e /mnt/pu2pny-root/etc/systemd/system/2pny-profile-autostart.service
-          test -e /mnt/pu2pny-root/etc/systemd/system/2pny-profile-proven.path
-          test -e /mnt/pu2pny-root/etc/systemd/system/2pny-profile-proven.service
 
           for f in \
             usr/local/bin/MMDVM-Host \
@@ -128,8 +136,10 @@ jobs:
             usr/local/sbin/2pny-protocol-network-apply \
             usr/local/sbin/2pny-display-apply \
             usr/local/sbin/2pny-network-online \
-            usr/local/sbin/2pny-profile-proven \
-            usr/share/2pny/hotspot.html; do
+            usr/share/2pny/hotspot.html \
+            etc/systemd/system/2pny-profile-autostart.service \
+            etc/systemd/system/2pny-profile-proven.path \
+            etc/systemd/system/2pny-profile-proven.service; do
               sudo sha256sum "/mnt/pu2pny-root/$f"
           done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.after
           diff -u /tmp/protected.before /tmp/protected.after
@@ -141,9 +151,12 @@ jobs:
           # REL-015: mounted read-only pre-validation before publication.
           sudo mount -o ro "$ROOTDEV" /mnt/pu2pny-root
           test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
-          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart src/2pny-profile-autostart-0.3.28.py
+          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart src/2pny-profile-autostart-0.3.31.110.py
+          sudo cmp -s /mnt/pu2pny-root/usr/local/sbin/2pny-profile-proven src/2pny-profile-proven-0.3.31.110.py
           sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.110'
-          sudo python3 -m py_compile /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart
+          sudo python3 -m py_compile \
+            /mnt/pu2pny-root/usr/local/sbin/2pny-profile-autostart \
+            /mnt/pu2pny-root/usr/local/sbin/2pny-profile-proven
           sudo umount /mnt/pu2pny-root
           sudo losetup -d "$LOOP"
           trap - EXIT
@@ -162,7 +175,7 @@ jobs:
           base=v0.3.31-alpha
           base_sha256=$BASE_SHA256
           commit=$GITHUB_SHA
-          scope=MMDVM profile autostart regression only
+          scope=proven-profile/MMDVM autostart regression only
           validation=SW/CI + read-only image preflight
           hardware_validation=PENDENTE
           EOF
@@ -196,14 +209,21 @@ jobs:
       - name: Write release notes
         run: |
           cat > RELEASE-NOTES.md <<'EOF'
-          PU2PNY-OS 0.3.31.110 — hotfix cirúrgico para a regressão de restauração do MMDVMHost/perfil no boot.
+          PU2PNY-OS 0.3.31.110 — hotfix cirúrgico da cadeia `last-active-profile`/MMDVMHost.
 
-          - Base imutável: imagem publicada v0.3.31-alpha.
-          - Correção única: restaura o comportamento comprovado da 0.3.30 para `2pny-profile-autostart`, permitindo reativar o perfil salvo mesmo quando `last-active-profile.json` ainda não existe.
-          - Mantém o snapshot `last-active-profile.json` da 0.3.31 para uso futuro, mas ele deixa de ser pré-condição para o rádio voltar.
-          - DMR, D-Star, YSF/C4FM, RF, frequências, offsets, gateways, display, rede, áudio e UI são protegidos por hash e não são alterados por este hotfix.
-          - A regressão foi reproduzida por teste determinístico: 0.3.30 ativa o perfil salvo; 0.3.31 não ativa sem `last-active-profile.json`.
-          - Validação física Raspberry Pi + MMDVM continua obrigatória antes de promover para HW PASS.
+          Erros confirmados na 0.3.31:
+          - o autostart exigia `last-active-profile.json` e saía sem restaurar o rádio quando o snapshot ainda não existia;
+          - o helper DMR comprovadamente bem-sucedido grava `network-radio.json` com `state=configured`, mas o snapshot 0.3.31 aceitava somente `gateway_active`, `active` ou `ready`, então DMR nunca criava o snapshot.
+
+          Correção:
+          - `state=configured` é aceito como prova somente para DMR, porque esse estado é gravado pelo helper protegido apenas depois de MMDVMHost e DMRGateway permanecerem ativos;
+          - se o snapshot estiver ausente por migração/evento perdido, o autostart só usa fallback quando o runtime bem-sucedido anterior coincide com o perfil salvo; rascunho divergente não é ativado;
+          - exceções no restore são tratadas e o rascunho salvo continua preservado.
+
+          Proteção de escopo:
+          - base imutável: imagem publicada `v0.3.31-alpha`;
+          - MMDVM-Host, DMR helper, demais protocolos, gateways, display, rede, áudio, UI e units systemd permanecem byte-idênticos por gate de hash;
+          - validação física Raspberry Pi + MMDVM continua PENDENTE até o teste do operador.
           EOF
       - name: Publish prerelease
         uses: softprops/action-gh-release@v3
