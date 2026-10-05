@@ -50,11 +50,9 @@ def make_repo() -> tuple[Path, str]:
     cfg["baseline_ref"] = base
     write(repo / "ci/baseline-guard-config.json", json.dumps(cfg, indent=2) + "\n")
     base = commit(repo, "pin test baseline")
-    # Pin once more to the commit that actually contains the final config.
     cfg["baseline_ref"] = base
     write(repo / "ci/baseline-guard-config.json", json.dumps(cfg, indent=2) + "\n")
     base = commit(repo, "final test baseline")
-    # Tests always pass --base explicitly, so config's stored test SHA is not material.
     return repo, base
 
 
@@ -68,9 +66,10 @@ def reset_to(repo: Path, base: str):
 
 
 def dossier(repo: Path, base: str, changed_files: list[str], *, complete=True):
+    configured = json.loads((repo / "ci/baseline-guard-config.json").read_text(encoding="utf-8"))["baseline_ref"]
     data = {
         "component": "display",
-        "baseline_ref": base if complete else "wrong",
+        "baseline_ref": configured if complete else "wrong",
         "reason": "DISPLAY-031 isolated display candidate",
         "requirement_ids": ["DISPLAY-031", "TEST-031"],
         "changed_files": changed_files,
