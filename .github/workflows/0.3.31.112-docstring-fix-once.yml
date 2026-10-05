@@ -17,6 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: pu2pny-os-0.3.31.112-recovery
+          fetch-depth: 0
       - name: Remove false-positive token from documentation only
         run: |
           set -euo pipefail
