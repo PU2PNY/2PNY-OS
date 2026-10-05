@@ -1,0 +1,88 @@
+name: PU2PNY-OS CI Policy — i18n and ARM64 scope
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'pu2pny-os-*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.scope.outputs.docs_only }}
+      arm64_required: ${{ steps.scope.outputs.arm64_required }}
+      i18n_required: ${{ steps.scope.outputs.i18n_required }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: base
+        shell: bash
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${PR_BASE:-}" ]]; then
+            base="$PR_BASE"
+          elif [[ -n "${PUSH_BEFORE:-}" && ! "$PUSH_BEFORE" =~ ^0+$ ]]; then
+            base="$PUSH_BEFORE"
+          else
+            base="1c91b26fd561eb7a727df896f2179fd951b6681a"
+          fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+      - name: Test conservative classifier
+        run: python3 ci/test-classify-change-scope.py
+      - id: scope
+        name: Classify change before expensive jobs
+        run: python3 ci/classify-change-scope.py --base '${{ steps.base.outputs.base }}' --head '${{ github.sha }}'
+      - name: Decision summary
+        shell: bash
+        run: |
+          {
+            echo '### PU2PNY CI scope'
+            echo '- docs_only: `${{ steps.scope.outputs.docs_only }}`'
+            echo '- arm64_required: `${{ steps.scope.outputs.arm64_required }}`'
+            echo '- i18n_required: `${{ steps.scope.outputs.i18n_required }}`'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  i18n-pt-en-es:
+    needs: scope
+    if: needs.scope.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PT EN ES purity and installed-page coverage
+        run: node ci/test-i18n-pt-en-es.cjs
+
+  arm64-decision:
+    needs: scope
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce explicit ARM64 decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ '${{ needs.scope.outputs.arm64_required }}' == 'true' ]]; then
+            echo 'ARM64_REQUIRED=true'
+            echo 'A future/release ARM64 build job must run.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'ARM64_REQUIRED=false'
+            echo 'Documentation-only diff: ARM64 is intentionally skipped.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  docs-only-no-arm64:
+    needs: scope
+    if: needs.scope.outputs.docs_only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'PASS — documentation-only change; no ARM64 runner allocated.'
