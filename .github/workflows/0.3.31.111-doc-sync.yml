@@ -1,0 +1,68 @@
+name: PU2PNY-OS 0.3.31.111 Canonical Docs Sync
+
+on:
+  push:
+    branches:
+      - pu2pny-os-0.3.31.111-governance
+    paths:
+      - '.github/workflows/0.3.31.111-doc-sync.yml'
+      - 'ci/sync-canonical-0.3.31.110.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: canonical-doc-sync-0.3.31.111
+  cancel-in-progress: false
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout governance branch
+        uses: actions/checkout@v4
+        with:
+          ref: pu2pny-os-0.3.31.111-governance
+          fetch-depth: 0
+
+      - name: Validate synchronizer syntax
+        run: python3 -m py_compile ci/sync-canonical-0.3.31.110.py
+
+      - name: Synchronize canonical documents
+        run: python3 ci/sync-canonical-0.3.31.110.py
+
+      - name: Reject whitespace corruption
+        run: git diff --check
+
+      - name: Verify scope is documentation only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git diff --name-only)
+          if (( ${#changed[@]} == 0 )); then
+            echo 'No canonical changes required.'
+            exit 0
+          fi
+          allowed='^(PU2PNY-OS_(MASTER_SPEC|RELEASE_STATUS|TEST_MATRIX|CHANGELOG)\.md)$'
+          for path in "${changed[@]}"; do
+            if [[ ! "$path" =~ $allowed ]]; then
+              echo "ERROR: unexpected path changed by doc sync: $path" >&2
+              exit 1
+            fi
+          done
+          printf 'Canonical files changed:\n%s\n' "${changed[*]}"
+
+      - name: Commit canonical synchronization
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'Canonical documents already synchronized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md
+          git commit -m 'docs: synchronize canonical state with 0.3.31.110'
+          git push origin HEAD:pu2pny-os-0.3.31.111-governance
