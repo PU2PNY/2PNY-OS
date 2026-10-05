@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "baseline_ref": "1c91b26fd561eb7a727df896f2179fd951b6681a",
+  "baseline_label": "PU2PNY-OS 0.3.31.110",
+  "canonical_documents": [
+    "PU2PNY-OS_MASTER_SPEC.md",
+    "PU2PNY-OS_CHANGELOG.md",
+    "PU2PNY-OS_RELEASE_STATUS.md",
+    "PU2PNY-OS_TEST_MATRIX.md"
+  ],
+  "validation_levels": ["DOC", "SW", "VPS", "HW", "PROD"],
+  "components": {
+    "rf_mmdvm": {
+      "protected": true,
+      "patterns": [
+        "src/*mmdvm*",
+        "src/**/*mmdvm*",
+        "systemd/*mmdvm*",
+        "systemd/**/*mmdvm*",
+        "config/*mmdvm*",
+        "config/**/*mmdvm*"
+      ]
+    },
+    "dmr": {
+      "protected": true,
+      "patterns": [
+        "src/*dmr*",
+        "src/**/*dmr*",
+        "config/*dmr*",
+        "config/**/*dmr*",
+        "systemd/*dmr*",
+        "systemd/**/*dmr*"
+      ]
+    },
+    "dstar": {
+      "protected": true,
+      "patterns": [
+        "src/*dstar*",
+        "src/**/*dstar*",
+        "src/*d-star*",
+        "src/**/*d-star*",
+        "src/*ircddb*",
+        "src/**/*ircddb*",
+        "config/*dstar*",
+        "config/**/*dstar*",
+        "systemd/*dstar*",
+        "systemd/**/*dstar*"
+      ]
+    },
+    "ysf_c4fm": {
+      "protected": true,
+      "patterns": [
+        "src/*ysf*",
+        "src/**/*ysf*",
+        "src/*c4fm*",
+        "src/**/*c4fm*",
+        "config/*ysf*",
+        "config/**/*ysf*",
+        "systemd/*ysf*",
+        "systemd/**/*ysf*"
+      ]
+    },
+    "network_wizard": {
+      "protected": true,
+      "patterns": [
+        "src/*wifi*",
+        "src/**/*wifi*",
+        "src/*network*",
+        "src/**/*network*",
+        "src/*netdiag*",
+        "src/**/*netdiag*",
+        "src/*wizard*",
+        "src/**/*wizard*",
+        "src/*firstboot*",
+        "src/**/*firstboot*",
+        "src/*provision*",
+        "src/**/*provision*"
+      ]
+    },
+    "display": {
+      "protected": true,
+      "patterns": [
+        "src/*display*",
+        "src/**/*display*",
+        "src/*nextion*",
+        "src/**/*nextion*",
+        "assets/*nextion*",
+        "assets/**/*nextion*",
+        "systemd/*display*",
+        "systemd/**/*display*"
+      ]
+    }
+  }
+}
