@@ -10,12 +10,17 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import sys
 
 ENGINE = Path(__file__).with_name("2pny-update-manager-0.3.31.112.py")
 spec = importlib.util.spec_from_file_location("pny_update_engine_031112", ENGINE)
 if spec is None or spec.loader is None:
     raise RuntimeError("cannot load PU2PNY update engine")
 engine = importlib.util.module_from_spec(spec)
+# Python 3.12 dataclasses resolve annotations through sys.modules while the
+# module is executing. Register the engine before exec_module so the real
+# entrypoint works the same way as a normal import.
+sys.modules[spec.name] = engine
 spec.loader.exec_module(engine)
 
 # Preserve the exact service surface used by the previous updater. Expanding
