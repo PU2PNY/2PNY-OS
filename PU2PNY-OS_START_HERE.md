@@ -68,13 +68,12 @@ Não liberar como completa com requisito crítico ausente, regressão conhecida 
 - Enquanto a metadata do GitHub retornar `PU2PNY/2PNY-OS`, esse é o caminho real observado.
 - Título da aba: exatamente `PU2PNY-OS`.
 
-## Ciclo ativo — 0.3.30-alpha — 2026-09-27
+## Ciclo consolidado — 0.3.31.110 — 2026-10-05
 
-- Branch: `pu2pny-os-0.3.30-alpha`.
-- Base preservada: `pu2pny-os-0.3.29-alpha`.
-- Rollback pré-ciclo: `backup/0.3.29-pre-0.3.30-display-20260927`.
-- Escopo: **somente displays**. RF, DMR, D-Star, YSF/C4FM, rede, wizard, APRS, Direct, gateways, áudio, boot/update e demais runtimes ficam congelados.
-- Objetivo: atualização incremental sem flicker, identidade física por `connect/comok`, separação hardware ≠ HMI/layout, um writer por vez e fallback nativo G4KLX/ON7LDS 2/3.
-- Nenhum TFT/HMI é gravado automaticamente.
-- Estado atual: **ALPHA / PARA TESTE FÍSICO**. SW/CI/VPS PASS no run `36341170897`; ARM64, SHA-256, preflight, validador final, artifact e publish passaram. Release `v0.3.30-alpha` aponta ao commit validado `3ec9b8cd1228f1e722595ff5ff1e1de5bd70bb60`.
-- Ausência de flicker, COMOK real, modelos físicos e comportamento no Nextion/OLED/LCD continuam **HW PENDENTE** até Raspberry Pi/MMDVM/display reais. DMR/D-Star/YSF e demais baselines RF também exigem regressão física nesta imagem antes de qualquer promoção para HW PASS.
+- Branch de código observada: `pu2pny-os-0.3.31.110`.
+- Commit observado: `1c91b26fd561eb7a727df896f2179fd951b6681a`.
+- Snapshot de baseline: `docs/PU2PNY-OS_BASELINE_0.3.31.110.md`.
+- A 0.3.31.110 é o estado mais novo do código, não uma promoção automática para HW PASS.
+- A 0.3.30-alpha continua sendo a última candidata de display com SW/CI/VPS formalmente registrado: run `36341170897`, com Nextion/OLED/LCD físico ainda HW PENDENTE.
+- Baselines HW protegidas incluem DMR simplex, D-Star simplex e YSF/C4FM simplex conforme evidências consolidadas no snapshot; duplex e recursos avançados mantêm seus estados próprios.
+- `REL-026`: os cinco documentos canônicos devem distinguir código atual de evidência de validação e nunca inferir HW por SW/VPS.
