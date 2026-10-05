@@ -1,0 +1,61 @@
+name: PU2PNY-OS 0.3.31.112 Recovery CI
+
+on:
+  push:
+    branches:
+      - pu2pny-os-0.3.31.112-recovery
+    paths:
+      - 'src/2pny-update-manager-0.3.31.112.py'
+      - 'src/2pny-update-entrypoint-0.3.31.112.py'
+      - 'ci/test-0.3.31.112-update-recovery.py'
+      - 'ci/test-0.3.31.112-service-policy.py'
+      - 'docs/UPDATE-BACKUP-RECOVERY-0.3.31.112.md'
+      - '.github/workflows/0.3.31.112-recovery-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recovery-sw:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pu2pny-os-0.3.31.112-recovery
+
+      - name: Python syntax
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            src/2pny-update-manager-0.3.31.112.py \
+            src/2pny-update-entrypoint-0.3.31.112.py \
+            ci/test-0.3.31.112-update-recovery.py \
+            ci/test-0.3.31.112-service-policy.py
+
+      - name: Transactional update tests
+        run: |
+          set -euo pipefail
+          python3 ci/test-0.3.31.112-update-recovery.py
+
+      - name: Service policy tests
+        run: |
+          set -euo pipefail
+          python3 ci/test-0.3.31.112-service-policy.py
+
+      - name: Reject unsafe implementation patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(src/2pny-update-manager-0.3.31.112.py src/2pny-update-entrypoint-0.3.31.112.py)
+          if grep -nE '(^|[^A-Za-z])(eval|exec)\s*\(|curl[[:space:]]*\|[[:space:]]*(ba)?sh|shell[[:space:]]*=[[:space:]]*True' "${files[@]}"; then
+            echo 'ERROR: unsafe execution pattern found' >&2
+            exit 1
+          fi
+
+      - name: Confirm historical updater unchanged by this candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code pu2pny-os-0.3.31.110...HEAD -- src/2pny-update-manager-0.3.20.py
