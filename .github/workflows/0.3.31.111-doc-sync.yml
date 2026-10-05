@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: canonical-doc-sync-0.3.31.111
+  group: canonical-doc-sync-selfhosted-0.3.31.111-v2
   cancel-in-progress: false
 
 jobs:
