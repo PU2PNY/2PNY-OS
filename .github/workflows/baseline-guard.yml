@@ -1,0 +1,48 @@
+name: PU2PNY Baseline Guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'pu2pny-os-*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  baseline-guard:
+    name: Protected baseline gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve comparison base
+        id: refs
+        shell: bash
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${PR_BASE:-}" ]]; then
+            echo "base=${PR_BASE}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=1c91b26fd561eb7a727df896f2179fd951b6681a" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate guard syntax and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ci/baseline_guard.py ci/test-baseline-guard.py
+          python3 ci/test-baseline-guard.py
+
+      - name: Enforce protected baseline policy
+        run: >-
+          python3 ci/baseline_guard.py
+          --base '${{ steps.refs.outputs.base }}'
+          --head '${{ github.sha }}'
