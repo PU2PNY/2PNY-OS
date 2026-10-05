@@ -1,0 +1,50 @@
+name: PU2PNY-OS 0.3.31.114 Display Candidate
+
+on:
+  push:
+    branches: [pu2pny-os-0.3.31.114-display]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  display-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Candidate delta is non-runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git diff --name-only pu2pny-os-0.3.31.113-baseline-guard...HEAD)
+          allowed='^(ci/test-0\.3\.31\.114-display-candidate\.py|docs/DISPLAY-CANDIDATE-0\.3\.31\.114\.md|\.github/workflows/0\.3\.31\.114-display-candidate\.yml)$'
+          for p in "${changed[@]}"; do
+            [[ "$p" =~ $allowed ]] || { echo "ERROR: non-display-candidate delta: $p" >&2; exit 1; }
+          done
+
+      - name: Protected radio/network runtime remains byte-identical to 0.3.31.110
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code 1c91b26fd561eb7a727df896f2179fd951b6681a...HEAD -- \
+            'src/*dmr*' 'src/*DMR*' 'src/*dstar*' 'src/*DStar*' 'src/*ysf*' 'src/*YSF*' \
+            'src/*mmdvm*' 'src/*MMDVM*' 'src/*wifi*' 'src/*network*' 'src/*wizard*'
+
+      - name: Re-run proven 0.3.30 display regression suite
+        run: |
+          set -euo pipefail
+          python3 -m py_compile src/2pny-display-core-0.3.30.py src/2pny-display-detector-0.3.30.py src/2pny-display-apply-0.3.30.py
+          python3 ci/test-0.3.30-display.py
+
+      - name: Validate exclusive candidate contract
+        run: |
+          set -euo pipefail
+          python3 ci/test-0.3.31.114-display-candidate.py
+
+      - name: Baseline Guard
+        run: python3 ci/baseline_guard.py --base 1c91b26fd561eb7a727df896f2179fd951b6681a --head HEAD
