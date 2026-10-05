@@ -44,7 +44,7 @@ jobs:
             echo 'ERROR: unsafe execution pattern found' >&2
             exit 1
           fi
-          git diff --exit-code pu2pny-os-0.3.31.110...HEAD -- src/2pny-update-manager-0.3.20.py
+          git diff --exit-code origin/pu2pny-os-0.3.31.110...HEAD -- src/2pny-update-manager-0.3.20.py
       - name: Commit only comment correction
         run: |
           set -euo pipefail
