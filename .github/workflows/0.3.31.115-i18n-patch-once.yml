@@ -1,0 +1,46 @@
+name: PU2PNY-OS 0.3.31.115 i18n catalog patch
+
+on:
+  push:
+    branches: [ pu2pny-os-0.3.31.115-ci-i18n ]
+    paths:
+      - 'ci/patch-i18n-catalog-0.3.31.115.py'
+      - '.github/workflows/0.3.31.115-i18n-patch-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pu2pny-os-0.3.31.115-i18n-patch
+  cancel-in-progress: false
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pu2pny-os-0.3.31.115-ci-i18n
+          fetch-depth: 0
+      - name: Apply exact catalog additions
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ci/patch-i18n-catalog-0.3.31.115.py
+          python3 ci/patch-i18n-catalog-0.3.31.115.py
+          git diff --check
+          git diff -- src/ui-language-0.3.27.js
+      - name: Verify PT EN ES gate before commit
+        run: |
+          set -euo pipefail
+          node ci/test-i18n-pt-en-es.cjs
+      - name: Commit only the catalog correction
+        run: |
+          set -euo pipefail
+          test -n "$(git status --porcelain -- src/ui-language-0.3.27.js)" || { echo 'catalog already current'; exit 0; }
+          test -z "$(git status --porcelain --untracked-files=no | grep -v '^ M src/ui-language-0.3.27.js$' || true)"
+          git config user.name 'PU2PNY CI'
+          git config user.email '47339656+PU2PNY@users.noreply.github.com'
+          git add src/ui-language-0.3.27.js
+          git commit -m 'fix: complete PT EN ES catalog coverage'
+          git push origin HEAD:pu2pny-os-0.3.31.115-ci-i18n
