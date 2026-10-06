@@ -1,0 +1,76 @@
+name: PU2PNY-OS 0.3.31.116 Consolidation CI
+
+on:
+  push:
+    branches: [pu2pny-os-0.3.31.116-consolidation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  consolidated-gates:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch immutable physical-test baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin pu2pny-os-0.3.31.110:refs/remotes/origin/pu2pny-os-0.3.31.110
+          test "$(git rev-parse origin/pu2pny-os-0.3.31.110)" = "1c91b26fd561eb7a727df896f2179fd951b6681a"
+      - name: Baseline Guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ci/baseline_guard.py ci/test-baseline-guard.py
+          python3 ci/test-baseline-guard.py
+          python3 ci/baseline_guard.py --base 1c91b26fd561eb7a727df896f2179fd951b6681a --head HEAD
+      - name: Recovery SW gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile src/2pny-update-manager-0.3.31.112.py src/2pny-update-entrypoint-0.3.31.112.py ci/test-0.3.31.112-update-recovery.py ci/test-0.3.31.112-service-policy.py
+          python3 ci/test-0.3.31.112-update-recovery.py
+          python3 ci/test-0.3.31.112-service-policy.py
+          files=(src/2pny-update-manager-0.3.31.112.py src/2pny-update-entrypoint-0.3.31.112.py)
+          if grep -nE '(^|[^A-Za-z])(eval|exec)\s*\(|curl[[:space:]]*\|[[:space:]]*(ba)?sh|shell[[:space:]]*=[[:space:]]*True' "${files[@]}"; then
+            echo 'ERROR: unsafe Recovery execution pattern found' >&2
+            exit 1
+          fi
+          git diff --exit-code origin/pu2pny-os-0.3.31.110...HEAD -- src/2pny-update-manager-0.3.20.py
+      - name: Display regression gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile src/2pny-display-core-0.3.30.py src/2pny-display-detector-0.3.30.py src/2pny-display-apply-0.3.30.py
+          python3 ci/test-0.3.30-display.py
+          python3 ci/test-0.3.31.114-display-candidate.py
+      - name: PT EN ES and scope policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/test-classify-change-scope.py
+          node --check src/ui-language-0.3.27.js
+          node ci/test-i18n-pt-en-es.cjs
+      - name: Protected RF network protocol runtime stays byte-identical
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code 1c91b26fd561eb7a727df896f2179fd951b6681a...HEAD -- \
+            'src/*dmr*' 'src/*DMR*' 'src/*dstar*' 'src/*DStar*' 'src/*ysf*' 'src/*YSF*' \
+            'src/*mmdvm*' 'src/*MMDVM*' 'src/*wifi*' 'src/*network*' 'src/*wizard*'
+      - name: Canonical governance markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md; do
+            grep -Fq 'REL-026' "$f"
+            grep -Fq '0.3.31.116' "$f"
+          done
