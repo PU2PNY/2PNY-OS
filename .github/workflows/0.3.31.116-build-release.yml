@@ -1,0 +1,194 @@
+name: Build and release PU2PNY-OS 0.3.31.116
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.31.116
+  cancel-in-progress: false
+
+env:
+  VERSION: 0.3.31.116
+  BASE_COMMIT: 1c91b26fd561eb7a727df896f2179fd951b6681a
+  BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31.110/PU2PNY-OS-0.3.31.110-arm64.img.xz
+  BASE_SHA256: 35b8a5656c52abc974c7bdf0723fc30e714bf8abae7c2adb982a61b603f66743
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Consolidated release gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin pu2pny-os-0.3.31.110:refs/remotes/origin/pu2pny-os-0.3.31.110
+          test "$(git rev-parse origin/pu2pny-os-0.3.31.110)" = "$BASE_COMMIT"
+          python3 ci/test-baseline-guard.py
+          python3 ci/baseline_guard.py --base "$BASE_COMMIT" --head HEAD
+          python3 ci/test-0.3.31.112-update-recovery.py
+          python3 ci/test-0.3.31.112-service-policy.py
+          python3 ci/test-0.3.30-display.py
+          python3 ci/test-0.3.31.114-display-candidate.py
+          python3 ci/test-classify-change-scope.py
+          node --check src/ui-language-0.3.27.js
+          node ci/test-i18n-pt-en-es.cjs
+          bash -n ci/patch-image-0.3.31.116.sh
+          git diff --exit-code "$BASE_COMMIT"...HEAD -- \
+            'src/*dmr*' 'src/*DMR*' 'src/*dstar*' 'src/*DStar*' 'src/*ysf*' 'src/*YSF*' \
+            'src/*mmdvm*' 'src/*MMDVM*' 'src/*wifi*' 'src/*network*' 'src/*wizard*' src/2pny-update-manager-0.3.20.py
+      - name: Build backend with version identity only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('src/2pnyd-main-0.3.27.go').read_text()
+          old='appVersion            = "0.3.27-alpha"'
+          if src.count(old)!=1: raise SystemExit('backend version anchor missing/ambiguous')
+          Path('/tmp/2pnyd-main.go').write_text(src.replace(old,'appVersion            = "0.3.31.116"',1))
+          PY
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          go build -trimpath -o /tmp/2pnyd-0.3.31.116 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-0.3.31.116 | grep -Eq 'ARM aarch64|ARM64|aarch64'
+          strings /tmp/2pnyd-0.3.31.116 | grep -Fq '0.3.31.116'
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux e2fsprogs file
+      - name: Download and verify immutable 0.3.31.110 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base.img.xz "$BASE_URL"
+          echo "$BASE_SHA256  base.img.xz" | sha256sum -c -
+          xz -t base.img.xz
+          xz -dk base.img.xz
+          mv base.img "PU2PNY-OS-$VERSION-arm64.img"
+      - name: Apply only 0.3.31.116 approved overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          cleanup(){ set +e; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p /mnt/pu2pny-root
+          sudo mount "$ROOTDEV" /mnt/pu2pny-root
+          protected=(usr/local/bin/MMDVM-Host usr/local/libexec/2pny-dmr-apply usr/local/sbin/2pny-protocol-network-apply usr/local/sbin/2pny-display-apply usr/local/sbin/2pny-network-online usr/local/sbin/2pny-update-manager usr/share/2pny/hotspot.html etc/systemd/system/2pny-profile-autostart.service etc/systemd/system/2pny-profile-proven.path etc/systemd/system/2pny-profile-proven.service)
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.before
+          sudo bash ci/patch-image-0.3.31.116.sh /mnt/pu2pny-root
+          sudo install -m 0755 /tmp/2pnyd-0.3.31.116 /mnt/pu2pny-root/usr/local/bin/2pnyd
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo cmp -s /mnt/pu2pny-root/usr/share/2pny/ui-language.js src/ui-language-0.3.27.js
+          sudo cmp -s /mnt/pu2pny-root/usr/local/libexec/2pny-update-manager-0.3.31.112.py src/2pny-update-manager-0.3.31.112.py
+          sudo cmp -s /mnt/pu2pny-root/usr/local/libexec/2pny-update-entrypoint-0.3.31.112.py src/2pny-update-entrypoint-0.3.31.112.py
+          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.116'
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+          sudo sync
+          sudo umount /mnt/pu2pny-root
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+          sudo mount -o ro "$ROOTDEV" /mnt/pu2pny-root
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo cmp -s /mnt/pu2pny-root/usr/share/2pny/ui-language.js src/ui-language-0.3.27.js
+          sudo cmp -s /mnt/pu2pny-root/usr/local/libexec/2pny-update-manager-0.3.31.112.py src/2pny-update-manager-0.3.31.112.py
+          sudo cmp -s /mnt/pu2pny-root/usr/local/libexec/2pny-update-entrypoint-0.3.31.112.py src/2pny-update-entrypoint-0.3.31.112.py
+          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.116'
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.readonly
+          diff -u /tmp/protected.before /tmp/protected.readonly
+          sudo umount /mnt/pu2pny-root
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+      - name: Compress verify and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          HASH="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" > "$IMAGE.sha256"
+          cat > BUILD-INFO.txt <<EOF
+          PU2PNY-OS $VERSION
+          classification=physical-test-candidate
+          base=v0.3.31.110
+          base_commit=$BASE_COMMIT
+          base_sha256=$BASE_SHA256
+          commit=$GITHUB_SHA
+          scope=version identity + PT/EN/ES catalog + versioned hardened Recovery engine
+          live_updater=0.3.20 preserved byte-identical for CLI compatibility
+          trixie=not included
+          validation=SW/CI + Debian12 VPS Recovery + read-only image preflight
+          hardware_validation=PENDENTE
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.116-arm64
+          path: |
+            PU2PNY-OS-0.3.31.116-arm64.img.xz
+            PU2PNY-OS-0.3.31.116-arm64.img.xz.sha256
+            BUILD-INFO.txt
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.116-arm64
+          path: release
+      - name: Verify transferred artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        shell: bash
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.31.116 — candidata para teste físico.
+
+          Base imutável: 0.3.31.110. Consolida Recovery 0.3.31.112 (SW/CI + VPS PASS), Baseline Guard 0.3.31.113, contrato de display 0.3.31.114 e catálogo PT/EN/ES 0.3.31.115.
+
+          O updater 0.3.20 usado pelo painel permanece byte-idêntico; o Recovery endurecido 0.3.31.112 é instalado de forma versionada porque sua CLI ainda não é compatível com as chamadas atuais. DMR/D-Star/YSF, MMDVMHost, RF, frequências, offsets, rede e wizard não são alterados. Debian 13/Trixie não faz parte desta imagem.
+
+          Classificação: PARA TESTE FÍSICO. RF real, duplex, BER/RSSI e Nextion física permanecem PENDENTE HW.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.31.116
+          target_commitish: ${{ github.sha }}
+          name: PU2PNY-OS 0.3.31.116 — candidata para teste físico
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.31.116-arm64.img.xz
+            release/PU2PNY-OS-0.3.31.116-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
