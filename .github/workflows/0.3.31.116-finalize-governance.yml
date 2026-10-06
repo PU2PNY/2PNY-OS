@@ -1,0 +1,46 @@
+name: Finalize 0.3.31.116 governance
+
+on:
+  push:
+    branches: [pu2pny-os-0.3.31.116-consolidation]
+    paths: [.github/workflows/0.3.31.116-finalize-governance.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pu2pny-os-0.3.31.116-consolidation
+          fetch-depth: 0
+      - name: Append REL-026 and validated state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          blocks={
+          'PU2PNY-OS_MASTER_SPEC.md': '''## REL-026 — Gate de consolidação de candidata\n\nUma candidata formada por correções isoladas deve partir de baseline conhecida e imutável, incorporar somente conjuntos previamente validados, sincronizar a documentação canônica, executar os gates combinados aplicáveis, construir ARM64 e validar integridade/SHA-256 antes de disponibilizar link de imagem. Validações dependentes de Raspberry Pi, MMDVM, RF ou display físico permanecem `PENDENTE HW` até execução real.\n\n**Aceite:** baseline/commit identificados; delta auditável; Baseline Guard, Recovery, Display e i18n aplicáveis em PASS SW/CI; artefato ARM64 íntegro com SHA-256; estado HW explícito. **Validação mínima:** SW/CI para candidata; HW para promover itens físicos.\n\nAplicação corrente: `0.3.31.116`, baseada no commit `1c91b26fd561eb7a727df896f2179fd951b6681a` da `0.3.31.110`. Debian 13/Trixie fica fora desta candidata.''',
+          'PU2PNY-OS_RELEASE_STATUS.md': '''## 0.3.31.116 — consolidação para teste físico (REL-026)\n\n- Base imutável: `0.3.31.110` / commit `1c91b26fd561eb7a727df896f2179fd951b6681a`.\n- Recovery `0.3.31.112`: **PASS SW/CI** e **PASS VPS Debian 12** (8/8 testes transacionais + allowlist). O updater ativo `0.3.20` é preservado por incompatibilidade entre as CLIs; o engine novo entra versionado, sem assumir o runtime.\n- Baseline Guard `0.3.31.113`: **PASS SW/CI**.\n- Display `0.3.31.114`: **PASS SW/CI**; Nextion física continua **PENDENTE HW**.\n- PT/EN/ES `0.3.31.115`: **PASS SW/CI**.\n- Consolidação `0.3.31.116`: **EM TESTE SW/CI** até gate combinado e build ARM64.\n- RF real, duplex, BER/RSSI e Nextion física: **PENDENTE HW**.\n- Debian 13/Trixie: **NÃO APLICÁVEL nesta candidata**; avaliação permanece isolada.''',
+          'PU2PNY-OS_TEST_MATRIX.md': '''## 0.3.31.116 — matriz de consolidação REL-026\n\n| Gate | Nível | Estado antes do build 116 | Evidência |\n|---|---|---|---|\n| Recovery preflight/prepare/activate/rollback 0.3.31.112 | SW/CI | APROVADO | run 37380823933; 8 testes transacionais |\n| Recovery em ambiente Debian 12 isolado | VPS | APROVADO | commit 2570de829bb762030890a5936da22cc0cb703a4a; 8/8 + allowlist |\n| Baseline Guard 0.3.31.113 | SW/CI | APROVADO | run 37375251867 |\n| Display contract 0.3.31.114 | SW/CI | APROVADO | suite de regressão; runtime não reescrito |\n| Nextion física | HW | PENDENTE | exige hardware real |\n| PT/EN/ES 0.3.31.115 | SW/CI | APROVADO | run 37380416056; catálogo integral |\n| Gates combinados 0.3.31.116 | SW/CI | EM TESTE | workflow `0.3.31.116-consolidation-ci.yml` |\n| Build/imagem ARM64 0.3.31.116 + SHA-256 | SW/CI | PENDENTE | executar somente após gates combinados |\n| DMR/D-Star/YSF/RF real e duplex | HW | PENDENTE | baseline protegido; reteste físico obrigatório antes de promoção |''',
+          'PU2PNY-OS_CHANGELOG.md': '''## 0.3.31.116 — REL-026 / consolidação segura\n\n- Adotado `REL-026`: nenhuma candidata consolidada recebe link de imagem antes de gates combinados, build ARM64, validação estrutural e SHA-256.\n- Recovery 0.3.31.112 consolidado após PASS SW/CI e VPS Debian 12; updater 0.3.20 permanece ativo e byte-idêntico porque a CLI 0.3.31.112 não é compatível com as chamadas atuais do painel/backend. O engine novo é empacotado de forma versionada e não autoritativa.\n- Mantidos Baseline Guard 0.3.31.113, contrato de display 0.3.31.114 e PT/EN/ES 0.3.31.115.\n- Debian 13/Trixie não é misturado nesta candidata.\n- DMR/D-Star/YSF, MMDVMHost, RF, frequências, offsets, rede e wizard permanecem fora do escopo.\n- Estado físico permanece `PENDENTE HW`; build ou VPS não substituem Raspberry Pi/MMDVM/Nextion.'''
+          }
+          for name,block in blocks.items():
+              p=Path(name); txt=p.read_text()
+              if 'REL-026' not in txt:
+                  p.write_text(txt.rstrip()+'\n\n'+block.strip()+'\n')
+          p=Path('docs/RECOVERY-SW-VALIDATION-PENDING.md'); txt=p.read_text()
+          extra='''## Atualização de estado — 0.3.31.116\n\n- SW/CI: **PASS** — run `37380823933`.\n- VPS Debian 12: **PASS** no commit `2570de829bb762030890a5936da22cc0cb703a4a`; 8/8 testes transacionais e allowlist de serviços.\n- Integração: o engine 0.3.31.112 pode ser empacotado de forma versionada, mas **não substitui** `/usr/local/sbin/2pny-update-manager` nesta candidata porque a CLI atual do painel/backend exige comandos legados não oferecidos pelo novo engine.\n- HW: **PENDENTE** quando futura integração autoritativa afetar serviços físicos.'''
+          if 'VPS Debian 12: **PASS**' not in txt:
+              p.write_text(txt.rstrip()+'\n\n'+extra+'\n')
+          PY
+          rm -f .github/workflows/0.3.31.116-finalize-governance.yml
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'docs: finalize REL-026 for 0.3.31.116'
+          git push origin HEAD:pu2pny-os-0.3.31.116-consolidation
