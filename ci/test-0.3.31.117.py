@@ -5,6 +5,7 @@ import subprocess
 
 repo=Path(__file__).resolve().parents[1]
 base='be75b68aa5549c15d538b1814ffd2df5987cb759'
+base_branch='pu2pny-os-0.3.31.116-consolidation'
 
 # The existing network backend already has real RSSI + canonical resume URLs.
 go=(repo/'src/2pnyd-main-0.3.27.go').read_text()
@@ -42,9 +43,15 @@ for token in ('followPrimaryToPanel','Wi-Fi / Uplink · Ethernet','on7lds-compat
 assert 'curl | bash' not in patch
 assert 'wget ' not in patch
 
-# No existing runtime source is edited in the branch. 0.3.31.117 is delivered
-# as a versioned image overlay; canonical docs may be appended after CI PASS.
-changed=subprocess.check_output(['git','diff','--name-only',base+'...HEAD'],cwd=repo,text=True).splitlines()
+# No existing runtime source is edited in the branch. In shallow clones, fetch
+# the immutable baseline ref and compare the two trees directly; a merge-base
+# is not required for this scope gate.
+if subprocess.run(['git','cat-file','-e',base+'^{commit}'],cwd=repo,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
+    subprocess.run(['git','fetch','--no-tags','origin',base_branch+':refs/remotes/origin/'+base_branch],cwd=repo,check=True)
+    got=subprocess.check_output(['git','rev-parse','refs/remotes/origin/'+base_branch],cwd=repo,text=True).strip()
+    if got!=base:
+        raise SystemExit(f'baseline ref moved: expected {base}, got {got}')
+changed=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],cwd=repo,text=True).splitlines()
 allowed={
     '.github/workflows/0.3.31.117-build-release.yml',
     'ci/harden-nextiondriver-0.3.31.117.py',
