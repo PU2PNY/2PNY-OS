@@ -37,6 +37,9 @@ for token in ('Compatível Pi-Star/WPSD (MMDVMHost nativo)','ON7LDS L3 · Screen
 hard=(repo/'ci/harden-nextiondriver-0.3.31.117.py').read_text()
 for token in ('blocked HMI host-command request','external DB download disabled','updateDisplay call site still present'):
     assert token in hard
+backend=(repo/'ci/patch-backend-0.3.31.117.py').read_text()
+for token in ('on7lds-compatible','DISPLAY-025','115200','mmdvmhost-native'):
+    assert token in backend
 patch=(repo/'ci/patch-image-0.3.31.117.sh').read_text()
 for token in ('followPrimaryToPanel','Wi-Fi / Uplink · Ethernet','on7lds-compatible','SendFrameType","1"','NoNewPrivileges=yes','IPAddressAllow=localhost'):
     assert token in patch
@@ -55,6 +58,7 @@ changed=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],cwd=rep
 allowed={
     '.github/workflows/0.3.31.117-build-release.yml',
     'ci/harden-nextiondriver-0.3.31.117.py',
+    'ci/patch-backend-0.3.31.117.py',
     'ci/patch-image-0.3.31.117.sh',
     'ci/test-0.3.31.117.py',
     'ci/sync-canonical-0.3.31.117.py',
@@ -73,4 +77,5 @@ if protected:
 print('NETWORK_REAL_RSSI_BASELINE_OK')
 print('WIFI_HANDOFF_PATCH_ANCHORS_OK')
 print('NEXTION_COMPAT_SECURITY_POLICY_OK')
+print('BACKEND_DISPLAY_POLICY_PATCH_OK')
 print('SCOPE_0331117_OK',len(changed))
