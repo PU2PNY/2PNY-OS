@@ -8,7 +8,7 @@ Design goals:
 - every active-file replacement is atomic;
 - any activation or health-check failure attempts automatic rollback;
 - backup archives have their own manifest and SHA-256;
-- arbitrary shell execution, curl|bash and unconstrained paths are forbidden.
+- arbitrary shell execution, piped remote installers and unconstrained paths are forbidden.
 
 This candidate is intentionally not wired into the runtime yet. The historical
 0.3.20 updater remains untouched until this implementation passes SW/VPS and

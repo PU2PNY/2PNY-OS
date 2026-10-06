@@ -7,6 +7,7 @@ import io
 import json
 import os
 from pathlib import Path
+import sys
 import tarfile
 import tempfile
 
@@ -15,6 +16,7 @@ MODULE = ROOT / "src/2pny-update-manager-0.3.31.112.py"
 spec = importlib.util.spec_from_file_location("pny_update_031112", MODULE)
 assert spec and spec.loader
 m = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = m
 spec.loader.exec_module(m)
 
 
