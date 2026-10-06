@@ -998,3 +998,14 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Consolidação `0.3.31.116`: **EM TESTE SW/CI** até gate combinado e build ARM64.
 - RF real, duplex, BER/RSSI e Nextion física: **PENDENTE HW**.
 - Debian 13/Trixie: **NÃO APLICÁVEL nesta candidata**; avaliação permanece isolada.
+
+## PU2PNY-OS 0.3.31.117 — CANDIDATA PARA TESTE FÍSICO
+
+- **REL-027 / estado:** PARA TESTE FÍSICO; não promover a produção sem HW real.
+- **Base imutável:** `v0.3.31.116` / commit `be75b68aa5549c15d538b1814ffd2df5987cb759`.
+- **Commit de runtime/build:** `1ab827b1e91ea0cac1bffa294c2242b0faf72f13`.
+- **SW/CI:** APROVADO na execução https://github.com/PU2PNY/2PNY-OS/actions/runs/37547804310.
+- **VPS:** APROVADO (source gates + overlay fixture + NextionDriver x86_64; Go indisponível na VPS).
+- **HW:** PENDENTE — Wi-Fi handoff real, Ethernet/mDNS no cliente, Nextion física, RF/DMR/D-Star/YSF e BER/RSSI RF não são aprovados por CI.
+- **Imagem SHA-256:** `c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b`.
+- **Escopo:** NET-037, LIVE-023, DISPLAY-025 e REL-027. Runtime RF/protocolos/rede transacional protegido.

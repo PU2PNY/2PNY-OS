@@ -1852,3 +1852,17 @@ Uma candidata formada por correções isoladas deve partir de baseline conhecida
 **Aceite:** baseline/commit identificados; delta auditável; Baseline Guard, Recovery, Display e i18n aplicáveis em PASS SW/CI; artefato ARM64 íntegro com SHA-256; estado HW explícito. **Validação mínima:** SW/CI para candidata; HW para promover itens físicos.
 
 Aplicação corrente: `0.3.31.116`, baseada no commit `1c91b26fd561eb7a727df896f2179fd951b6681a` da `0.3.31.110`. Debian 13/Trixie fica fora desta candidata.
+
+## 2026-10-06 — ciclo 0.3.31.117: retomada de rede e compatibilidade Nextion
+
+### NET-037 — Retomada automática do painel após handoff Wi-Fi
+Depois de `NET-002` confirmar associação, IPv4 e persistência do perfil, a página que iniciou a troca deve procurar de forma limitada e sob demanda os destinos de retomada fornecidos pelo backend, priorizando `http://pu2pny.local/`, e navegar para o painel na LAN quando ele estiver alcançável. O mecanismo não autoriza polling contínuo nem transforma falha de navegador/cliente em falso sucesso de rede. Em Ethernet, o sistema deve garantir `pu2pny.local`/mDNS; um navegador externo não pode ser forçado a abrir sem uma requisição do próprio cliente.
+
+### LIVE-023 — Barra Wi-Fi/Uplink usa apenas sinal real
+No box Ao Vivo, quando o uplink padrão for Wi-Fi, a barra deve usar exclusivamente `wifi_signal`/RSSI medidos pelo backend (`nmcli`/`iw`). Quando o uplink for Ethernet, exibir Ethernet e RSSI `—`, sem converter presença de cabo em porcentagem fictícia. Ausência de telemetria Wi-Fi também resulta em `—`/barra vazia.
+
+### DISPLAY-025 — Compatibilidade Pi-Star/WPSD/ON7LDS endurecida
+Além do renderer nativo MMDVMHost e do PU2PNY Moderno já existentes, o sistema pode oferecer um renderer explícito `on7lds-compatible` para HMI Pi-Star/WPSD/ON7LDS. O driver deve ser compilado de uma revisão upstream fixa, operar com exatamente um writer, usar Transparent Data quando a Nextion estiver ligada ao modem e manter TFT/HMI existente sem gravação automática. Toda execução de shell originada da HMI e download autônomo de dados pelo driver são proibidos. Layout/HMI instalado continua distinto do modelo físico; COMOK comprova hardware, não o HMI. Nextion física permanece HW PENDENTE até teste real.
+
+### REL-027 — 0.3.31.117 é overlay cirúrgico sobre 0.3.31.116
+A 0.3.31.117 parte da imagem publicada 0.3.31.116 e altera somente UI de retomada/indicador de uplink, integração de display/Nextion, identidade de versão, build/gates e documentação. MMDVMHost binário, DMRGateway/helpers de protocolo, DMR/D-Star/YSF, RF, frequências, offsets, `2pny-network-switch`, `2pny-network-online` e wizard permanecem protegidos/byte-idênticos. Build exige ARM64, SHA-256, preflight montado, gate de hashes e classificação PARA TESTE FÍSICO. **Validação mínima:** SW/CI; VPS quando aplicável; HW obrigatório para Nextion física, RF e handoff real do dispositivo.

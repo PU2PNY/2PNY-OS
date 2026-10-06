@@ -902,3 +902,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Debian 13/Trixie não é misturado nesta candidata.
 - DMR/D-Star/YSF, MMDVMHost, RF, frequências, offsets, rede e wizard permanecem fora do escopo.
 - Estado físico permanece `PENDENTE HW`; build ou VPS não substituem Raspberry Pi/MMDVM/Nextion.
+
+## 0.3.31.117 — 2026-10-06 — REL-027
+
+- NET-037: após conexão Wi-Fi confirmada, a UI passa a reencontrar o painel por `pu2pny.local` e pelos endereços reais fornecidos pelo backend; nenhum navegador é falsamente considerado “autoaberto” em Ethernet.
+- LIVE-023: `Wi-Fi / Uplink` passa a representar sinal Wi-Fi real; Ethernet mostra cabo sem RSSI/porcentagem inventada.
+- DISPLAY-025: adicionada compatibilidade explícita Pi-Star/WPSD/ON7LDS com NextionDriver pinado em `03b904270c9cb54f720d71753fc209afb1d9598f`, hardening contra HMI→shell/download autônomo, Transparent Data para display no modem, single-writer e sem flash automático de HMI/TFT.
+- Protegidos: MMDVMHost, DMR/D-Star/YSF, DMRGateway/helpers, RF, frequências, offsets, `2pny-network-switch`, `2pny-network-online` e wizard permanecem sem alteração pelo overlay.
+- Build/runtime commit: `1ab827b1e91ea0cac1bffa294c2242b0faf72f13`; imagem SHA-256 `c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37547804310; VPS: APROVADO (source gates + overlay fixture + NextionDriver x86_64; Go indisponível na VPS); HW: PENDENTE.

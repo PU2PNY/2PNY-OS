@@ -943,3 +943,15 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | Gates combinados 0.3.31.116 | SW/CI | EM TESTE | workflow `0.3.31.116-consolidation-ci.yml` |
 | Build/imagem ARM64 0.3.31.116 + SHA-256 | SW/CI | PENDENTE | executar somente após gates combinados |
 | DMR/D-Star/YSF/RF real e duplex | HW | PENDENTE | baseline protegido; reteste físico obrigatório antes de promoção |
+
+## 0.3.31.117 — REL-027
+
+| ID | Caso | Nível | Estado | Evidência/limite |
+|---|---|---|---|---|
+| NET-037 | Handoff pós-conexão usa `pu2pny.local`/resume URLs com tentativa limitada | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37547804310; HW real PENDENTE |
+| LIVE-023 | Barra usa `wifi_signal`/RSSI real; Ethernet e ausência de telemetria não geram porcentagem | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37547804310; RSSI físico PENDENTE |
+| DISPLAY-025-A | NextionDriver pinado compila ARM64 após hardening; `system()`/`popen()` removidos do source set | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37547804310 |
+| DISPLAY-025-B | Single-writer, Transparent Data, rollback e unit sandbox presentes na imagem | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37547804310; Nextion física PENDENTE |
+| REL-027 | Imagem ARM64 monta, overlay aplica, protegidos mantêm hash, `xz -t` e SHA-256 passam | SW/CI | APROVADO | SHA-256 `c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b` |
+| REL-027-VPS | Validação não-RF da candidata | VPS | APROVADO (source gates + overlay fixture + NextionDriver x86_64; Go indisponível na VPS) | VPS não substitui HW |
+| REL-027-HW | Wi-Fi/Ethernet/Nextion/RF em Raspberry Pi real | HW | PENDENTE | teste do operador obrigatório |
