@@ -2,6 +2,10 @@ name: Build and release PU2PNY-OS 0.3.31.116
 
 on:
   workflow_dispatch:
+  push:
+    branches: [pu2pny-os-0.3.31.116-consolidation]
+    paths:
+      - .github/workflows/0.3.31.116-build-release.yml
 
 permissions:
   contents: write
