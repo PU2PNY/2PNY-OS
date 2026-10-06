@@ -893,3 +893,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Validação concluída em SW/CI/VPS: WartyWallaby passou testes incrementais/COMOK/fallback/JS e staging `PROTECTED_IDENTICAL`; GitHub Actions run `36341170897` passou source, staging, ARM64, SHA-256, preflight, validador final, artifact e publish.
 - Publicada prerelease `v0.3.30-alpha` no commit `3ec9b8cd1228f1e722595ff5ff1e1de5bd70bb60`, SHA-256 da imagem `fa1cbb43c7497432972e4da852c3ce49277e8bebe9a18f4bdbdc52bf3423437b`.
 - Estado: **ALPHA / PARA TESTE FÍSICO**. Nenhum resultado físico foi promovido para PASS; flicker real, COMOK, Nextion/OLED/LCD, reboot/persistência e regressões RF permanecem HW PENDENTE.
+
+## 0.3.31.116 — REL-026 / consolidação segura
+
+- Adotado `REL-026`: nenhuma candidata consolidada recebe link de imagem antes de gates combinados, build ARM64, validação estrutural e SHA-256.
+- Recovery 0.3.31.112 consolidado após PASS SW/CI e VPS Debian 12; updater 0.3.20 permanece ativo e byte-idêntico porque a CLI 0.3.31.112 não é compatível com as chamadas atuais do painel/backend. O engine novo é empacotado de forma versionada e não autoritativa.
+- Mantidos Baseline Guard 0.3.31.113, contrato de display 0.3.31.114 e PT/EN/ES 0.3.31.115.
+- Debian 13/Trixie não é misturado nesta candidata.
+- DMR/D-Star/YSF, MMDVMHost, RF, frequências, offsets, rede e wizard permanecem fora do escopo.
+- Estado físico permanece `PENDENTE HW`; build ou VPS não substituem Raspberry Pi/MMDVM/Nextion.

@@ -987,3 +987,14 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Release: `v0.3.30-alpha`, prerelease publicada em 2026-09-27; imagem ARM64 593681200 bytes; SHA-256 `fa1cbb43c7497432972e4da852c3ce49277e8bebe9a18f4bdbdc52bf3423437b`.
 - TFT/HMI: nenhuma gravação automática.
 - HW: flicker real, COMOK físico, Nextion via modem/direta, OLED/LCD, persistência após reboot e regressão RF nesta imagem continuam **PENDENTE**. Nenhum item físico foi promovido para PASS.
+
+## 0.3.31.116 — consolidação para teste físico (REL-026)
+
+- Base imutável: `0.3.31.110` / commit `1c91b26fd561eb7a727df896f2179fd951b6681a`.
+- Recovery `0.3.31.112`: **PASS SW/CI** e **PASS VPS Debian 12** (8/8 testes transacionais + allowlist). O updater ativo `0.3.20` é preservado por incompatibilidade entre as CLIs; o engine novo entra versionado, sem assumir o runtime.
+- Baseline Guard `0.3.31.113`: **PASS SW/CI**.
+- Display `0.3.31.114`: **PASS SW/CI**; Nextion física continua **PENDENTE HW**.
+- PT/EN/ES `0.3.31.115`: **PASS SW/CI**.
+- Consolidação `0.3.31.116`: **EM TESTE SW/CI** até gate combinado e build ARM64.
+- RF real, duplex, BER/RSSI e Nextion física: **PENDENTE HW**.
+- Debian 13/Trixie: **NÃO APLICÁVEL nesta candidata**; avaliação permanece isolada.

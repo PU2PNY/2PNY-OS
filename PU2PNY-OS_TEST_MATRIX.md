@@ -929,3 +929,17 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | TEST-REL-0330A | REL-025 | diff 0.3.29→0.3.30 limitado à allowlist de display/CI/docs; protegidos byte-identical | SW/CI/VPS | PASS | compare + `PROTECTED_IDENTICAL` na VPS e CI |
 | TEST-REL-0330B | REL-025 | source → staged → ARM64 → SHA → preflight → validador → publish | SW/CI | PASS | GitHub Actions run `36341170897` |
 | TEST-REL-0330C | REL-025 | imagem publicada, link acessível e SHA-256 correspondente | SW/CI | PASS | prerelease `v0.3.30-alpha`; SHA-256 `fa1cbb43c7497432972e4da852c3ce49277e8bebe9a18f4bdbdc52bf3423437b` |
+
+## 0.3.31.116 — matriz de consolidação REL-026
+
+| Gate | Nível | Estado antes do build 116 | Evidência |
+|---|---|---|---|
+| Recovery preflight/prepare/activate/rollback 0.3.31.112 | SW/CI | APROVADO | run 37380823933; 8 testes transacionais |
+| Recovery em ambiente Debian 12 isolado | VPS | APROVADO | commit 2570de829bb762030890a5936da22cc0cb703a4a; 8/8 + allowlist |
+| Baseline Guard 0.3.31.113 | SW/CI | APROVADO | run 37375251867 |
+| Display contract 0.3.31.114 | SW/CI | APROVADO | suite de regressão; runtime não reescrito |
+| Nextion física | HW | PENDENTE | exige hardware real |
+| PT/EN/ES 0.3.31.115 | SW/CI | APROVADO | run 37380416056; catálogo integral |
+| Gates combinados 0.3.31.116 | SW/CI | EM TESTE | workflow `0.3.31.116-consolidation-ci.yml` |
+| Build/imagem ARM64 0.3.31.116 + SHA-256 | SW/CI | PENDENTE | executar somente após gates combinados |
+| DMR/D-Star/YSF/RF real e duplex | HW | PENDENTE | baseline protegido; reteste físico obrigatório antes de promoção |

@@ -1844,3 +1844,11 @@ Overlay cirúrgico sobre 0.3.28: NET-036, UI-045, UI-046 e documentação/gates 
 
 ### REL-025 — Escopo cirúrgico da 0.3.30-alpha
 A 0.3.30 é um overlay **display-only** sobre a 0.3.29. Somente fontes/helpers/UI de display, o trecho do handler `/api/display/override`, metadado de versão, testes/CI e documentação podem mudar. DMR simplex, D-Star simplex, YSF/C4FM, MMDVM/RF, rede/wizard, APRS, Direct, gateways, áudio, update/restore e demais runtimes devem permanecer byte-identical quando aplicável. Build exige gate de escopo, hashes de protegidos, testes SW/VPS, ARM64, SHA-256, preflight montado e validador final. Display físico permanece HW PENDENTE.
+
+## REL-026 — Gate de consolidação de candidata
+
+Uma candidata formada por correções isoladas deve partir de baseline conhecida e imutável, incorporar somente conjuntos previamente validados, sincronizar a documentação canônica, executar os gates combinados aplicáveis, construir ARM64 e validar integridade/SHA-256 antes de disponibilizar link de imagem. Validações dependentes de Raspberry Pi, MMDVM, RF ou display físico permanecem `PENDENTE HW` até execução real.
+
+**Aceite:** baseline/commit identificados; delta auditável; Baseline Guard, Recovery, Display e i18n aplicáveis em PASS SW/CI; artefato ARM64 íntegro com SHA-256; estado HW explícito. **Validação mínima:** SW/CI para candidata; HW para promover itens físicos.
+
+Aplicação corrente: `0.3.31.116`, baseada no commit `1c91b26fd561eb7a727df896f2179fd951b6681a` da `0.3.31.110`. Debian 13/Trixie fica fora desta candidata.
