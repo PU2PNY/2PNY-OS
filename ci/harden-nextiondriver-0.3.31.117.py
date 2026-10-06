@@ -28,12 +28,13 @@ safe = '''                if ((RXbuffer[1]<0xF2)&&(received>2)&&(received<200)) 
                 }
 '''
 s = s[:start] + safe + s[end:]
-# A display must never be able to start an HMI/TFT flash by itself.
-s, n = re.subn(r'if \(received==2\) updateDisplay\(\);',
-               'if (received==2) writelog(LOG_WARNING,"PU2PNY-OS blocked HMI/TFT update request");',
-               s, count=1)
-if n != 1:
-    raise SystemExit("HMI update trigger anchor missing/ambiguous")
+
+# A display must never be able to initiate a TFT/HMI flash by itself. Upstream
+# has two HMI command paths that call updateDisplay(); both are neutralized.
+flash_calls = s.count('updateDisplay();')
+if flash_calls != 2:
+    raise SystemExit(f"expected exactly two HMI updateDisplay call sites, found {flash_calls}")
+s = s.replace('updateDisplay();', 'writelog(LOG_WARNING,"PU2PNY-OS blocked HMI/TFT update request");')
 main.write_text(s)
 
 h = helpers.read_text()
@@ -54,8 +55,6 @@ for p in sorted(root.glob('*.c')):
 if unsafe:
     raise SystemExit("unsafe shell execution remains: " + ", ".join(unsafe))
 
-# Upstream display update routine may remain compiled, but all runtime call sites
-# from HMI input must be gone. Flashing is handled only by a future explicit OS flow.
 if 'updateDisplay();' in main.read_text():
     raise SystemExit("automatic updateDisplay call site still present")
 
