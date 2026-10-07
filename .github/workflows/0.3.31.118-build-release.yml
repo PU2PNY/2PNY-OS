@@ -1,0 +1,279 @@
+name: Build and release PU2PNY-OS 0.3.31.118
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [pu2pny-os-0.3.31.118-nextion-hotfix]
+    paths:
+      - .github/workflows/0.3.31.118-build-release.yml
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.31.118
+  cancel-in-progress: false
+
+env:
+  VERSION: 0.3.31.118
+  BASE_COMMIT: 088ba5901bfc918503430df658f1a7b5728ef64e
+  BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31.117/PU2PNY-OS-0.3.31.117-arm64.img.xz
+  BASE_SHA256: c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b
+  NEXTION_UPSTREAM_COMMIT: 03b904270c9cb54f720d71753fc209afb1d9598f
+  RELEASE_BRANCH: pu2pny-os-0.3.31.118-nextion-hotfix
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install build and image tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends git make gcc curl xz-utils util-linux e2fsprogs file binutils
+
+      - name: DISPLAY-026 source and scope gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse "$BASE_COMMIT")" = "$BASE_COMMIT"
+          python3 ci/test-0.3.31.118.py
+          python3 -m py_compile \
+            ci/harden-nextiondriver-0.3.31.118.py \
+            ci/patch-backend-0.3.31.118.py \
+            ci/test-0.3.31.118.py \
+            ci/sync-canonical-0.3.31.118.py
+          bash -n ci/patch-image-0.3.31.118.sh
+          git diff --exit-code "$BASE_COMMIT" HEAD -- src
+
+      - name: Build pinned hardened NextionDriver with non-root runtime PTY
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/nextiondriver
+          git clone https://github.com/on7lds/NextionDriver.git /tmp/nextiondriver
+          git -C /tmp/nextiondriver checkout --detach "$NEXTION_UPSTREAM_COMMIT"
+          test "$(git -C /tmp/nextiondriver rev-parse HEAD)" = "$NEXTION_UPSTREAM_COMMIT"
+          python3 ci/harden-nextiondriver-0.3.31.118.py /tmp/nextiondriver
+          grep -Fq '#define NEXTIONDRIVERLINK' /tmp/nextiondriver/NextionDriver.h
+          grep -Fq '/run/2pny-nextiondriver/ttyNextionDriver' /tmp/nextiondriver/NextionDriver.h
+          ! grep -Fq '"/dev/ttyNextionDriver"' /tmp/nextiondriver/NextionDriver.h
+          if grep -REn '\b(system|popen)[[:space:]]*\(' --include='*.c' /tmp/nextiondriver; then
+            echo 'ERROR: shell execution primitive remains in hardened NextionDriver source' >&2
+            exit 1
+          fi
+          make -C /tmp/nextiondriver clean
+          make -C /tmp/nextiondriver -j2
+          file /tmp/nextiondriver/NextionDriver | grep -Eq 'ARM aarch64|ARM64|aarch64'
+          /tmp/nextiondriver/NextionDriver -V | grep -Fq 'NextionDriver version'
+          strings /tmp/nextiondriver/NextionDriver | grep -Fq '/run/2pny-nextiondriver/ttyNextionDriver'
+          ! strings /tmp/nextiondriver/NextionDriver | grep -Fq '/dev/ttyNextionDriver'
+          readelf -Ws /tmp/nextiondriver/NextionDriver | grep -Eq '[[:space:]](system|popen)@' && { echo 'ERROR: forbidden libc shell symbol linked' >&2; exit 1; } || true
+          testdir="$(mktemp -d)"
+          trap 'rm -rf "$testdir"' EXIT
+          ln -s /dev/null "$testdir/ttyNextionDriver"
+          test -L "$testdir/ttyNextionDriver"
+          trap - EXIT
+          rm -rf "$testdir"
+
+      - name: Build backend with 0.3.31.117 display policy and 0.3.31.118 identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-0.3.31.118.py src/2pnyd-main-0.3.27.go /tmp/2pnyd-main.go
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          go build -trimpath -o /tmp/2pnyd-0.3.31.118 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-0.3.31.118 | grep -Eq 'ARM aarch64|ARM64|aarch64'
+          strings /tmp/2pnyd-0.3.31.118 | grep -Fq '0.3.31.118'
+          strings /tmp/2pnyd-0.3.31.118 | grep -Fq 'on7lds-compatible'
+
+      - name: Download and verify immutable 0.3.31.117 image
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base.img.xz "$BASE_URL"
+          echo "$BASE_SHA256  base.img.xz" | sha256sum -c -
+          xz -t base.img.xz
+          xz -dk base.img.xz
+          mv base.img "PU2PNY-OS-$VERSION-arm64.img"
+
+      - name: Apply display-only 0.3.31.118 overlay and preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          cleanup(){ set +e; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p /mnt/pu2pny-root
+          sudo mount "$ROOTDEV" /mnt/pu2pny-root
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = '0.3.31.117'
+
+          protected=(
+            usr/local/bin/MMDVM-Host
+            usr/local/libexec/2pny-dmr-apply
+            usr/local/sbin/2pny-protocol-network-apply
+            usr/local/sbin/2pny-network-switch
+            usr/local/sbin/2pny-network-online
+            usr/local/sbin/2pny-display-apply
+            usr/share/2pny/wizard.html
+            usr/share/2pny/internet.html
+            usr/share/2pny/dashboard.html
+            usr/share/2pny/display.html
+            etc/systemd/system/2pny-nextiondriver.service
+            etc/systemd/system/2pny-profile-autostart.service
+            etc/systemd/system/2pny-profile-proven.path
+            etc/systemd/system/2pny-profile-proven.service
+          )
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.before
+
+          sudo grep -Fq 'User=mmdvm' /mnt/pu2pny-root/etc/systemd/system/2pny-nextiondriver.service
+          sudo grep -Fq 'RuntimeDirectory=2pny-nextiondriver' /mnt/pu2pny-root/etc/systemd/system/2pny-nextiondriver.service
+          sudo grep -Fq '/run/2pny-nextiondriver/ttyNextionDriver' /mnt/pu2pny-root/usr/local/sbin/2pny-display-apply
+
+          sudo bash ci/patch-image-0.3.31.118.sh /mnt/pu2pny-root /tmp/nextiondriver/NextionDriver
+          sudo install -m 0755 /tmp/2pnyd-0.3.31.118 /mnt/pu2pny-root/usr/local/bin/2pnyd
+
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.118'
+          sudo strings /mnt/pu2pny-root/usr/local/bin/NextionDriver-pu2pny | grep -Fq '/run/2pny-nextiondriver/ttyNextionDriver'
+          ! sudo strings /mnt/pu2pny-root/usr/local/bin/NextionDriver-pu2pny | grep -Fq '/dev/ttyNextionDriver'
+
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+
+          sudo sync
+          sudo umount /mnt/pu2pny-root
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+
+          sudo mount -o ro "$ROOTDEV" /mnt/pu2pny-root
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo strings /mnt/pu2pny-root/usr/local/bin/NextionDriver-pu2pny | grep -Fq '/run/2pny-nextiondriver/ttyNextionDriver'
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.readonly
+          diff -u /tmp/protected.before /tmp/protected.readonly
+          sudo umount /mnt/pu2pny-root
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+
+      - name: Compress verify checksum and build info
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          HASH="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" > "$IMAGE.sha256"
+          echo "sha256=$HASH" >> "$GITHUB_OUTPUT"
+          cat > BUILD-INFO.txt <<EOF
+          PU2PNY-OS $VERSION
+          classification=physical-test-candidate
+          base=v0.3.31.117
+          base_sha256=$BASE_SHA256
+          runtime_commit=$GITHUB_SHA
+          nextiondriver_upstream=$NEXTION_UPSTREAM_COMMIT
+          scope=DISPLAY-026 + REL-028 + version/docs
+          fix=NextionDriver virtual PTY moved from /dev to /run/2pny-nextiondriver for non-root service
+          protected=MMDVMHost/DMR/D-Star/YSF/RF/network/wizard/display-apply/unit/UI byte-identical by image hash gate
+          validation=SW/CI + read-only image preflight
+          hardware_validation=PENDENTE
+          EOF
+
+      - name: Sync canonical docs after successful gates
+        shell: bash
+        env:
+          IMAGE_SHA256: ${{ steps.image.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          RUN_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          python3 ci/sync-canonical-0.3.31.118.py \
+            --runtime-commit "$GITHUB_SHA" \
+            --image-sha256 "$IMAGE_SHA256" \
+            --run-url "$RUN_URL" \
+            --vps 'BLOQUEADO no runner SentinelX por diretório de trabalho não gravável; CI reproduz e valida o subset não-RF'
+          if ! git diff --quiet -- PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md
+            git commit -m 'docs: record 0.3.31.118 Nextion HW hotfix'
+            git push origin HEAD:"$RELEASE_BRANCH"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.118-arm64
+          path: |
+            PU2PNY-OS-0.3.31.118-arm64.img.xz
+            PU2PNY-OS-0.3.31.118-arm64.img.xz.sha256
+            BUILD-INFO.txt
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.118-arm64
+          path: release
+      - name: Verify transferred artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        shell: bash
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.31.118 — hotfix Nextion ON7LDS / candidata para teste físico.
+
+          Evidência física da 0.3.31.117: Nextion NX3224T024_011R 320x240 confirmada por COMOK, mas o HMI permaneceu em `USE NextionDriver - ON7LDS`. O renderer avançado falhou e o rollback preservou MMDVMHost/DMRGateway.
+
+          Causa raiz: o NextionDriver upstream cria `/dev/ttyNextionDriver`, enquanto a integração segura da 0.3.31.117 executa como `mmdvm` e espera `/run/2pny-nextiondriver/ttyNextionDriver`.
+
+          Correção DISPLAY-026:
+          - mesmo upstream pinado e mesmo hardening da 0.3.31.117;
+          - PTY compilado diretamente para `/run/2pny-nextiondriver/ttyNextionDriver`;
+          - serviço continua não-root (`User=mmdvm`, `NoNewPrivileges=yes`);
+          - não concede escrita em `/dev`;
+          - nenhum HMI/TFT é gravado automaticamente.
+
+          Gate de hash preserva byte a byte MMDVMHost, DMR/D-Star/YSF, RF, rede, wizard, `2pny-display-apply`, unit do NextionDriver e UIs da 0.3.31.117. Apenas NextionDriver, identidade backend/versão e documentação são alterados.
+
+          Classificação: PARA TESTE FÍSICO. A saída real do splash ON7LDS e standby/RX/TX continuam PENDENTE HW até novo teste.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.31.118
+          target_commitish: ${{ env.RELEASE_BRANCH }}
+          name: PU2PNY-OS 0.3.31.118 — Nextion ON7LDS hotfix
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.31.118-arm64.img.xz
+            release/PU2PNY-OS-0.3.31.118-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
