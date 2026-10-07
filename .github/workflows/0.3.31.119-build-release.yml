@@ -6,6 +6,10 @@ on:
     branches: [pu2pny-os-0.3.31.119-display-autodetect]
     paths:
       - .github/workflows/0.3.31.119-build-release.yml
+      - ci/patch-image-0.3.31.119.sh
+      - ci/patch-backend-0.3.31.119.py
+      - ci/test-0.3.31.119.py
+      - ci/sync-canonical-0.3.31.119.py
 
 permissions:
   contents: write
