@@ -967,3 +967,15 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | REL-028 | Imagem 0.3.31.118 preserva hashes do runtime 0.3.31.117 exceto NextionDriver/backend/version | SW/CI | APROVADO | SHA-256 `111db204ab8f407aa0b25f503db0c612f3fc59575c437340314f173bd12d6dfc` |
 | REL-028-VPS | reprodução/validação não-RF | VPS | BLOQUEADO no runner SentinelX por diretório de trabalho não gravável; CI reproduz e valida o subset não-RF | VPS não substitui Nextion física |
 | REL-028-HW | Nextion ON7LDS sai do splash e acompanha standby/RX/TX | HW | PENDENTE | novo teste físico obrigatório |
+
+## 0.3.31.119 — DISPLAY-027 / REL-029
+
+| ID | Caso | Nível | Estado | Evidência/limite |
+|---|---|---|---|---|
+| DISPLAY-027-A | UI Nextion não expõe `pu2pny-modern-v2` e oferece G4KLX 0 / ON7LDS 2 / ON7LDS 3 / ON7LDS 4 | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37650989580 |
+| DISPLAY-027-B | `ScreenLayout=0` persiste/aplica como zero, sem fallback para layout 9 | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37650989580 |
+| DISPLAY-027-C | G4KLX/L2 usam MMDVMHost nativo; L3/L3 HS usam NextionDriver endurecido + Transparent Data; um writer por vez | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37650989580 |
+| DISPLAY-027-D | modelo/resolução por COMOK não é convertido em HMI/layout inventado | SW/CI | APROVADO | política e UI validadas em https://github.com/PU2PNY/2PNY-OS/actions/runs/37650989580; prova física depende do modem |
+| REL-029 | imagem 0.3.31.119 preserva por hash MMDVMHost, NextionDriver, RF/protocolos/rede/wizard | SW/CI | APROVADO | SHA-256 `ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978` |
+| REL-029-VPS | subset não-RF | VPS | NÃO VERIFICADO nesta execução; CI ARM64 valida o subset SW e não substitui hardware | VPS não substitui Nextion física |
+| REL-029-HW | Nextion real sai do splash e acompanha standby/RX/TX no perfil correto | HW | PENDENTE | teste físico obrigatório |

@@ -918,3 +918,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - DISPLAY-026 recompila o mesmo upstream pinado e o mesmo hardening da 0.3.31.117, alterando somente `NEXTIONDRIVERLINK` para o RuntimeDirectory não privilegiado.
 - Ponto de retorno: `backup/0.3.31.117-nextion-hw-fail-20261007` @ `088ba5901bfc918503430df658f1a7b5728ef64e`.
 - Build/runtime commit: `824a54c317fc872743808f6c9c9b8bf8fba6d5f4`; imagem SHA-256 `111db204ab8f407aa0b25f503db0c612f3fc59575c437340314f173bd12d6dfc`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37567112033; VPS: BLOQUEADO no runner SentinelX por diretório de trabalho não gravável; CI reproduz e valida o subset não-RF; HW: PENDENTE.
+
+## 0.3.31.119 — 2026-10-07 — REL-029 / DISPLAY-027
+
+- Removido do fluxo ativo de Nextion o renderer `PU2PNY Moderno V2`.
+- O seletor Renderer agora apresenta diretamente os quatro perfis padrão suportados: Modem/G4KLX (`0`), ON7LDS L2 (`2`), ON7LDS L3 (`3`) e ON7LDS L3 HS (`4`).
+- Corrigido o parse de layout que convertia `ScreenLayout=0` em fallback porque zero era tratado como falso.
+- Mantida detecção não destrutiva de hardware; modelo físico não é usado para inventar HMI/layout. Quando não houver evidência, o operador escolhe o Renderer manualmente.
+- Mantidos NextionDriver endurecido, PTY em `/run/2pny-nextiondriver/ttyNextionDriver`, Transparent Data com `SendFrameType=1`, single-writer e proibição de flash automático.
+- Referência oficial adicionada: `g4klx/MMDVM-Host` para Transparent Data; ON7LDS NextionDriver para o caminho `Port=modem`.
+- Base/rollback: `v0.3.31.118` / branch `pu2pny-os-0.3.31.118-nextion-hotfix`.
+- Build/runtime commit: `a97f79c16c987de13fa5d31ba2648dbfc9597e54`; imagem SHA-256 `ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37650989580; VPS: NÃO VERIFICADO nesta execução; CI ARM64 valida o subset SW e não substitui hardware; HW: PENDENTE.

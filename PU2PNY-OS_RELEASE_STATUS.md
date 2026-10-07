@@ -1021,3 +1021,16 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **VPS:** BLOQUEADO no runner SentinelX por diretório de trabalho não gravável; CI reproduz e valida o subset não-RF.
 - **Imagem SHA-256:** `111db204ab8f407aa0b25f503db0c612f3fc59575c437340314f173bd12d6dfc`.
 - **HW:** PENDENTE para comprovar saída do splash ON7LDS e standby/RX/TX reais. Não PROD.
+
+## PU2PNY-OS 0.3.31.119 — CANDIDATA PARA TESTE FÍSICO
+
+- **Escopo:** somente Display/Nextion — DISPLAY-027 + REL-029.
+- **Mudança ativa:** removida a opção Nextion `PU2PNY Moderno V2`; Renderer passa a oferecer somente Modem/G4KLX, ON7LDS L2, ON7LDS L3 e ON7LDS L3 HS.
+- **Correção adicional:** `ScreenLayout=0` deixa de cair no antigo fallback por avaliação booleana de zero.
+- **Detecção:** modelo/resolução continuam automáticos por evidência real; HMI/layout desconhecido exige escolha manual.
+- **Base:** `v0.3.31.118`, SHA-256 `111db204ab8f407aa0b25f503db0c612f3fc59575c437340314f173bd12d6dfc`.
+- **Commit de runtime/build:** `a97f79c16c987de13fa5d31ba2648dbfc9597e54`.
+- **SW/CI:** APROVADO em https://github.com/PU2PNY/2PNY-OS/actions/runs/37650989580.
+- **VPS:** NÃO VERIFICADO nesta execução; CI ARM64 valida o subset SW e não substitui hardware.
+- **Imagem SHA-256:** `ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978`.
+- **HW:** PENDENTE — Nextion física deve comprovar saída do splash e atualização de standby/RX/TX. Não PROD.

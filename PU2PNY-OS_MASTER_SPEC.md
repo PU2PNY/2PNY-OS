@@ -1874,3 +1874,13 @@ Quando o renderer `on7lds-compatible` for usado, o NextionDriver deve continuar 
 
 ### REL-028 — 0.3.31.118 corrige somente a integração do PTY ON7LDS
 A 0.3.31.118 parte da imagem publicada 0.3.31.117 e substitui somente o binário endurecido `NextionDriver-pu2pny`, a identidade de versão/backend e documentação/gates. MMDVMHost, DMR/D-Star/YSF, helpers RF/protocolo, rede, wizard, `2pny-display-apply`, unit systemd e UIs permanecem byte-idênticos à 0.3.31.117. Nextion física permanece HW PENDENTE após o build.
+
+## 2026-10-07 — ciclo 0.3.31.119: renderer padrão MMDVM/Nextion
+
+### DISPLAY-027 — Nextion somente por caminhos padrão MMDVM/ON7LDS
+O renderer Nextion específico `pu2pny-modern-v2` deixa de ser uma opção ativa do sistema. Para Nextion conectada ao modem, o painel deve oferecer no próprio campo **Renderer** somente perfis compatíveis com o ecossistema MMDVM: `Modem · G4KLX` (`ScreenLayout=0`), `Nextion · ON7LDS L2` (`ScreenLayout=2`) pelo renderer nativo do MMDVMHost, e `Nextion · ON7LDS L3/L3 HS` (`ScreenLayout=3/4`) pelo NextionDriver endurecido quando esse intermediário for necessário. O valor `ScreenLayout=0` deve permanecer zero durante persistência/aplicação; é proibido tratá-lo como valor ausente/falso. O hardware físico pode ser identificado por `connect/comok`, mas modelo/resolução não autorizam inferir qual HMI/layout foi gravado. Quando o HMI não puder ser provado, a seleção manual é obrigatória. Nenhum HMI/TFT é gravado automaticamente e permanece a regra de exatamente um writer.
+
+Referências técnicas: MMDVM-Host oficial (`https://github.com/g4klx/MMDVM-Host`) fornece Transparent Data (`setTransparentDataParams`, leitura/escrita transparente); NextionDriver ON7LDS (`https://github.com/on7lds/NextionDriver`) documenta operação `Port=modem` por Transparent Data com `SendFrameType=1`.
+
+### REL-029 — 0.3.31.119 é overlay estritamente de display sobre 0.3.31.118
+A 0.3.31.119 parte da imagem publicada 0.3.31.118. O delta de runtime é limitado a UI de Display, política `2pny-display-apply`, identidade do backend/versão e documentação/gates. MMDVMHost, NextionDriver endurecido, DMRGateway, DMR/D-Star/YSF, RF, frequências, offsets, rede, wizard e demais serviços permanecem protegidos por gate de hash. A aprovação de saída real do splash, standby/RX/TX e interação com a Nextion exige HW real.
