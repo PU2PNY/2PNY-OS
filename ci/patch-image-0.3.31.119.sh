@@ -31,9 +31,7 @@ def subone(s,pattern,repl,label,flags=re.M):
     if n!=1: raise SystemExit(f'{label}: anchor count={n}')
     return out
 
-# DISPLAY-027 UI: the Renderer field itself contains only the standard modem
-# and Nextion/ON7LDS profiles. Hardware/model detection remains automatic, but
-# no physical model is used to guess which HMI was flashed into the screen.
+# DISPLAY-027 UI: only standard MMDVM/Nextion renderer profiles remain.
 p,s=load('usr/share/2pny/display.html')
 old='<label>Renderer</label><select id="rendererSelect"><option value="pu2pny-modern-v2">PU2PNY Moderno V2</option><option value="mmdvmhost-native">Compatível Pi-Star/WPSD (MMDVMHost nativo)</option><option value="on7lds-compatible">Pi-Star/WPSD avançado · ON7LDS NextionDriver</option></select>'
 new='<label>Renderer</label><select id="rendererSelect"><option value="mmdvmhost-native|0">Modem · G4KLX padrão · ScreenLayout 0</option><option value="mmdvmhost-native|2">Nextion · ON7LDS L2 · ScreenLayout 2</option><option value="on7lds-compatible|3">Nextion · ON7LDS L3 · NextionDriver</option><option value="on7lds-compatible|4">Nextion · ON7LDS L3 HS · NextionDriver</option></select>'
@@ -52,8 +50,7 @@ s=one(s,"function syncRenderer(){var r=q('rendererSelect').value,native=r==='mmd
 old="q('enabled').checked=o.enabled!==false;q('rendererSelect').value=o.renderer==='on7lds-compatible'?'on7lds-compatible':(o.renderer==='mmdvmhost-native'?'mmdvmhost-native':'pu2pny-modern-v2');"
 new="q('enabled').checked=o.enabled!==false;var ol=Number(o.layout),or=o.renderer==='on7lds-compatible'?'on7lds-compatible':'mmdvmhost-native';if(or==='on7lds-compatible'&&![3,4].includes(ol))ol=3;if(or==='mmdvmhost-native'&&![0,2].includes(ol))ol=0;var rk=or+'|'+ol;q('rendererSelect').value=Array.from(q('rendererSelect').options).some(function(x){return x.value===rk})?rk:'mmdvmhost-native|0';"
 s=one(s,old,new,'renderer load')
-old="q('nativeLayout').value=String([0,2,3,4].includes(Number(o.layout))?Number(o.layout):2);syncRenderer()"
-s=one(s,old,"syncRenderer()",'remove layout load')
+s=one(s,"q('nativeLayout').value=String([0,2,3,4].includes(Number(o.layout))?Number(o.layout):2);syncRenderer()","syncRenderer()",'remove layout load')
 old="var renderer=q('rendererSelect').value,parts=q('modelSelect').value.split('|'),layout=renderer==='pu2pny-modern-v2'?9:Number(q('nativeLayout').value);var detail=renderer==='on7lds-compatible'?'Ativando compatibilidade ON7LDS por Transparent Data com writer exclusivo…':(renderer==='mmdvmhost-native'?'Ativando renderer compatível do MMDVMHost com writer exclusivo…':'Ativando PU2PNY Moderno V2 com atualizações incrementais…');"
 new="var choice=q('rendererSelect').value.split('|'),renderer=choice[0],layout=Number(choice[1]),parts=q('modelSelect').value.split('|');var detail=renderer==='on7lds-compatible'?'Ativando Nextion ON7LDS por Transparent Data com writer exclusivo…':'Ativando renderer nativo do MMDVMHost com writer exclusivo…';"
 s=one(s,old,new,'renderer save')
@@ -62,23 +59,19 @@ s=s.replace('<p><b>OLED 0x3C/0x3D:</b> SSD1306/SH1106 em Moderno V2 compacto. O 
 if 'PU2PNY Moderno' in s or 'pu2pny-modern-v2' in s: raise SystemExit('project-specific Nextion renderer remains in active display UI')
 p.write_text(s)
 
+# DISPLAY-027 runtime: preserve the proven transport implementations, remove the
+# project-specific renderer, and normalize only the renderer/layout policy.
 p,s=load('usr/local/sbin/2pny-display-apply')
-# Temporary source-shape diagnostic for the immutable 0.3.31.118 image.
-for ln,line in enumerate(s.splitlines(),1):
-    if any(k in line for k in ('requested','renderer','effective','DISPLAY-021','patch_modern_transport','layout')):
-        print(f'DISPLAY_HELPER_DIAG {ln}: {line}')
 s=s.replace('Two mutually-exclusive Nextion renderer modes are supported:', 'Two mutually-exclusive standard Nextion renderer modes are supported:')
 s=s.replace('- pu2pny-modern-v2: MMDVMHost owns the modem serial transport while the\n  PU2PNY Display Core sends vector commands through MQTT host/display-in.\n- mmdvmhost-native: MMDVMHost owns both transport and native Nextion rendering.','- mmdvmhost-native: MMDVMHost owns transport and native G4KLX/ON7LDS L2 rendering.\n- on7lds-compatible: hardened NextionDriver sits between MMDVMHost and ON7LDS L3/L3 HS through Transparent Data.')
-s=subone(s,r'^(?P<i>\s*)requested\s*=\s*int\(ov\.get\("layout"\)\s*or\s*[0-9]+\)\s*$',r'\g<i>raw_layout=ov.get("layout")\n\g<i>try:requested=int(raw_layout if raw_layout is not None else 0)\n\g<i>except Exception:requested=0','layout parser')
-s=subone(s,r'^(?P<i>\s*)if\s+requested\s+not\s+in\s*\(9\s*,\s*0\s*,\s*2\s*,\s*3\s*,\s*4\)\s*:\s*requested\s*=\s*[29]\s*$',r'\g<i>if requested not in (0,2,3,4):requested=0','layout allowlist')
-s=subone(s,r'^(?P<i>\s*)renderer\s*=\s*str\(ov\.get\("renderer"\)\s*or\s*.*\)\.strip\(\)\.lower\(\)\s*$',r'\g<i>renderer=str(ov.get("renderer") or ("on7lds-compatible" if requested in (3,4) else "mmdvmhost-native")).strip().lower()','renderer default')
-s=subone(s,r'^(?P<i>\s*)if\s+renderer\s+not\s+in\s*\([^\n]+\)\s*:\s*renderer\s*=\s*"[^"]+"\s*$',r'\g<i>if renderer not in ("mmdvmhost-native","on7lds-compatible"):renderer=("on7lds-compatible" if requested in (3,4) else "mmdvmhost-native")','renderer allowlist')
-policy_marker='# DISPLAY-021: MMDVM-connected Nextion may have a valid host->display path even\n'
-s=one(s,policy_marker,'if requested in (3,4):renderer="on7lds-compatible"\nelse:renderer="mmdvmhost-native"\n'+policy_marker,'final renderer normalization')
-s,n=re.subn(r'^\s*if\s+requested\s*==\s*9\s*:\s*renderer\s*=\s*"pu2pny-modern-v2"\s*$', '', s, count=1, flags=re.M)
-if n!=1: raise SystemExit(f'remove Moderno fallback: anchor count={n}')
+s=one(s,'requested=int(ov.get("layout") if ov.get("layout") is not None else 2)','raw_layout=ov.get("layout")\ntry:requested=int(raw_layout if raw_layout is not None else 0)\nexcept Exception:requested=0','layout parser')
+s=one(s,'if requested not in (9,0,2,3,4):requested=2','if requested not in (0,2,3,4):requested=0','layout allowlist')
+s=one(s,'renderer=str(ov.get("renderer") or "mmdvmhost-native").strip().lower()','renderer=str(ov.get("renderer") or ("on7lds-compatible" if requested in (3,4) else "mmdvmhost-native")).strip().lower()','renderer default')
+s=one(s,'if renderer not in ("pu2pny-modern-v2","mmdvmhost-native","on7lds-compatible"):renderer="mmdvmhost-native"','if renderer not in ("mmdvmhost-native","on7lds-compatible"):renderer=("on7lds-compatible" if requested in (3,4) else "mmdvmhost-native")','renderer allowlist')
+s=one(s,'if requested in (0,2,3) and renderer!="on7lds-compatible":renderer="mmdvmhost-native"\nif requested==4:renderer="on7lds-compatible"','if requested in (3,4):renderer="on7lds-compatible"\nelse:renderer="mmdvmhost-native"','renderer normalization')
 s=s.replace('    # Preserve an explicit native layout selection. Moderno V2 remains the\n    # default when the user has not selected ON7LDS 2/3.\n','')
-s=subone(s,r'^(?P<i>\s*)effective\s*=\s*requested\s+if\s+requested\s+in\s*\(0\s*,\s*2\s*,\s*3\s*\)\s+else\s+2\s*$',r'\g<i>effective=requested if requested in (0,2) else 0','native layouts')
+s=one(s,'    if requested==9:renderer="pu2pny-modern-v2"\n','', 'remove Moderno fallback')
+s=one(s,'    effective=requested if requested in (0,2,3) else 2','    effective=requested if requested in (0,2) else 0','native layouts')
 s=one(s,'if ov.get("enabled") is False:\n    ctl("disable","--now",LEGACY);ctl("disable","--now",CORE)','if ov.get("enabled") is False:\n    ctl("disable","--now",NEXTIONDRIVER);ctl("disable","--now",LEGACY);ctl("disable","--now",CORE)','disable compatibility writer')
 s=one(s,'if not kind:\n    ctl("disable","--now",LEGACY);ctl("disable","--now",CORE)','if not kind:\n    ctl("disable","--now",NEXTIONDRIVER);ctl("disable","--now",LEGACY);ctl("disable","--now",CORE)','not configured compatibility writer')
 s,n=re.subn(r'\ndef patch_modern_transport\(\):.*?\n    return backup\n', '\n', s, count=1, flags=re.S)
