@@ -1009,3 +1009,15 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **HW:** PENDENTE — Wi-Fi handoff real, Ethernet/mDNS no cliente, Nextion física, RF/DMR/D-Star/YSF e BER/RSSI RF não são aprovados por CI.
 - **Imagem SHA-256:** `c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b`.
 - **Escopo:** NET-037, LIVE-023, DISPLAY-025 e REL-027. Runtime RF/protocolos/rede transacional protegido.
+
+## PU2PNY-OS 0.3.31.118 — HOTFIX NEXTION / CANDIDATA PARA TESTE FÍSICO
+
+- **Feedback HW da 0.3.31.117:** DISPLAY-025 FALHOU. Nextion `NX3224T024_011R` 320x240 foi confirmada por COMOK, porém HMI `USE NextionDriver - ON7LDS` permaneceu no splash. A tentativa do renderer ON7LDS falhou e o rollback para `mmdvmhost-native` preservou MMDVMHost/DMRGateway ativos.
+- **Causa raiz:** upstream fixa `/dev/ttyNextionDriver`; a 0.3.31.117 roda como `mmdvm` e espera `/run/2pny-nextiondriver/ttyNextionDriver`.
+- **DISPLAY-026:** binário recompilado com PTY em RuntimeDirectory não privilegiado; nenhum root extra e nenhuma escrita geral em `/dev`.
+- **REL-028 / base:** `v0.3.31.117`, SHA-256 base `c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b`.
+- **Commit de runtime/build:** `824a54c317fc872743808f6c9c9b8bf8fba6d5f4`.
+- **SW/CI:** APROVADO em https://github.com/PU2PNY/2PNY-OS/actions/runs/37567112033.
+- **VPS:** BLOQUEADO no runner SentinelX por diretório de trabalho não gravável; CI reproduz e valida o subset não-RF.
+- **Imagem SHA-256:** `111db204ab8f407aa0b25f503db0c612f3fc59575c437340314f173bd12d6dfc`.
+- **HW:** PENDENTE para comprovar saída do splash ON7LDS e standby/RX/TX reais. Não PROD.

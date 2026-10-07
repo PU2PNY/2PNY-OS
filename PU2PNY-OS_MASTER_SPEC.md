@@ -1866,3 +1866,11 @@ Além do renderer nativo MMDVMHost e do PU2PNY Moderno já existentes, o sistema
 
 ### REL-027 — 0.3.31.117 é overlay cirúrgico sobre 0.3.31.116
 A 0.3.31.117 parte da imagem publicada 0.3.31.116 e altera somente UI de retomada/indicador de uplink, integração de display/Nextion, identidade de versão, build/gates e documentação. MMDVMHost binário, DMRGateway/helpers de protocolo, DMR/D-Star/YSF, RF, frequências, offsets, `2pny-network-switch`, `2pny-network-online` e wizard permanecem protegidos/byte-idênticos. Build exige ARM64, SHA-256, preflight montado, gate de hashes e classificação PARA TESTE FÍSICO. **Validação mínima:** SW/CI; VPS quando aplicável; HW obrigatório para Nextion física, RF e handoff real do dispositivo.
+
+## 2026-10-07 — ciclo 0.3.31.118: hotfix Nextion ON7LDS
+
+### DISPLAY-026 — Porta virtual ON7LDS não privilegiada
+Quando o renderer `on7lds-compatible` for usado, o NextionDriver deve continuar executando como usuário não privilegiado e criar/publicar seu PTY exclusivamente em `/run/2pny-nextiondriver/ttyNextionDriver`, dentro do `RuntimeDirectory` gerenciado pelo systemd. Não é permitido resolver a compatibilidade elevando o driver a root ou concedendo escrita geral em `/dev`. O caminho consumido por MMDVMHost e o caminho compilado no driver devem ser idênticos.
+
+### REL-028 — 0.3.31.118 corrige somente a integração do PTY ON7LDS
+A 0.3.31.118 parte da imagem publicada 0.3.31.117 e substitui somente o binário endurecido `NextionDriver-pu2pny`, a identidade de versão/backend e documentação/gates. MMDVMHost, DMR/D-Star/YSF, helpers RF/protocolo, rede, wizard, `2pny-display-apply`, unit systemd e UIs permanecem byte-idênticos à 0.3.31.117. Nextion física permanece HW PENDENTE após o build.

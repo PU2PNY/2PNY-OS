@@ -910,3 +910,11 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - DISPLAY-025: adicionada compatibilidade explícita Pi-Star/WPSD/ON7LDS com NextionDriver pinado em `03b904270c9cb54f720d71753fc209afb1d9598f`, hardening contra HMI→shell/download autônomo, Transparent Data para display no modem, single-writer e sem flash automático de HMI/TFT.
 - Protegidos: MMDVMHost, DMR/D-Star/YSF, DMRGateway/helpers, RF, frequências, offsets, `2pny-network-switch`, `2pny-network-online` e wizard permanecem sem alteração pelo overlay.
 - Build/runtime commit: `1ab827b1e91ea0cac1bffa294c2242b0faf72f13`; imagem SHA-256 `c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37547804310; VPS: APROVADO (source gates + overlay fixture + NextionDriver x86_64; Go indisponível na VPS); HW: PENDENTE.
+
+## 0.3.31.118 — 2026-10-07 — REL-028 / DISPLAY-026
+
+- Registrado HW FAIL da compatibilidade ON7LDS na 0.3.31.117: Nextion `NX3224T024_011R` foi confirmada por COMOK, mas permaneceu no splash do HMI `USE NextionDriver - ON7LDS`; a aplicação do renderer avançado falhou e executou rollback seguro.
+- Causa raiz confirmada em código/upstream: NextionDriver usa `/dev/ttyNextionDriver`, enquanto a integração 0.3.31.117 roda como `mmdvm` e espera `/run/2pny-nextiondriver/ttyNextionDriver`.
+- DISPLAY-026 recompila o mesmo upstream pinado e o mesmo hardening da 0.3.31.117, alterando somente `NEXTIONDRIVERLINK` para o RuntimeDirectory não privilegiado.
+- Ponto de retorno: `backup/0.3.31.117-nextion-hw-fail-20261007` @ `088ba5901bfc918503430df658f1a7b5728ef64e`.
+- Build/runtime commit: `824a54c317fc872743808f6c9c9b8bf8fba6d5f4`; imagem SHA-256 `111db204ab8f407aa0b25f503db0c612f3fc59575c437340314f173bd12d6dfc`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37567112033; VPS: BLOQUEADO no runner SentinelX por diretório de trabalho não gravável; CI reproduz e valida o subset não-RF; HW: PENDENTE.

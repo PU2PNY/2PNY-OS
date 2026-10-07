@@ -955,3 +955,15 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | REL-027 | Imagem ARM64 monta, overlay aplica, protegidos mantêm hash, `xz -t` e SHA-256 passam | SW/CI | APROVADO | SHA-256 `c323d796135d8e69eca9240d50e40a8f529d79b1992d94a7753946f88a4f403b` |
 | REL-027-VPS | Validação não-RF da candidata | VPS | APROVADO (source gates + overlay fixture + NextionDriver x86_64; Go indisponível na VPS) | VPS não substitui HW |
 | REL-027-HW | Wi-Fi/Ethernet/Nextion/RF em Raspberry Pi real | HW | PENDENTE | teste do operador obrigatório |
+
+## 0.3.31.117 feedback HW / 0.3.31.118 — REL-028
+
+| ID | Caso | Nível | Estado | Evidência/limite |
+|---|---|---|---|---|
+| DISPLAY-025-HW-117 | HMI ON7LDS físico sai do splash com renderer avançado | HW | FALHOU | HMI ficou em `USE NextionDriver - ON7LDS`; apply falhou e rollback restaurou `mmdvmhost-native` |
+| DISPLAY-025-ROLLBACK-117 | Falha de renderer preserva rádio/config anterior | HW | APROVADO | MMDVMHost e DMRGateway permaneceram ativos após rollback |
+| DISPLAY-026-A | Driver compilado usa `/run/2pny-nextiondriver/ttyNextionDriver` e não `/dev/ttyNextionDriver` | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37567112033 |
+| DISPLAY-026-B | unit continua não-root + RuntimeDirectory; display-apply usa o mesmo PTY | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37567112033 |
+| REL-028 | Imagem 0.3.31.118 preserva hashes do runtime 0.3.31.117 exceto NextionDriver/backend/version | SW/CI | APROVADO | SHA-256 `111db204ab8f407aa0b25f503db0c612f3fc59575c437340314f173bd12d6dfc` |
+| REL-028-VPS | reprodução/validação não-RF | VPS | BLOQUEADO no runner SentinelX por diretório de trabalho não gravável; CI reproduz e valida o subset não-RF | VPS não substitui Nextion física |
+| REL-028-HW | Nextion ON7LDS sai do splash e acompanha standby/RX/TX | HW | PENDENTE | novo teste físico obrigatório |
