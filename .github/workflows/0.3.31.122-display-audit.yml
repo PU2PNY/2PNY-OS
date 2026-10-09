@@ -1,0 +1,61 @@
+name: PU2PNY-OS 0.3.31.122 display audit
+
+on:
+  push:
+    branches: [pu2pny-os-0.3.31.122-pistar-wpsd-nextion]
+    paths:
+      - .github/workflows/0.3.31.122-display-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31.121/PU2PNY-OS-0.3.31.121-arm64.img.xz
+  BASE_SHA256: ee00e310f12ad89aefe9508e009c5bc36f156b306ac02788de2040a3a11c8b22
+
+jobs:
+  audit-display-runtime:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download immutable 0.3.31.121 image
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base.img.xz "$BASE_URL"
+          echo "$BASE_SHA256  base.img.xz" | sha256sum -c -
+          xz -t base.img.xz
+          xz -dk base.img.xz
+      - name: Inspect exact display and MMDVMHost runtime contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOOP="$(sudo losetup --find --show --partscan base.img)"
+          cleanup(){ set +e; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p /mnt/pu2pny-root
+          sudo mount -o ro "$ROOTDEV" /mnt/pu2pny-root
+          ROOT=/mnt/pu2pny-root
+          echo '=== VERSION ==='
+          sudo cat "$ROOT/etc/2pny/version"
+          echo '=== MMDVMHOST UNIT ==='
+          sudo cat "$ROOT/etc/systemd/system/2pny-mmdvmhost.service"
+          echo '=== NEXTIONDRIVER UNIT ==='
+          sudo cat "$ROOT/etc/systemd/system/2pny-nextiondriver.service"
+          echo '=== USER/GROUP ==='
+          sudo grep -E '^(mmdvm|2pny|www-data):' "$ROOT/etc/passwd" || true
+          sudo grep -E '^(mmdvm|dialout|tty|2pny|www-data):' "$ROOT/etc/group" || true
+          echo '=== PATH OWNERSHIP ==='
+          sudo stat -c '%A %U:%G %a %n' "$ROOT/var/lib/2pny" "$ROOT/var/lib/2pny/mmdvm" "$ROOT/var/lib/2pny/mmdvm/MMDVM-Host.ini" "$ROOT/usr/local/bin/MMDVM-Host" "$ROOT/usr/local/bin/NextionDriver-pu2pny"
+          echo '=== DISPLAY APPLY RELEVANT ==='
+          sudo grep -nE 'NEXTIONDRIVER|patch_on7lds|restart_host_or_rollback|ttyNextionDriver|Transparent Data|SendFrameType|ctl\(' "$ROOT/usr/local/sbin/2pny-display-apply" || true
+          echo '=== SYSTEMD VERIFY ==='
+          sudo systemd-analyze verify --root="$ROOT" "$ROOT/etc/systemd/system/2pny-nextiondriver.service" "$ROOT/etc/systemd/system/2pny-mmdvmhost.service" 2>&1 || true
+          sudo umount /mnt/pu2pny-root
+          sudo losetup -d "$LOOP"
+          trap - EXIT
