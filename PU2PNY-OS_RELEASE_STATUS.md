@@ -1046,3 +1046,14 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **VPS:** NÃO VERIFICADO nesta execução; CI ARM64 valida SW e não substitui hardware.
 - **Imagem SHA-256:** `43fa01b610519c3c8e63a474a6494a6cd6247b7750c8eb0815a9328b9ffe1a03`.
 - **HW:** PENDENTE — validar Nextion física e `http://pu2pny.local/` no Raspberry Pi real. Não PROD.
+
+## PU2PNY-OS 0.3.31.121 — CANDIDATA PARA TESTE FÍSICO
+- **Escopo:** DISPLAY-029 + REL-031.
+- **Causa tratada:** handoff ON7LDS/NextionDriver podia falhar antes de assumir a porta virtual; G4KLX/L2 `active` não comprova HMI compatível.
+- **Mudança:** clean stop/start do NextionDriver, limpeza do PTY, flag upstream `-i`, validação conjunta NextionDriver + MMDVMHost + PTY e rollback.
+- **Base:** `v0.3.31.120`, SHA-256 `43fa01b610519c3c8e63a474a6494a6cd6247b7750c8eb0815a9328b9ffe1a03`.
+- **Commit de runtime/build:** `9b9ddc4ab4cdff8f516ab02eef3c4f7d8c7d949f`.
+- **SW/CI:** APROVADO em https://github.com/PU2PNY/2PNY-OS/actions/runs/37878210638.
+- **VPS:** NÃO VERIFICADO nesta execução; CI ARM64 executou smoke real do binário sem RF.
+- **Imagem SHA-256:** `ee00e310f12ad89aefe9508e009c5bc36f156b306ac02788de2040a3a11c8b22`.
+- **HW:** PENDENTE — saída visual standby/RX/TX e compatibilidade da HMI real precisam do Raspberry/MMDVM/Nextion do operador.

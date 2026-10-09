@@ -938,3 +938,10 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Nenhum perfil Wi-Fi/Ethernet, RF, DMR, D-Star, YSF, frequência, gateway ou wizard é alterado.
 - Base/rollback: `v0.3.31.119` / branch `pu2pny-os-0.3.31.119-display-autodetect`.
 - Build/runtime commit: `776f7d6676fc1f31ce2c8167aed7bb766c168c6d`; imagem SHA-256 `43fa01b610519c3c8e63a474a6494a6cd6247b7750c8eb0815a9328b9ffe1a03`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37862675745; VPS: NÃO VERIFICADO nesta execução; CI ARM64 valida SW e não substitui hardware; HW: PENDENTE.
+
+## 0.3.31.121 — 2026-10-09 — REL-031 / DISPLAY-029
+- Corrigido handoff ON7LDS: NextionDriver passa por clean stop/start após a configuração ser gravada.
+- PTY stale é removido antes do start; `-i` upstream evita abortar por instância detectada durante transição.
+- Aplicação só confirma o modo após NextionDriver, `2pny-mmdvmhost.service` e PTY estarem simultaneamente estáveis; falha restaura a configuração anterior.
+- MMDVMHost e binário NextionDriver permanecem byte-idênticos à 0.3.31.120.
+- Build/runtime commit: `9b9ddc4ab4cdff8f516ab02eef3c4f7d8c7d949f`; imagem SHA-256 `ee00e310f12ad89aefe9508e009c5bc36f156b306ac02788de2040a3a11c8b22`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37878210638; HW: PENDENTE.

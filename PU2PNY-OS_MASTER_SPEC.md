@@ -1895,3 +1895,11 @@ Avahi deve anunciar explicitamente o hostname `pu2pny` por IPv4 e ser reanunciad
 
 ### REL-030 — 0.3.31.120 é overlay cirúrgico sobre 0.3.31.119
 A 0.3.31.120 parte da imagem publicada 0.3.31.119. O delta é limitado a `2pny-display-apply`, Avahi/dispatcher mDNS, identidade do backend/versão e documentação/gates. MMDVMHost, NextionDriver binário, DMR/D-Star/YSF, RF, frequências, gateways, Wi-Fi profiles, wizard e demais caminhos permanecem protegidos por hash. Nextion real e resolução mDNS no equipamento do usuário exigem validação HW.
+
+## 2026-10-09 — ciclo 0.3.31.121: handoff real ON7LDS/NextionDriver
+
+### DISPLAY-029 — NextionDriver precisa assumir a topologia antes do MMDVMHost
+Quando uma Nextion ligada ao modem usar ON7LDS L3/L3 HS, a troca de renderer deve recriar de forma limpa o PTY do NextionDriver, usar o modo upstream `-i` para não abortar por detecção de processo concorrente/stale, iniciar o NextionDriver com a configuração já gravada, validar a existência da porta virtual e somente então estabilizar o MMDVMHost. A transição continua single-writer, com rollback automático e sem flash de HMI/TFT. Um estado `active` do renderer nativo não pode ser tratado como prova de saída visível na HMI.
+
+### REL-031 — 0.3.31.121 é overlay estritamente de runtime Nextion sobre 0.3.31.120
+A 0.3.31.121 parte da imagem publicada 0.3.31.120. O delta é limitado ao helper `2pny-display-apply`, unit `2pny-nextiondriver.service`, identidade de versão e documentação/gates. MMDVMHost, binário NextionDriver, DMR/D-Star/YSF, RF, rede/mDNS, Wi-Fi, wizard e UI permanecem protegidos por gate de hash. Aprovação visual exige HW real.
