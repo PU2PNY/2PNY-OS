@@ -65,8 +65,8 @@ jobs:
           go test /tmp/2pnyd-main.go
           go build -trimpath -o /tmp/2pnyd-0.3.31.121 /tmp/2pnyd-main.go
           file /tmp/2pnyd-0.3.31.121 | grep -Eq 'ARM aarch64|ARM64|aarch64'
-          strings /tmp/2pnyd-0.3.31.121 | grep -Fq '0.3.31.121'
-          strings /tmp/2pnyd-0.3.31.121 | grep -Fq 'on7lds-compatible'
+          grep -aFq '0.3.31.121' /tmp/2pnyd-0.3.31.121
+          grep -aFq 'on7lds-compatible' /tmp/2pnyd-0.3.31.121
 
       - name: Download and verify immutable 0.3.31.120 image
         shell: bash
@@ -84,7 +84,7 @@ jobs:
           set -euo pipefail
           IMG="PU2PNY-OS-$VERSION-arm64.img"
           LOOP="$(sudo losetup --find --show --partscan "$IMG")"
-          cleanup(){ set +e; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          cleanup(){ set +e; sudo rm -rf /run/2pny-nextiondriver; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
           trap cleanup EXIT
           sleep 1
           ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
@@ -120,19 +120,19 @@ jobs:
           sudo grep -Fq 'NextionDriver-pu2pny -d -i -vv -c' /mnt/pu2pny-root/etc/systemd/system/2pny-nextiondriver.service
           sudo grep -Fq 'ExecStartPre=/usr/bin/rm -f /run/2pny-nextiondriver/ttyNextionDriver' /mnt/pu2pny-root/etc/systemd/system/2pny-nextiondriver.service
           sudo grep -Fq 'active("2pny-mmdvmhost.service")' /mnt/pu2pny-root/usr/local/sbin/2pny-display-apply
-          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.121'
+          sudo grep -aFq '0.3.31.121' /mnt/pu2pny-root/usr/local/bin/2pnyd
 
           for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.after
           diff -u /tmp/protected.before /tmp/protected.after
 
-          # ARM64 runtime smoke: the exact shipped hardened binary must stay alive
-          # and create its virtual PTY using the same modem/Transparent Data mode.
           SMOKE=/tmp/nextion-smoke
           rm -rf "$SMOKE"; mkdir -p "$SMOKE"
           sudo cp /mnt/pu2pny-root/usr/local/bin/NextionDriver-pu2pny "$SMOKE/NextionDriver-pu2pny"
           sudo cp /mnt/pu2pny-root/usr/share/2pny/nextiondriver/groups.txt "$SMOKE/groups.txt"
           sudo cp /mnt/pu2pny-root/usr/share/2pny/nextiondriver/users.csv "$SMOKE/users.csv"
           sudo chown -R "$(id -u):$(id -g)" "$SMOKE"
+          sudo rm -rf /run/2pny-nextiondriver
+          sudo install -d -m 0755 -o "$(id -u)" -g "$(id -g)" /run/2pny-nextiondriver
           cat >"$SMOKE/MMDVM.ini" <<EOF
           [General]
           Display=Nextion
@@ -143,7 +143,7 @@ jobs:
           [DMR]
           Enable=1
           [Nextion]
-          Port=$SMOKE/ttyNextionDriver
+          Port=/run/2pny-nextiondriver/ttyNextionDriver
           ScreenLayout=3
           [Transparent Data]
           Enable=1
@@ -163,12 +163,17 @@ jobs:
           SleepWhenInactive=0
           EOF
           "$SMOKE/NextionDriver-pu2pny" -d -i -c "$SMOKE/MMDVM.ini" >"$SMOKE/driver.log" 2>&1 & NDPID=$!
-          for i in $(seq 1 40); do test -L "$SMOKE/ttyNextionDriver" && kill -0 "$NDPID" 2>/dev/null && break; sleep .25; done
-          test -L "$SMOKE/ttyNextionDriver"
-          kill -0 "$NDPID"
+          ready=0
+          for i in $(seq 1 40); do
+            if test -L /run/2pny-nextiondriver/ttyNextionDriver && kill -0 "$NDPID" 2>/dev/null; then ready=1; break; fi
+            if ! kill -0 "$NDPID" 2>/dev/null; then break; fi
+            sleep .25
+          done
+          if test "$ready" != 1; then cat "$SMOKE/driver.log"; exit 1; fi
+          grep -Fq 'Transparent data sockets active' "$SMOKE/driver.log"
           kill -TERM "$NDPID" || true
           wait "$NDPID" || true
-          grep -Fq 'Transparent data sockets active' "$SMOKE/driver.log"
+          sudo rm -rf /run/2pny-nextiondriver
 
           sudo sync
           sudo umount /mnt/pu2pny-root
