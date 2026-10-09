@@ -1,0 +1,251 @@
+name: Build and release PU2PNY-OS 0.3.31.120
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [pu2pny-os-0.3.31.120-nextion-mdns-fix]
+    paths:
+      - .github/workflows/0.3.31.120-build-release.yml
+      - ci/patch-image-0.3.31.120.sh
+      - ci/patch-backend-0.3.31.120.py
+      - ci/test-0.3.31.120.py
+      - ci/sync-canonical-0.3.31.120.py
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.31.120
+  cancel-in-progress: false
+
+env:
+  VERSION: 0.3.31.120
+  BASE_COMMIT: 274cf740dbea0a21e1431896c0ca3ccd775281a0
+  BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31.119/PU2PNY-OS-0.3.31.119-arm64.img.xz
+  BASE_SHA256: ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978
+  RELEASE_BRANCH: pu2pny-os-0.3.31.120-nextion-mdns-fix
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install build and image tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc xz-utils util-linux e2fsprogs file binutils
+
+      - name: DISPLAY-028 NET-038 source and scope gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse "$BASE_COMMIT")" = "$BASE_COMMIT"
+          python3 ci/test-0.3.31.120.py
+          python3 -m py_compile ci/patch-backend-0.3.31.120.py ci/test-0.3.31.120.py ci/sync-canonical-0.3.31.120.py
+          bash -n ci/patch-image-0.3.31.120.sh
+          git diff --exit-code "$BASE_COMMIT" HEAD -- src
+
+      - name: Build 0.3.31.120 backend identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-0.3.31.120.py src/2pnyd-main-0.3.27.go /tmp/2pnyd-main.go
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          go build -trimpath -o /tmp/2pnyd-0.3.31.120 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-0.3.31.120 | grep -Eq 'ARM aarch64|ARM64|aarch64'
+          strings /tmp/2pnyd-0.3.31.120 | grep -Fq '0.3.31.120'
+          strings /tmp/2pnyd-0.3.31.120 | grep -Fq 'mmdvmhost-native'
+          strings /tmp/2pnyd-0.3.31.120 | grep -Fq 'on7lds-compatible'
+          ! strings /tmp/2pnyd-0.3.31.120 | grep -Fq 'pu2pny-modern-v2'
+
+      - name: Download and verify immutable 0.3.31.119 image
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base.img.xz "$BASE_URL"
+          echo "$BASE_SHA256  base.img.xz" | sha256sum -c -
+          xz -t base.img.xz
+          xz -dk base.img.xz
+          mv base.img "PU2PNY-OS-$VERSION-arm64.img"
+
+      - name: Apply surgical 0.3.31.120 overlay and preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          cleanup(){ set +e; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p /mnt/pu2pny-root
+          sudo mount "$ROOTDEV" /mnt/pu2pny-root
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = '0.3.31.119'
+
+          protected=(
+            usr/local/bin/MMDVM-Host
+            usr/local/bin/NextionDriver-pu2pny
+            usr/local/libexec/2pny-dmr-apply
+            usr/local/sbin/2pny-protocol-network-apply
+            usr/local/sbin/2pny-network-switch
+            usr/local/sbin/2pny-network-online
+            usr/share/2pny/wizard.html
+            usr/share/2pny/internet.html
+            usr/share/2pny/dashboard.html
+            usr/share/2pny/display.html
+            etc/systemd/system/2pny-nextiondriver.service
+            etc/systemd/system/2pny-profile-autostart.service
+            etc/systemd/system/2pny-profile-proven.path
+            etc/systemd/system/2pny-profile-proven.service
+          )
+          for f in "${protected[@]}"; do sudo test -e "/mnt/pu2pny-root/$f"; sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.before
+
+          sudo bash ci/patch-image-0.3.31.120.sh /mnt/pu2pny-root
+          sudo install -m 0755 /tmp/2pnyd-0.3.31.120 /mnt/pu2pny-root/usr/local/bin/2pnyd
+
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo python3 -m py_compile /mnt/pu2pny-root/usr/local/sbin/2pny-display-apply
+          sudo grep -Fq 'if (not ctl("enable",NEXTIONDRIVER)) or (not ctl("restart",NEXTIONDRIVER)):' /mnt/pu2pny-root/usr/local/sbin/2pny-display-apply
+          sudo grep -Fq 'host-name=pu2pny' /mnt/pu2pny-root/etc/avahi/avahi-daemon.conf
+          sudo grep -Fq 'use-ipv4=yes' /mnt/pu2pny-root/etc/avahi/avahi-daemon.conf
+          sudo test -x /mnt/pu2pny-root/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns
+          sudo grep -Fq 'try-restart avahi-daemon.service' /mnt/pu2pny-root/etc/NetworkManager/dispatcher.d/90-pu2pny-mdns
+          sudo test -L /mnt/pu2pny-root/etc/systemd/system/multi-user.target.wants/avahi-daemon.service || sudo test -L /mnt/pu2pny-root/etc/systemd/system/dbus-org.freedesktop.Avahi.service
+          sudo strings /mnt/pu2pny-root/usr/local/bin/2pnyd | grep -Fq '0.3.31.120'
+
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+
+          sudo sync
+          sudo umount /mnt/pu2pny-root
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+
+          sudo mount -o ro "$ROOTDEV" /mnt/pu2pny-root
+          test "$(sudo cat /mnt/pu2pny-root/etc/2pny/version)" = "$VERSION"
+          sudo grep -Fq 'restart",NEXTIONDRIVER' /mnt/pu2pny-root/usr/local/sbin/2pny-display-apply
+          sudo grep -Fq 'host-name=pu2pny' /mnt/pu2pny-root/etc/avahi/avahi-daemon.conf
+          for f in "${protected[@]}"; do sudo sha256sum "/mnt/pu2pny-root/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.readonly
+          diff -u /tmp/protected.before /tmp/protected.readonly
+          sudo umount /mnt/pu2pny-root
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+
+      - name: Compress verify checksum and build info
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          HASH="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" > "$IMAGE.sha256"
+          echo "sha256=$HASH" >> "$GITHUB_OUTPUT"
+          cat > BUILD-INFO.txt <<EOF
+          PU2PNY-OS $VERSION
+          classification=physical-test-candidate
+          base=v0.3.31.119
+          base_sha256=$BASE_SHA256
+          runtime_commit=$GITHUB_SHA
+          scope=DISPLAY-028 + NET-038 + REL-030
+          nextion_fix=controlled NextionDriver restart after atomic config write
+          mdns_fix=explicit pu2pny Avahi hostname + event-driven NetworkManager reannounce
+          protected=MMDVMHost/NextionDriver binary/DMR/D-Star/YSF/RF/Wi-Fi profiles/wizard/display UI byte-identical by image hash gate
+          validation=SW/CI + mounted/read-only ARM64 image preflight
+          hardware_validation=PENDENTE
+          EOF
+
+      - name: Sync canonical docs after successful gates
+        shell: bash
+        env:
+          IMAGE_SHA256: ${{ steps.image.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          RUN_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          python3 ci/sync-canonical-0.3.31.120.py \
+            --runtime-commit "$GITHUB_SHA" \
+            --image-sha256 "$IMAGE_SHA256" \
+            --run-url "$RUN_URL" \
+            --vps 'NÃO VERIFICADO nesta execução; CI ARM64 valida SW e não substitui hardware'
+          if ! git diff --quiet -- PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md
+            git commit -m 'docs: record 0.3.31.120 physical-test candidate'
+            git push origin HEAD:"$RELEASE_BRANCH"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.120-arm64
+          path: |
+            PU2PNY-OS-0.3.31.120-arm64.img.xz
+            PU2PNY-OS-0.3.31.120-arm64.img.xz.sha256
+            BUILD-INFO.txt
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.120-arm64
+          path: release
+      - name: Verify transferred artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Write release notes
+        shell: bash
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.31.120 — Nextion reapply + pu2pny.local — candidata para teste físico.
+
+          DISPLAY-028:
+          - corrige a reaplicação ON7LDS/NextionDriver: após gravar a configuração, o serviço é explicitamente reiniciado;
+          - preserva rollback, PTY endurecido, Transparent Data, single-writer e HMI/TFT existente;
+          - não altera MMDVMHost nem o binário NextionDriver.
+
+          NET-038:
+          - Avahi anuncia explicitamente `pu2pny.local` por IPv4;
+          - mudança de uplink no NetworkManager dispara reanúncio event-driven, sem polling;
+          - não altera perfis Wi-Fi/Ethernet, DHCP, RF ou protocolos.
+
+          MMDVMHost, NextionDriver binário, DMR/D-Star/YSF, RF, Wi-Fi profiles, wizard e UI de Display permanecem byte-idênticos à base v0.3.31.119 por gate de hash.
+
+          Classificação: PARA TESTE FÍSICO. Nextion real e resolução de `pu2pny.local` continuam PENDENTES HW até teste no Raspberry Pi.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.31.120
+          target_commitish: ${{ env.RELEASE_BRANCH }}
+          name: PU2PNY-OS 0.3.31.120 — Nextion + mDNS fix
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.31.120-arm64.img.xz
+            release/PU2PNY-OS-0.3.31.120-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
