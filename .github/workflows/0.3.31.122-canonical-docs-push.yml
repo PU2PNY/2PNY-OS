@@ -1,0 +1,53 @@
+name: PU2PNY-OS 0.3.31.122 Canonical Docs Sync
+
+on:
+  push:
+    branches: [pu2pny-os-0.3.31.122-pistar-wpsd-nextion]
+    paths: [.github/workflows/0.3.31.122-canonical-docs-push.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Record DISPLAY-030 and HW evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          append_once(){ file="$1"; marker="$2"; text="$3"; grep -Fq "$marker" "$file" || printf '\n%s\n' "$text" >> "$file"; }
+          append_once PU2PNY-OS_MASTER_SPEC.md 'DISPLAY-030 — Compatibilidade de telas Pi-Star/WPSD' '### DISPLAY-030 — Compatibilidade de telas Pi-Star/WPSD
+- Somente o subsistema de Display pode reproduzir o contrato de compatibilidade Pi-Star/WPSD; RF, MMDVM, protocolos, rede, wizard e demais baselines permanecem protegidos.
+- Nextion com HMI PD0DIB/ON7LDS usa NextionDriver com `Port=modem`, PTY antes do MMDVMHost, Transparent Data loopback e `SendFrameType=1`.
+- Em ON7LDS, MMDVMHost requer NextionDriver e inicia depois dele; fora de ON7LDS essa dependência é removida.
+- Nenhum HMI/TFT é sobrescrito automaticamente. L3/ScreenLayout 3 é o caminho padrão; HS/Layout 4 exige HMI compatível e seleção explícita.
+- Aceite HW: standby, RX e TX visíveis no Raspberry Pi + MMDVM + Nextion real.'
+          append_once PU2PNY-OS_TEST_MATRIX.md 'HW-DISPLAY-121-20261009' '### HW-DISPLAY-121-20261009 — FALHOU
+- 0.3.31.121 em hardware real: PD0DIB Model 10 v1.05 (`USE NextionDriver - ON7LDS`); ON7LDS L3/L3 HS retornaram rollback e não exibiram dados.
+- DISPLAY-029 não aprovado em HW; evidência originou DISPLAY-030.
+
+### SW-DISPLAY-122-20261009 — APROVADO SW/CI; HW PENDENTE
+- Gates ARM64: lifecycle `RequiredBy`, ordem NextionDriver -> MMDVMHost, PTY, Transparent Data, SendFrameType=1, fsck e hashes protegidos passaram.
+- Standby/RX/TX real: PENDENTE HW.'
+          append_once PU2PNY-OS_RELEASE_STATUS.md '0.3.31.122 — Pi-Star/WPSD Nextion' '### 0.3.31.122 — Pi-Star/WPSD Nextion
+- Classificação: PARA TESTE FÍSICO.
+- Escopo: DISPLAY-030 somente.
+- Base: 0.3.31.121.
+- SW/CI: APROVADO. HW: PENDENTE.
+- SHA-256: c39d217ef5d6f70c171a82fb2c45f23a95a20345dfed1246a4a22892e47602b5.
+- Não declarar Display funcional até confirmação real de standby/RX/TX.'
+          append_once PU2PNY-OS_CHANGELOG.md 'DISPLAY-030 (2026-10-09)' '### DISPLAY-030 (2026-10-09)
+- Decisão permanente: somente Display pode seguir a compatibilidade Pi-Star/WPSD/PD0DIB/ON7LDS; esta exceção não autoriza alterações nos demais subsistemas.
+- 0.3.31.122: ON7LDS passa a instalar `RequiredBy=2pny-mmdvmhost.service` com `Before=2pny-mmdvmhost.service`, alinhado ao lifecycle PD0DIB/Pi-Star.
+- Ao sair de ON7LDS a dependência é removida; rollback restaura o MMDVMHost; HMI/TFT não é gravado silenciosamente.'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --quiet -- PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_CHANGELOG.md; then
+            git add PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_CHANGELOG.md
+            git commit -m 'docs: record DISPLAY-030 and 0.3.31.122 validation'
+            git push origin HEAD:pu2pny-os-0.3.31.122-pistar-wpsd-nextion
+          fi
