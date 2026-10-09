@@ -1,0 +1,257 @@
+name: Build and release PU2PNY-OS 0.3.31.122
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [pu2pny-os-0.3.31.122-pistar-wpsd-nextion]
+    paths:
+      - .github/workflows/0.3.31.122-build-release.yml
+      - ci/patch-image-0.3.31.122.sh
+      - ci/patch-backend-0.3.31.122.py
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.31.122
+  cancel-in-progress: false
+
+env:
+  VERSION: 0.3.31.122
+  BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31.121/PU2PNY-OS-0.3.31.121-arm64.img.xz
+  BASE_SHA256: ee00e310f12ad89aefe9508e009c5bc36f156b306ac02788de2040a3a11c8b22
+  RELEASE_BRANCH: pu2pny-os-0.3.31.122-pistar-wpsd-nextion
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Install image tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc xz-utils util-linux e2fsprogs file binutils systemd
+      - name: DISPLAY-030 source gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n ci/patch-image-0.3.31.122.sh
+          python3 -m py_compile ci/patch-backend-0.3.31.122.py
+          grep -Fq 'RequiredBy=2pny-mmdvmhost.service' ci/patch-image-0.3.31.122.sh
+          grep -Fq 'SendFrameType","1"' ci/patch-image-0.3.31.122.sh
+          grep -Fq 'Port","modem"' ci/patch-image-0.3.31.122.sh
+          grep -Fq 'ctl("daemon-reload")' ci/patch-image-0.3.31.122.sh
+      - name: Build backend identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-0.3.31.122.py src/2pnyd-main-0.3.27.go /tmp/2pnyd-main.go
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          go build -trimpath -o /tmp/2pnyd-0.3.31.122 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-0.3.31.122 | grep -Eq 'ARM aarch64|ARM64|aarch64'
+          grep -aFq '0.3.31.122' /tmp/2pnyd-0.3.31.122
+          grep -aFq 'on7lds-compatible' /tmp/2pnyd-0.3.31.122
+      - name: Download and verify immutable 0.3.31.121
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base.img.xz "$BASE_URL"
+          echo "$BASE_SHA256  base.img.xz" | sha256sum -c -
+          xz -t base.img.xz
+          xz -dk base.img.xz
+          mv base.img "PU2PNY-OS-$VERSION-arm64.img"
+      - name: Apply DISPLAY-030 overlay and preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          NDPID=""
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          cleanup(){ set +e; test -z "${NDPID:-}" || kill -TERM "$NDPID" 2>/dev/null || true; sudo rm -rf /run/2pny-nextiondriver; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p /mnt/pu2pny-root
+          sudo mount "$ROOTDEV" /mnt/pu2pny-root
+          ROOT=/mnt/pu2pny-root
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = '0.3.31.121'
+          protected=(
+            usr/local/bin/MMDVM-Host
+            usr/local/bin/NextionDriver-pu2pny
+            usr/local/libexec/2pny-dmr-apply
+            usr/local/sbin/2pny-protocol-network-apply
+            usr/local/sbin/2pny-network-switch
+            usr/local/sbin/2pny-network-online
+            usr/share/2pny/wizard.html
+            usr/share/2pny/internet.html
+            usr/share/2pny/dashboard.html
+            usr/share/2pny/display.html
+            etc/systemd/system/2pny-mmdvmhost.service
+            etc/avahi/avahi-daemon.conf
+            etc/NetworkManager/dispatcher.d/90-pu2pny-mdns
+          )
+          for f in "${protected[@]}"; do sudo test -e "$ROOT/$f"; sudo sha256sum "$ROOT/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.before
+          sudo bash ci/patch-image-0.3.31.122.sh "$ROOT"
+          sudo install -m 0755 /tmp/2pnyd-0.3.31.122 "$ROOT/usr/local/bin/2pnyd"
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = "$VERSION"
+          sudo python3 -m py_compile "$ROOT/usr/local/sbin/2pny-display-apply"
+          sudo systemd-analyze verify --root="$ROOT" "$ROOT/etc/systemd/system/2pny-nextiondriver.service" "$ROOT/etc/systemd/system/2pny-mmdvmhost.service"
+          # Prove the Pi-Star/PD0DIB RequiredBy contract is installed only while enabled.
+          sudo systemctl --root="$ROOT" enable 2pny-nextiondriver.service
+          sudo test -L "$ROOT/etc/systemd/system/2pny-mmdvmhost.service.requires/2pny-nextiondriver.service"
+          sudo systemctl --root="$ROOT" disable 2pny-nextiondriver.service
+          sudo test ! -e "$ROOT/etc/systemd/system/2pny-mmdvmhost.service.requires/2pny-nextiondriver.service"
+          for f in "${protected[@]}"; do sudo sha256sum "$ROOT/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+          # Execute the exact shipped ARM64 NextionDriver with the ON7LDS modem contract.
+          SMOKE=/tmp/nextion-smoke
+          rm -rf "$SMOKE"; mkdir -p "$SMOKE"
+          sudo cp "$ROOT/usr/local/bin/NextionDriver-pu2pny" "$SMOKE/NextionDriver-pu2pny"
+          sudo cp "$ROOT/usr/share/2pny/nextiondriver/groups.txt" "$SMOKE/groups.txt"
+          sudo cp "$ROOT/usr/share/2pny/nextiondriver/users.csv" "$SMOKE/users.csv"
+          sudo chown -R "$(id -u):$(id -g)" "$SMOKE"
+          sudo rm -rf /run/2pny-nextiondriver
+          sudo install -d -m 0755 -o "$(id -u)" -g "$(id -g)" /run/2pny-nextiondriver
+          cat >"$SMOKE/MMDVM.ini" <<EOF
+          [General]
+          Display=Nextion
+          [Info]
+          RXFrequency=439500000
+          TXFrequency=439500000
+          Location=CI
+          [DMR]
+          Enable=1
+          [Nextion]
+          Port=/run/2pny-nextiondriver/ttyNextionDriver
+          ScreenLayout=3
+          [Transparent Data]
+          Enable=1
+          RemoteAddress=127.0.0.1
+          RemotePort=40094
+          LocalPort=40095
+          SendFrameType=1
+          [NextionDriver]
+          Port=modem
+          LogLevel=2
+          DataFilesPath=$SMOKE/
+          GroupsFile=groups.txt
+          DMRidFile=users.csv
+          WaitForLan=0
+          ShowModesStatus=1
+          RemoveDim=0
+          SleepWhenInactive=0
+          EOF
+          "$SMOKE/NextionDriver-pu2pny" -d -i -c "$SMOKE/MMDVM.ini" >"$SMOKE/driver.log" 2>&1 & NDPID=$!
+          ready=0
+          for i in $(seq 1 48); do
+            if test -L /run/2pny-nextiondriver/ttyNextionDriver && kill -0 "$NDPID" 2>/dev/null; then ready=1; break; fi
+            sleep .25
+          done
+          test "$ready" = 1 || { cat "$SMOKE/driver.log"; exit 1; }
+          sockets=0
+          for i in $(seq 1 24); do grep -Fq 'Transparent data sockets active' "$SMOKE/driver.log" && { sockets=1; break; }; sleep .25; done
+          test "$sockets" = 1 || { cat "$SMOKE/driver.log"; exit 1; }
+          kill -TERM "$NDPID" || true; wait "$NDPID" || true; NDPID=""
+          sudo rm -rf /run/2pny-nextiondriver
+          sudo sync
+          sudo umount "$ROOT"
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+          sudo mount -o ro "$ROOTDEV" "$ROOT"
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = "$VERSION"
+          for f in "${protected[@]}"; do sudo sha256sum "$ROOT/$f"; done | sed 's#/mnt/pu2pny-root/##' > /tmp/protected.readonly
+          diff -u /tmp/protected.before /tmp/protected.readonly
+          sudo umount "$ROOT"; sudo losetup -d "$LOOP"; trap - EXIT
+      - name: Compress verify checksum
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          HASH="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" > "$IMAGE.sha256"
+          echo "sha256=$HASH" >> "$GITHUB_OUTPUT"
+          cat > BUILD-INFO.txt <<EOF
+          PU2PNY-OS $VERSION
+          classification=physical-test-candidate
+          base=v0.3.31.121
+          base_sha256=$BASE_SHA256
+          runtime_commit=$GITHUB_SHA
+          scope=DISPLAY-030 only
+          nextion=PD0DIB/ON7LDS Pi-Star lifecycle: RequiredBy + Before + PTY + Transparent Data SendFrameType=1
+          protected=RF/DMR/D-Star/YSF/MMDVMHost binary/NextionDriver binary/network/mDNS/Wi-Fi/wizard/dashboard/display UI byte-identical to 0.3.31.121
+          validation=SW/CI ARM64 + systemd RequiredBy install/remove gate + NextionDriver PTY/Transparent Data smoke + image fsck
+          hardware_validation=PENDENTE
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.122-arm64
+          path: |
+            PU2PNY-OS-0.3.31.122-arm64.img.xz
+            PU2PNY-OS-0.3.31.122-arm64.img.xz.sha256
+            BUILD-INFO.txt
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.122-arm64
+          path: release
+      - name: Verify transferred artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm64.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Release notes
+        shell: bash
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.31.122 — Pi-Star/WPSD Nextion lifecycle — PARA TESTE FÍSICO.
+
+          DISPLAY-030:
+          - incorpora a evidência HW da 0.3.31.121: PD0DIB Model 10 v1.05 exige NextionDriver/ON7LDS e L3 continuava fazendo rollback;
+          - alinha o lifecycle ON7LDS ao método PD0DIB/Pi-Star: ao habilitar NextionDriver, MMDVMHost passa a requerê-lo e a iniciar depois dele;
+          - a dependência é removida ao sair do modo ON7LDS, portanto G4KLX/native não passa a depender do driver;
+          - usa ScreenLayout 3, Port=modem, Transparent Data em loopback e SendFrameType=1;
+          - preserva TFT/HMI existente; nenhuma gravação automática;
+          - L3 HS continua apenas seleção explícita para HMI compatível.
+
+          Escopo protegido por hash: RF, DMR, D-Star, YSF, binários MMDVMHost/NextionDriver, rede/mDNS, Wi-Fi, wizard, dashboard e UI de Display permanecem byte-idênticos à 0.3.31.121.
+
+          Validação física de standby/RX/TX continua PENDENTE e precisa ser executada no Raspberry Pi + MMDVM + Nextion real.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.31.122
+          target_commitish: ${{ env.RELEASE_BRANCH }}
+          name: PU2PNY-OS 0.3.31.122 — Pi-Star/WPSD Nextion
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.31.122-arm64.img.xz
+            release/PU2PNY-OS-0.3.31.122-arm64.img.xz.sha256
+            release/BUILD-INFO.txt
