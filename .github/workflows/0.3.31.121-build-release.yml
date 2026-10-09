@@ -83,8 +83,9 @@ jobs:
         run: |
           set -euo pipefail
           IMG="PU2PNY-OS-$VERSION-arm64.img"
+          NDPID=""
           LOOP="$(sudo losetup --find --show --partscan "$IMG")"
-          cleanup(){ set +e; sudo rm -rf /run/2pny-nextiondriver; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          cleanup(){ set +e; if test -n "${NDPID:-}"; then kill -TERM "$NDPID" 2>/dev/null || true; wait "$NDPID" 2>/dev/null || true; fi; sudo rm -rf /run/2pny-nextiondriver; mountpoint -q /mnt/pu2pny-root && sudo umount /mnt/pu2pny-root; sudo losetup -d "$LOOP" 2>/dev/null || true; }
           trap cleanup EXIT
           sleep 1
           ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
@@ -170,9 +171,16 @@ jobs:
             sleep .25
           done
           if test "$ready" != 1; then cat "$SMOKE/driver.log"; exit 1; fi
-          grep -Fq 'Transparent data sockets active' "$SMOKE/driver.log"
+          sockets=0
+          for i in $(seq 1 20); do
+            if grep -Fq 'Transparent data sockets active' "$SMOKE/driver.log"; then sockets=1; break; fi
+            if ! kill -0 "$NDPID" 2>/dev/null; then break; fi
+            sleep .25
+          done
+          if test "$sockets" != 1; then cat "$SMOKE/driver.log"; exit 1; fi
           kill -TERM "$NDPID" || true
           wait "$NDPID" || true
+          NDPID=""
           sudo rm -rf /run/2pny-nextiondriver
 
           sudo sync
