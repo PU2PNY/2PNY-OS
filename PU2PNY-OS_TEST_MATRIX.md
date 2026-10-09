@@ -979,3 +979,16 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | REL-029 | imagem 0.3.31.119 preserva por hash MMDVMHost, NextionDriver, RF/protocolos/rede/wizard | SW/CI | APROVADO | SHA-256 `ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978` |
 | REL-029-VPS | subset não-RF | VPS | NÃO VERIFICADO nesta execução; CI ARM64 valida o subset SW e não substitui hardware | VPS não substitui Nextion física |
 | REL-029-HW | Nextion real sai do splash e acompanha standby/RX/TX no perfil correto | HW | PENDENTE | teste físico obrigatório |
+
+## 0.3.31.120 — DISPLAY-028 / NET-038 / REL-030
+
+| ID | Caso | Nível | Estado | Evidência/limite |
+|---|---|---|---|---|
+| DISPLAY-028-A | reaplicar ON7LDS executa enable + restart explícito do NextionDriver | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37862675745 |
+| DISPLAY-028-B | rollback e regra single-writer permanecem no helper existente | SW/CI | APROVADO | overlay cirúrgico validado em https://github.com/PU2PNY/2PNY-OS/actions/runs/37862675745 |
+| DISPLAY-028-HW | Nextion NX3224T024_011R exibe standby e acompanha RX/TX no perfil HMI correto | HW | PENDENTE | teste físico obrigatório |
+| NET-038-A | Avahi configura `host-name=pu2pny` e IPv4 | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37862675745 |
+| NET-038-B | mudança NetworkManager dispara reanúncio Avahi sem polling | SW/CI | APROVADO | https://github.com/PU2PNY/2PNY-OS/actions/runs/37862675745 |
+| NET-038-HW | `http://pu2pny.local/` resolve após Wi-Fi/Ethernet e troca de uplink | HW | PENDENTE | teste físico obrigatório |
+| REL-030 | imagem 0.3.31.120 preserva por hash MMDVMHost, NextionDriver binário, RF/protocolos, Wi-Fi profiles e wizard | SW/CI | APROVADO | SHA-256 `43fa01b610519c3c8e63a474a6494a6cd6247b7750c8eb0815a9328b9ffe1a03` |
+| REL-030-VPS | subset não-RF | VPS | NÃO VERIFICADO nesta execução; CI ARM64 valida SW e não substitui hardware | VPS não substitui hardware físico |

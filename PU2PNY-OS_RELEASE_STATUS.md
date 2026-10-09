@@ -1034,3 +1034,15 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **VPS:** NÃO VERIFICADO nesta execução; CI ARM64 valida o subset SW e não substitui hardware.
 - **Imagem SHA-256:** `ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978`.
 - **HW:** PENDENTE — Nextion física deve comprovar saída do splash e atualização de standby/RX/TX. Não PROD.
+
+## PU2PNY-OS 0.3.31.120 — CANDIDATA PARA TESTE FÍSICO
+
+- **Escopo:** DISPLAY-028 + NET-038 + REL-030.
+- **Nextion:** força restart controlado do NextionDriver após reaplicação da configuração, preservando rollback/single-writer.
+- **mDNS:** Avahi anuncia `pu2pny.local` explicitamente e recebe reanúncio event-driven após mudança de uplink.
+- **Base:** `v0.3.31.119`, SHA-256 `ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978`.
+- **Commit de runtime/build:** `776f7d6676fc1f31ce2c8167aed7bb766c168c6d`.
+- **SW/CI:** APROVADO em https://github.com/PU2PNY/2PNY-OS/actions/runs/37862675745.
+- **VPS:** NÃO VERIFICADO nesta execução; CI ARM64 valida SW e não substitui hardware.
+- **Imagem SHA-256:** `43fa01b610519c3c8e63a474a6494a6cd6247b7750c8eb0815a9328b9ffe1a03`.
+- **HW:** PENDENTE — validar Nextion física e `http://pu2pny.local/` no Raspberry Pi real. Não PROD.

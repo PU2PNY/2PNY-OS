@@ -929,3 +929,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Referência oficial adicionada: `g4klx/MMDVM-Host` para Transparent Data; ON7LDS NextionDriver para o caminho `Port=modem`.
 - Base/rollback: `v0.3.31.118` / branch `pu2pny-os-0.3.31.118-nextion-hotfix`.
 - Build/runtime commit: `a97f79c16c987de13fa5d31ba2648dbfc9597e54`; imagem SHA-256 `ab787f47c27566c9f057b3517320674c010904ea98b82e478993fb75a6fa3978`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37650989580; VPS: NÃO VERIFICADO nesta execução; CI ARM64 valida o subset SW e não substitui hardware; HW: PENDENTE.
+
+## 0.3.31.120 — 2026-10-08 — REL-030 / DISPLAY-028 / NET-038
+
+- Corrigida reaplicação ON7LDS: após escrever a configuração, `NextionDriver` é habilitado e reiniciado explicitamente antes de validar o PTY; rollback existente é preservado.
+- Mantidos sem alteração o binário NextionDriver, MMDVMHost e a regra de um único writer; nenhum HMI/TFT é gravado automaticamente.
+- Corrigido `pu2pny.local`: Avahi recebe hostname explícito `pu2pny` e reanúncio event-driven nas mudanças relevantes do NetworkManager, sem polling.
+- Nenhum perfil Wi-Fi/Ethernet, RF, DMR, D-Star, YSF, frequência, gateway ou wizard é alterado.
+- Base/rollback: `v0.3.31.119` / branch `pu2pny-os-0.3.31.119-display-autodetect`.
+- Build/runtime commit: `776f7d6676fc1f31ce2c8167aed7bb766c168c6d`; imagem SHA-256 `43fa01b610519c3c8e63a474a6494a6cd6247b7750c8eb0815a9328b9ffe1a03`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37862675745; VPS: NÃO VERIFICADO nesta execução; CI ARM64 valida SW e não substitui hardware; HW: PENDENTE.

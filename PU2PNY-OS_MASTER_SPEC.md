@@ -1884,3 +1884,14 @@ Referências técnicas: MMDVM-Host oficial (`https://github.com/g4klx/MMDVM-Host
 
 ### REL-029 — 0.3.31.119 é overlay estritamente de display sobre 0.3.31.118
 A 0.3.31.119 parte da imagem publicada 0.3.31.118. O delta de runtime é limitado a UI de Display, política `2pny-display-apply`, identidade do backend/versão e documentação/gates. MMDVMHost, NextionDriver endurecido, DMRGateway, DMR/D-Star/YSF, RF, frequências, offsets, rede, wizard e demais serviços permanecem protegidos por gate de hash. A aprovação de saída real do splash, standby/RX/TX e interação com a Nextion exige HW real.
+
+## 2026-10-08 — ciclo 0.3.31.120: reaplicação Nextion + recuperação mDNS
+
+### DISPLAY-028 — configuração Nextion deve reiniciar o writer selecionado
+Ao aplicar ON7LDS L3/L3 HS, após a gravação atômica de `MMDVM-Host.ini`, o `NextionDriver` deve ser explicitamente reiniciado antes da validação do PTY. Apenas `systemctl enable --now` não é suficiente quando o serviço já está ativo. A falha de enable/restart deve preservar o rollback existente. Continuam obrigatórios: exatamente um writer, nenhuma gravação automática de HMI/TFT e nenhuma apropriação direta de `/dev/serial0` quando a UART pertence ao MMDVM.
+
+### NET-038 — `pu2pny.local` deve ser reanunciado após mudança de uplink
+Avahi deve anunciar explicitamente o hostname `pu2pny` por IPv4 e ser reanunciado de forma event-driven quando o NetworkManager sinalizar `up`, mudança DHCP ou conectividade. Esta correção não altera perfis Wi-Fi/Ethernet, DHCP, DNS externo, RF ou protocolos.
+
+### REL-030 — 0.3.31.120 é overlay cirúrgico sobre 0.3.31.119
+A 0.3.31.120 parte da imagem publicada 0.3.31.119. O delta é limitado a `2pny-display-apply`, Avahi/dispatcher mDNS, identidade do backend/versão e documentação/gates. MMDVMHost, NextionDriver binário, DMR/D-Star/YSF, RF, frequências, gateways, Wi-Fi profiles, wizard e demais caminhos permanecem protegidos por hash. Nextion real e resolução mDNS no equipamento do usuário exigem validação HW.
