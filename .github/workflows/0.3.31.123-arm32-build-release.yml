@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/0.3.31.123-arm32-build-release.yml'
       - 'ci/prepare-0.3.31.123-arm32.py'
+      - 'ci/build-nextiondriver-arm32.sh'
       - 'ci/ARM32-0.3.31.123-BUILD-INTENT.md'
   workflow_dispatch:
 
@@ -44,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file binutils iproute2 parted nodejs systemd
+          sudo apt-get install -y --no-install-recommends git curl xz-utils util-linux rsync dosfstools e2fsprogs file binutils iproute2 parted nodejs systemd
 
       - name: Restore cumulative baseline through 0.3.31-alpha
         shell: bash
@@ -135,7 +136,8 @@ jobs:
           grep -Fq 'raspios-bookworm-armhf-lite.img.xz' "$B"
           ! grep -Fq 'GOARCH=arm64' "$B"
           ! grep -Fq 'raspios-bookworm-arm64-lite.img.xz' "$B"
-          python3 -m py_compile ci/prepare-0.3.31.123-arm32.py
+          python3 -m py_compile ci/prepare-0.3.31.123-arm32.py ci/harden-nextiondriver-0.3.31.117.py ci/harden-nextiondriver-0.3.31.118.py
+          bash -n ci/build-nextiondriver-arm32.sh
           python3 -m py_compile ci/patch-backend-0.3.31.122.py
           for v in 110 111 112 113 114 115 116 117 118 119 120 121 122; do
             test ! -f "ci/patch-image-0.3.31.$v.sh" || bash -n "ci/patch-image-0.3.31.$v.sh"
@@ -152,6 +154,14 @@ jobs:
           sudo xz -t "$IMG"
           sudo cp "$IMG" "$GITHUB_WORKSPACE/base-arm32.img.xz"
           sudo chown "$USER:$USER" "$GITHUB_WORKSPACE/base-arm32.img.xz"
+
+      - name: Build hardened NextionDriver for ARM32 rootfs
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ci/build-nextiondriver-arm32.sh base-arm32.img.xz /tmp/NextionDriver-arm32 /tmp/nextiondriver-arm32-src
+          file /tmp/NextionDriver-arm32 | grep -Eq 'ELF 32-bit.*ARM'
+          ! file /tmp/NextionDriver-arm32 | grep -Eqi 'aarch64|ARM64'
 
       - name: Build final ARMv6 backend
         shell: bash
@@ -191,7 +201,11 @@ jobs:
             f="ci/patch-image-0.3.31.$v.sh"
             if test -f "$f"; then
               echo "APPLY $f"
-              sudo bash "$f" "$ROOT"
+              case "$v" in
+                117) sudo bash "$f" "$ROOT" /tmp/NextionDriver-arm32 /tmp/nextiondriver-arm32-src ;;
+                118) sudo bash "$f" "$ROOT" /tmp/NextionDriver-arm32 ;;
+                *) sudo bash "$f" "$ROOT" ;;
+              esac
             fi
           done
           sudo install -m 0755 /tmp/2pnyd-0.3.31.123 "$ROOT/usr/local/bin/2pnyd"
@@ -202,8 +216,7 @@ jobs:
           sudo mount -o ro "$ROOTDEV" "$ROOT"
           test "$(sudo cat "$ROOT/etc/2pny/version")" = "$VERSION"
           test "$(sudo chroot "$ROOT" /usr/bin/dpkg --print-architecture)" = armhf
-          sudo file "$ROOT/usr/local/bin/2pnyd" | grep -Eq 'ELF 32-bit.*ARM'
-          for b in MMDVM-Host DMRGateway dstargateway YSFGateway P25Gateway NXDNGateway DAPNETGateway; do
+          for b in 2pnyd MMDVM-Host NextionDriver-pu2pny DMRGateway dstargateway YSFGateway P25Gateway NXDNGateway DAPNETGateway; do
             f="$ROOT/usr/local/bin/$b"
             sudo test -x "$f"
             out="$(sudo file -b "$f")"
@@ -211,6 +224,8 @@ jobs:
             echo "$out" | grep -Eq 'ELF 32-bit.*ARM'
             ! echo "$out" | grep -Eqi 'aarch64|ARM64'
           done
+          sudo strings "$ROOT/usr/local/bin/NextionDriver-pu2pny" | grep -Fq '/run/2pny-nextiondriver/ttyNextionDriver'
+          ! sudo strings "$ROOT/usr/local/bin/NextionDriver-pu2pny" | grep -Fq '/dev/ttyNextionDriver'
           sudo umount "$ROOT"
           sudo losetup -d "$LOOP"
           trap - EXIT
@@ -232,8 +247,9 @@ jobs:
           target=Raspberry Pi Zero / Zero W original
           base=Raspberry Pi OS Legacy Lite 32-bit Bookworm 2026-09-15
           base_sha256=d82875ed98f905394094a41754a5621a6097655883a8f286e7c6c06477786c30
+          nextiondriver_upstream=03b904270c9cb54f720d71753fc209afb1d9598f
           commit=$GITHUB_SHA
-          validation=SW/CI + xz + fsck + read-only mount + dpkg armhf + ELF 32-bit ARM gates
+          validation=SW/CI + ARM32 native NextionDriver + xz + fsck + read-only mount + dpkg armhf + ELF 32-bit ARM gates
           hardware_validation=PENDENTE
           rollback=39ae138e98f99b48d7d60ed449dfe075dbc7cf14
           EOF
@@ -274,7 +290,7 @@ jobs:
           Destino: Raspberry Pi Zero e Zero W originais (ARMv6/32-bit).
           Esta é uma linha separada da ARM64; a release ARM64 protegida não foi alterada.
 
-          Gates executados pelo CI: imagem Raspberry Pi OS armhf, backend GOARCH=arm GOARM=6, integridade XZ, SHA-256, fsck, montagem somente leitura, dpkg=armhf e verificação ELF 32-bit ARM dos binários críticos. Qualquer AArch64/ARM64 falha o build.
+          Gates executados pelo CI: imagem Raspberry Pi OS armhf, backend GOARCH=arm GOARM=6, NextionDriver hardened compilado nativamente em rootfs armhf, integridade XZ, SHA-256, fsck, montagem somente leitura, dpkg=armhf e verificação ELF 32-bit ARM dos binários críticos. Qualquer AArch64/ARM64 falha o build.
 
           DMR/RF, D-Star, YSF e Nextion físico permanecem HW PENDENTE até o teste no Raspberry Pi Zero + MMDVM/display real.
           EOF
