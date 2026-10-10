@@ -11,6 +11,11 @@ root = Path(sys.argv[1]).resolve()
 p = root / "builder/build-image.sh"
 s = p.read_text()
 
+# Gate the staged UI against the same renderer anchor used by the official 0.3.31 image patch.
+hotspot = root / "rootfs-overlay/usr/share/2pny/hotspot.html"
+if 'function renderFamilies(){updateRadioGuide();' not in hotspot.read_text():
+    raise SystemExit('ARM32_0331_STAGE_RENDERER_GATE_FAILED')
+
 repls = {
     'ARCH="arm64"': 'ARCH="armhf"',
     'BASE_NAME="2026-09-15-raspios-bookworm-arm64-lite.img.xz"': 'BASE_NAME="2026-09-15-raspios-bookworm-armhf-lite.img.xz"',
