@@ -17,7 +17,19 @@ if 'function renderFamilies(){updateRadioGuide();' not in hotspot.read_text():
     raise SystemExit('ARM32_0331_STAGE_RENDERER_GATE_FAILED')
 
 repls = {
-    'ARCH="arm64"': 'ARCH="armhf"',
+    'ARCH="arm64"': '''ARCH="armhf"
+# ARM32 build-host compatibility only. Current GitHub ARM64 kernels may not
+# execute armhf userspace directly; register qemu-arm binfmt for chroot steps.
+# Nothing from QEMU is copied into the final PU2PNY-OS image.
+if [ "$(uname -m)" != "armv7l" ] && [ "$(uname -m)" != "armv6l" ]; then
+  if [ ! -e /proc/sys/fs/binfmt_misc/qemu-arm ]; then
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static binfmt-support
+    update-binfmts --enable qemu-arm || true
+  fi
+  test -e /proc/sys/fs/binfmt_misc/qemu-arm
+  grep -q '^enabled' /proc/sys/fs/binfmt_misc/qemu-arm
+fi''',
     'BASE_NAME="2026-09-15-raspios-bookworm-arm64-lite.img.xz"': 'BASE_NAME="2026-09-15-raspios-bookworm-armhf-lite.img.xz"',
     'BASE_URL="https://downloads.raspberrypi.com/raspios_oldstable_lite_arm64/images/raspios_oldstable_lite_arm64-2026-09-15/${BASE_NAME}"': 'BASE_URL="https://downloads.raspberrypi.com/raspios_oldstable_lite_armhf/images/raspios_oldstable_lite_armhf-2026-09-15/${BASE_NAME}"',
     'BASE_SHA256="bcaefdf9c40dbed31dcaeb3b8494e498b4f1e3078c2604b0d9f5f595f8f6fd91"': 'BASE_SHA256="d82875ed98f905394094a41754a5621a6097655883a8f286e7c6c06477786c30"',
@@ -37,6 +49,7 @@ required = [
     'raspios-bookworm-armhf-lite.img.xz',
     'raspios_oldstable_lite_armhf',
     'd82875ed98f905394094a41754a5621a6097655883a8f286e7c6c06477786c30',
+    '/proc/sys/fs/binfmt_misc/qemu-arm',
 ]
 for anchor in required:
     if anchor not in s:
