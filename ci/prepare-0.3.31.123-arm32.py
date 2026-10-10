@@ -18,8 +18,8 @@ if 'function renderFamilies(){updateRadioGuide();' not in hotspot.read_text():
 
 repls = {
     'ARCH="arm64"': '''ARCH="armhf"
-# ARM32 build-host compatibility only. Current GitHub ARM64 kernels may not
-# execute armhf userspace directly; register qemu-arm binfmt for chroot steps.
+# ARM32 build-host compatibility only. Current GitHub hosts may not execute
+# armhf userspace directly; register qemu-arm binfmt for chroot steps.
 # Nothing from QEMU is copied into the final PU2PNY-OS image.
 if [ "$(uname -m)" != "armv7l" ] && [ "$(uname -m)" != "armv6l" ]; then
   if [ ! -e /proc/sys/fs/binfmt_misc/qemu-arm ]; then
@@ -42,6 +42,27 @@ for old, new in repls.items():
     if old not in s:
         raise SystemExit(f"ARM32_PORT_ANCHOR_MISSING: {old}")
     s = s.replace(old, new)
+
+# The upstream image builder contains a host-architecture guard written for its
+# original native ARM64 workflow. For this branch only, replace that policy
+# guard with the mandatory qemu-arm gate above. We locate the block by its
+# unique error text and delete only the enclosing shell if/fi block.
+msg = 'ERRO: este builder instala pacotes dentro do rootfs e deve rodar em Linux ARM64/aarch64.'
+lines = s.splitlines(keepends=True)
+try:
+    mid = next(i for i, line in enumerate(lines) if msg in line)
+except StopIteration:
+    raise SystemExit('ARM32_HOST_GUARD_MESSAGE_MISSING')
+start = next((i for i in range(mid, max(-1, mid - 10), -1)
+              if lines[i].strip().startswith('if ') and lines[i].strip().endswith('then')), None)
+end = next((i for i in range(mid, min(len(lines), mid + 10))
+            if lines[i].strip() == 'fi'), None)
+if start is None or end is None or end <= start:
+    raise SystemExit('ARM32_HOST_GUARD_BLOCK_NOT_FOUND')
+del lines[start:end + 1]
+s = ''.join(lines)
+if msg in s:
+    raise SystemExit('ARM32_HOST_GUARD_STILL_PRESENT')
 
 required = [
     'ARCH="armhf"',
