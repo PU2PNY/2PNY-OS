@@ -98,3 +98,8 @@ Antes do link verificar commit, branch, CI/build ARM64, artefato, estrutura, SHA
 **Preservar tudo que já funciona e foi aprovado. Corrigir somente o errado. Adicionar somente o solicitado/aprovado. Testar antes de afirmar. Nunca transformar suposição em fato.**
 
 Toda versão nova deve ser um superset seguro da última versão aprovada. Exemplo: `DMR simplex perfeito + duplex com defeito = simplex intocado + correção exclusiva do duplex + regressão completa depois.`
+
+## 18. REL-AUTO-001 — execução autônoma até o artefato
+Quando o usuário reportar erro, regressão ou pedir atualização de uma imagem PU2PNY-OS, o ciclo padrão deve prosseguir sem confirmações intermediárias desnecessárias: investigar → localizar causa → criar rollback → corrigir somente o necessário → executar testes SW/VPS aplicáveis → corrigir falhas encontradas → gerar a imagem da arquitetura correta (ARM32 ou ARM64) → executar os gates de release → produzir SHA-256 → publicar/obter o artefato → entregar link, hash e commit.
+
+Não interromper o ciclo apenas para relatar progresso ou pedir autorização já implícita no pedido de correção. A execução só pode ficar BLOQUEADA quando faltar uma permissão/credencial externa indispensável ou quando a próxima evidência exigir hardware físico que não possa ser acessado remotamente. Mesmo nesses casos, concluir antes tudo que for tecnicamente executável e registrar exatamente o bloqueador. Esta regra não autoriza enfraquecer gates, inventar teste HW, alterar baseline protegido ou ampliar escopo sem necessidade.
