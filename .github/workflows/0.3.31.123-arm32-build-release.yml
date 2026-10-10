@@ -1,0 +1,293 @@
+name: Build and release PU2PNY-OS 0.3.31.123 ARM32 Pi Zero
+
+on:
+  push:
+    branches: [pu2pny-os-0.3.31.123-armhf-pizero]
+    paths:
+      - '.github/workflows/0.3.31.123-arm32-build-release.yml'
+      - 'ci/prepare-0.3.31.123-arm32.py'
+      - 'ci/ARM32-0.3.31.123-BUILD-INTENT.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-0.3.31.123-arm32-pizero
+  cancel-in-progress: false
+
+env:
+  VERSION: 0.3.31.123
+  RELEASE_BRANCH: pu2pny-os-0.3.31.123-armhf-pizero
+
+jobs:
+  build-arm32:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/XLX-Modern-Installer
+          ref: 2pny-os-build
+          path: legacy-source
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl xz-utils util-linux rsync dosfstools e2fsprogs file binutils iproute2 parted nodejs systemd
+
+      - name: Restore cumulative baseline through 0.3.31-alpha
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash legacy-source/2pny-os/bootstrap.sh
+          for f in \
+            ci/prepare-0.1.2.sh \
+            ci/prepare-0.1.3.sh \
+            ci/prepare-0.1.4-ui.sh \
+            ci/prepare-0.1.5-hardware.sh \
+            ci/prepare-0.1.5-fixes.sh \
+            ci/prepare-0.1.6-rf.sh \
+            ci/prepare-0.1.6-build-fix.sh \
+            ci/prepare-0.1.7-modules.sh \
+            ci/prepare-0.1.7-hotfix1-ethernet.sh \
+            ci/prepare-0.1.7-hotfix2-listener-prep.sh \
+            ci/prepare-0.1.7-hotfix2-captive-responsive.sh \
+            ci/prepare-0.1.7-hotfix2-review-fixes.sh \
+            ci/prepare-0.1.7-hotfix2-route-dedupe.sh \
+            ci/prepare-0.1.7-hotfix3-network-stability.sh \
+            ci/prepare-0.1.7-hotfix3-compat-talkeralias.sh \
+            ci/prepare-0.1.7-hotfix4-dual-network.sh \
+            ci/prepare-0.1.7-hotfix4-validator-fix.sh \
+            ci/prepare-0.1.7-hotfix5-bookworm-network.sh \
+            ci/prepare-0.1.7-hotfix5-base-fix.sh \
+            ci/prepare-0.1.7-hotfix5-validator-compat.sh \
+            ci/prepare-0.1.8-anchor-compat.sh \
+            ci/prepare-0.1.8-network-core.sh \
+            ci/prepare-0.1.8-builder-service-fix.sh \
+            ci/prepare-0.1.9-pu2pny-hardware-ui.sh \
+            ci/prepare-0.1.9-network-pid-fix.sh \
+            ci/prepare-0.1.9-build-metadata-fix.sh \
+            ci/prepare-0.1.9-hotfix1-hardware-status.sh \
+            ci/prepare-0.2.0-onboarding.sh \
+            ci/prepare-0.2.1-network-ux.sh; do
+              bash "$f" legacy-source/2pny-os
+          done
+          for f in \
+            ci/prepare-0.2.2-stability.py \
+            ci/prepare-0.2.3-dashboard.py \
+            ci/prepare-0.2.4-network-display.py \
+            ci/prepare-0.2.5-protocol-network.py \
+            ci/prepare-0.2.7-radio-live.py \
+            ci/prepare-0.2.8-alpha.py \
+            ci/prepare-0.2.9-alpha.py \
+            ci/prepare-0.3.0-alpha.py \
+            ci/prepare-0.3.1-alpha.py \
+            ci/prepare-0.3.2-alpha.py \
+            ci/prepare-0.3.3-alpha.py \
+            ci/prepare-0.3.4-alpha.py \
+            ci/prepare-0.3.5-alpha.py \
+            ci/prepare-0.3.6-alpha.py \
+            ci/prepare-0.3.7-alpha.py \
+            ci/prepare-0.3.8-alpha.py \
+            ci/prepare-0.3.9-alpha.py \
+            ci/prepare-0.3.10-alpha.py \
+            ci/prepare-0.3.11-alpha.py \
+            ci/prepare-0.3.12-alpha.py \
+            ci/prepare-0.3.13-alpha.py \
+            ci/prepare-0.3.14-alpha.py \
+            ci/prepare-0.3.15-alpha.py \
+            ci/prepare-0.3.16-alpha.py \
+            ci/prepare-0.3.17-alpha.py \
+            ci/prepare-0.3.18-alpha.py \
+            ci/prepare-0.3.19-alpha.py \
+            ci/prepare-0.3.20-alpha.py \
+            ci/prepare-0.3.23-alpha.py \
+            ci/prepare-0.3.24-alpha.py \
+            ci/prepare-0.3.25-alpha.py \
+            ci/prepare-0.3.26-alpha.py \
+            ci/prepare-0.3.27-alpha.py \
+            ci/prepare-0.3.28-alpha.py; do
+              python3 "$f" legacy-source/2pny-os
+          done
+          python3 ci/patch-0.3.29-surgical.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.30-display.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.31-alpha.py legacy-source/2pny-os
+          python3 ci/prepare-0.3.31.123-arm32.py legacy-source/2pny-os
+
+      - name: ARM32 builder gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          B=legacy-source/2pny-os/builder/build-image.sh
+          grep -Fq 'ARCH="armhf"' "$B"
+          grep -Fq 'GOARCH=arm GOARM=6' "$B"
+          grep -Fq 'raspios-bookworm-armhf-lite.img.xz' "$B"
+          ! grep -Fq 'GOARCH=arm64' "$B"
+          ! grep -Fq 'raspios-bookworm-arm64-lite.img.xz' "$B"
+          python3 -m py_compile ci/prepare-0.3.31.123-arm32.py
+          python3 -m py_compile ci/patch-backend-0.3.31.122.py
+          for v in 110 111 112 113 114 115 116 117 118 119 120 121 122; do
+            test ! -f "ci/patch-image-0.3.31.$v.sh" || bash -n "ci/patch-image-0.3.31.$v.sh"
+          done
+
+      - name: Build ARM32 base image
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd legacy-source/2pny-os
+          sudo -E VERSION='0.3.31-alpha' ./builder/build-image.sh
+          IMG="$(sudo find dist -maxdepth 1 -type f -name '*.img.xz' -print -quit)"
+          test -n "$IMG" && test -s "$IMG"
+          sudo xz -t "$IMG"
+          sudo cp "$IMG" "$GITHUB_WORKSPACE/base-arm32.img.xz"
+          sudo chown "$USER:$USER" "$GITHUB_WORKSPACE/base-arm32.img.xz"
+
+      - name: Build final ARMv6 backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-0.3.31.122.py src/2pnyd-main-0.3.27.go /tmp/2pnyd-main.go
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/2pnyd-main.go')
+          s=p.read_text().replace('0.3.31.122','0.3.31.123')
+          p.write_text(s)
+          PY
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -trimpath -o /tmp/2pnyd-0.3.31.123 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-0.3.31.123 | grep -Eq 'ELF 32-bit.*ARM'
+          ! file /tmp/2pnyd-0.3.31.123 | grep -Eqi 'aarch64|ARM64'
+          grep -aFq '0.3.31.123' /tmp/2pnyd-0.3.31.123
+
+      - name: Apply 0.3.31 hotfix chain to ARM32 image
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          xz -dc base-arm32.img.xz > "PU2PNY-OS-$VERSION-arm32-pizero.img"
+          IMG="PU2PNY-OS-$VERSION-arm32-pizero.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          ROOT=/mnt/pu2pny-arm32
+          cleanup(){ set +e; mountpoint -q "$ROOT" && sudo umount "$ROOT"; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p "$ROOT"
+          sudo mount "$ROOTDEV" "$ROOT"
+          test "$(sudo chroot "$ROOT" /usr/bin/dpkg --print-architecture)" = armhf
+          for v in 110 111 112 113 114 115 116 117 118 119 120 121 122; do
+            f="ci/patch-image-0.3.31.$v.sh"
+            if test -f "$f"; then
+              echo "APPLY $f"
+              sudo bash "$f" "$ROOT"
+            fi
+          done
+          sudo install -m 0755 /tmp/2pnyd-0.3.31.123 "$ROOT/usr/local/bin/2pnyd"
+          echo "$VERSION" | sudo tee "$ROOT/etc/2pny/version" >/dev/null
+          sudo sync
+          sudo umount "$ROOT"
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+          sudo mount -o ro "$ROOTDEV" "$ROOT"
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = "$VERSION"
+          test "$(sudo chroot "$ROOT" /usr/bin/dpkg --print-architecture)" = armhf
+          sudo file "$ROOT/usr/local/bin/2pnyd" | grep -Eq 'ELF 32-bit.*ARM'
+          for b in MMDVM-Host DMRGateway dstargateway YSFGateway P25Gateway NXDNGateway DAPNETGateway; do
+            f="$ROOT/usr/local/bin/$b"
+            sudo test -x "$f"
+            out="$(sudo file -b "$f")"
+            echo "$b :: $out"
+            echo "$out" | grep -Eq 'ELF 32-bit.*ARM'
+            ! echo "$out" | grep -Eqi 'aarch64|ARM64'
+          done
+          sudo umount "$ROOT"
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+
+      - name: Compress, verify and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm32-pizero.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          HASH="$(sha256sum "$IMAGE" | awk '{print $1}')"
+          printf '%s  %s\n' "$HASH" "$(basename "$IMAGE")" > "$IMAGE.sha256"
+          cat > BUILD-INFO.txt <<EOF
+          PU2PNY-OS $VERSION ARM32 Pi Zero
+          classification=physical-test-candidate
+          architecture=armhf / ARMv6 / GOARM=6
+          target=Raspberry Pi Zero / Zero W original
+          base=Raspberry Pi OS Legacy Lite 32-bit Bookworm 2026-09-15
+          base_sha256=d82875ed98f905394094a41754a5621a6097655883a8f286e7c6c06477786c30
+          commit=$GITHUB_SHA
+          validation=SW/CI + xz + fsck + read-only mount + dpkg armhf + ELF 32-bit ARM gates
+          hardware_validation=PENDENTE
+          rollback=39ae138e98f99b48d7d60ed449dfe075dbc7cf14
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.123-arm32-pizero
+          path: |
+            PU2PNY-OS-0.3.31.123-arm32-pizero.img.xz
+            PU2PNY-OS-0.3.31.123-arm32-pizero.img.xz.sha256
+            BUILD-INFO.txt
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+
+  publish:
+    needs: build-arm32
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-0.3.31.123-arm32-pizero
+          path: release
+      - name: Verify transferred artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="release/PU2PNY-OS-$VERSION-arm32-pizero.img.xz"
+          xz -t "$IMAGE"
+          test "$(awk '{print $1}' "$IMAGE.sha256")" = "$(sha256sum "$IMAGE" | awk '{print $1}')"
+      - name: Release notes
+        shell: bash
+        run: |
+          cat > RELEASE-NOTES.md <<'EOF'
+          PU2PNY-OS 0.3.31.123 ARM32/ARMv6 — CANDIDATA PARA TESTE FÍSICO.
+
+          Destino: Raspberry Pi Zero e Zero W originais (ARMv6/32-bit).
+          Esta é uma linha separada da ARM64; a release ARM64 protegida não foi alterada.
+
+          Gates executados pelo CI: imagem Raspberry Pi OS armhf, backend GOARCH=arm GOARM=6, integridade XZ, SHA-256, fsck, montagem somente leitura, dpkg=armhf e verificação ELF 32-bit ARM dos binários críticos. Qualquer AArch64/ARM64 falha o build.
+
+          DMR/RF, D-Star, YSF e Nextion físico permanecem HW PENDENTE até o teste no Raspberry Pi Zero + MMDVM/display real.
+          EOF
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v0.3.31.123-arm32-pizero
+          target_commitish: ${{ env.RELEASE_BRANCH }}
+          name: PU2PNY-OS 0.3.31.123 ARM32 Pi Zero
+          prerelease: true
+          body_path: RELEASE-NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/PU2PNY-OS-0.3.31.123-arm32-pizero.img.xz
+            release/PU2PNY-OS-0.3.31.123-arm32-pizero.img.xz.sha256
+            release/BUILD-INFO.txt
