@@ -1059,11 +1059,18 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **HW:** PENDENTE — saída visual standby/RX/TX e compatibilidade da HMI real precisam do Raspberry/MMDVM/Nextion do operador.
 
 ### 4.00.000 — Ecossistema global
-- Estado: EM TESTE / candidata para teste físico após build.
-- Branch: pu2pny-os-4.00.000-ecosystem.
-- Base protegida ARMHF/ARMv6: 0.3.31.124 / commit 6e7dc53d94a80d8860ce54f513b738313907e5b8.
+- Estado: **SW/CI PASS / prerelease publicada / CANDIDATA PARA TESTE FÍSICO. Não PROD.**
+- Branch de construção: `pu2pny-os-4.00.000-ecosystem`.
+- Base protegida ARMHF/ARMv6: 0.3.31.124 / commit `6e7dc53d94a80d8860ce54f513b738313907e5b8`.
 - Base protegida ARM64: 0.3.31.122, última linha ARM64 protegida antes da trilha Pi Zero.
-- Implementado: inventário global de capacidades, /api/capabilities, serviço event-driven/baixa frequência, modelo Helix opcional/default-off e gates de não regressão.
+- Implementado: inventário global de capacidades, `/api/capabilities`, serviço event-driven/baixa frequência, modelo Helix opcional/default-off e gates de não regressão.
 - Safety CI, Baseline Guard e validação VPS da camada 4.00.000: PASS.
-- Build dual ARM64/ARMHF: EM TESTE até workflow 4.00.000 concluir.
-- HW RF/display/audio: PENDENTE; não classificar como produção.
+- Commit fonte real das imagens: `684820f49896d9a478644e7418932ed40a3a8870`.
+- ARM64: run `38575811918` — build/overlay protegido/XZ/SHA/estrutura/artefato PASS; SHA-256 `3ec52631dfe44b9a466bd1f1f4a8b910c6fdac3663736f7d643091b8c5a13dd7`.
+- ARMHF/ARMv6/Pi Zero: run `38582443780` — toolchain ARMv6, Helix, backend, overlay protegido, fsck, montagem read-only, validação armhf, XZ/SHA e artefato PASS; SHA-256 `b7edc16b4a7786e0b0664eef7a1a3f53b449f6abf55aa47d31516a170163760c`.
+- Publicação/revalidação conjunta: run `38584440709` — ambos os artefatos passaram novamente `xz -t` + `sha256sum -c`; prerelease `v4.00.000` publicada e seis assets confirmados.
+- Commit da correção do gate ARM32: `14a5a2a054f5b563db70860192dcd3165694e82b`.
+- Commit do publicador seguro: `ecef5fc85bb5419797927d5efe8b3316ce263e7a`.
+- A tag da release usa `main` apenas como âncora administrativa por restrição do `GITHUB_TOKEN`; a proveniência real das imagens permanece registrada pelos commits/runs acima e nos `BUILD-INFO`.
+- Helix está instalado mas **desabilitado por padrão**; `shadow/process` não são ativados automaticamente. HVC e AMBE/AMBE+2 nativo não são declarados produção.
+- **HW RF/duplex/BER/RSSI/audio/transcoding/display: PENDENTE**; não promover para HW/PROD antes do teste físico.

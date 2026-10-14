@@ -1014,3 +1014,17 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 - HXP1/DSP/self-test possuem evidência SW/ENV no repositório Helix-Voice.
 - HVC final e AMBE/AMBE+2 nativo não estão aprovados para produção; não declarar transcoder integral sem backend verificado.
 - HW/RF/audio real: PENDENTE.
+
+
+### SW-400000-IMAGE-DUALARCH-20261014 — APROVADO SW/CI
+- Requisitos: `REL-050`, `ARCH-007`, `PROTO-058`; classificação do artefato: **candidata para teste físico**, não PROD.
+- Fonte comum das imagens: commit `684820f49896d9a478644e7418932ed40a3a8870`.
+- ARM64: run `38575811918` — Helix self-test, backend, base imutável, overlay protegido, inventário de capacidades, hashes protegidos, fsck/estrutura, XZ, SHA-256 e upload do artefato: PASS.
+- ARM64 SHA-256: `3ec52631dfe44b9a466bd1f1f4a8b910c6fdac3663736f7d643091b8c5a13dd7`.
+- ARMHF/ARMv6/Pi Zero: run `38582443780` — cross-build Helix ARMv6, backend GOARM=6, base 0.3.31.124 verificada, overlay protegido, `systemd-analyze verify`, scanner, fsck, montagem read-only, arquitetura armhf, XZ, SHA-256 e upload: PASS.
+- ARMHF/ARMv6 SHA-256: `b7edc16b4a7786e0b0664eef7a1a3f53b449f6abf55aa47d31516a170163760c`.
+- Correção mínima do gate ARM32: commit `14a5a2a054f5b563db70860192dcd3165694e82b`; substituiu execução foreign-arch via chroot pela consulta da base dpkg sem executar binário ARM. Nenhum arquivo RF/backend/runtime foi alterado nesse commit.
+- Revalidação/publicação: run `38584440709` — downloads dos artefatos já validados, `xz -t` + `sha256sum -c` para ambos, publicação `v4.00.000` e verificação dos seis assets: PASS.
+- Baseline Guard após o publicador: run `38584440452` — PASS.
+- Helix permanece default-off; HVC/native AMBE não promovidos.
+- **HW:** PENDENTE para RF real, simplex/duplex real, BER/RSSI, áudio/transcoding e displays físicos. SW/CI PASS não substitui HW.

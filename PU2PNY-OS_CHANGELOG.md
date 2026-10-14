@@ -954,3 +954,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Helix passa a ser backend opcional local, pinado, padrão off; HVC e AMBE nativo continuam bloqueados enquanto faltarem gates próprios.
 - A família 4.00.000 usa artefatos por arquitetura quando necessário; não forçar uma imagem única que invalide Pi Zero/ARMv6 ou ARM64.
 - Validação VPS da camada de capacidades/backend concluída sem promover nenhum estado para HW.
+
+
+### Fechamento de build/publicação 4.00.000 — 2026-10-14
+- O primeiro reparo ARM32 falhou apenas no gate de arquitetura porque um runner x86_64 tentou executar `/usr/bin/dpkg` ARMHF via `chroot`, resultando em `Exec format error`; toolchain, Helix ARMv6, backend, overlay, fsck e scanner já haviam passado.
+- Commit `14a5a2a054f5b563db70860192dcd3165694e82b` aplicou correção cirúrgica de uma linha: a arquitetura passou a ser lida pela base dpkg montada, sem executar binário ARM. O novo run `38582443780` concluiu ARMHF/ARMv6 integralmente com PASS.
+- A primeira tentativa de publicação falhou somente com `HTTP 403 Resource not accessible by integration` ao criar release apontando para um commit que modifica workflows; os dois artefatos já haviam passado a revalidação XZ/SHA.
+- O publicador separado, commit `ecef5fc85bb5419797927d5efe8b3316ce263e7a`, reutilizou exatamente os artefatos aprovados, revalidou ambos e publicou `v4.00.000` no run `38584440709` com PASS. A tag usa `main` somente como âncora administrativa; `BUILD-INFO` e notas preservam o commit fonte real `684820f49896d9a478644e7418932ed40a3a8870`.
+- SHA-256 final ARM64: `3ec52631dfe44b9a466bd1f1f4a8b910c6fdac3663736f7d643091b8c5a13dd7`.
+- SHA-256 final ARMHF/ARMv6/Pi Zero: `b7edc16b4a7786e0b0664eef7a1a3f53b449f6abf55aa47d31516a170163760c`.
+- Nenhuma dessas correções alterou o caminho RF aprovado, MMDVMHost, DMRGateway, NextionDriver, Wi-Fi profiles ou comportamento de protocolo protegido.
+- Estado final deste ciclo: **SW/CI PASS / prerelease candidata para teste físico; HW/PROD continuam PENDENTE**.
