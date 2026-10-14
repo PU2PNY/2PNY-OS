@@ -176,7 +176,7 @@ jobs:
           sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
           sudo mount -o ro "$ROOTDEV" "$ROOT"
           test "$(sudo cat "$ROOT/etc/2pny/version")" = "$VERSION"
-          test "$(sudo chroot "$ROOT" /usr/bin/dpkg --print-architecture)" = armhf
+          test "$(sudo dpkg-query --admindir="$ROOT/var/lib/dpkg" -W -f='${Architecture}' dpkg)" = armhf
           sudo test -x "$ROOT/usr/local/bin/helix-daemon"
           sudo test -x "$ROOT/usr/local/sbin/pu2pny-capability-scan"
           sudo file "$ROOT/usr/local/bin/helix-daemon" | grep -Eq 'ELF 32-bit.*ARM'
