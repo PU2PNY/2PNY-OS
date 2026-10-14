@@ -1,4 +1,5 @@
 #!/bin/bash
+# PU2PNY-OS 4.00.000 release trigger / pinned Helix packaging
 set -euo pipefail
 ROOT="${1:?root mount required}"
 BINARY="${2:?helix-daemon binary required}"
