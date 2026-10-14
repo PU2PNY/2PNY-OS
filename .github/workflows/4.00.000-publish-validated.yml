@@ -1,0 +1,121 @@
+name: Publish validated PU2PNY-OS 4.00.000 artifacts
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.000-ecosystem]
+    paths:
+      - '.github/workflows/4.00.000-publish-validated.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-4.00.000-publish-validated
+  cancel-in-progress: false
+
+env:
+  VERSION: 4.00.000
+  RELEASE_TAG: v4.00.000
+  RELEASE_TARGET: main
+  IMAGE_SOURCE_COMMIT: 684820f49896d9a478644e7418932ed40a3a8870
+  REPAIR_WORKFLOW_COMMIT: 14a5a2a054f5b563db70860192dcd3165694e82b
+  HELIX_COMMIT: b71a5fccd6371a88284866510000302f0126d565
+  ARM32_SOURCE_RUN: '38582443780'
+  ARM64_SOURCE_RUN: '38575811918'
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Download validated ARM32 artifact
+        uses: actions/download-artifact@v4
+        with:
+          repository: PU2PNY/2PNY-OS
+          run-id: ${{ env.ARM32_SOURCE_RUN }}
+          name: pu2pny-os-4.00.000-arm32-pizero-repaired
+          path: release
+          github-token: ${{ github.token }}
+
+      - name: Download validated ARM64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          repository: PU2PNY/2PNY-OS
+          run-id: ${{ env.ARM64_SOURCE_RUN }}
+          name: pu2pny-os-4.00.000-arm64
+          path: release
+          github-token: ${{ github.token }}
+
+      - name: Revalidate both architecture artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f release/PU2PNY-OS-4.00.000-arm64.img.xz
+          test -f release/PU2PNY-OS-4.00.000-arm64.img.xz.sha256
+          test -f release/PU2PNY-OS-4.00.000-arm32-pizero.img.xz
+          test -f release/PU2PNY-OS-4.00.000-arm32-pizero.img.xz.sha256
+          test -f release/BUILD-INFO-arm64.txt
+          test -f release/BUILD-INFO-arm32.txt
+          for image in release/*.img.xz; do
+            xz -t "$image"
+            (cd release && sha256sum -c "$(basename "$image").sha256")
+          done
+          echo 'Validated image checksums:'
+          cat release/*.img.xz.sha256
+
+      - name: Publish dual-architecture physical-test prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > release/RELEASE-NOTES.md <<EOF
+          PU2PNY-OS 4.00.000 — CANDIDATA PARA TESTE FÍSICO
+
+          Arquiteturas:
+          - ARM64: derivada da base imutável v0.3.31.122 e validada no run $ARM64_SOURCE_RUN.
+          - ARMHF/ARMv6: derivada da base imutável v0.3.31.124-arm32-pizero e validada no run $ARM32_SOURCE_RUN.
+
+          O caminho RF aprovado permanece protegido. A camada 4.00.000 adiciona inventário global de capacidades, /api/capabilities e Helix pinado em $HELIX_COMMIT, instalado mas DESABILITADO por padrão.
+
+          Helix shadow/process não são ativados automaticamente. HVC e AMBE/AMBE+2 nativo NÃO estão declarados como produção. RF real, duplex real, BER/RSSI reais, áudio/transcoding real e displays físicos permanecem PENDENTE HW.
+
+          Commit fonte real das imagens: $IMAGE_SOURCE_COMMIT
+          Commit da correção ARM32: $REPAIR_WORKFLOW_COMMIT
+          Release anchor: $RELEASE_TARGET (necessário porque GITHUB_TOKEN não pode criar tag para commit que modifica workflows)
+          Publisher workflow commit: $GITHUB_SHA
+          EOF
+          files=(
+            release/PU2PNY-OS-4.00.000-arm64.img.xz
+            release/PU2PNY-OS-4.00.000-arm64.img.xz.sha256
+            release/PU2PNY-OS-4.00.000-arm32-pizero.img.xz
+            release/PU2PNY-OS-4.00.000-arm32-pizero.img.xz.sha256
+            release/BUILD-INFO-arm64.txt
+            release/BUILD-INFO-arm32.txt
+          )
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$RELEASE_TARGET" --title "PU2PNY-OS 4.00.000 — Global Ecosystem" --notes-file release/RELEASE-NOTES.md --prerelease
+            gh release upload "$RELEASE_TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$RELEASE_TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$RELEASE_TARGET" --title "PU2PNY-OS 4.00.000 — Global Ecosystem" --notes-file release/RELEASE-NOTES.md --prerelease
+          fi
+
+      - name: Verify published release metadata and assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)" = true
+          for name in \
+            PU2PNY-OS-4.00.000-arm64.img.xz \
+            PU2PNY-OS-4.00.000-arm64.img.xz.sha256 \
+            PU2PNY-OS-4.00.000-arm32-pizero.img.xz \
+            PU2PNY-OS-4.00.000-arm32-pizero.img.xz.sha256 \
+            BUILD-INFO-arm64.txt \
+            BUILD-INFO-arm32.txt; do
+            gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -Fxq "$name"
+          done
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json url --jq .url
