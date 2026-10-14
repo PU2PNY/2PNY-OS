@@ -1,0 +1,52 @@
+name: Finalize PU2PNY-OS 4.00.000 release evidence
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.000-ecosystem]
+    paths:
+      - '.github/workflows/4.00.000-finalize-release-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pu2pny-os-4.00.000-finalize-release-docs
+  cancel-in-progress: false
+
+jobs:
+  finalize-docs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pu2pny-os-4.00.000-ecosystem
+          fetch-depth: 0
+
+      - name: Apply deterministic canonical release evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/finalize-4.00.000-release-docs.py
+          git diff --check
+          test "$(git diff --name-only | sort | tr '\n' ' ')" = "PU2PNY-OS_CHANGELOG.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md "
+          grep -Fq 'run `38584440709`' PU2PNY-OS_RELEASE_STATUS.md
+          grep -Fq 'SW-400000-IMAGE-DUALARCH-20261014' PU2PNY-OS_TEST_MATRIX.md
+          grep -Fq 'Fechamento de build/publicação 4.00.000' PU2PNY-OS_CHANGELOG.md
+          grep -Fq 'HW/PROD continuam PENDENTE' PU2PNY-OS_CHANGELOG.md
+
+      - name: Commit canonical evidence only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'Canonical release evidence already finalized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md
+          test -z "$(git status --porcelain | awk '$1 != "M" && $1 != "A" {print}')"
+          git commit -m 'docs: record validated 4.00.000 physical-test candidate'
+          git push origin HEAD:pu2pny-os-4.00.000-ecosystem
