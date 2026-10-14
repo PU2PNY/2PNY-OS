@@ -1,0 +1,149 @@
+name: PU2PNY OS 4.00.000 Safety CI
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.000-ecosystem]
+    paths:
+      - 'runtime/**'
+      - 'ci/patch-backend-4.00.000.py'
+      - 'ci/patch-image-4.00.000.sh'
+      - '.github/workflows/4.00.000-safety-ci.yml'
+      - 'src/2pnyd-main-0.3.27.go'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Syntax and source gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile runtime/pu2pny-capability-scan.py ci/patch-backend-4.00.000.py
+          bash -n ci/patch-image-4.00.000.sh
+          grep -Fq 'no_network_probe' runtime/pu2pny-capability-scan.py
+          grep -Fq 'no_rf_write' runtime/pu2pny-capability-scan.py
+          grep -Fq 'OnUnitInactiveSec=15min' ci/patch-image-4.00.000.sh
+          ! grep -Eqi 'curl[[:space:]]*\|[[:space:]]*(ba)?sh|wget[[:space:]]+[^ ]+[[:space:]]*\|[[:space:]]*(ba)?sh' runtime/pu2pny-capability-scan.py ci/patch-image-4.00.000.sh
+
+      - name: Build backend from protected patch chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-0.3.31.122.py src/2pnyd-main-0.3.27.go /tmp/base.go
+          python3 ci/patch-backend-4.00.000.py src/2pnyd-main-0.3.27.go /tmp/new.go
+          gofmt -w /tmp/base.go /tmp/new.go
+          go test /tmp/new.go
+          grep -Fq 'appVersion            = "4.00.000"' /tmp/new.go
+          grep -Fq 'http.HandleFunc("/api/capabilities", capabilitiesHandler)' /tmp/new.go
+
+      - name: Prove protected handlers are byte-identical
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          base=Path('/tmp/base.go').read_text()
+          new=Path('/tmp/new.go').read_text()
+          names=[
+              'hardwareHandler','displayDetectionHandler','protocolStatusHandler',
+              'protocolApplyHandler','networkConnectHandler','liveStatusHandler',
+              'rfStatusHandler','rfApplyHandler','rfPowerHandler','rfBERCalibrationHandler'
+          ]
+          def func(src,name):
+              marker=f'func {name}('
+              start=src.find(marker)
+              if start < 0: raise SystemExit(f'missing {name}')
+              brace=src.find('{', start)
+              if brace < 0: raise SystemExit(f'missing brace {name}')
+              depth=0
+              in_str=False; esc=False; raw=False; rune=False
+              i=brace
+              while i < len(src):
+                  c=src[i]
+                  if raw:
+                      if c=='`': raw=False
+                  elif in_str:
+                      if esc: esc=False
+                      elif c=='\\': esc=True
+                      elif c=='"': in_str=False
+                  elif rune:
+                      if esc: esc=False
+                      elif c=='\\': esc=True
+                      elif c=="'": rune=False
+                  else:
+                      if c=='`': raw=True
+                      elif c=='"': in_str=True
+                      elif c=="'": rune=True
+                      elif c=='{': depth+=1
+                      elif c=='}':
+                          depth-=1
+                          if depth==0: return src[start:i+1]
+                  i+=1
+              raise SystemExit(f'unterminated {name}')
+          for name in names:
+              if func(base,name) != func(new,name):
+                  raise SystemExit(f'protected handler changed: {name}')
+          print('PROTECTED_HANDLERS_IDENTICAL')
+          PY
+
+      - name: Cross-build backend ARM64 and ARMv6
+        shell: bash
+        run: |
+          set -euo pipefail
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -o /tmp/2pnyd-arm64 /tmp/new.go
+          GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -trimpath -o /tmp/2pnyd-armv6 /tmp/new.go
+          file /tmp/2pnyd-arm64 | grep -Eqi 'aarch64|ARM64'
+          file /tmp/2pnyd-armv6 | grep -Eq 'ELF 32-bit.*ARM'
+          grep -aFq '4.00.000' /tmp/2pnyd-arm64
+          grep -aFq '4.00.000' /tmp/2pnyd-armv6
+
+      - name: Capability scanner fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$(mktemp -d)"
+          trap 'rm -rf "$ROOT"' EXIT
+          mkdir -p "$ROOT/var/lib/2pny" "$ROOT/run/2pny" "$ROOT/usr/local/bin"
+          cat > "$ROOT/var/lib/2pny/hardware.json" <<'JSON'
+          {"raspberry_model":"Raspberry Pi Test","mmdvm":{"detected":true,"profile":"MMDVM_HS compatível","port":"/dev/serial0","realpath":"/dev/ttyAMA0","baud":115200,"duplex":"unknown","capabilities":["D-Star","DMR","YSF","P25","NXDN","POCSAG"]}}
+          JSON
+          cat > "$ROOT/var/lib/2pny/display-detection.json" <<'JSON'
+          {"state":"done","displays":[{"family":"nextion","model":"NX3224T024_011R","resolution":"320x240","transport":"mmdvm","port":"modem","physical_confirmed":false}]}
+          JSON
+          printf '#!/bin/sh\nexit 0\n' > "$ROOT/usr/local/bin/helix-daemon"
+          chmod 0755 "$ROOT/usr/local/bin/helix-daemon"
+          PU2PNY_ROOT="$ROOT" PU2PNY_TEST_ARCH=armv6l python3 runtime/pu2pny-capability-scan.py
+          python3 - "$ROOT/run/2pny/capabilities.json" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1]))
+          assert p['os_version']=='4.00.000'
+          assert p['platform']['architecture']=='armv6l'
+          assert p['modem']['detected'] is True
+          assert all(p['protocols'][k]['status']=='available' for k in ('dmr','dstar','ysf','p25','nxdn','pocsag'))
+          assert p['protocols']['m17']['status']=='unknown'
+          assert p['protocols']['fm']['status']=='unknown'
+          assert p['transcoder']['helix']['state']=='disabled'
+          assert p['transcoder']['helix']['hvc']['state']=='blocked'
+          assert p['validation']['hardware']=='pending'
+          print('CAPABILITY_FIXTURE_PASS')
+          PY
+
+      - name: Image patch fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$(mktemp -d)"
+          trap 'rm -rf "$ROOT"' EXIT
+          mkdir -p "$ROOT/etc/2pny" "$ROOT/etc/systemd/system" "$ROOT/usr/local/sbin"
+          printf '4.00.000\n' > "$ROOT/etc/2pny/version"
+          bash ci/patch-image-4.00.000.sh "$ROOT"
+          test -x "$ROOT/usr/local/sbin/pu2pny-capability-scan"
+          test -L "$ROOT/etc/systemd/system/multi-user.target.wants/pu2pny-capabilities.path"
+          test -L "$ROOT/etc/systemd/system/timers.target.wants/pu2pny-capabilities.timer"
+          grep -Fq 'NoNewPrivileges=true' "$ROOT/etc/systemd/system/pu2pny-capabilities.service"
