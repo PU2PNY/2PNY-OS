@@ -1,0 +1,420 @@
+name: Build and release PU2PNY-OS 4.00.000
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.000-ecosystem]
+    paths:
+      - '.github/workflows/4.00.000-build-release.yml'
+      - 'ci/patch-backend-4.00.000.py'
+      - 'ci/patch-image-4.00.000.sh'
+      - 'ci/install-helix-4.00.000.sh'
+      - 'runtime/pu2pny-capability-scan.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pu2pny-os-4.00.000-release
+  cancel-in-progress: false
+
+env:
+  VERSION: 4.00.000
+  RELEASE_TAG: v4.00.000
+  RELEASE_BRANCH: pu2pny-os-4.00.000-ecosystem
+  HELIX_COMMIT: b71a5fccd6371a88284866510000302f0126d565
+  ARM64_BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31.122/PU2PNY-OS-0.3.31.122-arm64.img.xz
+  ARM64_BASE_SHA256: c39d217ef5d6f70c171a82fb2c45f23a95a20345dfed1246a4a22892e47602b5
+  ARM32_BASE_URL: https://github.com/PU2PNY/2PNY-OS/releases/download/v0.3.31.124-arm32-pizero/PU2PNY-OS-0.3.31.124-arm32-pizero.img.xz
+  ARM32_BASE_SHA256: 1822cc9c83823e2554dcc7abfa8bc5bc4c6820f4630350e01cac556a9f9f7b9c
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Checkout pinned Helix
+        uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/Helix-Voice
+          ref: ${{ env.HELIX_COMMIT }}
+          path: helix-source
+          fetch-depth: 1
+
+      - name: Install image tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xz-utils util-linux e2fsprogs file binutils systemd
+
+      - name: Build and self-test pinned Helix natively
+        shell: bash
+        working-directory: helix-source
+        run: |
+          set -euo pipefail
+          cargo test --workspace
+          cargo build --release -p helix-daemon
+          ./target/release/helix-daemon --self-test
+          file ./target/release/helix-daemon | grep -Eqi 'aarch64|ARM64'
+
+      - name: Build 4.00.000 backend ARM64
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-4.00.000.py src/2pnyd-main-0.3.27.go /tmp/2pnyd-main.go
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -o /tmp/2pnyd-4.00.000 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-4.00.000 | grep -Eqi 'aarch64|ARM64'
+          grep -aFq '4.00.000' /tmp/2pnyd-4.00.000
+
+      - name: Download immutable ARM64 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base-arm64.img.xz "$ARM64_BASE_URL"
+          echo "$ARM64_BASE_SHA256  base-arm64.img.xz" | sha256sum -c -
+          xz -t base-arm64.img.xz
+          xz -dk base-arm64.img.xz
+          mv base-arm64.img "PU2PNY-OS-$VERSION-arm64.img"
+
+      - name: Apply additive 4.00.000 ARM64 overlay
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          ROOT=/mnt/pu2pny-400-arm64
+          cleanup(){ set +e; mountpoint -q "$ROOT" && sudo umount "$ROOT"; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p "$ROOT"
+          sudo mount "$ROOTDEV" "$ROOT"
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = '0.3.31.122'
+          protected=(
+            usr/local/bin/MMDVM-Host usr/local/bin/NextionDriver-pu2pny
+            usr/local/libexec/2pny-dmr-apply usr/local/sbin/2pny-protocol-network-apply
+            usr/local/sbin/2pny-network-switch usr/local/sbin/2pny-network-online
+            usr/share/2pny/wizard.html usr/share/2pny/internet.html usr/share/2pny/dashboard.html
+            etc/systemd/system/2pny-mmdvmhost.service etc/avahi/avahi-daemon.conf
+          )
+          for f in "${protected[@]}"; do sudo test -e "$ROOT/$f"; sudo sha256sum "$ROOT/$f"; done | sed "s#$ROOT/##" > /tmp/arm64-protected.before
+          sudo install -m 0755 /tmp/2pnyd-4.00.000 "$ROOT/usr/local/bin/2pnyd"
+          echo "$VERSION" | sudo tee "$ROOT/etc/2pny/version" >/dev/null
+          sudo bash ci/patch-image-4.00.000.sh "$ROOT"
+          sudo bash ci/install-helix-4.00.000.sh "$ROOT" "$GITHUB_WORKSPACE/helix-source/target/release/helix-daemon" "$HELIX_COMMIT"
+          for f in "${protected[@]}"; do sudo sha256sum "$ROOT/$f"; done | sed "s#$ROOT/##" > /tmp/arm64-protected.after
+          diff -u /tmp/arm64-protected.before /tmp/arm64-protected.after
+          sudo systemd-analyze verify --root="$ROOT" \
+            "$ROOT/etc/systemd/system/pu2pny-capabilities.service" \
+            "$ROOT/etc/systemd/system/pu2pny-capabilities.path" \
+            "$ROOT/etc/systemd/system/pu2pny-capabilities.timer" \
+            "$ROOT/etc/systemd/system/helix-voice.service" \
+            "$ROOT/etc/systemd/system/helix-voice-process.service"
+          sudo env PU2PNY_ROOT="$ROOT" PU2PNY_TEST_ARCH=aarch64 python3 runtime/pu2pny-capability-scan.py
+          sudo python3 - "$ROOT/run/2pny/capabilities.json" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1]))
+          assert p['os_version']=='4.00.000'
+          assert p['platform']['architecture']=='aarch64'
+          assert p['transcoder']['helix']['binary_present'] is True
+          assert p['transcoder']['helix']['state']=='disabled'
+          assert p['transcoder']['helix']['hvc']['state']=='blocked'
+          assert p['validation']['hardware']=='pending'
+          PY
+          sudo test ! -e "$ROOT/etc/systemd/system/multi-user.target.wants/helix-voice.service"
+          sudo sync
+          sudo umount "$ROOT"
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+          sudo mount -o ro "$ROOTDEV" "$ROOT"
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = "$VERSION"
+          test "$(sudo chroot "$ROOT" /usr/bin/dpkg --print-architecture)" = arm64
+          sudo test -x "$ROOT/usr/local/bin/helix-daemon"
+          sudo test -x "$ROOT/usr/local/sbin/pu2pny-capability-scan"
+          for f in "${protected[@]}"; do sudo sha256sum "$ROOT/$f"; done | sed "s#$ROOT/##" > /tmp/arm64-protected.readonly
+          diff -u /tmp/arm64-protected.before /tmp/arm64-protected.readonly
+          sudo umount "$ROOT"
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+
+      - name: Compress and checksum ARM64
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm64.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          sha256sum "$IMAGE" > "$IMAGE.sha256"
+          cat > BUILD-INFO-arm64.txt <<EOF
+          PU2PNY-OS $VERSION ARM64
+          classification=physical-test-candidate
+          base=v0.3.31.122
+          base_sha256=$ARM64_BASE_SHA256
+          commit=$GITHUB_SHA
+          helix_commit=$HELIX_COMMIT
+          helix_default=disabled
+          hvc_production=blocked
+          validation=SW/CI+native-Helix-self-test+xz+fsck+read-only-mount+dpkg-arm64+protected-hash
+          hardware_validation=PENDENTE
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-4.00.000-arm64
+          path: |
+            PU2PNY-OS-4.00.000-arm64.img.xz
+            PU2PNY-OS-4.00.000-arm64.img.xz.sha256
+            BUILD-INFO-arm64.txt
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+
+  build-arm32:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: arm-unknown-linux-gnueabihf
+
+      - name: Checkout pinned Helix
+        uses: actions/checkout@v4
+        with:
+          repository: PU2PNY/Helix-Voice
+          ref: ${{ env.HELIX_COMMIT }}
+          path: helix-source
+          fetch-depth: 1
+
+      - name: Install ARMv6/image tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabihf xz-utils util-linux e2fsprogs file binutils systemd
+
+      - name: Cross-build pinned Helix for ARMv6 hard-float
+        shell: bash
+        working-directory: helix-source
+        env:
+          CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABIHF_LINKER: arm-linux-gnueabihf-gcc
+          RUSTFLAGS: -C target-cpu=arm1176jzf-s
+        run: |
+          set -euo pipefail
+          cargo build --release -p helix-daemon --target arm-unknown-linux-gnueabihf
+          file ./target/arm-unknown-linux-gnueabihf/release/helix-daemon | grep -Eq 'ELF 32-bit.*ARM'
+          ! file ./target/arm-unknown-linux-gnueabihf/release/helix-daemon | grep -Eqi 'aarch64|ARM64'
+          grep -aFq 'helix-daemon' ./target/arm-unknown-linux-gnueabihf/release/helix-daemon
+
+      - name: Build 4.00.000 backend ARMv6
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-4.00.000.py src/2pnyd-main-0.3.27.go /tmp/2pnyd-main.go
+          gofmt -w /tmp/2pnyd-main.go
+          go test /tmp/2pnyd-main.go
+          GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -trimpath -o /tmp/2pnyd-4.00.000 /tmp/2pnyd-main.go
+          file /tmp/2pnyd-4.00.000 | grep -Eq 'ELF 32-bit.*ARM'
+          ! file /tmp/2pnyd-4.00.000 | grep -Eqi 'aarch64|ARM64'
+          grep -aFq '4.00.000' /tmp/2pnyd-4.00.000
+
+      - name: Download immutable ARM32 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 -o base-arm32.img.xz "$ARM32_BASE_URL"
+          echo "$ARM32_BASE_SHA256  base-arm32.img.xz" | sha256sum -c -
+          xz -t base-arm32.img.xz
+          xz -dk base-arm32.img.xz
+          mv base-arm32.img "PU2PNY-OS-$VERSION-arm32-pizero.img"
+
+      - name: Apply additive 4.00.000 ARM32 overlay
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm32-pizero.img"
+          LOOP="$(sudo losetup --find --show --partscan "$IMG")"
+          ROOT=/mnt/pu2pny-400-arm32
+          cleanup(){ set +e; mountpoint -q "$ROOT" && sudo umount "$ROOT"; sudo losetup -d "$LOOP" 2>/dev/null || true; }
+          trap cleanup EXIT
+          sleep 1
+          ROOTDEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1;exit}')"
+          test -n "$ROOTDEV"
+          sudo mkdir -p "$ROOT"
+          sudo mount "$ROOTDEV" "$ROOT"
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = '0.3.31.124'
+          protected=(
+            usr/local/bin/MMDVM-Host usr/local/bin/NextionDriver-pu2pny DMRGateway
+            usr/local/sbin/2pny-protocol-network-apply usr/local/sbin/2pny-network-switch
+            usr/share/2pny/wizard.html usr/share/2pny/internet.html usr/share/2pny/dashboard.html
+            etc/systemd/system/2pny-mmdvmhost.service etc/avahi/avahi-daemon.conf
+          )
+          printf '' > /tmp/arm32-protected.before
+          for f in "${protected[@]}"; do
+            if sudo test -e "$ROOT/$f"; then sudo sha256sum "$ROOT/$f"; fi
+          done | sed "s#$ROOT/##" > /tmp/arm32-protected.before
+          sudo install -m 0755 /tmp/2pnyd-4.00.000 "$ROOT/usr/local/bin/2pnyd"
+          echo "$VERSION" | sudo tee "$ROOT/etc/2pny/version" >/dev/null
+          sudo bash ci/patch-image-4.00.000.sh "$ROOT"
+          sudo bash ci/install-helix-4.00.000.sh "$ROOT" "$GITHUB_WORKSPACE/helix-source/target/arm-unknown-linux-gnueabihf/release/helix-daemon" "$HELIX_COMMIT"
+          for f in "${protected[@]}"; do
+            if sudo test -e "$ROOT/$f"; then sudo sha256sum "$ROOT/$f"; fi
+          done | sed "s#$ROOT/##" > /tmp/arm32-protected.after
+          diff -u /tmp/arm32-protected.before /tmp/arm32-protected.after
+          sudo systemd-analyze verify --root="$ROOT" \
+            "$ROOT/etc/systemd/system/pu2pny-capabilities.service" \
+            "$ROOT/etc/systemd/system/pu2pny-capabilities.path" \
+            "$ROOT/etc/systemd/system/pu2pny-capabilities.timer" \
+            "$ROOT/etc/systemd/system/helix-voice.service" \
+            "$ROOT/etc/systemd/system/helix-voice-process.service"
+          sudo env PU2PNY_ROOT="$ROOT" PU2PNY_TEST_ARCH=armv6l python3 runtime/pu2pny-capability-scan.py
+          sudo python3 - "$ROOT/run/2pny/capabilities.json" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1]))
+          assert p['os_version']=='4.00.000'
+          assert p['platform']['architecture']=='armv6l'
+          assert p['transcoder']['helix']['binary_present'] is True
+          assert p['transcoder']['helix']['state']=='disabled'
+          assert p['transcoder']['helix']['hvc']['state']=='blocked'
+          assert p['validation']['hardware']=='pending'
+          PY
+          sudo test ! -e "$ROOT/etc/systemd/system/multi-user.target.wants/helix-voice.service"
+          sudo sync
+          sudo umount "$ROOT"
+          sudo e2fsck -fn "$ROOTDEV" || test $? -le 1
+          sudo mount -o ro "$ROOTDEV" "$ROOT"
+          test "$(sudo cat "$ROOT/etc/2pny/version")" = "$VERSION"
+          test "$(sudo chroot "$ROOT" /usr/bin/dpkg --print-architecture)" = armhf
+          sudo test -x "$ROOT/usr/local/bin/helix-daemon"
+          file "$GITHUB_WORKSPACE/helix-source/target/arm-unknown-linux-gnueabihf/release/helix-daemon" | grep -Eq 'ELF 32-bit.*ARM'
+          sudo test -x "$ROOT/usr/local/sbin/pu2pny-capability-scan"
+          for f in "${protected[@]}"; do
+            if sudo test -e "$ROOT/$f"; then sudo sha256sum "$ROOT/$f"; fi
+          done | sed "s#$ROOT/##" > /tmp/arm32-protected.readonly
+          diff -u /tmp/arm32-protected.before /tmp/arm32-protected.readonly
+          sudo umount "$ROOT"
+          sudo losetup -d "$LOOP"
+          trap - EXIT
+
+      - name: Compress and checksum ARM32
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG="PU2PNY-OS-$VERSION-arm32-pizero.img"
+          xz -T0 -6 -f "$IMG"
+          IMAGE="$IMG.xz"
+          xz -t "$IMAGE"
+          sha256sum "$IMAGE" > "$IMAGE.sha256"
+          cat > BUILD-INFO-arm32.txt <<EOF
+          PU2PNY-OS $VERSION ARM32/ARMv6
+          classification=physical-test-candidate
+          base=v0.3.31.124-arm32-pizero
+          base_sha256=$ARM32_BASE_SHA256
+          commit=$GITHUB_SHA
+          helix_commit=$HELIX_COMMIT
+          helix_default=disabled
+          hvc_production=blocked
+          validation=SW/CI+Helix-cross-build+xz+fsck+read-only-mount+dpkg-armhf+protected-hash
+          hardware_validation=PENDENTE
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-4.00.000-arm32-pizero
+          path: |
+            PU2PNY-OS-4.00.000-arm32-pizero.img.xz
+            PU2PNY-OS-4.00.000-arm32-pizero.img.xz.sha256
+            BUILD-INFO-arm32.txt
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+
+  publish:
+    needs: [build-arm64, build-arm32]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-4.00.000-arm64
+          path: release
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-os-4.00.000-arm32-pizero
+          path: release
+
+      - name: Verify both transferred artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for image in release/*.img.xz; do
+            xz -t "$image"
+            test -f "$image.sha256"
+            (cd release && sha256sum -c "$(basename "$image").sha256")
+          done
+
+      - name: Publish physical-test prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > release/RELEASE-NOTES.md <<EOF
+          PU2PNY-OS 4.00.000 — ECOSSISTEMA GLOBAL — CANDIDATA PARA TESTE FÍSICO.
+
+          Arquiteturas:
+          - ARM64: base imutável 0.3.31.122.
+          - ARMHF/ARMv6 Pi Zero/Zero W original: base imutável 0.3.31.124.
+
+          Adicionado sem substituir o caminho RF aprovado:
+          - inventário global conservador de capacidades;
+          - endpoint /api/capabilities;
+          - atualização por eventos + fallback de baixa frequência;
+          - Helix Voice Engine pinado em $HELIX_COMMIT, instalado mas DESABILITADO por padrão;
+          - shadow/process separados; process não pode ser habilitado persistentemente por systemctl enable;
+          - HVC e AMBE nativo NÃO declarados produção;
+          - handlers protegidos RF/DMR/display/rede/Ao Vivo permanecem cobertos por gate de não regressão.
+
+          Validação desta release: SW/CI + build por arquitetura + integridade xz + fsck + montagem somente leitura + arquitetura dpkg/ELF + hashes protegidos.
+          RF real, duplex real, BER/RSSI reais, áudio/transcoding real e displays físicos: PENDENTE HW.
+
+          Commit de release: $GITHUB_SHA
+          EOF
+          files=(
+            release/PU2PNY-OS-4.00.000-arm64.img.xz
+            release/PU2PNY-OS-4.00.000-arm64.img.xz.sha256
+            release/PU2PNY-OS-4.00.000-arm32-pizero.img.xz
+            release/PU2PNY-OS-4.00.000-arm32-pizero.img.xz.sha256
+            release/BUILD-INFO-arm64.txt
+            release/BUILD-INFO-arm32.txt
+          )
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "PU2PNY-OS 4.00.000 — Global Ecosystem" --notes-file release/RELEASE-NOTES.md --prerelease
+            gh release upload "$RELEASE_TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$RELEASE_TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "PU2PNY-OS 4.00.000 — Global Ecosystem" --notes-file release/RELEASE-NOTES.md --prerelease
+          fi
