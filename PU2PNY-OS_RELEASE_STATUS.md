@@ -1057,3 +1057,13 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - **VPS:** NÃO VERIFICADO nesta execução; CI ARM64 executou smoke real do binário sem RF.
 - **Imagem SHA-256:** `ee00e310f12ad89aefe9508e009c5bc36f156b306ac02788de2040a3a11c8b22`.
 - **HW:** PENDENTE — saída visual standby/RX/TX e compatibilidade da HMI real precisam do Raspberry/MMDVM/Nextion do operador.
+
+### 4.00.000 — Ecossistema global
+- Estado: EM TESTE / candidata para teste físico após build.
+- Branch: pu2pny-os-4.00.000-ecosystem.
+- Base protegida ARMHF/ARMv6: 0.3.31.124 / commit 6e7dc53d94a80d8860ce54f513b738313907e5b8.
+- Base protegida ARM64: 0.3.31.122, última linha ARM64 protegida antes da trilha Pi Zero.
+- Implementado: inventário global de capacidades, /api/capabilities, serviço event-driven/baixa frequência, modelo Helix opcional/default-off e gates de não regressão.
+- Safety CI, Baseline Guard e validação VPS da camada 4.00.000: PASS.
+- Build dual ARM64/ARMHF: EM TESTE até workflow 4.00.000 concluir.
+- HW RF/display/audio: PENDENTE; não classificar como produção.

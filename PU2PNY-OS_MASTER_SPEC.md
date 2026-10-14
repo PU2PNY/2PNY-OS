@@ -1903,3 +1903,36 @@ Quando uma Nextion ligada ao modem usar ON7LDS L3/L3 HS, a troca de renderer dev
 
 ### REL-031 — 0.3.31.121 é overlay estritamente de runtime Nextion sobre 0.3.31.120
 A 0.3.31.121 parte da imagem publicada 0.3.31.120. O delta é limitado ao helper `2pny-display-apply`, unit `2pny-nextiondriver.service`, identidade de versão e documentação/gates. MMDVMHost, binário NextionDriver, DMR/D-Star/YSF, RF, rede/mDNS, Wi-Fi, wizard e UI permanecem protegidos por gate de hash. Aprovação visual exige HW real.
+
+## 4.00.000 — Ecossistema global orientado por capacidades
+
+### ARCH-007 — Inventário global de capacidades
+- PU2PNY-OS deve detectar e expor capacidades reais do host, modem, gateways, displays, transcoder e acesso remoto sem presumir que presença de pacote significa validação física.
+- Estados devem distinguir pelo menos available, unavailable, unknown, disabled, blocked e error.
+- Nenhuma capacidade pode ser promovida para HW/PROD sem evidência correspondente.
+- Implementação deve ser event-driven ou de baixa frequência, sem polling agressivo, escrita RF ou chamadas externas repetitivas.
+
+### ARCH-008 — Integração local Helix
+- Helix Voice Engine é backend opcional e local para PCM/DSP/transcoding orchestration.
+- Modos: off, shadow e process; padrão off.
+- Falha, ausência ou timeout do Helix não pode bloquear boot, rede, RF, MMDVMHost ou o caminho de áudio legado.
+- HXP1/local IPC permanece sem cloud/API no hot path.
+- HVC permanece bloqueado para produção enquanto qualidade/FTO/interoperabilidade não estiverem aprovadas.
+- AMBE/AMBE+2 não é declarado nativo do Helix; requer backend externo/licenciado/verificado quando aplicável.
+
+### PROTO-050 — Matriz global de protocolos
+- Preservar DMR simplex/duplex e gateways já aprovados; ampliar somente por módulos isolados.
+- D-Star, YSF/C4FM, P25, NXDN e POCSAG/DAPNET permanecem suportados conforme hardware/firmware/gateway real detectado.
+- M17, FM/SVXLink, AX.25/KISS/IL2P e extensões semelhantes só podem aparecer como disponíveis quando existir hardware/firmware/backend compatível e validado.
+
+### DISPLAY-031 — Displays globais por capacidade
+- Suportar detecção modular de Nextion, OLED, HD44780/LCDproc e demais famílias implementadas sem amarrar o sistema a uma única tela.
+- Nextion continua com writer único, sem gravação automática de HMI/TFT e com gate HW para standby/RX/TX reais.
+
+### NET-050 — Acesso remoto opcional
+- Cloudflare Tunnel, Tailscale e ZeroTier são opcionais e desabilitados por padrão.
+- Nenhum deles pode expor segredo, substituir uplink RF/protocolo, ou liberar backend bruto sem autenticação e política explícita.
+
+### REL-050 — Gate 4.00.000
+- Imagens ARM64 e ARMHF/ARMv6 devem preservar a baseline correta de cada arquitetura, passar CI estrutural, fsck/xz, SHA-256 e regressões SW aplicáveis.
+- RF real, BER/RSSI reais, duplex físico e displays físicos continuam HW PENDENTE até evidência real.

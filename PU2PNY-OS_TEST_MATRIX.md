@@ -992,3 +992,25 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 | NET-038-HW | `http://pu2pny.local/` resolve após Wi-Fi/Ethernet e troca de uplink | HW | PENDENTE | teste físico obrigatório |
 | REL-030 | imagem 0.3.31.120 preserva por hash MMDVMHost, NextionDriver binário, RF/protocolos, Wi-Fi profiles e wizard | SW/CI | APROVADO | SHA-256 `43fa01b610519c3c8e63a474a6494a6cd6247b7750c8eb0815a9328b9ffe1a03` |
 | REL-030-VPS | subset não-RF | VPS | NÃO VERIFICADO nesta execução; CI ARM64 valida SW e não substitui hardware | VPS não substitui hardware físico |
+
+### SW-400000-CAPABILITY-20261014 — APROVADO SW/CI
+- Branch: pu2pny-os-4.00.000-ecosystem.
+- Safety CI run 38574305041: PASS.
+- Baseline Guard run 38574304897: PASS.
+- Verificado: sintaxe Python/shell, patch backend, endpoint /api/capabilities, fixture de hardware, instalação systemd, cross-build backend ARM64 e ARMv6 e igualdade byte a byte dos handlers protegidos RF/DMR/display/rede/Ao Vivo.
+- HW: PENDENTE.
+
+### VPS-400000-CAPABILITY-20261014 — APROVADO VPS
+- Host de teste SentinelX: WartyWallaby x86_64, kernel 6.1.0-10-amd64.
+- Commit testado: 684820f49896d9a478644e7418932ed40a3a8870.
+- Scanner de capacidades: PASS.
+- Políticas no_network_probe/no_rf_write e hardware=pending: PASS.
+- Cadeia completa do patch backend 4.00.000: PASS.
+- go test do backend: PASS.
+- Este resultado não valida RF, MMDVM físico, BER/RSSI, duplex RF, áudio/transcoding real ou display físico.
+
+### SW-400000-HELIX-20261014 — PARCIAL / BLOQUEADO PARA PROD
+- Helix é backend opcional, padrão off, com estados explícitos e fallback obrigatório.
+- HXP1/DSP/self-test possuem evidência SW/ENV no repositório Helix-Voice.
+- HVC final e AMBE/AMBE+2 nativo não estão aprovados para produção; não declarar transcoder integral sem backend verificado.
+- HW/RF/audio real: PENDENTE.

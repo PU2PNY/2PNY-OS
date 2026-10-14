@@ -945,3 +945,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Aplicação só confirma o modo após NextionDriver, `2pny-mmdvmhost.service` e PTY estarem simultaneamente estáveis; falha restaura a configuração anterior.
 - MMDVMHost e binário NextionDriver permanecem byte-idênticos à 0.3.31.120.
 - Build/runtime commit: `9b9ddc4ab4cdff8f516ab02eef3c4f7d8c7d949f`; imagem SHA-256 `ee00e310f12ad89aefe9508e009c5bc36f156b306ac02788de2040a3a11c8b22`; SW/CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/37878210638; HW: PENDENTE.
+
+### 4.00.000 (2026-10-14)
+- Iniciado ecossistema global orientado por capacidades, sem amarrar o PU2PNY-OS a uma Raspberry Pi, um modem MMDVM ou um display específicos.
+- Adicionado inventário conservador de hardware/protocolos/display/transcoder/acesso remoto e endpoint /api/capabilities.
+- Adicionada atualização por PathChanged com fallback de 15 minutos, sem polling agressivo e sem escrita RF.
+- Adicionado gate CI que prova handlers protegidos RF/DMR/display/rede/Ao Vivo byte-idênticos à cadeia baseline antes da camada 4.00.000.
+- Helix passa a ser backend opcional local, pinado, padrão off; HVC e AMBE nativo continuam bloqueados enquanto faltarem gates próprios.
+- A família 4.00.000 usa artefatos por arquitetura quando necessário; não forçar uma imagem única que invalide Pi Zero/ARMv6 ou ARM64.
+- Validação VPS da camada de capacidades/backend concluída sem promover nenhum estado para HW.
