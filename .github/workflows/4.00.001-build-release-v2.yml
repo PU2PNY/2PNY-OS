@@ -181,7 +181,7 @@ jobs:
           grep -Fq 'timedatectl set-timezone' "$ROOT/usr/local/sbin/2pny-timezone-restore"
           test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-timezone-restore.service"
           bash -n "$ROOT/usr/local/sbin/2pny-timezone-restore"
-          python3 -m py_compile "$ROOT/usr/local/sbin/2pny-display-apply"
+          PYTHONPYCACHEPREFIX="/tmp/pu2pny-pycache-${TARGET_ID}" python3 -m py_compile "$ROOT/usr/local/sbin/2pny-display-apply"
           sudo systemd-analyze --root="$ROOT" verify 2pny-nextiondriver.service 2pny-timezone-restore.service
 
           manifest /tmp/protected.after
