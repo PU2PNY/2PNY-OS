@@ -1,0 +1,60 @@
+name: PU2PNY-OS 4.00.001 Safety CI
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.001-display-perf-timezone]
+    paths:
+      - 'ci/patch-backend-4.00.001.py'
+      - 'ci/patch-image-4.00.001.sh'
+      - 'ci/test-4.00.001.py'
+      - 'PU2PNY-OS_MASTER_SPEC.md'
+      - 'PU2PNY-OS_RELEASE_STATUS.md'
+      - 'PU2PNY-OS_TEST_MATRIX.md'
+      - 'PU2PNY-OS_CHANGELOG.md'
+      - '.github/workflows/4.00.001-safety-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pu2pny-os-4.00.001-safety
+  cancel-in-progress: true
+
+jobs:
+  surgical-gates:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Static corrective gates
+        run: |
+          set -euo pipefail
+          python3 ci/test-4.00.001.py
+          git diff --check
+          for f in PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md; do
+            grep -Fq '<!-- PU2PNY-OS-4.00.001-CANONICAL -->' "$f"
+          done
+      - name: Build backend ARM64 and ARMv6
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-4.00.001.py src/2pnyd-main-0.3.27.go /tmp/main.go
+          gofmt -w /tmp/main.go
+          go test /tmp/main.go
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -o /tmp/2pnyd-arm64 /tmp/main.go
+          GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -trimpath -o /tmp/2pnyd-armv6 /tmp/main.go
+          file /tmp/2pnyd-arm64 | grep -Eqi 'aarch64|ARM64'
+          file /tmp/2pnyd-armv6 | grep -Eq 'ELF 32-bit.*ARM'
+          grep -aFq '4.00.001' /tmp/2pnyd-arm64
+          grep -aFq '4.00.001' /tmp/2pnyd-armv6
+      - name: Assert scope excludes direct RF mutations
+        run: |
+          set -euo pipefail
+          ! grep -Eq 'DMRGateway\.ini|YSFGateway\.ini|DStarGateway|RXFrequency|TXFrequency|ColorCode' ci/patch-backend-4.00.001.py
+          ! grep -Eq 'DMRGateway\.ini|YSFGateway\.ini|DStarGateway|RXFrequency|TXFrequency|ColorCode' ci/patch-image-4.00.001.sh
+          grep -Fq 'NextionDriver-pu2pny -i -vv' ci/patch-image-4.00.001.sh
+          grep -Fq '2pny-timezone-restore.service' ci/patch-image-4.00.001.sh
