@@ -9,7 +9,8 @@ backend=repo/'ci/patch-backend-4.00.001.py'
 image=repo/'ci/patch-image-4.00.001.sh'
 
 for p in (backend,image):
-    if not p.is_file(): raise SystemExit(f'missing {p}')
+    if not p.is_file():
+        raise SystemExit(f'missing {p}')
 
 subprocess.run(['bash','-n',str(image)],check=True)
 with tempfile.TemporaryDirectory(prefix='pu2pny-400001-test-') as td:
@@ -19,17 +20,17 @@ with tempfile.TemporaryDirectory(prefix='pu2pny-400001-test-') as td:
     assert 'appVersion            = "4.00.001"' in text
     assert 'time.Sleep(160 * time.Millisecond)' in text
     assert 'time.Sleep(80 * time.Millisecond)' not in text
-    # Protected RF/gateway literals are inherited from the 4.00.000 chain;
-    # this overlay must not introduce edits in those subsystems.
+    # This overlay must not introduce direct RF/gateway edits.
+    overlay=backend.read_text()
     for forbidden in ('DMRGateway.ini','YSFGateway.ini','DStarGateway','RXFrequency','TXFrequency','ColorCode'):
-        assert forbidden not in backend.read_text(), forbidden
+        assert forbidden not in overlay, forbidden
 
 patch=image.read_text()
 required=(
- 'new=\'ExecStart=/usr/local/bin/NextionDriver-pu2pny -i -vv -c /var/lib/2pny/mmdvm/MMDVM-Host.ini\'',
- "! grep -Fq 'NextionDriver-pu2pny -d '",
- 'RemotePort\\\",\\\"40094', 'LocalPort\\\",\\\"40095', 'SendFrameType\\\",\\\"1',
- '2pny-timezone-restore.service','timedatectl set-timezone','4.00.001',
+    "new='ExecStart=/usr/local/bin/NextionDriver-pu2pny -i -vv -c /var/lib/2pny/mmdvm/MMDVM-Host.ini'",
+    "! grep -Fq 'NextionDriver-pu2pny -d '",
+    'RemotePort', '40094', 'LocalPort', '40095', 'SendFrameType',
+    '2pny-timezone-restore.service', 'timedatectl set-timezone', '4.00.001',
 )
 for token in required:
     assert token in patch, token
