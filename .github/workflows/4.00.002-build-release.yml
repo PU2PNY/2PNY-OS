@@ -1,0 +1,269 @@
+name: PU2PNY-OS 4.00.002 Build and Release
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.002-display-pistar-helix]
+    paths:
+      - '.github/workflows/4.00.002-build-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  VERSION: '4.00.002'
+  RELEASE_TAG: 'v4.00.002'
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ARM64
+            id: arm64
+            goarch: arm64
+            goarm: ''
+            base_url: https://github.com/PU2PNY/2PNY-OS/releases/download/v4.00.001/PU2PNY-OS-4.00.001-arm64.img.xz
+            base_sha256: 68b201a483d6f182e4286fd0c943ac7d1cb6571c3a402e27e20796dca8bb6d3a
+            output: PU2PNY-OS-4.00.002-arm64.img.xz
+          - label: ARM32 Pi Zero
+            id: arm32
+            goarch: arm
+            goarm: '6'
+            base_url: https://github.com/PU2PNY/2PNY-OS/releases/download/v4.00.001/PU2PNY-OS-4.00.001-arm32-pizero.img.xz
+            base_sha256: 80b738f3dc40d03d296f2750ad2383dc5561fc02d141f72bc025ef6ba49e8c5b
+            output: PU2PNY-OS-4.00.002-arm32-pizero.img.xz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Source and surgical gates
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file binutils >/dev/null
+          PYTHONPYCACHEPREFIX=/tmp/pycache400002 python3 ci/test-4.00.002.py
+          git diff --check
+
+      - name: Build target backend
+        env:
+          GOARCH_TARGET: ${{ matrix.goarch }}
+          GOARM_TARGET: ${{ matrix.goarm }}
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-4.00.002.py src/2pnyd-main-0.3.27.go /tmp/main.go
+          gofmt -w /tmp/main.go
+          go test /tmp/main.go
+          if [[ "$GOARCH_TARGET" == arm ]]; then
+            GOOS=linux GOARCH=arm GOARM="$GOARM_TARGET" CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /tmp/2pnyd /tmp/main.go
+            file /tmp/2pnyd | grep -Eq 'ELF 32-bit.*ARM'
+          else
+            GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /tmp/2pnyd /tmp/main.go
+            file /tmp/2pnyd | grep -Eqi 'aarch64|ARM64'
+          fi
+          strings /tmp/2pnyd | grep -Fq '4.00.002'
+
+      - name: Download and verify immutable 4.00.001 base
+        env:
+          BASE_URL: ${{ matrix.base_url }}
+          BASE_SHA256: ${{ matrix.base_sha256 }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2 "$BASE_URL" -o /tmp/base.img.xz
+          printf '%s  %s\n' "$BASE_SHA256" /tmp/base.img.xz | sha256sum -c -
+          xz -t /tmp/base.img.xz
+          xz -dc /tmp/base.img.xz > /tmp/pu2pny.img
+          test -s /tmp/pu2pny.img
+
+      - name: Patch image and prove protected baseline unchanged
+        env:
+          BASE_SHA256: ${{ matrix.base_sha256 }}
+          TARGET_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          ROOT="$(mktemp -d /tmp/pu2pny-root.XXXXXX)"
+          LOOP=''
+          cleanup() {
+            set +e
+            mountpoint -q "$ROOT" && sudo umount "$ROOT"
+            [[ -n "$LOOP" ]] && sudo losetup -d "$LOOP" 2>/dev/null || true
+            rmdir "$ROOT" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          LOOP="$(sudo losetup --find --show --partscan /tmp/pu2pny.img)"
+          ROOT_DEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1; exit}')"
+          if [[ -z "$ROOT_DEV" ]]; then
+            while read -r dev; do
+              [[ -b "$dev" ]] || continue
+              if sudo mount -o ro "$dev" "$ROOT" 2>/dev/null; then
+                if [[ -f "$ROOT/etc/2pny/version" ]]; then ROOT_DEV="$dev"; sudo umount "$ROOT"; break; fi
+                sudo umount "$ROOT"
+              fi
+            done < <(lsblk -lnpo NAME "$LOOP")
+          fi
+          [[ -n "$ROOT_DEV" && -b "$ROOT_DEV" ]] || { echo 'PU2PNY root partition not found' >&2; lsblk -f "$LOOP"; exit 1; }
+          sudo mount "$ROOT_DEV" "$ROOT"
+          [[ "$(cat "$ROOT/etc/2pny/version")" == '4.00.001' ]] || { echo 'unexpected base version' >&2; exit 1; }
+          test -x "$ROOT/usr/local/bin/MMDVM-Host"
+          test -x "$ROOT/usr/local/bin/NextionDriver-pu2pny"
+          test -x "$ROOT/usr/local/bin/helix-daemon"
+          test -f "$ROOT/etc/systemd/system/helix-voice.service"
+          test -f "$ROOT/etc/systemd/system/helix-voice-process.service"
+
+          manifest() {
+            local outfile="$1"
+            sudo python3 - "$ROOT" "$outfile" <<'PY'
+          import hashlib, os, sys
+          from pathlib import Path
+          root=Path(sys.argv[1]); out=Path(sys.argv[2])
+          allowed={
+            'etc/2pny/version',
+            'usr/local/bin/2pnyd',
+            'usr/local/sbin/2pny-display-config',
+            'usr/local/sbin/2pny-display-apply',
+            'usr/local/sbin/2pny-helix-mode',
+            'usr/share/2pny/display.html',
+            'usr/share/2pny/helix.html',
+            'etc/systemd/system/2pny-nextiondriver.service',
+            'etc/systemd/system/multi-user.target.wants/2pny-nextiondriver.service',
+          }
+          rows=[]
+          for base, dirs, files in os.walk(root, followlinks=False):
+              for name in files:
+                  p=Path(base)/name
+                  rel=p.relative_to(root).as_posix()
+                  if rel in allowed: continue
+                  try:
+                      if p.is_symlink():
+                          payload=('LINK:'+os.readlink(p)).encode()
+                      elif p.is_file():
+                          h=hashlib.sha256()
+                          with p.open('rb') as fh:
+                              for chunk in iter(lambda: fh.read(1024*1024), b''): h.update(chunk)
+                          rows.append(f'{h.hexdigest()}  {rel}')
+                          continue
+                      else: continue
+                      rows.append(f'{hashlib.sha256(payload).hexdigest()}  {rel}')
+                  except FileNotFoundError:
+                      continue
+          out.write_text('\n'.join(sorted(rows))+'\n')
+          PY
+          }
+
+          manifest /tmp/protected.before
+          sudo install -m 0755 /tmp/2pnyd "$ROOT/usr/local/bin/2pnyd"
+          sudo bash ci/patch-image-4.00.002.sh "$ROOT"
+
+          [[ "$(cat "$ROOT/etc/2pny/version")" == '4.00.002' ]]
+          grep -Fq 'NextionDriver-pu2pny -d -i -c /var/lib/2pny/mmdvm/MMDVM-Host.ini' "$ROOT/etc/systemd/system/2pny-nextiondriver.service"
+          grep -Fq 'ScreenLayout' "$ROOT/usr/local/sbin/2pny-display-config"
+          grep -Fq 'on7lds_l3hs' "$ROOT/usr/local/sbin/2pny-display-config"
+          grep -Fq 'SendFrameType' "$ROOT/usr/local/sbin/2pny-display-config"
+          grep -Fq 'Rotacionar tela' "$ROOT/usr/share/2pny/display.html"
+          grep -Fq 'legacy_protocol_transcoding_available' "$ROOT/usr/local/sbin/2pny-helix-mode"
+          test ! -e "$ROOT/etc/systemd/system/multi-user.target.wants/helix-voice.service"
+          test ! -e "$ROOT/etc/systemd/system/multi-user.target.wants/helix-voice-process.service"
+          PYTHONPYCACHEPREFIX="/tmp/pycache-image-$TARGET_ID" python3 -m py_compile "$ROOT/usr/local/sbin/2pny-display-config" "$ROOT/usr/local/sbin/2pny-helix-mode"
+          sudo systemd-analyze --root="$ROOT" verify 2pny-nextiondriver.service helix-voice.service helix-voice-process.service
+          if [[ "$TARGET_ID" == arm32 ]]; then
+            file "$ROOT/usr/bin/bash" | grep -Eq 'ELF 32-bit.*ARM'
+          else
+            file "$ROOT/usr/bin/bash" | grep -Eqi 'aarch64|ARM64'
+          fi
+
+          manifest /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+          cp /tmp/protected.before "/tmp/PROTECTED-HASHES-${TARGET_ID}.txt"
+          printf 'base_v4.00.001_sha256=%s\nsource_commit=%s\nversion=4.00.002\ntarget=%s\nclassification=CANDIDATA_PARA_TESTE_FISICO\ndisplay_hw=PENDENTE\nhelix_audio_hw=PENDENTE\nhelix_legacy_transcoding=BACKEND_REQUIRED\n' "$BASE_SHA256" "$GITHUB_SHA" "$TARGET_ID" > "/tmp/BUILD-INFO-${TARGET_ID}.txt"
+
+          sync
+          sudo umount "$ROOT"
+          sudo e2fsck -fn "$ROOT_DEV"
+          sudo mount -o ro "$ROOT_DEV" "$ROOT"
+          [[ "$(cat "$ROOT/etc/2pny/version")" == '4.00.002' ]]
+          grep -Fq 'NextionDriver-pu2pny -d -i -c' "$ROOT/etc/systemd/system/2pny-nextiondriver.service"
+          manifest /tmp/protected.readonly
+          diff -u /tmp/protected.before /tmp/protected.readonly
+          sudo umount "$ROOT"
+          sudo losetup -d "$LOOP"
+          LOOP=''
+          rmdir "$ROOT"
+          trap - EXIT
+
+      - name: Compress, test and checksum
+        env:
+          OUTPUT: ${{ matrix.output }}
+          TARGET_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          xz -T0 -6 -c /tmp/pu2pny.img > "$OUTPUT"
+          xz -t "$OUTPUT"
+          sha256sum "$OUTPUT" | tee "$OUTPUT.sha256"
+          cp "/tmp/BUILD-INFO-${TARGET_ID}.txt" "BUILD-INFO-${TARGET_ID}.txt"
+          cp "/tmp/PROTECTED-HASHES-${TARGET_ID}.txt" "PROTECTED-HASHES-${TARGET_ID}.txt"
+          cat "$OUTPUT.sha256" >> "BUILD-INFO-${TARGET_ID}.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-4.00.002-${{ matrix.id }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            ${{ matrix.output }}
+            ${{ matrix.output }}.sha256
+            BUILD-INFO-${{ matrix.id }}.txt
+            PROTECTED-HASHES-${{ matrix.id }}.txt
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-os-4.00.002-*
+          merge-multiple: true
+      - name: Reverify and publish 4.00.002 prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          sha256sum -c PU2PNY-OS-4.00.002-arm64.img.xz.sha256
+          sha256sum -c PU2PNY-OS-4.00.002-arm32-pizero.img.xz.sha256
+          xz -t PU2PNY-OS-4.00.002-arm64.img.xz
+          xz -t PU2PNY-OS-4.00.002-arm32-pizero.img.xz
+          grep -Fq "source_commit=${SOURCE_SHA}" BUILD-INFO-arm64.txt
+          grep -Fq "source_commit=${SOURCE_SHA}" BUILD-INFO-arm32.txt
+          grep -Fq 'classification=CANDIDATA_PARA_TESTE_FISICO' BUILD-INFO-arm64.txt
+          grep -Fq 'classification=CANDIDATA_PARA_TESTE_FISICO' BUILD-INFO-arm32.txt
+          grep -Fq 'display_hw=PENDENTE' BUILD-INFO-arm64.txt
+          grep -Fq 'helix_legacy_transcoding=BACKEND_REQUIRED' BUILD-INFO-arm64.txt
+          cat > /tmp/notes.md <<EOF
+          ## PU2PNY-OS 4.00.002 — CANDIDATA PARA TESTE FÍSICO
+
+          Source commit: \`${SOURCE_SHA}\`.
+
+          - **DISPLAY-033/034/035:** configuração reconstruída sobre semântica MMDVMHost/ON7LDS usada por Pi-Star/WPSD: None, OLED 3/6, Nextion direto, Nextion enhanced, enhanced ligado ao modem, HD44780, TFT Serial e LCDproc; layouts G4KLX/L2/L3/L3HS; brilho/idle; OLED rotate/invert/scroll/screensaver. Nenhum HMI/TFT é auto-gravado.
+          - **NextionDriver:** \`-d\` é usado como foreground conforme o upstream; o serviço só é habilitado quando um modo enhanced é selecionado.
+          - **Helix:** Off/Shadow/Process disponível para teste explícito e off por padrão. Process é a ponte PCM local. Transcodificação AMBE/AMBE+2/cross-mode legado continua indisponível sem backend externo autorizado/licenciado detectado.
+          - **Baseline:** arquivos fora do escopo permitido foram comparados por manifesto SHA-256 antes/depois do patch.
+
+          **HW permanece PENDENTE:** Nextion/OLED físicos, RF real, BER/RSSI, áudio e transcoding real.
+          EOF
+          assets=(PU2PNY-OS-4.00.002-arm64.img.xz PU2PNY-OS-4.00.002-arm64.img.xz.sha256 PU2PNY-OS-4.00.002-arm32-pizero.img.xz PU2PNY-OS-4.00.002-arm32-pizero.img.xz.sha256 BUILD-INFO-arm64.txt BUILD-INFO-arm32.txt PROTECTED-HASHES-arm64.txt PROTECTED-HASHES-arm32.txt)
+          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --repo "$GH_REPO" --title 'PU2PNY-OS 4.00.002 — Display Pi-Star/WPSD + Helix Test' --notes-file /tmp/notes.md --prerelease --target "$SOURCE_SHA"
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --repo "$GH_REPO" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --repo "$GH_REPO" --target "$SOURCE_SHA" --title 'PU2PNY-OS 4.00.002 — Display Pi-Star/WPSD + Helix Test' --notes-file /tmp/notes.md --prerelease
+          fi
+          gh release view "$RELEASE_TAG" --repo "$GH_REPO" --json url,isPrerelease,tagName,targetCommitish,assets
