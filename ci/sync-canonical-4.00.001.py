@@ -91,5 +91,5 @@ for name,body in sections.items():
     text=p.read_text()
     if marker in text:
         continue
-    p.write_text(text.rstrip()+body+'\n')
+    p.write_text(text.rstrip()+body.rstrip()+"\n")
     print('UPDATED',name)
