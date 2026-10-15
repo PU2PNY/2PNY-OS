@@ -1,0 +1,283 @@
+name: PU2PNY-OS 4.00.001 Build and Release
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.001-display-perf-timezone]
+    paths:
+      - '.github/workflows/4.00.001-build-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pu2pny-os-4.00.001-build-release
+  cancel-in-progress: false
+
+env:
+  VERSION: '4.00.001'
+  RELEASE_TAG: 'v4.00.001'
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ARM64
+            id: arm64
+            goarch: arm64
+            goarm: ''
+            dpkg_arch: arm64
+            base_url: https://github.com/PU2PNY/2PNY-OS/releases/download/v4.00.000/PU2PNY-OS-4.00.000-arm64.img.xz
+            base_sha256: 3ec52631dfe44b9a466bd1f1f4a8b910c6fdac3663736f7d643091b8c5a13dd7
+            output: PU2PNY-OS-4.00.001-arm64.img.xz
+          - label: ARM32 Pi Zero
+            id: arm32
+            goarch: arm
+            goarm: '6'
+            dpkg_arch: armhf
+            base_url: https://github.com/PU2PNY/2PNY-OS/releases/download/v4.00.000/PU2PNY-OS-4.00.000-arm32-pizero.img.xz
+            base_sha256: b7edc16b4a7786e0b0664eef7a1a3f53b449f6abf55aa47d31516a170163760c
+            output: PU2PNY-OS-4.00.001-arm32-pizero.img.xz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Install image tooling
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file binutils
+
+      - name: Re-run surgical source gates
+        run: |
+          set -euo pipefail
+          python3 ci/test-4.00.001.py
+          git diff --check
+
+      - name: Build backend for target
+        env:
+          GOARCH_TARGET: ${{ matrix.goarch }}
+          GOARM_TARGET: ${{ matrix.goarm }}
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-4.00.001.py src/2pnyd-main-0.3.27.go /tmp/main.go
+          gofmt -w /tmp/main.go
+          go test /tmp/main.go
+          if [[ "$GOARCH_TARGET" == arm ]]; then
+            GOOS=linux GOARCH=arm GOARM="$GOARM_TARGET" CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /tmp/2pnyd /tmp/main.go
+            file /tmp/2pnyd | grep -Eq 'ELF 32-bit.*ARM'
+          else
+            GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /tmp/2pnyd /tmp/main.go
+            file /tmp/2pnyd | grep -Eqi 'aarch64|ARM64'
+          fi
+          strings /tmp/2pnyd | grep -Fq '4.00.001'
+
+      - name: Download immutable 4.00.000 base
+        env:
+          BASE_URL: ${{ matrix.base_url }}
+          BASE_SHA256: ${{ matrix.base_sha256 }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2 "$BASE_URL" -o /tmp/base.img.xz
+          printf '%s  %s\n' "$BASE_SHA256" /tmp/base.img.xz | sha256sum -c -
+          xz -t /tmp/base.img.xz
+          xz -dc /tmp/base.img.xz > /tmp/pu2pny.img
+          test -s /tmp/pu2pny.img
+
+      - name: Patch image surgically and prove protected baseline
+        id: patch
+        env:
+          EXPECTED_DPKG_ARCH: ${{ matrix.dpkg_arch }}
+          BASE_SHA256: ${{ matrix.base_sha256 }}
+          TARGET_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          ROOT="$(mktemp -d /tmp/pu2pny-root.XXXXXX)"
+          LOOP=''
+          cleanup() {
+            set +e
+            mountpoint -q "$ROOT" && sudo umount "$ROOT"
+            [[ -n "$LOOP" ]] && sudo losetup -d "$LOOP" 2>/dev/null || true
+            rmdir "$ROOT" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          LOOP="$(sudo losetup --find --show --partscan /tmp/pu2pny.img)"
+          ROOT_DEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1; exit}')"
+          test -b "$ROOT_DEV"
+          sudo mount "$ROOT_DEV" "$ROOT"
+
+          test "$(cat "$ROOT/etc/2pny/version")" = '4.00.000'
+          test -x "$ROOT/usr/local/bin/2pnyd"
+          test -x "$ROOT/usr/local/bin/MMDVM-Host"
+          test -x "$ROOT/usr/local/bin/NextionDriver-pu2pny"
+          test -x "$ROOT/usr/local/sbin/2pny-display-apply"
+
+          PROTECTED=(
+            usr/local/bin/MMDVM-Host
+            usr/local/bin/NextionDriver-pu2pny
+            usr/local/sbin/2pny-display-apply
+            usr/local/sbin/2pny-protocol-network-apply
+            usr/local/sbin/2pny-network-switch
+            usr/share/2pny/wizard.html
+            usr/share/2pny/internet.html
+            usr/share/2pny/dashboard.html
+            etc/systemd/system/2pny-mmdvmhost.service
+            etc/avahi/avahi-daemon.conf
+            usr/local/bin/helix-daemon
+            etc/systemd/system/helix-voice.service
+            etc/systemd/system/helix-voice-process.service
+          )
+          for p in "${PROTECTED[@]}"; do
+            test -e "$ROOT/$p" || { echo "protected path missing: $p" >&2; exit 1; }
+          done
+          (cd "$ROOT" && sha256sum "${PROTECTED[@]}") > /tmp/protected.before
+
+          sudo install -m 0755 /tmp/2pnyd "$ROOT/usr/local/bin/2pnyd"
+          sudo bash ci/patch-image-4.00.001.sh "$ROOT"
+
+          test "$(cat "$ROOT/etc/2pny/version")" = '4.00.001'
+          grep -Fq 'ExecStart=/usr/local/bin/NextionDriver-pu2pny -i -vv -c /var/lib/2pny/mmdvm/MMDVM-Host.ini' "$ROOT/etc/systemd/system/2pny-nextiondriver.service"
+          ! grep -Fq 'NextionDriver-pu2pny -d ' "$ROOT/etc/systemd/system/2pny-nextiondriver.service"
+          grep -Fq 'Port","modem"' "$ROOT/usr/local/sbin/2pny-display-apply"
+          grep -Fq 'RemotePort","40094"' "$ROOT/usr/local/sbin/2pny-display-apply"
+          grep -Fq 'LocalPort","40095"' "$ROOT/usr/local/sbin/2pny-display-apply"
+          grep -Fq 'SendFrameType","1"' "$ROOT/usr/local/sbin/2pny-display-apply"
+          grep -Fq 'Compatibilidade Pi-Star / WPSD' "$ROOT/usr/share/2pny/display.html"
+          grep -Fq 'timedatectl set-timezone' "$ROOT/usr/local/sbin/2pny-timezone-restore"
+          test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-timezone-restore.service"
+          bash -n "$ROOT/usr/local/sbin/2pny-timezone-restore"
+          python3 -m py_compile "$ROOT/usr/local/sbin/2pny-display-apply"
+
+          sudo systemd-analyze --root="$ROOT" verify 2pny-nextiondriver.service 2pny-timezone-restore.service
+
+          ACTUAL_DPKG_ARCH="$(sed -n 's/^Architecture: //p' "$ROOT/var/lib/dpkg/status" | sort -u | head -n1 || true)"
+          if [[ -z "$ACTUAL_DPKG_ARCH" && -r "$ROOT/var/lib/dpkg/arch" ]]; then
+            ACTUAL_DPKG_ARCH="$(head -n1 "$ROOT/var/lib/dpkg/arch")"
+          fi
+          if [[ -n "$ACTUAL_DPKG_ARCH" ]]; then
+            echo "dpkg architecture evidence: $ACTUAL_DPKG_ARCH"
+          fi
+          file "$ROOT/usr/local/bin/2pnyd"
+
+          (cd "$ROOT" && sha256sum "${PROTECTED[@]}") > /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+
+          cp /tmp/protected.before "/tmp/PROTECTED-HASHES-${TARGET_ID}.txt"
+          printf 'base_v4.00.000_sha256=%s\nsource_commit=%s\nversion=4.00.001\ntarget=%s\nclassification=CANDIDATA_PARA_TESTE_FISICO\nnextion_hw=PENDENTE\n' \
+            "$BASE_SHA256" "$GITHUB_SHA" "$TARGET_ID" > "/tmp/BUILD-INFO-${TARGET_ID}.txt"
+
+          sync
+          sudo umount "$ROOT"
+          sudo e2fsck -fn "$ROOT_DEV"
+
+          sudo mount -o ro "$ROOT_DEV" "$ROOT"
+          test "$(cat "$ROOT/etc/2pny/version")" = '4.00.001'
+          grep -Fq 'NextionDriver-pu2pny -i -vv' "$ROOT/etc/systemd/system/2pny-nextiondriver.service"
+          test -L "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-timezone-restore.service"
+          (cd "$ROOT" && sha256sum -c "/tmp/PROTECTED-HASHES-${TARGET_ID}.txt")
+          sudo umount "$ROOT"
+          sudo losetup -d "$LOOP"
+          LOOP=''
+          rmdir "$ROOT"
+          trap - EXIT
+
+      - name: Compress and checksum candidate
+        env:
+          OUTPUT: ${{ matrix.output }}
+          TARGET_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          xz -T0 -6 -c /tmp/pu2pny.img > "$OUTPUT"
+          xz -t "$OUTPUT"
+          sha256sum "$OUTPUT" | tee "$OUTPUT.sha256"
+          cp "/tmp/BUILD-INFO-${TARGET_ID}.txt" "BUILD-INFO-${TARGET_ID}.txt"
+          cp "/tmp/PROTECTED-HASHES-${TARGET_ID}.txt" "PROTECTED-HASHES-${TARGET_ID}.txt"
+          cat "$OUTPUT.sha256" >> "BUILD-INFO-${TARGET_ID}.txt"
+          ls -lh "$OUTPUT" "$OUTPUT.sha256" "BUILD-INFO-${TARGET_ID}.txt" "PROTECTED-HASHES-${TARGET_ID}.txt"
+
+      - name: Upload candidate artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-4.00.001-${{ matrix.id }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            ${{ matrix.output }}
+            ${{ matrix.output }}.sha256
+            BUILD-INFO-${{ matrix.id }}.txt
+            PROTECTED-HASHES-${{ matrix.id }}.txt
+
+  publish:
+    name: Publish v4.00.001 prerelease
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-os-4.00.001-*
+          merge-multiple: true
+
+      - name: Revalidate downloaded artifacts
+        run: |
+          set -euo pipefail
+          sha256sum -c PU2PNY-OS-4.00.001-arm64.img.xz.sha256
+          sha256sum -c PU2PNY-OS-4.00.001-arm32-pizero.img.xz.sha256
+          xz -t PU2PNY-OS-4.00.001-arm64.img.xz
+          xz -t PU2PNY-OS-4.00.001-arm32-pizero.img.xz
+          grep -Fq 'classification=CANDIDATA_PARA_TESTE_FISICO' BUILD-INFO-arm64.txt
+          grep -Fq 'classification=CANDIDATA_PARA_TESTE_FISICO' BUILD-INFO-arm32.txt
+          grep -Fq 'nextion_hw=PENDENTE' BUILD-INFO-arm64.txt
+          grep -Fq 'nextion_hw=PENDENTE' BUILD-INFO-arm32.txt
+
+      - name: Publish immutable candidate assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > /tmp/release-notes.md <<'EOF'
+          ## PU2PNY-OS 4.00.001 — candidata para teste físico
+
+          Correção cirúrgica derivada diretamente dos artefatos imutáveis da 4.00.000.
+
+          - Nextion: lifecycle do ON7LDS NextionDriver corrigido para execução em foreground sob systemd; topologia MMDVMHost/Transparent Data preservada no padrão Pi-Star/WPSD.
+          - Display via modem: COMOK/auto-identificação física não é pré-condição de aplicação; nenhum HMI/TFT é gravado automaticamente.
+          - Timezone: fuso IANA já salvo pelo painel é reaplicado localmente no boot, sem nova geolocalização.
+          - ARM32: watcher Ao Vivo passa de 80 ms para 160 ms, reduzindo pela metade os wakeups desse loop sem alterar API/SSE/RF.
+          - Software transcoding: estratégia local/software registrada, porém HVC/AMBE legado do Helix continua BLOQUEADO para produção; não foi ativado silenciosamente.
+          - Baseline: RF, DMR, gateways, rede, MMDVMHost, NextionDriver binário, display apply, dashboard e Helix permanecem protegidos por SHA-256 antes/depois da cirurgia.
+
+          **Status:** CANDIDATA PARA TESTE FÍSICO. A correção Nextion só poderá virar APROVADA após evidência em Raspberry Pi + MMDVM + Nextion reais. BER/RSSI/TX/RX não são inferidos por este build.
+          EOF
+
+          assets=(
+            PU2PNY-OS-4.00.001-arm64.img.xz
+            PU2PNY-OS-4.00.001-arm64.img.xz.sha256
+            PU2PNY-OS-4.00.001-arm32-pizero.img.xz
+            PU2PNY-OS-4.00.001-arm32-pizero.img.xz.sha256
+            BUILD-INFO-arm64.txt
+            BUILD-INFO-arm32.txt
+            PROTECTED-HASHES-arm64.txt
+            PROTECTED-HASHES-arm32.txt
+          )
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --title 'PU2PNY-OS 4.00.001 — Display / Timezone / ARM32' --notes-file /tmp/release-notes.md --prerelease
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --target "$GITHUB_SHA" \
+              --title 'PU2PNY-OS 4.00.001 — Display / Timezone / ARM32' \
+              --notes-file /tmp/release-notes.md \
+              --prerelease
+          fi
+          gh release view "$RELEASE_TAG" --json url,isPrerelease,tagName,targetCommitish,assets
