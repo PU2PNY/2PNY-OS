@@ -1936,3 +1936,25 @@ A 0.3.31.121 parte da imagem publicada 0.3.31.120. O delta é limitado ao helper
 ### REL-050 — Gate 4.00.000
 - Imagens ARM64 e ARMHF/ARMv6 devem preservar a baseline correta de cada arquitetura, passar CI estrutural, fsck/xz, SHA-256 e regressões SW aplicáveis.
 - RF real, BER/RSSI reais, duplex físico e displays físicos continuam HW PENDENTE até evidência real.
+
+<!-- PU2PNY-OS-4.00.001-CANONICAL -->
+## PU2PNY-OS 4.00.001 — correção cirúrgica Display / timezone / ARM32
+
+### DISPLAY-032 — Nextion padrão Pi-Star/WPSD/MMDVM
+**Decisão:** supersede, por ordem explícita do usuário em 2026-10-14, qualquer requisito anterior que imponha renderer Nextion próprio do PU2PNY-OS, auto-provisionamento de HMI/TFT ou confirmação COMOK como pré-condição de ativação de tela ligada ao modem. O histórico anterior permanece apenas para auditoria.
+
+**Requisito:** telas Nextion ligadas à porta do modem devem usar exclusivamente semântica compatível com G4KLX/MMDVMHost e ON7LDS NextionDriver: `ScreenLayout=0` (G4KLX), `2` (ON7LDS L2), `3` (ON7LDS L3) ou `4` (ON7LDS L3 HS); L3/L3 HS usam PTY + Transparent Data com `SendFrameType=1`; HMI/TFT existente nunca é sobrescrito automaticamente; o layout é escolhido conforme o HMI já instalado. Para display ligado ao modem, ausência de COMOK não pode reprovar a aplicação, pois o upstream não garante leitura/identificação física nesse caminho.
+
+**Aceite mínimo:** SW deve provar configuração, exclusividade de writer, rollback e lifecycle systemd; HW deve provar imagem real aparecendo numa Nextion física. **Validação mínima final: HW.**
+
+### BOOT-051 — fuso IANA persistente
+Quando um fuso IANA válido for detectado/selecionado e salvo em `/var/lib/2pny/settings/clock.json`, o sistema deve reaplicá-lo localmente no boot, sem nova geolocalização ou polling externo. `timedatectl` é o caminho preferencial, com `/etc/localtime` + `/etc/timezone` como fallback local. **Validação mínima: VPS; persistência final também deve ser observada em HW.**
+
+### PERF-051 — redução de wakeups do watcher Ao Vivo em ARM32
+O watcher do snapshot Ao Vivo passa de 80 ms para 160 ms entre verificações, reduzindo pela metade os `stat`/wakeups ociosos desse loop sem mudar payload/API/SSE/RF. O aumento máximo teórico da observação do arquivo é de aproximadamente 80 ms. **Validação mínima: SW/VPS; desempenho percebido no Pi Zero permanece HW.**
+
+### ARCH-010 — transcodificação/processamento por software
+A estratégia aprovada é software/local, sem tornar hardware AMBE obrigatório. O Helix permanece isolado e fail-open. O estado técnico atual do Helix não autoriza declarar transcodificação AMBE/AMBE+2 ou HVC pronta para produção; interoperabilidade de codec legado continua **BLOQUEADA** até existir adaptador autorizado/licenciado e validação correspondente. A 4.00.001 não pode ativar silenciosamente um transcoder experimental, especialmente em ARMv6/Pi Zero.
+
+### Baseline protegida 4.00.001
+Por confirmação explícita do usuário, todo o restante que já está funcionando fica congelado e fora do escopo desta correção. A imagem 4.00.001 deve ser derivada dos artefatos imutáveis da 4.00.000 e comprovar por hashes que RF, DMR, gateways, Wi-Fi e demais helpers protegidos não sofreram alteração não autorizada.

@@ -965,3 +965,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - SHA-256 final ARMHF/ARMv6/Pi Zero: `b7edc16b4a7786e0b0664eef7a1a3f53b449f6abf55aa47d31516a170163760c`.
 - Nenhuma dessas correções alterou o caminho RF aprovado, MMDVMHost, DMRGateway, NextionDriver, Wi-Fi profiles ou comportamento de protocolo protegido.
 - Estado final deste ciclo: **SW/CI PASS / prerelease candidata para teste físico; HW/PROD continuam PENDENTE**.
+
+<!-- PU2PNY-OS-4.00.001-CANONICAL -->
+## 2026-10-14 — 4.00.001: display upstream, timezone persistente e ARM32 leve
+
+- **DISPLAY-032:** por solicitação explícita do usuário, a política anterior de telas foi supersedida. A implementação passa a seguir o modelo Pi-Star/WPSD: G4KLX/ON7LDS via MMDVMHost e ON7LDS NextionDriver; nenhum HMI/TFT é auto-gravado e COMOK não é gate para display atrás do modem.
+- Causa técnica confirmada no código upstream ON7LDS: a opção `-d` chama `go_daemon()`/fork. A unidade PU2PNY usava `Type=simple` junto com `-d`; 4.00.001 remove `-d` e deixa o systemd supervisionar o processo em foreground.
+- O upstream também declara que `checkDisplay()` não consegue checar/atualizar displays conectados via `Port=modem`; portanto auto-identificação física não pode ser usada como condição para aplicar esse modo.
+- **BOOT-051:** o fuso IANA salvo pelo painel é reafirmado no boot localmente, sem depender de nova detecção de região.
+- **PERF-051:** o watcher de estado Ao Vivo reduz wakeups de 80 ms para 160 ms. Nenhuma alteração RF/gateway acompanha essa otimização.
+- **ARCH-010:** software/local permanece a estratégia de transcodificação, mas o Helix atual continua experimental para HVC/codec legado e não é promovido silenciosamente a produção.
+- A 4.00.000 permanece ponto de rollback; a 4.00.001 é derivada diretamente de seus artefatos para preservar todo o restante confirmado como funcionando.

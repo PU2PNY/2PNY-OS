@@ -1028,3 +1028,24 @@ A prerelease 0.3.9-alpha está liberada somente como **HW-TEST**.
 - Baseline Guard após o publicador: run `38584440452` — PASS.
 - Helix permanece default-off; HVC/native AMBE não promovidos.
 - **HW:** PENDENTE para RF real, simplex/duplex real, BER/RSSI, áudio/transcoding e displays físicos. SW/CI PASS não substitui HW.
+
+<!-- PU2PNY-OS-4.00.001-CANONICAL -->
+## Matriz 4.00.001
+
+### HW-400000-DISPLAY-20261014 — FALHOU / HW
+Evidência do usuário: em instalação física, nenhuma das configurações de display ativou a Nextion em 32 ou 64 bits; a UI informou rollback da configuração anterior. Esta evidência reprova somente o caminho Display/Nextion testado e não autoriza inferir BER, RSSI ou demais métricas RF.
+
+### SW-400001-DISPLAY — EM TESTE
+Critério: NextionDriver executado em foreground sob `Type=simple`; PTY `/run/2pny-nextiondriver/ttyNextionDriver`; MMDVMHost/Transparent Data nos parâmetros upstream; ausência de COMOK não bloqueia tela ligada ao modem; rollback mantém MMDVMHost operacional. HW físico continua obrigatório para APROVADO final.
+
+### VPS-400001-TIMEZONE — EM TESTE
+Critério: timezone IANA salvo em `clock.json`, reinício/execução do restore sem rede, timezone efetivo preservado; entrada inválida não altera `/etc/localtime`.
+
+### SW-400001-PERF — EM TESTE
+Critério: watcher Ao Vivo usa 160 ms em vez de 80 ms e nenhum contrato API/SSE é alterado. Ganho efetivo em Pi Zero não pode ser marcado APROVADO sem HW.
+
+### SW-400001-BASELINE — EM TESTE
+Critério: hashes dos arquivos protegidos de RF/protocolos/gateways/rede permanecem idênticos aos artefatos 4.00.000, exceto backend, display e timezone explicitamente autorizados.
+
+### HW-400001-NEXTION — PENDENTE
+Critério final: após gravar a 4.00.001 em Raspberry Pi real, selecionar o layout que corresponde ao HMI já gravado e observar a imagem/estado real da Nextion, sem regressão do MMDVMHost/RF.

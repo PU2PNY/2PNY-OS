@@ -1074,3 +1074,16 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - A tag da release usa `main` apenas como âncora administrativa por restrição do `GITHUB_TOKEN`; a proveniência real das imagens permanece registrada pelos commits/runs acima e nos `BUILD-INFO`.
 - Helix está instalado mas **desabilitado por padrão**; `shadow/process` não são ativados automaticamente. HVC e AMBE/AMBE+2 nativo não são declarados produção.
 - **HW RF/duplex/BER/RSSI/audio/transcoding/display: PENDENTE**; não promover para HW/PROD antes do teste físico.
+
+<!-- PU2PNY-OS-4.00.001-CANONICAL -->
+## 4.00.001 — corretiva Display / timezone / ARM32 — EM TESTE
+
+- Base de rollback: `v4.00.000`, preservada e não sobrescrita.
+- Branch: `pu2pny-os-4.00.001-display-perf-timezone`.
+- Evidência HW recebida: aplicação de Nextion falhou e a tela permaneceu sem imagem nos testes relatados em 32 e 64 bits; portanto Display da 4.00.000 não está aprovado em HW.
+- DISPLAY-032: correção autorizada; validação física da nova imagem ainda **PENDENTE HW** até novo teste do usuário.
+- BOOT-051: implementação e teste não-RF exigidos antes da candidata.
+- PERF-051: redução de polling pode ser validada em SW/VPS; ganho real no Pi Zero permanece **PENDENTE HW**.
+- ARCH-010: software/local é a direção aprovada, mas transcoding legado por Helix continua **BLOQUEADO PARA PROD** conforme a evidência do próprio projeto Helix.
+- Todo o restante foi declarado funcionando pelo usuário e é baseline protegida; nenhuma mudança funcional fora deste escopo é autorizada.
+- Classificação máxima antes do reteste físico: **CANDIDATA PARA TESTE FÍSICO**, nunca PROD.
