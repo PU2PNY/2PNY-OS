@@ -1,0 +1,44 @@
+name: PU2PNY-OS 4.00.001 Canonical Docs Sync
+
+on:
+  push:
+    branches: [pu2pny-os-4.00.001-display-perf-timezone]
+    paths:
+      - 'ci/sync-canonical-4.00.001.py'
+      - '.github/workflows/4.00.001-canonical-sync.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pu2pny-os-4.00.001-canonical-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pu2pny-os-4.00.001-display-perf-timezone
+          fetch-depth: 0
+      - name: Apply canonical 4.00.001 decision
+        run: |
+          set -euo pipefail
+          python3 ci/sync-canonical-4.00.001.py
+          git diff --check
+          for f in PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md; do
+            grep -Fq '<!-- PU2PNY-OS-4.00.001-CANONICAL -->' "$f"
+          done
+      - name: Commit canonical documents
+        run: |
+          set -euo pipefail
+          git add PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md
+          if git diff --cached --quiet; then
+            echo 'Canonical docs already synchronized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs: record 4.00.001 corrective baseline'
+          git push origin HEAD:pu2pny-os-4.00.001-display-perf-timezone
