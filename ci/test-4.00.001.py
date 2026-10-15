@@ -26,12 +26,12 @@ with tempfile.TemporaryDirectory(prefix='pu2pny-400001-test-') as td:
 
 patch=image.read_text()
 required=(
- 'NextionDriver-pu2pny -i -vv -c /var/lib/2pny/mmdvm/MMDVM-Host.ini',
- 'RemotePort\",\"40094', 'LocalPort\",\"40095', 'SendFrameType\",\"1',
+ 'new=\'ExecStart=/usr/local/bin/NextionDriver-pu2pny -i -vv -c /var/lib/2pny/mmdvm/MMDVM-Host.ini\'',
+ "! grep -Fq 'NextionDriver-pu2pny -d '",
+ 'RemotePort\\\",\\\"40094', 'LocalPort\\\",\\\"40095', 'SendFrameType\\\",\\\"1',
  '2pny-timezone-restore.service','timedatectl set-timezone','4.00.001',
 )
 for token in required:
     assert token in patch, token
-assert 'NextionDriver-pu2pny -d -i -vv' not in patch
 assert 'curl | bash' not in patch
 print('SW_400001_SURGICAL_GATES_OK')
