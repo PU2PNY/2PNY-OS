@@ -1958,3 +1958,13 @@ A estratégia aprovada é software/local, sem tornar hardware AMBE obrigatório.
 
 ### Baseline protegida 4.00.001
 Por confirmação explícita do usuário, todo o restante que já está funcionando fica congelado e fora do escopo desta correção. A imagem 4.00.001 deve ser derivada dos artefatos imutáveis da 4.00.000 e comprovar por hashes que RF, DMR, gateways, Wi-Fi e demais helpers protegidos não sofreram alteração não autorizada.
+
+<!-- PU2PNY-OS-4.00.002-CANONICAL -->
+## PU2PNY-OS 4.00.002 — Display Pi-Star/WPSD + Helix experimental
+
+- **DISPLAY-033 — Paridade operacional de display Pi-Star/WPSD.** O PU2PNY-OS não mantém renderer/HMI próprio como requisito de funcionamento. A configuração deve usar os contratos reais do MMDVMHost e, quando selecionado, ON7LDS NextionDriver: tipos `None`, `OLED Type 3`, `OLED Type 6`, `Nextion`, `Nextion enhanced`, `Nextion enhanced attached to modem`, `HD44780`, `TFT Serial` e `LCDproc`. Critério SW: INI resultante contém somente chaves suportadas e um único writer físico. Critério HW: tela real mostra standby/RX/TX. Nível mínimo final: HW.
+- **DISPLAY-034 — Controles equivalentes relevantes.** Nextion expõe `G4KLX`, `ON7LDS L2`, `ON7LDS L3`, `ON7LDS L3 HS`, brilho, brilho em espera, relógio/UTC e porta. OLED expõe tipo 3/6, brilho, screensaver, scroll quando aplicável, rotate e invert. Nenhuma função visual não suportada pelo upstream deve ser inventada. Nível: SW + HW.
+- **DISPLAY-035 — Nextion ligado ao modem.** Para `enhanced attached to modem`, usar `Port=modem` com Transparent Data `Enable=1`, `RemotePort=40094`, `LocalPort=40095`, `SendFrameType=1`; nenhum HMI/TFT é gravado automaticamente. ON7LDS NextionDriver deve ser supervisionado sem daemon órfão e somente quando um modo enhanced for escolhido. Nível: SW + HW.
+- **ARCH-011 — Helix testável, opcional e fail-safe.** A 4.00.002 pode expor `off`, `shadow` e `process` para teste explícito. `process` significa somente a ponte PCM local existente; não declarar AMBE/AMBE+2 ou cross-mode legado disponível sem backend externo autorizado/licenciado realmente detectado. Helix permanece `off` por padrão e não pode bloquear boot, RF ou protocolos legados. Nível: SW/VPS; áudio/transcoding final: HW.
+- **PERF-052 — Zero custo de Helix quando off.** Nenhum serviço Helix deve ser habilitado automaticamente na imagem; ativação ocorre somente por ação explícita. Nível: SW/VPS.
+- **REL-052 — Gate 4.00.002.** Gerar ARM32/ARMv6 e ARM64 sobre artefatos imutáveis 4.00.001, validar XZ, filesystem, arquitetura, versão, SHA-256 e hashes da baseline protegida. Classificação máxima antes do reteste físico: CANDIDATA PARA TESTE FÍSICO.

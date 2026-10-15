@@ -976,3 +976,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - **PERF-051:** o watcher de estado Ao Vivo reduz wakeups de 80 ms para 160 ms. Nenhuma alteração RF/gateway acompanha essa otimização.
 - **ARCH-010:** software/local permanece a estratégia de transcodificação, mas o Helix atual continua experimental para HVC/codec legado e não é promovido silenciosamente a produção.
 - A 4.00.000 permanece ponto de rollback; a 4.00.001 é derivada diretamente de seus artefatos para preservar todo o restante confirmado como funcionando.
+
+<!-- PU2PNY-OS-4.00.002-CANONICAL -->
+## 4.00.002 — Display Pi-Star/WPSD + Helix experimental
+- Substitui o caminho ativo de configuração de display próprio pelo contrato MMDVMHost/ON7LDS usado por Pi-Star/WPSD.
+- Registra `DISPLAY-033..035`, `ARCH-011`, `PERF-052` e `REL-052`.
+- Corrige a supervisão do ON7LDS NextionDriver com base no comportamento real do upstream: `-d` mantém o processo em foreground; a 4.00.001 havia removido esse sinalizador por interpretação incorreta e não é baseline aprovada de display.
+- Nenhum `.hmi/.tft` é auto-gravado. O layout selecionado deve corresponder ao que já está na tela.
+- Helix ganha controle explícito off/shadow/process para teste; cross-mode legado continua indisponível sem backend codec externo real/autorizado.
+- RF/DMR/D-Star/YSF/rede/wizard/Ao Vivo e demais áreas confirmadas funcionando permanecem baseline protegida.

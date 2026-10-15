@@ -1087,3 +1087,12 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - ARCH-010: software/local é a direção aprovada, mas transcoding legado por Helix continua **BLOQUEADO PARA PROD** conforme a evidência do próprio projeto Helix.
 - Todo o restante foi declarado funcionando pelo usuário e é baseline protegida; nenhuma mudança funcional fora deste escopo é autorizada.
 - Classificação máxima antes do reteste físico: **CANDIDATA PARA TESTE FÍSICO**, nunca PROD.
+
+<!-- PU2PNY-OS-4.00.002-CANONICAL -->
+## 4.00.002 — EM TESTE / candidata somente após gates
+- Base imutável: `v4.00.001`; rollback: `backup/4.00.001-pre-4.00.002-display-helix-20261015`.
+- Branch: `pu2pny-os-4.00.002-display-pistar-helix`.
+- Display/Nextion 4.00.001 permanece **HW FALHOU** conforme relato do usuário e não é carregado como baseline funcional.
+- Objetivo: paridade de configuração Pi-Star/WPSD, sem HMI próprio obrigatório ou auto-flash.
+- Helix: ativação experimental controlada; `off` por padrão; HVC/AMBE/cross-mode legado não promovidos a produção.
+- Classificação máxima antes de teste físico: **CANDIDATA PARA TESTE FÍSICO**. Nextion/OLED, RF real e áudio/transcoding permanecem HW PENDENTE.

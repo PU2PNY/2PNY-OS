@@ -1049,3 +1049,19 @@ Critério: hashes dos arquivos protegidos de RF/protocolos/gateways/rede permane
 
 ### HW-400001-NEXTION — PENDENTE
 Critério final: após gravar a 4.00.001 em Raspberry Pi real, selecionar o layout que corresponde ao HMI já gravado e observar a imagem/estado real da Nextion, sem regressão do MMDVMHost/RF.
+
+<!-- PU2PNY-OS-4.00.002-CANONICAL -->
+## Matriz 4.00.002
+
+| ID | Caso | Resultado esperado | Estado inicial | Nível |
+|---|---|---|---|---|
+| SW-400002-DISPLAY / DISPLAY-033 | gerar configs por tipo | MMDVMHost/NextionDriver recebem somente semântica upstream; sem renderer próprio | EM TESTE | SW |
+| SW-400002-NEXTION-MODEM / DISPLAY-035 | enhanced + modem | Port=modem + Transparent Data 40094/40095 + SendFrameType=1 | EM TESTE | SW |
+| SW-400002-NEXTION-SERVICE / DISPLAY-035 | supervisão driver | `-d` foreground sob systemd; enhanced habilita serviço, demais modos não | EM TESTE | SW |
+| SW-400002-OLED / DISPLAY-034 | OLED 3/6 | rotate/invert/screensaver e scroll apenas quando aplicável | EM TESTE | SW |
+| VPS-400002-HELIX / ARCH-011 | off/shadow/process | self-test, serviço local e rollback; off sem carga | PENDENTE | VPS |
+| SW-400002-BASELINE | manifesto 4.00.001 antes/depois | RF/protocolos/gateways/rede/wizard/Ao Vivo protegidos byte-idênticos | EM TESTE | SW/CI |
+| REL-400002-ARM32 / REL-052 | imagem ARMv6 | XZ/fsck/mount/version/SHA PASS | PENDENTE | SW/CI |
+| REL-400002-ARM64 / REL-052 | imagem ARM64 | XZ/fsck/mount/version/SHA PASS | PENDENTE | SW/CI |
+| HW-400002-DISPLAY | Nextion/OLED real | imagem/standby/RX/TX e controles respondem sem regressão MMDVMHost | PENDENTE | HW |
+| HW-400002-HELIX-AUDIO | áudio/process real | somente capacidade realmente conectada a backend/protocolo pode ser promovida | PENDENTE | HW |
