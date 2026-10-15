@@ -91,6 +91,13 @@ def service_active(name: str) -> bool:
         return False
 
 
+def service_enabled(name: str) -> bool:
+    try:
+        return subprocess.run(["systemctl", "is-enabled", "--quiet", name], timeout=5).returncode == 0
+    except Exception:
+        return False
+
+
 def systemctl(*args: str, check: bool = True) -> None:
     subprocess.run(["systemctl", *args], check=check, timeout=20, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
@@ -127,8 +134,7 @@ def section_patch(text: str, section: str, values: dict[str, Any]) -> str:
         if key in pending:
             lines[i] = f"{key}={pending.pop(key)}\n"
     if pending:
-        inserts = [f"{key}={value}\n" for key, value in pending.items()]
-        lines[end:end] = inserts
+        lines[end:end] = [f"{key}={value}\n" for key, value in pending.items()]
     return "".join(lines)
 
 
@@ -166,7 +172,6 @@ def normalize(payload: dict[str, Any]) -> dict[str, Any]:
     if dtype not in DISPLAY_TYPES:
         fail("invalid_display_type", dtype)
     cfg: dict[str, Any] = {"type": dtype}
-
     if dtype.startswith("nextion"):
         layout = str(payload.get("layout", "g4klx")).strip().lower()
         if layout not in LAYOUTS:
@@ -175,33 +180,24 @@ def normalize(payload: dict[str, Any]) -> dict[str, Any]:
             port = "modem"
         else:
             port = valid_port(payload.get("port", "modem"), allow_modem=(dtype == "nextion"))
-        cfg.update({
-            "port": port,
-            "layout": layout,
-            "brightness": clamp_int(payload.get("brightness", 50), "brightness", 0, 100),
-            "idle_brightness": clamp_int(payload.get("idle_brightness", 20), "idle_brightness", 0, 100),
-            "display_clock": as_bool(payload.get("display_clock"), True),
-            "utc": as_bool(payload.get("utc"), False),
-        })
+        cfg.update({"port": port, "layout": layout,
+                    "brightness": clamp_int(payload.get("brightness", 50), "brightness", 0, 100),
+                    "idle_brightness": clamp_int(payload.get("idle_brightness", 20), "idle_brightness", 0, 100),
+                    "display_clock": as_bool(payload.get("display_clock"), True),
+                    "utc": as_bool(payload.get("utc"), False)})
     elif dtype in ("oled3", "oled6"):
-        cfg.update({
-            "brightness": clamp_int(payload.get("brightness", 0), "brightness", 0, 255),
-            "screensaver": as_bool(payload.get("screensaver"), True),
-            "scroll": as_bool(payload.get("scroll"), dtype == "oled3") if dtype == "oled3" else False,
-            "rotate": as_bool(payload.get("rotate"), False),
-            "invert": as_bool(payload.get("invert"), False),
-        })
+        cfg.update({"brightness": clamp_int(payload.get("brightness", 0), "brightness", 0, 255),
+                    "screensaver": as_bool(payload.get("screensaver"), True),
+                    "scroll": as_bool(payload.get("scroll"), dtype == "oled3") if dtype == "oled3" else False,
+                    "rotate": as_bool(payload.get("rotate"), False),
+                    "invert": as_bool(payload.get("invert"), False)})
     elif dtype == "tft_serial":
-        cfg.update({
-            "port": valid_port(payload.get("port", "modem"), allow_modem=True),
-            "brightness": clamp_int(payload.get("brightness", 50), "brightness", 0, 100),
-        })
+        cfg.update({"port": valid_port(payload.get("port", "modem"), allow_modem=True),
+                    "brightness": clamp_int(payload.get("brightness", 50), "brightness", 0, 100)})
     elif dtype == "lcdproc":
-        cfg.update({
-            "display_clock": as_bool(payload.get("display_clock"), True),
-            "utc": as_bool(payload.get("utc"), False),
-            "dim_on_idle": as_bool(payload.get("dim_on_idle"), False),
-        })
+        cfg.update({"display_clock": as_bool(payload.get("display_clock"), True),
+                    "utc": as_bool(payload.get("utc"), False),
+                    "dim_on_idle": as_bool(payload.get("dim_on_idle"), False)})
     return cfg
 
 
@@ -209,67 +205,38 @@ def build_ini(original: str, cfg: dict[str, Any]) -> str:
     dtype = cfg["type"]
     text = section_patch(original, "General", {"Display": DISPLAY_TYPES[dtype]})
     if dtype.startswith("nextion"):
-        layout = LAYOUTS[cfg["layout"]]
         mmdvm_port = "/dev/ttyNextionDriver" if dtype == "nextion_driver" else cfg["port"]
-        text = section_patch(text, "Nextion", {
-            "Port": mmdvm_port,
-            "Brightness": cfg["brightness"],
-            "DisplayClock": int(cfg["display_clock"]),
-            "UTC": int(cfg["utc"]),
-            "ScreenLayout": layout,
-            "IdleBrightness": cfg["idle_brightness"],
-        })
+        text = section_patch(text, "Nextion", {"Port": mmdvm_port,
+            "Brightness": cfg["brightness"], "DisplayClock": int(cfg["display_clock"]),
+            "UTC": int(cfg["utc"]), "ScreenLayout": LAYOUTS[cfg["layout"]],
+            "IdleBrightness": cfg["idle_brightness"]})
         if dtype in ("nextion_driver", "nextion_driver_modem"):
-            text = section_patch(text, "NextionDriver", {
-                "Port": cfg["port"],
-                "LogLevel": 2,
-                "RemoveDim": 0,
-                "SleepWhenInactive": 600,
-                "ShowModesStatus": 0,
-            })
+            text = section_patch(text, "NextionDriver", {"Port": cfg["port"], "LogLevel": 2,
+                "RemoveDim": 0, "SleepWhenInactive": 600, "ShowModesStatus": 0})
         if dtype == "nextion_driver_modem":
-            text = section_patch(text, "Transparent Data", {
-                "Enable": 1,
-                "RemoteAddress": "127.0.0.1",
-                "RemotePort": 40094,
-                "LocalPort": 40095,
-                "SendFrameType": 1,
-            })
+            text = section_patch(text, "Transparent Data", {"Enable": 1, "RemoteAddress": "127.0.0.1",
+                "RemotePort": 40094, "LocalPort": 40095, "SendFrameType": 1})
     elif dtype in ("oled3", "oled6"):
-        text = section_patch(text, "OLED", {
-            "Type": 3 if dtype == "oled3" else 6,
-            "Brightness": cfg["brightness"],
-            "Invert": int(cfg["invert"]),
-            "Scroll": int(cfg["scroll"]),
-            "Rotate": int(cfg["rotate"]),
-            "LogoScreensaver": int(cfg["screensaver"]),
-        })
+        text = section_patch(text, "OLED", {"Type": 3 if dtype == "oled3" else 6,
+            "Brightness": cfg["brightness"], "Invert": int(cfg["invert"]), "Scroll": int(cfg["scroll"]),
+            "Rotate": int(cfg["rotate"]), "LogoScreensaver": int(cfg["screensaver"])})
     elif dtype == "tft_serial":
         text = section_patch(text, "TFT Serial", {"Port": cfg["port"], "Brightness": cfg["brightness"]})
     elif dtype == "lcdproc":
-        text = section_patch(text, "LCDproc", {
-            "Address": "localhost",
-            "Port": 13666,
-            "DimOnIdle": int(cfg["dim_on_idle"]),
-            "DisplayClock": int(cfg["display_clock"]),
-            "UTC": int(cfg["utc"]),
-        })
+        text = section_patch(text, "LCDproc", {"Address": "localhost", "Port": 13666,
+            "DimOnIdle": int(cfg["dim_on_idle"]), "DisplayClock": int(cfg["display_clock"]), "UTC": int(cfg["utc"])})
     return text
 
 
 def status() -> None:
     cfg = load_state()
-    print(json.dumps({
-        "ok": True,
-        "version": "4.00.002",
-        "config": cfg,
+    print(json.dumps({"ok": True, "version": "4.00.002", "config": cfg,
         "available_ports": available_ports(),
         "nextion_layouts": ["g4klx", "on7lds_l2", "on7lds_l3", "on7lds_l3hs"],
         "mmdvmhost_active": service_active(MMDVM_SERVICE),
         "nextiondriver_active": service_active(DRIVER_SERVICE),
-        "hmi_autoflash": False,
-        "source": "Pi-Star/WPSD-compatible MMDVMHost semantics",
-    }, ensure_ascii=False))
+        "nextiondriver_enabled": service_enabled(DRIVER_SERVICE),
+        "hmi_autoflash": False, "source": "Pi-Star/WPSD-compatible MMDVMHost semantics"}, ensure_ascii=False))
 
 
 def apply() -> None:
@@ -282,7 +249,6 @@ def apply() -> None:
     cfg = normalize(payload)
     if not INI.is_file():
         fail("mmdvm_ini_missing", str(INI))
-
     original = INI.read_text(errors="replace")
     candidate = build_ini(original, cfg)
     if candidate == original and cfg == load_state():
@@ -291,19 +257,22 @@ def apply() -> None:
 
     mmdvm_was_active = service_active(MMDVM_SERVICE)
     driver_was_active = service_active(DRIVER_SERVICE)
+    driver_was_enabled = service_enabled(DRIVER_SERVICE)
     BACKUP.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(INI, BACKUP)
     driver_needed = cfg["type"] in ("nextion_driver", "nextion_driver_modem")
-
     try:
         if mmdvm_was_active:
             systemctl("stop", MMDVM_SERVICE)
         systemctl("stop", DRIVER_SERVICE, check=False)
         atomic_write(INI, candidate, INI.stat().st_mode & 0o777)
         if driver_needed:
+            systemctl("enable", DRIVER_SERVICE)
             systemctl("start", DRIVER_SERVICE)
             if not service_active(DRIVER_SERVICE):
                 raise RuntimeError("NextionDriver did not become active")
+        else:
+            systemctl("disable", DRIVER_SERVICE, check=False)
         if mmdvm_was_active:
             systemctl("start", MMDVM_SERVICE)
             if not service_active(MMDVM_SERVICE):
@@ -313,13 +282,16 @@ def apply() -> None:
         try:
             shutil.copy2(BACKUP, INI)
             systemctl("stop", DRIVER_SERVICE, check=False)
+            if driver_was_enabled:
+                systemctl("enable", DRIVER_SERVICE, check=False)
+            else:
+                systemctl("disable", DRIVER_SERVICE, check=False)
             if driver_was_active:
                 systemctl("start", DRIVER_SERVICE, check=False)
             if mmdvm_was_active:
                 systemctl("start", MMDVM_SERVICE, check=False)
         finally:
             fail("display_apply_rolled_back", str(exc))
-
     print(json.dumps({"ok": True, "applied": cfg, "hardware_validation": "PENDENTE"}, ensure_ascii=False))
 
 
