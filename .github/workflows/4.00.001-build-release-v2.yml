@@ -99,7 +99,21 @@ jobs:
           trap cleanup EXIT
           LOOP="$(sudo losetup --find --show --partscan /tmp/pu2pny.img)"
           ROOT_DEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1; exit}')"
-          [[ -n "$ROOT_DEV" && -b "$ROOT_DEV" ]] || { echo 'root ext4 partition not found' >&2; lsblk -f "$LOOP"; exit 1; }
+          if [[ -z "$ROOT_DEV" ]]; then
+            echo 'lsblk did not expose FSTYPE; probing image partitions by PU2PNY root marker'
+            while read -r dev; do
+              [[ -b "$dev" ]] || continue
+              if sudo mount -o ro "$dev" "$ROOT" 2>/dev/null; then
+                if [[ -f "$ROOT/etc/2pny/version" ]]; then
+                  ROOT_DEV="$dev"
+                  sudo umount "$ROOT"
+                  break
+                fi
+                sudo umount "$ROOT"
+              fi
+            done < <(lsblk -lnpo NAME "$LOOP")
+          fi
+          [[ -n "$ROOT_DEV" && -b "$ROOT_DEV" ]] || { echo 'PU2PNY root partition not found' >&2; lsblk -f "$LOOP"; exit 1; }
           sudo mount "$ROOT_DEV" "$ROOT"
 
           BASE_VERSION="$(cat "$ROOT/etc/2pny/version" 2>/dev/null || true)"
