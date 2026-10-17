@@ -58,7 +58,13 @@ cat > "$STAGE/prerun.sh" <<'EOF'
 if [ ! -d "${ROOTFS_DIR}" ]; then copy_previous; fi
 EOF
 chmod +x "$STAGE/prerun.sh"
-printf 'PU2PNY-OS 5.00.001 Minimal\n' > "$STAGE/EXPORT_IMAGE"
+# pi-gen sources EXPORT_IMAGE as shell. Keep no suffix so release names stay canonical.
+cat > "$STAGE/EXPORT_IMAGE" <<'EOF'
+IMG_SUFFIX=""
+if [ "${USE_QEMU}" = "1" ]; then
+  export IMG_SUFFIX="${IMG_SUFFIX}-qemu"
+fi
+EOF
 
 ROOTPAY="$STAGE/00-pu2pny/files/rootfs"
 # Copy only application payload. No donor /usr/lib, /lib, /boot, package DB or kernel is inherited.
@@ -132,6 +138,8 @@ else
 fi
 systemctl enable NetworkManager.service avahi-daemon.service 2>/dev/null || true
 systemctl disable ssh.service 2>/dev/null || true
+# The temporary pi-gen password is never a shipped credential.
+if id pu2pny >/dev/null 2>&1; then passwd -l pu2pny; fi
 # 5.x core services are regenerated here to avoid inheriting old service semantics.
 cat >/etc/systemd/system/2pny-eventd.service <<'UNIT'
 [Unit]
@@ -202,7 +210,7 @@ FIRST_USER_NAME='pu2pny'
 DISABLE_FIRST_BOOT_USER_RENAME=1
 WPA_COUNTRY='BR'
 EOF
-# pi-gen requires a password when rename is disabled; keep account locked in the exported appliance.
+# pi-gen requires an initial value to create the account; stage2 locks it before export.
 echo "FIRST_USER_PASS='PU2PNY-BUILD-ONLY'" >> "$PI/config"
 
 # Skip all later Raspberry Pi OS stages. stage2 is our custom minimal appliance stage.
