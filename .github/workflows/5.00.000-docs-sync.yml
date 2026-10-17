@@ -1,0 +1,38 @@
+name: PU2PNY-OS 5.00.000 Canonical Docs Sync
+
+on:
+  push:
+    branches: [pu2pny-os-5.00.000-appliance]
+    paths:
+      - 'ci/record-5.00.000-release.py'
+      - '.github/workflows/5.00.000-docs-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pu2pny-os-5.00.000-appliance
+          fetch-depth: 0
+      - name: Record verified 5.00.000 state
+        run: |
+          set -euo pipefail
+          python3 ci/record-5.00.000-release.py
+          git diff --check
+      - name: Commit canonical docs if changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'Canonical docs already synchronized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PU2PNY-OS_MASTER_SPEC.md PU2PNY-OS_RELEASE_STATUS.md PU2PNY-OS_TEST_MATRIX.md PU2PNY-OS_CHANGELOG.md
+          git commit -m 'docs: record verified PU2PNY-OS 5.00.000 candidate'
+          git push origin HEAD:pu2pny-os-5.00.000-appliance
