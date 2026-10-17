@@ -1,0 +1,123 @@
+name: PU2PNY-OS 5.00.001 Minimal Build
+
+on:
+  push:
+    branches:
+      - pu2pny-os-5.00.001-minimal
+    paths:
+      - 'runtime/5x/**'
+      - 'src/**'
+      - 'ci/build-5.00.001-minimal.sh'
+      - 'ci/validate-5.00.001-minimal.sh'
+      - '.github/workflows/5.00.001-minimal-build.yml'
+      - 'docs/PU2PNY-OS_5.00.001_MINIMAL.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pu2pny-os-5.00.001-minimal
+  cancel-in-progress: false
+
+jobs:
+  source-gates:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check HEAD^
+          bash -n ci/build-5.00.001-minimal.sh
+          bash -n ci/validate-5.00.001-minimal.sh
+          python3 -m py_compile runtime/5x/*.py
+          grep -Fq "PI32_SHA='59b67461533c2eef3564bc48eb3ce5c16e5c62ee'" ci/build-5.00.001-minimal.sh
+          grep -Fq "PI64_SHA='d346cd53562b3c6b4f94c9155175f814258c456d'" ci/build-5.00.001-minimal.sh
+          ! grep -Fq 'expected immutable 4.00.001 base' ci/build-5.00.001-minimal.sh
+          echo SOURCE_GATES_500001_OK
+
+  build:
+    needs: source-gates
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm32, arm64]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free runner disk space
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          sudo apt-get clean
+          df -h /
+      - name: Install pi-gen host dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y coreutils quilt parted qemu-user-binfmt debootstrap zerofree zip dosfstools e2fsprogs libcap2-bin grep rsync xz-utils file git curl bc gpg pigz xxd arch-test bmap-tools kmod
+      - name: Build clean minimal image
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ci/build-5.00.001-minimal.sh ci/validate-5.00.001-minimal.sh
+          sudo --preserve-env=RUNNER_TEMP,GITHUB_WORKSPACE bash ci/build-5.00.001-minimal.sh '${{ matrix.arch }}' "$GITHUB_WORKSPACE/out"
+      - name: Validate image
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo --preserve-env=RUNNER_TEMP bash ci/validate-5.00.001-minimal.sh '${{ matrix.arch }}' "out/PU2PNY-OS-5.00.001-${{ matrix.arch }}.img.xz"
+          cat "out/PU2PNY-OS-5.00.001-${{ matrix.arch }}.img.xz.sha256"
+          du -h "out/PU2PNY-OS-5.00.001-${{ matrix.arch }}.img.xz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PU2PNY-OS-5.00.001-${{ matrix.arch }}
+          path: |
+            out/PU2PNY-OS-5.00.001-${{ matrix.arch }}.img.xz
+            out/PU2PNY-OS-5.00.001-${{ matrix.arch }}.img.xz.sha256
+          compression-level: 0
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: PU2PNY-OS-5.00.001-*
+          path: release
+          merge-multiple: true
+      - name: Final artifact gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          for a in arm32 arm64; do
+            f="release/PU2PNY-OS-5.00.001-${a}.img.xz"
+            s="${f}.sha256"
+            test -s "$f"
+            test -s "$s"
+            (cd release && sha256sum -c "$(basename "$s")")
+            xz -t "$f"
+            stat -c '%n %s bytes' "$f"
+          done
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='v5.00.001'
+          TITLE='PU2PNY-OS 5.00.001 Minimal — Physical Test Candidate'
+          NOTES='Clean-base Minimal rebuild using pinned official Raspberry Pi pi-gen. ARM32 and ARM64 passed SW structural gates. RF/UART/MMDVM/display remain HW PENDING until physical test.'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber
+          else
+            gh release create "$TAG" release/* --target "$GITHUB_SHA" --title "$TITLE" --notes "$NOTES" --prerelease
+          fi
+          gh release view "$TAG" --json url,tagName,isPrerelease,assets
