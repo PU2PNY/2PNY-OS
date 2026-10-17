@@ -30,6 +30,10 @@ done
 sudo grep -Fq 'host-name=pu2pny' "$MNT/etc/avahi/avahi-daemon.conf"
 sudo test -L "$MNT/etc/systemd/system/multi-user.target.wants/2pny-eventd.service"
 sudo test -L "$MNT/etc/systemd/system/multi-user.target.wants/2pny-network-manager.service"
+# No reusable default credential may ship. Password field must be locked and SSH must not be enabled.
+PW_FIELD="$(sudo awk -F: '$1=="pu2pny"{print $2}' "$MNT/etc/shadow")"
+[[ "$PW_FIELD" == '!'* || "$PW_FIELD" == '*'* ]] || { echo 'pu2pny account is not locked' >&2; exit 7; }
+sudo test ! -e "$MNT/etc/systemd/system/multi-user.target.wants/ssh.service" || { echo 'ssh unexpectedly enabled' >&2; exit 7; }
 BIN_DESC="$(sudo file "$MNT/usr/local/bin/MMDVM-Host")"
 if [[ "$ARCH" == arm64 ]]; then
   grep -Eqi 'aarch64|ARM aarch64|64-bit.*ARM' <<<"$BIN_DESC" || { echo "wrong ARM64 binary: $BIN_DESC" >&2; exit 4; }
