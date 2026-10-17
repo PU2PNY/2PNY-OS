@@ -1,0 +1,235 @@
+name: PU2PNY-OS 5.00.000 Build and Release
+
+on:
+  push:
+    branches: [pu2pny-os-5.00.000-appliance]
+    paths:
+      - '.github/workflows/5.00.000-build-release.yml'
+      - 'runtime/5x/**'
+      - 'ci/patch-image-5.00.000.sh'
+      - 'ci/patch-backend-5.00.000.py'
+      - 'ci/test-5.00.000.py'
+      - 'docs/PU2PNY-OS_UI_CONTRACT.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  VERSION: '5.00.000'
+  RELEASE_TAG: 'v5.00.000'
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ARM64
+            id: arm64
+            goarch: arm64
+            goarm: ''
+            base_url: https://github.com/PU2PNY/2PNY-OS/releases/download/v4.00.001/PU2PNY-OS-4.00.001-arm64.img.xz
+            base_sha256: 68b201a483d6f182e4286fd0c943ac7d1cb6571c3a402e27e20796dca8bb6d3a
+            output: PU2PNY-OS-5.00.000-arm64.img.xz
+          - label: ARM32 Pi Zero
+            id: arm32
+            goarch: arm
+            goarm: '6'
+            base_url: https://github.com/PU2PNY/2PNY-OS/releases/download/v4.00.001/PU2PNY-OS-4.00.001-arm32-pizero.img.xz
+            base_sha256: 80b738f3dc40d03d296f2750ad2383dc5561fc02d141f72bc025ef6ba49e8c5b
+            output: PU2PNY-OS-5.00.000-arm32.img.xz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+
+      - name: Source gates
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file binutils >/dev/null
+          PYTHONPYCACHEPREFIX=/tmp/pycache500000 python3 ci/test-5.00.000.py
+          python3 -m py_compile ci/patch-backend-5.00.000.py
+          git diff --check
+
+      - name: Build protected web backend for target
+        env:
+          GOARCH_TARGET: ${{ matrix.goarch }}
+          GOARM_TARGET: ${{ matrix.goarm }}
+        run: |
+          set -euo pipefail
+          python3 ci/patch-backend-5.00.000.py src/2pnyd-main-0.3.27.go /tmp/main.go
+          gofmt -w /tmp/main.go
+          go test /tmp/main.go
+          if [[ "$GOARCH_TARGET" == arm ]]; then
+            GOOS=linux GOARCH=arm GOARM="$GOARM_TARGET" CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /tmp/2pnyd /tmp/main.go
+            file /tmp/2pnyd | grep -Eq 'ELF 32-bit.*ARM'
+          else
+            GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /tmp/2pnyd /tmp/main.go
+            file /tmp/2pnyd | grep -Eqi 'aarch64|ARM64'
+          fi
+          strings /tmp/2pnyd | grep -Fq '5.00.000'
+
+      - name: Download and verify immutable 4.00.001 base
+        env:
+          BASE_URL: ${{ matrix.base_url }}
+          BASE_SHA256: ${{ matrix.base_sha256 }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 2 "$BASE_URL" -o /tmp/base.img.xz
+          printf '%s  %s\n' "$BASE_SHA256" /tmp/base.img.xz | sha256sum -c -
+          xz -t /tmp/base.img.xz
+          xz -dc /tmp/base.img.xz > /tmp/pu2pny.img
+          test -s /tmp/pu2pny.img
+
+      - name: Patch appliance, protect RF baseline and validate
+        env:
+          BASE_SHA256: ${{ matrix.base_sha256 }}
+          TARGET_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          ROOT="$(mktemp -d /tmp/pu2pny-root.XXXXXX)"
+          LOOP=''
+          cleanup() {
+            set +e
+            mountpoint -q "$ROOT" && sudo umount "$ROOT"
+            [[ -n "$LOOP" ]] && sudo losetup -d "$LOOP" 2>/dev/null || true
+            rmdir "$ROOT" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          LOOP="$(sudo losetup --find --show --partscan /tmp/pu2pny.img)"
+          ROOT_DEV="$(lsblk -lnpo NAME,FSTYPE "$LOOP" | awk '$2=="ext4"{print $1; exit}')"
+          if [[ -z "$ROOT_DEV" ]]; then
+            while read -r dev; do
+              [[ -b "$dev" ]] || continue
+              if sudo mount -o ro "$dev" "$ROOT" 2>/dev/null; then
+                if [[ -f "$ROOT/etc/2pny/version" ]]; then ROOT_DEV="$dev"; sudo umount "$ROOT"; break; fi
+                sudo umount "$ROOT"
+              fi
+            done < <(lsblk -lnpo NAME "$LOOP")
+          fi
+          [[ -n "$ROOT_DEV" && -b "$ROOT_DEV" ]] || { echo 'PU2PNY root partition not found' >&2; lsblk -f "$LOOP"; exit 1; }
+          sudo mount "$ROOT_DEV" "$ROOT"
+          [[ "$(cat "$ROOT/etc/2pny/version")" == '4.00.001' ]]
+          test -x "$ROOT/usr/local/bin/MMDVM-Host"
+          test -f "$ROOT/etc/systemd/system/2pny-mmdvmhost.service"
+          test -x "$ROOT/usr/bin/nmcli"
+          test -f "$ROOT/etc/avahi/avahi-daemon.conf"
+
+          protect_manifest() {
+            local out="$1" p
+            : > "$out"
+            for p in \
+              usr/local/bin/MMDVM-Host \
+              usr/local/libexec/2pny-dmr-apply \
+              usr/local/sbin/2pny-protocol-network-apply \
+              etc/systemd/system/2pny-mmdvmhost.service \
+              var/lib/2pny/mmdvm/MMDVM-Host.ini; do
+              if [[ -e "$ROOT/$p" || -L "$ROOT/$p" ]]; then
+                (cd "$ROOT" && sha256sum "$p") >> "$out"
+              else
+                printf 'ABSENT  %s\n' "$p" >> "$out"
+              fi
+            done
+          }
+          protect_manifest /tmp/protected.before
+          sudo install -m 0755 /tmp/2pnyd "$ROOT/usr/local/bin/2pnyd"
+          sudo bash ci/patch-image-5.00.000.sh "$ROOT"
+          protect_manifest /tmp/protected.after
+          diff -u /tmp/protected.before /tmp/protected.after
+
+          [[ "$(cat "$ROOT/etc/2pny/version")" == '5.00.000' ]]
+          PYTHONPYCACHEPREFIX="/tmp/pycache-image-$TARGET_ID" python3 -m py_compile "$ROOT/usr/local/libexec/pu2pny/2pny-eventd" "$ROOT/usr/local/libexec/pu2pny/2pny-hardware-manager" "$ROOT/usr/local/libexec/pu2pny/2pny-network-manager" "$ROOT/usr/local/sbin/2pny-wifi-apply" "$ROOT/usr/local/sbin/2pny-protocol-manager"
+          sudo systemd-analyze --root="$ROOT" verify 2pny-eventd.service 2pny-hardware-manager.service 2pny-network-manager.service 2pny-mmdvmhost.service
+          grep -Fq 'host-name=pu2pny' "$ROOT/etc/avahi/avahi-daemon.conf"
+          if [[ "$TARGET_ID" == arm32 ]]; then
+            file "$ROOT/usr/bin/bash" | grep -Eq 'ELF 32-bit.*ARM'
+          else
+            file "$ROOT/usr/bin/bash" | grep -Eqi 'aarch64|ARM64'
+          fi
+          cp /tmp/protected.before "/tmp/PROTECTED-HASHES-${TARGET_ID}.txt"
+          printf 'base_v4.00.001_sha256=%s\nsource_commit=%s\nversion=5.00.000\ntarget=%s\nclassification=ALPHA_CANDIDATA_PARA_TESTE_FISICO\nhw_validation=PENDENTE\nrf_baseline_files=UNCHANGED\n' "$BASE_SHA256" "$GITHUB_SHA" "$TARGET_ID" > "/tmp/BUILD-INFO-${TARGET_ID}.txt"
+
+          sync
+          sudo umount "$ROOT"
+          sudo e2fsck -fn "$ROOT_DEV"
+          sudo mount -o ro "$ROOT_DEV" "$ROOT"
+          [[ "$(cat "$ROOT/etc/2pny/version")" == '5.00.000' ]]
+          test -x "$ROOT/usr/local/sbin/2pny-wifi-apply"
+          protect_manifest /tmp/protected.readonly
+          diff -u /tmp/protected.before /tmp/protected.readonly
+          sudo umount "$ROOT"
+          sudo losetup -d "$LOOP"; LOOP=''; rmdir "$ROOT"; trap - EXIT
+
+      - name: Compress, integrity-test and checksum
+        env:
+          OUTPUT: ${{ matrix.output }}
+          TARGET_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          xz -T0 -6 -c /tmp/pu2pny.img > "$OUTPUT"
+          test -s "$OUTPUT"
+          xz -t "$OUTPUT"
+          sha256sum "$OUTPUT" | tee "$OUTPUT.sha256"
+          cp "/tmp/BUILD-INFO-${TARGET_ID}.txt" "BUILD-INFO-${TARGET_ID}.txt"
+          cp "/tmp/PROTECTED-HASHES-${TARGET_ID}.txt" "PROTECTED-HASHES-${TARGET_ID}.txt"
+          cat "$OUTPUT.sha256" >> "BUILD-INFO-${TARGET_ID}.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-5.00.000-${{ matrix.id }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            ${{ matrix.output }}
+            ${{ matrix.output }}.sha256
+            BUILD-INFO-${{ matrix.id }}.txt
+            PROTECTED-HASHES-${{ matrix.id }}.txt
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-os-5.00.000-*
+          merge-multiple: true
+      - name: Reverify and publish 5.00.000 prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          sha256sum -c PU2PNY-OS-5.00.000-arm64.img.xz.sha256
+          sha256sum -c PU2PNY-OS-5.00.000-arm32.img.xz.sha256
+          xz -t PU2PNY-OS-5.00.000-arm64.img.xz
+          xz -t PU2PNY-OS-5.00.000-arm32.img.xz
+          grep -Fq "source_commit=${SOURCE_SHA}" BUILD-INFO-arm64.txt
+          grep -Fq "source_commit=${SOURCE_SHA}" BUILD-INFO-arm32.txt
+          cat > /tmp/notes.md <<EOF
+          ## PU2PNY-OS 5.00.000 — ALPHA / CANDIDATA PARA TESTE FÍSICO
+
+          Source commit: \`${SOURCE_SHA}\`.
+
+          Primeira imagem da arquitetura 5.x. Base binária imutável 4.00.001, evitando promover cegamente a 4.00.002 que teve regressões físicas reportadas. A camada 5.x adiciona Event Bus local, inventário conservador de hardware, estado de rede event-driven, Wi-Fi NetworkManager transacional com rollback, Protocol Manager de dono único, contrato mDNS \`pu2pny.local\` e preserva por hash arquivos críticos do caminho RF.
+
+          **O CI comprova:** sintaxe/build, arquitetura, montagem, systemd verify, preservação dos arquivos RF protegidos, fsck read-only, XZ e SHA-256.
+
+          **HW continua PENDENTE:** MMDVM/UART/RF real, DMR/D-Star/YSF/P25/NXDN/POCSAG RF↔NET, Wi-Fi/AP real, mDNS em LAN real, Nextion/OLED e BER/RSSI.
+          EOF
+          assets=(PU2PNY-OS-5.00.000-arm64.img.xz PU2PNY-OS-5.00.000-arm64.img.xz.sha256 PU2PNY-OS-5.00.000-arm32.img.xz PU2PNY-OS-5.00.000-arm32.img.xz.sha256 BUILD-INFO-arm64.txt BUILD-INFO-arm32.txt PROTECTED-HASHES-arm64.txt PROTECTED-HASHES-arm32.txt)
+          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --repo "$GH_REPO" --title 'PU2PNY-OS 5.00.000 — Appliance Alpha' --notes-file /tmp/notes.md --prerelease --target "$SOURCE_SHA"
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --repo "$GH_REPO" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --repo "$GH_REPO" --target "$SOURCE_SHA" --title 'PU2PNY-OS 5.00.000 — Appliance Alpha' --notes-file /tmp/notes.md --prerelease
+          fi
+          gh release view "$RELEASE_TAG" --repo "$GH_REPO"
