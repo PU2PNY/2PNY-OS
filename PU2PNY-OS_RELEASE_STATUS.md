@@ -1096,3 +1096,18 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - Objetivo: paridade de configuração Pi-Star/WPSD, sem HMI próprio obrigatório ou auto-flash.
 - Helix: ativação experimental controlada; `off` por padrão; HVC/AMBE/cross-mode legado não promovidos a produção.
 - Classificação máxima antes de teste físico: **CANDIDATA PARA TESTE FÍSICO**. Nextion/OLED, RF real e áudio/transcoding permanecem HW PENDENTE.
+
+<!-- PU2PNY-OS-5.00.000-VERIFIED -->
+## PU2PNY-OS 5.00.000 — 2026-10-17
+
+**Estado:** ALPHA / CANDIDATA PARA TESTE FÍSICO — NÃO PROD.
+**Branch:** `pu2pny-os-5.00.000-appliance`
+**Commit do artefato:** `d435e0d0322b5dbc5e334399edd332a8f5b1ba0b`
+**CI:** run `39003305505` — ARM32 PASS, ARM64 PASS, publish PASS.
+**Base da imagem:** 4.00.001 verificada; 4.00.002 não foi usada como base estrutural por regressões físicas reportadas.
+
+- ARM32: `PU2PNY-OS-5.00.000-arm32.img.xz`, 682213664 bytes, SHA-256 `97ce1886567288cca361d21c63a14e78ae0ffe20cff2eafeb3529b84c2e59ef2`.
+- ARM64: `PU2PNY-OS-5.00.000-arm64.img.xz`, 601373964 bytes, SHA-256 `55402edeb87a748decc88f86092b15ebd0ed6bd45c59cdb40e9cf21c75117797`.
+- CI comprovou: sintaxe/build, arquitetura, montagem, preservação dos arquivos RF protegidos, systemd verify, fsck read-only, XZ e checksum.
+- HW PENDENTE: Raspberry/MMDVM/UART, RF↔NET, DMR/D-Star/YSF/P25/NXDN/POCSAG, Wi-Fi/AP/mDNS reais, Nextion/OLED, BER/RSSI.
+- VPS: NÃO VERIFICADO nesta execução; o SentinelX disponível apontava para host não dedicado ao teste PU2PNY, portanto não foi usado para evitar impacto fora do projeto.

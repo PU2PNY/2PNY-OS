@@ -1968,3 +1968,18 @@ Por confirmação explícita do usuário, todo o restante que já está funciona
 - **ARCH-011 — Helix testável, opcional e fail-safe.** A 4.00.002 pode expor `off`, `shadow` e `process` para teste explícito. `process` significa somente a ponte PCM local existente; não declarar AMBE/AMBE+2 ou cross-mode legado disponível sem backend externo autorizado/licenciado realmente detectado. Helix permanece `off` por padrão e não pode bloquear boot, RF ou protocolos legados. Nível: SW/VPS; áudio/transcoding final: HW.
 - **PERF-052 — Zero custo de Helix quando off.** Nenhum serviço Helix deve ser habilitado automaticamente na imagem; ativação ocorre somente por ação explícita. Nível: SW/VPS.
 - **REL-052 — Gate 4.00.002.** Gerar ARM32/ARMv6 e ARM64 sobre artefatos imutáveis 4.00.001, validar XZ, filesystem, arquitetura, versão, SHA-256 e hashes da baseline protegida. Classificação máxima antes do reteste físico: CANDIDATA PARA TESTE FÍSICO.
+
+<!-- PU2PNY-OS-5.00.000-VERIFIED -->
+## Geração 5.x — PU2PNY-OS 5.00.000
+
+### ARCH-500 — Appliance modular 5.x
+A geração 5.x mantém o PU2PNY-OS como sistema próprio, não fork de Pi-Star/WPSD. A primeira candidata instala Event Bus local, Hardware Manager conservador, Network Manager event-driven, Wi-Fi transacional via NetworkManager e Protocol Manager de dono único sobre uma base 4.00.001 verificada. Componentes opcionais permanecem desacoplados e dados sem evidência não são promovidos.
+
+### NET-500 — Wi-Fi transacional e mDNS
+Aplicação de Wi-Fi deve preservar o perfil anterior até associação+IPv4 válidos e restaurar perfil/AP em falha. `pu2pny.local` é o nome mDNS canônico em AP/STA/Ethernet.
+
+### RF-500 — Baseline RF protegida
+A imagem 5.00.000 não altera os arquivos críticos MMDVMHost/DMR protegidos durante o overlay; hashes são comparados antes/depois no CI. Isso é evidência SW, não aprovação RF/HW.
+
+### REL-500 — Primeira candidata 5.x
+ARM32 e ARM64 devem passar source gates, build, verificação de arquitetura, montagem, systemd verify, fsck somente leitura, XZ e SHA-256 antes de publicação. A ausência de teste físico mantém a classificação ALPHA / CANDIDATA PARA TESTE FÍSICO.

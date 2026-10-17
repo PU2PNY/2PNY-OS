@@ -985,3 +985,14 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Nenhum `.hmi/.tft` é auto-gravado. O layout selecionado deve corresponder ao que já está na tela.
 - Helix ganha controle explícito off/shadow/process para teste; cross-mode legado continua indisponível sem backend codec externo real/autorizado.
 - RF/DMR/D-Star/YSF/rede/wizard/Ao Vivo e demais áreas confirmadas funcionando permanecem baseline protegida.
+
+<!-- PU2PNY-OS-5.00.000-VERIFIED -->
+## 2026-10-17 — PU2PNY-OS 5.00.000 Appliance Alpha
+
+- Criada arquitetura 5.x com contrato de UI preservado.
+- Adicionados Event Bus local, Hardware Manager sem escrita RF, Network Manager event-driven, Wi-Fi NetworkManager transacional com rollback e Protocol Manager de dono único.
+- `pu2pny.local` reafirmado por Avahi; compatibilidade `mmdvmhost.service` é somente alias do serviço canônico, nunca segundo motor.
+- Backend web preservado a partir da cadeia 4.00.001 com versão 5.00.000; arquivos críticos RF são protegidos por hash no CI.
+- Builds ARM32 e ARM64 passaram no run `39003305505` e foram publicadas como prerelease `v5.00.000` no commit `d435e0d0322b5dbc5e334399edd332a8f5b1ba0b`.
+- ARM32 SHA-256 `97ce1886567288cca361d21c63a14e78ae0ffe20cff2eafeb3529b84c2e59ef2`; ARM64 SHA-256 `55402edeb87a748decc88f86092b15ebd0ed6bd45c59cdb40e9cf21c75117797`.
+- Classificação: ALPHA / CANDIDATA PARA TESTE FÍSICO. Nenhum caso HW foi promovido por CI.

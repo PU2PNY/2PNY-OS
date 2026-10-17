@@ -1065,3 +1065,21 @@ Critério final: após gravar a 4.00.001 em Raspberry Pi real, selecionar o layo
 | REL-400002-ARM64 / REL-052 | imagem ARM64 | XZ/fsck/mount/version/SHA PASS | PENDENTE | SW/CI |
 | HW-400002-DISPLAY | Nextion/OLED real | imagem/standby/RX/TX e controles respondem sem regressão MMDVMHost | PENDENTE | HW |
 | HW-400002-HELIX-AUDIO | áudio/process real | somente capacidade realmente conectada a backend/protocolo pode ser promovida | PENDENTE | HW |
+
+<!-- PU2PNY-OS-5.00.000-VERIFIED -->
+## PU2PNY-OS 5.00.000 — matriz da candidata inicial
+
+| ID | Caso | Estado | Nível |
+|---|---|---|---|
+| TEST-500-SRC | Python/Shell/source gates 5.x | PASS | SW |
+| TEST-500-ARM32 | Build + arquitetura ARM32/GOARM6 | PASS | SW |
+| TEST-500-ARM64 | Build + arquitetura ARM64 | PASS | SW |
+| TEST-500-BASE | SHA/XZ da base 4.00.001 | PASS | SW |
+| TEST-500-RF-GUARD | Hashes de arquivos RF protegidos antes/depois | PASS | SW |
+| TEST-500-SYSTEMD | Units 5.x + MMDVMHost verificadas offline | PASS | SW |
+| TEST-500-FS | fsck + remontagem read-only | PASS | SW |
+| TEST-500-XZ | XZ final + SHA-256 + publicação | PASS | SW |
+| TEST-500-VPS | VPS dedicada PU2PNY | NÃO VERIFICADO | VPS |
+| TEST-500-NET-HW | AP/Wi-Fi/Ethernet/pu2pny.local reais | PENDENTE | HW |
+| TEST-500-RF-HW | MMDVM/UART e RF↔NET | PENDENTE | HW |
+| TEST-500-DISPLAY-HW | Nextion/OLED físicos | PENDENTE | HW |
