@@ -33,10 +33,10 @@ ARM32 e ARM64 devem passar source gates, build, verificação de arquitetura, mo
 append('PU2PNY-OS_RELEASE_STATUS.md', f'''
 ## PU2PNY-OS 5.00.000 — 2026-10-17
 
-**Estado:** ALPHA / CANDIDATA PARA TESTE FÍSICO — NÃO PROD.  
-**Branch:** `pu2pny-os-5.00.000-appliance`  
-**Commit do artefato:** `{COMMIT}`  
-**CI:** run `{RUN}` — ARM32 PASS, ARM64 PASS, publish PASS.  
+**Estado:** ALPHA / CANDIDATA PARA TESTE FÍSICO — NÃO PROD.
+**Branch:** `pu2pny-os-5.00.000-appliance`
+**Commit do artefato:** `{COMMIT}`
+**CI:** run `{RUN}` — ARM32 PASS, ARM64 PASS, publish PASS.
 **Base da imagem:** 4.00.001 verificada; 4.00.002 não foi usada como base estrutural por regressões físicas reportadas.
 
 - ARM32: `PU2PNY-OS-5.00.000-arm32.img.xz`, 682213664 bytes, SHA-256 `{ARM32}`.
