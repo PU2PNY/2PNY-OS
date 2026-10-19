@@ -996,3 +996,12 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Builds ARM32 e ARM64 passaram no run `39003305505` e foram publicadas como prerelease `v5.00.000` no commit `d435e0d0322b5dbc5e334399edd332a8f5b1ba0b`.
 - ARM32 SHA-256 `97ce1886567288cca361d21c63a14e78ae0ffe20cff2eafeb3529b84c2e59ef2`; ARM64 SHA-256 `55402edeb87a748decc88f86092b15ebd0ed6bd45c59cdb40e9cf21c75117797`.
 - Classificação: ALPHA / CANDIDATA PARA TESTE FÍSICO. Nenhum caso HW foi promovido por CI.
+
+<!-- PU2PNY-OS-20261019-HW-FEEDBACK -->
+## 2026-10-19 — Feedback de campo: display geral e acesso compartilhado
+
+- Usuário relatou falha de displays em **todos os Raspberry Pi e tipos de telas ensaiados**, inclusive por outras pessoas. Evidência: feedback HW; causa comum ainda não diagnosticada; número/commit gravado não declarado no próprio relato.
+- Usuário confirmou **todo o restante funcionando perfeitamente**. Classificação: baseline protegida de campo; proibição de refatorar RF/DMR/D-Star/YSF/rede/UI/áudio/gateways fora do escopo.
+- Solicitada recuperação dos modos RF **Público** e **Semi-público**. Novo contrato **PROTO-501** separa Privado, Semi-público com ACL (vazia = não abrir) e Público de ativação avançada consciente.
+- Inspeção da branch 5.00.001-minimal identificou ausência de instalação/validação explícita de MMDVM-Display/NextionDriver no builder e validator. Lacuna futura, não prova da causa do HW FAIL na release existente.
+- Criados issues #18 e #19 e documento `docs/PU2PNY-OS_HW_FEEDBACK_2026-10-19.md`; atualização exclusivamente documental em branch separada, sem alteração runtime nem release nova.
