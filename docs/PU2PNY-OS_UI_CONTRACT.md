@@ -57,6 +57,17 @@ Versão atual, versão disponível, arquitetura, checksum, backup opcional, prog
 ## Backup/Recovery
 Backup/restore de identidade, rede, RF, protocolos, display, APRS, Direct, Helix e segredos protegidos.
 
+## Controle de acesso por rádio (PROTO-501)
+Configuração integrada do acesso RF, separada da autenticação do painel web:
+- **Privado**: somente proprietário, padrão de novas instalações.
+- **Semi-público**: proprietário + lista explícita de indicativos/Radio IDs autorizados; lista vazia ou inválida **não libera o nó**.
+- **Público**: aberto no RF quando suportado, exclusivamente mediante escolha administrativa avançada, confirmação explícita e aviso de responsabilidade.
+- Exibir *modo configurado* e *modo efetivo*. Não mascarar falhas de `SelfOnly`, whitelist e suporte por protocolo. Preservar perfil existente durante upgrade até conversão segura.
+- Persistência entre reinício, alterações de protocolo e update, com teste prévio e rollback. **Publicar não significa permitir acesso anônimo ao painel**.
+
+## Falha de displays: contrato de diagnóstico (DISPLAY-501)
+Depois dos testes multicartão de 2026-10-19, não exibir “Display pronto” sem provar driver/binário presente, serviço operacional e transporte confirmado. Mostrar modelo físico somente quando verificado, HMI separado da detecção da tela, porta, driver, status, erro de seleção e rollback. Nenhum display é HW aprovado nesta rodada; SW/CI/VPS não substitui standby/RX/TX em hardware.
+
 ## Requisitos de compatibilidade
 - Desktop/tablet/mobile.
 - Claro/escuro e alto contraste.
