@@ -1083,3 +1083,19 @@ Critério final: após gravar a 4.00.001 em Raspberry Pi real, selecionar o layo
 | TEST-500-NET-HW | AP/Wi-Fi/Ethernet/pu2pny.local reais | PENDENTE | HW |
 | TEST-500-RF-HW | MMDVM/UART e RF↔NET | PENDENTE | HW |
 | TEST-500-DISPLAY-HW | Nextion/OLED físicos | PENDENTE | HW |
+
+<!-- PU2PNY-OS-20261019-HW-FEEDBACK -->
+## 2026-10-19 — Feedback multicartão e modos multiusuário
+
+| ID | Caso/evidência | Estado | Nível |
+|---|---|---|---|
+| TEST-501-HW-DISPLAY | Múltiplos Raspberry Pi, diversos displays, nenhuma variação funcional; modelos/versões individuais não enumerados | **FAIL reportado** | HW |
+| TEST-501-HW-OTHER | Restante do sistema relatado como perfeito pelo usuário; preservar todos os comportamentos aprovados, sem inferir PASS granular de recursos não ensaiados | **PASS relatado / baseline protegido** | HW (relato) |
+| TEST-501-SW-PACKAGE | Confirmar MMDVM-Display, NextionDriver quando usados, service/dep/config/layout e binários efetivos na imagem 5.00.001 ARM32/ARM64 | **FAIL de cobertura estrutural** — builder/validator não exigem drivers; correção pendente | SW (inspeção fonte) |
+| TEST-501-HW-NEXTION | Modem MMDVM e UART direta, HMI compatível, standby/RX/TX e conflito zero de UART | PENDENTE novo reteste após correção | HW |
+| TEST-501-HW-OLED-LCD | OLED/I2C, HD44780/I2C e demais famílias declaradas com modelos reais, barramento, reconhecimento e standby/RX/TX | PENDENTE novo reteste após correção | HW |
+| TEST-501-SW-ACCESS | Privado/Semi/Público: `SelfOnly`, ACL por modo, lista vazia fecha, persistência e rollback, sem mudanças RF fora do escopo | PENDENTE | SW/VPS |
+| TEST-501-HW-ACCESS | Dois rádios autorizados/não autorizados; aceite/rejeição real, múltiplos protocolos, simplex/duplex sem regressão | PENDENTE | HW |
+| TEST-501-REL | ARM32/ARM64, CI, XZ, SHA e link verificado somente após correção; não declarar disponibilizado antes | NÃO ENTREGUE | SW/CI |
+
+Referência de campo: `docs/PU2PNY-OS_HW_FEEDBACK_2026-10-19.md`. O relato não identifica versão/commit exatos de cada cartão; não confundir a última release pública 5.00.000 com a branch 5.00.001 ainda em desenvolvimento.
