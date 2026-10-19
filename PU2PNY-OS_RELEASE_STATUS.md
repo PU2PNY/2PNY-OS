@@ -1111,3 +1111,15 @@ O mantenedor aprovou como ótimo/perfeito todo o restante da 0.3.16 que não foi
 - CI comprovou: sintaxe/build, arquitetura, montagem, preservação dos arquivos RF protegidos, systemd verify, fsck read-only, XZ e checksum.
 - HW PENDENTE: Raspberry/MMDVM/UART, RF↔NET, DMR/D-Star/YSF/P25/NXDN/POCSAG, Wi-Fi/AP/mDNS reais, Nextion/OLED, BER/RSSI.
 - VPS: NÃO VERIFICADO nesta execução; o SentinelX disponível apontava para host não dedicado ao teste PU2PNY, portanto não foi usado para evitar impacto fora do projeto.
+
+<!-- PU2PNY-OS-20261019-HW-FEEDBACK -->
+## 2026-10-19 — Retorno de campo: displays falharam; restante aprovado pelo usuário
+
+- **Release mais recente publicada no GitHub observado:** `v5.00.000`; **branch em evolução:** `pu2pny-os-5.00.001-minimal`, commit-base consultado `a5906a93069edff544e3d196e8298c7b5a73213b`.
+- **Exatidão da versão gravada por cada usuário:** NÃO VERIFICADA; a expressão “última versão” é compatível com a 5.00.000 publicada, mas não fornece o SHA de cada cartão.
+- **HW FAIL reportado — DISPLAY-501:** nenhuma família/variação de tela testada funcionou em diferentes Raspberry Pi. Causa comum ainda NÃO VERIFICADA.
+- **Baseline protegida declarada:** todas as funções fora de display foram reportadas como funcionando perfeitamente; não substituir esse relato por testes granulares inexequíveis, nem alterar esses módulos incidentalmente.
+- **PENDENTE — PROTO-501:** modos Público e Semi-público ausentes da UI relatada. Não declarar implementados.
+- **Risco confirmado na candidata não publicada 5.00.001:** builder/validador não exigem os backends externos de display. Não publicar como “displays corrigidos” nesse estado.
+- **Ações nesta rodada:** relatório em `docs/PU2PNY-OS_HW_FEEDBACK_2026-10-19.md`, issues #18 e #19, documentação canônica em branch separada; nenhuma alteração de RF/runtime/imagens.
+- **Estado:** correção DISPLAY NÃO ENTREGUE / HW FAIL; acesso multiusuário PENDENTE. Próxima imagem não gerada, não publicar links/SHAs inexistentes.
