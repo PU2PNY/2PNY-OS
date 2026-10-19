@@ -1983,3 +1983,15 @@ A imagem 5.00.000 não altera os arquivos críticos MMDVMHost/DMR protegidos dur
 
 ### REL-500 — Primeira candidata 5.x
 ARM32 e ARM64 devem passar source gates, build, verificação de arquitetura, montagem, systemd verify, fsck somente leitura, XZ e SHA-256 antes de publicação. A ausência de teste físico mantém a classificação ALPHA / CANDIDATA PARA TESTE FÍSICO.
+
+<!-- PU2PNY-OS-20261019-HW-FEEDBACK -->
+## 2026-10-19 — Feedback físico da última candidata publicada e recursos de compartilhamento
+
+### DISPLAY-501 — Recuperar compatibilidade física de displays (HW FAIL reportado)
+Vários usuários relataram que **nenhuma tela testada** operou em diferentes Raspberry Pi na última versão testada. Modelos individuais e commit gravado não foram fornecidos nesta rodada; última release pública observada: `v5.00.000`. **Não assumir causa única.** Investigar separadamente instalador/serviço/configuração/transporte/renderer para Nextion (modem/UART), OLED/I2C, HD44780 e demais implementados. Não habilitar mais de um writer físico nem retirar a serial do modem MMDVM; nenhum flash de HMI/TFT sem consentimento. `MMDVM-Display`/NextionDriver devem estar realmente instalados e testados quando usados; nenhuma detecção falsa. Teste mínimo SW/CI, conclusão somente HW real (standby/RX/TX).
+
+### PROTO-501 — Política RF Privado / Semi-público / Público
+O painel deve disponibilizar controle de acesso por RF, independente de simplex/duplex e da autenticação web. **Privado:** proprietário; **Semi-público:** proprietário e lista explicitamente autorizada por indicativo/Radio ID, nunca abrir se lista vazia; **Público:** acesso aberto ao RF suportado, somente após escolha deliberada, advertência e confirmação administrativa. Nova instalação privilegia Privado. Atualizações preservam comportamento atual até migração/seleção segura. Aplicar `SelfOnly`, whitelist e demais filtros somente após comprovar suporte/sintaxe no MMDVMHost empacotado em DMR/D-Star/YSF/P25/NXDN; mostrar indisponível quando não aplicável (por exemplo, POCSAG). Um manager dono da configuração, persistência, rollback, health-check e rejeição RF real. Nenhum ajuste oportunista em modem/frequência/TG/slot/CC.
+
+### REL-501 — Bloqueio do novo release por contrato de display
+A branch `5.00.001-minimal` não instala explicitamente os drivers externos `MMDVM-Display`/NextionDriver nem os valida no gate estrutural, apesar da presença de arquivos de configuração herdados. Corrigir esse contrato antes de publicar uma candidata que prometa displays. A falha estrutural da nova branch NÃO prova por si só a causa do HW FAIL da versão publicada. Proteger como baseline de regressão tudo o que o usuário relatou funcionando fora dos displays. Relatório completo: `docs/PU2PNY-OS_HW_FEEDBACK_2026-10-19.md`.
