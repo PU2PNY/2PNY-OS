@@ -1,0 +1,131 @@
+name: PU2PNY-OS 5.00.001 Display and Access Recovery
+on:
+  push:
+    branches: [pu2pny-os-5.00.001-display-access-recovery]
+    paths:
+      - '.github/workflows/5.00.001-display-access-release.yml'
+      - 'ci/build-5.00.001-display-access.sh'
+      - 'ci/patch-image-5.00.001-recovery.sh'
+      - 'ci/patch-display-5.00.001.py'
+      - 'ci/test-5.00.001-display.py'
+      - 'ci/test-5.00.001-rf-access.py'
+      - 'runtime/5x/2pny-rf-access.py'
+      - 'runtime/5x/2pny-rf-access-request.py'
+      - 'runtime/rf-access-5.00.001.html'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-5.00.001-display-access
+  cancel-in-progress: false
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Source and protected baseline validation
+        run: |
+          set -euo pipefail
+          bash -n ci/patch-image-5.00.001-recovery.sh ci/build-5.00.001-display-access.sh
+          python3 -m py_compile ci/patch-display-5.00.001.py runtime/5x/2pny-rf-access.py runtime/5x/2pny-rf-access-request.py
+          python3 ci/test-5.00.001-display.py
+          python3 ci/test-5.00.001-rf-access.py
+          python3 ci/test-5.00.000.py
+          git diff --check
+          for p in src/2pnyd-main-0.3.27.go runtime/5x/2pny-protocol-manager.py runtime/5x/2pny-wifi-apply.py ci/patch-image-5.00.000.sh; do
+            git diff --exit-code v5.00.000 -- "$p"
+          done
+  build:
+    needs: source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            base_sha: 55402edeb87a748decc88f86092b15ebd0ed6bd45c59cdb40e9cf21c75117797
+          - arch: arm32
+            base_sha: 97ce1886567288cca361d21c63a14e78ae0ffe20cff2eafeb3529b84c2e59ef2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Tooling
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends file binutils xz-utils e2fsprogs util-linux >/dev/null
+      - name: Build and validate image with immutable 5.00.000 RF baseline
+        run: |
+          set -euo pipefail
+          bash ci/build-5.00.001-display-access.sh '${{ matrix.arch }}' '${{ matrix.base_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-os-5.00.001-${{ matrix.arch }}
+          if-no-files-found: error
+          compression-level: 0
+          path: |
+            PU2PNY-OS-5.00.001-${{ matrix.arch }}.img.xz
+            PU2PNY-OS-5.00.001-${{ matrix.arch }}.img.xz.sha256
+            BUILD-INFO-${{ matrix.arch }}.txt
+            PROTECTED-HASHES-${{ matrix.arch }}.txt
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-os-5.00.001-*
+          merge-multiple: true
+      - name: Recheck XZ and SHA, publish candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for arch in arm32 arm64; do
+            file="PU2PNY-OS-5.00.001-$arch.img.xz"
+            test -s "$file"
+            xz -t "$file"
+            sha256sum -c "$file.sha256"
+            grep -Fq 'version=5.00.001' "BUILD-INFO-$arch.txt"
+            grep -Fq "source_commit=$GITHUB_SHA" "BUILD-INFO-$arch.txt"
+            grep -Fq 'rf_baseline_hashes=IDENTICAL' "BUILD-INFO-$arch.txt"
+          done
+          if gh release view v5.00.001 --repo "$GH_REPO" >/dev/null 2>&1; then
+            echo "Version tag already published: refusing automatic replacement" >&2; exit 7
+          fi
+          cat >/tmp/release-notes.md <<EOF
+          # PU2PNY-OS 5.00.001 — ALPHA / CANDIDATA PARA TESTE FÍSICO
+
+          Commit: $GITHUB_SHA.
+          Derived from SHA-256 verified v5.00.000 image without changing MMDVMHost, gateways, RF, Wi-Fi or protocols.
+          Display updates: preserve G4KLX Nextion layout zero, disable competing writer, never misrepresent COMOK or physical confirmation.
+          Added three RF access policies in Protocolos / Acesso RF: Private, Semi-public with source whitelist (DMR and D-Star only with valid IDs/callsigns), Public with explicit confirmation. No RF policy auto-activated on upgrade.
+          Validated by SW, CI, image filesystem mounting, ELF architecture, preflight, XZ, SHA-256, protected-hash comparison.
+          HW displays and RF access operation remain PENDING physical tests. Existing display HW failures have NOT been marked as solved.
+          EOF
+          gh release create v5.00.001 \
+            PU2PNY-OS-5.00.001-arm32.img.xz PU2PNY-OS-5.00.001-arm32.img.xz.sha256 \
+            PU2PNY-OS-5.00.001-arm64.img.xz PU2PNY-OS-5.00.001-arm64.img.xz.sha256 \
+            BUILD-INFO-arm32.txt BUILD-INFO-arm64.txt \
+            PROTECTED-HASHES-arm32.txt PROTECTED-HASHES-arm64.txt \
+            --repo "$GH_REPO" --target "$GITHUB_SHA" \
+            --title 'PU2PNY-OS 5.00.001 Display and RF Access Recovery (Alpha)' \
+            --notes-file /tmp/release-notes.md --prerelease
+          gh release view v5.00.001 --repo "$GH_REPO" \
+            --json tagName,targetCommitish,assets \
+            --jq '{tag:.tagName,target:.targetCommitish,assets:[.assets[]|{name:.name,size:.size}]}' > /tmp/asset-check.json
+          cat /tmp/asset-check.json
+          for arch in arm32 arm64; do
+            jq -e --arg n "PU2PNY-OS-5.00.001-$arch.img.xz" '.assets[]|select(.name==$n and .size>0)' /tmp/asset-check.json >/dev/null
+          done
