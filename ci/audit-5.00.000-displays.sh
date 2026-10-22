@@ -54,4 +54,25 @@ printf '\n-- DISPLAY HELPERS AND EXECUTABLE DEPENDENCIES --\n'
 for path in "$MNT/usr/local/bin/MMDVM-Display" "$MNT/usr/local/bin/NextionDriver-pu2pny"; do
   [[ -f "$path" ]] && sudo readelf -d "$path" 2>/dev/null | grep NEEDED || true
 done
+printf '\n-- DISPLAY STARTUP / I2C / PYTHON PREREQUISITES --\n'
+for unit in 2pny-display.service 2pny-display-core.service 2pny-nextiondriver.service 2pny-display-apply-request.service; do
+  printf '%s enabled=' "$unit"
+  sudo systemctl --root="$MNT" is-enabled "$unit" 2>/dev/null || true
+done
+for p in usr/lib/python3/dist-packages/PIL usr/lib/python3/dist-packages/smbus.py usr/lib/python3/dist-packages/smbus2 usr/lib/python3/dist-packages/smbus.cpython-311-arm-linux-gnueabihf.so usr/lib/python3/dist-packages/smbus.cpython-313-aarch64-linux-gnu.so; do
+  if sudo test -e "$MNT/$p"; then printf 'PRESENT %s\n' "$p"; else printf 'MISSING %s\n' "$p"; fi
+done
+for p in boot/firmware/config.txt boot/config.txt; do
+  if sudo test -f "$MNT/$p"; then
+    printf 'BOOTFILE %s\n' "$p"
+    sudo grep -E '^(dtparam=i2c_arm=|dtparam=spi=|enable_uart=)' "$MNT/$p" || true
+  fi
+done
+if sudo test -f "$MNT/etc/systemd/system/2pny-display-core.service"; then
+  sudo grep -E '^(ExecStart|User|Group|After|Wants|Requires|SupplementaryGroups)=' "$MNT/etc/systemd/system/2pny-display-core.service" || true
+fi
+printf '\n-- DISPLAY TRANSPORT / PACKAGE STATUS --\n'
+for p in lib/firmware usr/local/sbin/2pny-display-core; do
+  sudo test -e "$MNT/$p" && printf 'PRESENT %s\n' "$p" || printf 'MISSING %s\n' "$p"
+done
 printf '\nAUDIT_COMPLETE_READ_ONLY\n'
