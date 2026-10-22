@@ -75,4 +75,12 @@ printf '\n-- DISPLAY TRANSPORT / PACKAGE STATUS --\n'
 for p in lib/firmware usr/local/sbin/2pny-display-core; do
   sudo test -e "$MNT/$p" && printf 'PRESENT %s\n' "$p" || printf 'MISSING %s\n' "$p"
 done
+printf '\n-- INSTALLED DISPLAY APPLY SIGNATURES (NO SECRETS) --\n'
+if sudo test -f "$MNT/usr/local/sbin/2pny-display-apply"; then
+  sudo grep -nE 'requested=int|\\bDRIVER=|nextiondriver.service|NEXTION|on7lds|mmdvmhost-native|Port","modem"|ScreenLayout|WhiteList' "$MNT/usr/local/sbin/2pny-display-apply" | head -75 || true
+fi
+printf '\n-- PANEL DISPLAY/API PATHS --\n'
+if sudo test -f "$MNT/usr/share/2pny/display.html"; then
+  sudo grep -oE '/api/display/[a-z/-]+' "$MNT/usr/share/2pny/display.html" | sort -u || true
+fi
 printf '\nAUDIT_COMPLETE_READ_ONLY\n'
