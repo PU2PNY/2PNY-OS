@@ -4,6 +4,8 @@ on:
     branches: [pu2pny-os-5.00.001-display-access-recovery]
     paths:
       - 'runtime/5x/2pny-rf-access.py'
+      - 'ci/patch-display-5.00.001.py'
+      - 'ci/test-5.00.001-display.py'
       - 'ci/test-5.00.001-rf-access.py'
       - '.github/workflows/5.00.001-access-policy-ci.yml'
   workflow_dispatch:
@@ -22,6 +24,7 @@ jobs:
           set -euo pipefail
           python3 -m py_compile runtime/5x/2pny-rf-access.py ci/test-5.00.001-rf-access.py
           python3 ci/test-5.00.001-rf-access.py
+          python3 ci/test-5.00.001-display.py
           git diff --check
       - name: Existing RF engines untouched in this commit
         run: |
