@@ -1,0 +1,44 @@
+name: Inspect 5.00.002 ARM64 protocol and display startup
+on:
+  push:
+    branches: [fix/5.00.003-display-protocol-reboot]
+    paths: ['.github/workflows/inspect-5.00.003-base.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect immutable base rootfs (read-only)
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils util-linux >/dev/null
+          curl -fL --retry 3 'https://github.com/PU2PNY/2PNY-OS/releases/download/v5.00.002/PU2PNY-OS-5.00.002-arm64.img.xz' -o "$work/base.xz"
+          xz -t "$work/base.xz"
+          xz -dc "$work/base.xz" > "$work/base.img"
+          loop="$(sudo losetup --find --show --partscan --read-only "$work/base.img")"
+          mkdir -p "$work/root"
+          sudo mount -o ro "${loop}p2" "$work/root"
+          root="$work/root"
+          { 
+            echo '=== image identity ==='; cat "$root/etc/2pny/version" || true
+            echo '=== units ==='; sudo find "$root/etc/systemd/system" -maxdepth 3 -iname '*2pny*' -printf '%p -> %l\n' | sort | head -180
+            echo '=== 2pny executables ==='; sudo find "$root/usr/local/bin" "$root/usr/local/sbin" -maxdepth 1 -iname '*2pny*' -o -iname '*protocol*' | head -120
+            echo '=== display services ==='
+            for file in "$root/etc/systemd/system"/2pny-{display,display-core,display-adapter,nextiondriver,mmdvmhost}.service; do
+              if test -f "$file"; then echo "--- ${file#$root}"; cat "$file"; fi
+            done
+            echo '=== persistence references (scripts, no secrets) ==='
+            sudo grep -RilE 'protocol.*(active|restore|current|save)|restore.*protocol|last.protocol|mmdvmhost' "$root/usr/local/sbin" "$root/etc/systemd/system" 2>/dev/null | head -70
+          } | tee inspect-5.00.002.txt
+          sudo umount "$root"
+          sudo losetup -d "$loop"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inspect-5.00.002-arm64
+          path: inspect-5.00.002.txt
