@@ -1,3 +1,9 @@
+## 2026-10-22 — 5.00.003 correção adicional conservadora
+
+`runtime/display/apply.py`: se não houver override explícito, usa layout salvo **somente** para tipos Nextion e layouts permitidos, sem forçar mudanças de RF. Teste estático acrescentado. Alterações anteriores de separação OLED/Nextion mantidas. **Sem declarar boot/protocolo corrigido, nem CI/HW PASS ou imagem gerada.**
+
+---
+
 ## 2026-10-22 — 5.00.003 investigação e correção parcial OLED
 
 Commit de runtime: `19e012e19b45a548c1a36849bae78c2b307cbce5`. Removida a inferência de Nextion baseada apenas na presença de MMDVM e preservada a delegação OLED/LCD sem desabilitar antes o adaptador. Teste de regressão estático adicionado. **Ainda não houve CI nem teste HW e a falha de protocolo/reboot não foi corrigida. Imagem 5.00.003 não publicada.**
