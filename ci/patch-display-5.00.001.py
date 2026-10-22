@@ -25,6 +25,73 @@ def patch_go(text):
         'if err := os.WriteFile(displayOverrideFile, raw, 0600); err != nil {\n'
         '\t\t\t\twriteJSON(w, http.StatusInternalServerError, map[string]any{"ok":false,"error":"falha ao salvar display"})\n'
         '\t\t\t\treturn\n\t\t\t}\n\t\t\tapplyDisplayOverrideToProbe()')
+
+    # Access-policy changes are independent of existing RF/DMR protocol paths.
+    handler = """
+func rfAccessPolicyHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodGet {
+        data := readPublicJSON("/var/lib/2pny/access/policy.json")
+        if len(data) == 0 { data = map[string]any{"mode":"legacy_unchanged","verified":false} }
+        writeJSON(w,http.StatusOK,map[string]any{"ok":true,"policy":data})
+        return
+    }
+    if r.Method != http.MethodPost {
+        http.Error(w,"GET or POST required",http.StatusMethodNotAllowed)
+        return
+    }
+    if !sameOrigin(r) || !fileExists(provisionedFile) {
+        http.Error(w,"request rejected",http.StatusForbidden)
+        return
+    }
+    var request struct {
+        Mode string _BT_json:"mode"_BT_
+        Confirmation string _BT_json:"confirmation"_BT_
+        Allowed []struct {
+            Callsign string _BT_json:"callsign"_BT_
+            DMRID string _BT_json:"dmr_id"_BT_
+        } _BT_json:"allowed"_BT_
+    }
+    if err := json.NewDecoder(http.MaxBytesReader(w,r.Body,32768)).Decode(&request); err != nil {
+        writeJSON(w,http.StatusBadRequest,map[string]any{"ok":false,"error":"invalid_request"})
+        return
+    }
+    if request.Mode != "private" && request.Mode != "semi_public" && request.Mode != "public" {
+        writeJSON(w,http.StatusBadRequest,map[string]any{"ok":false,"error":"invalid_access_mode"})
+        return
+    }
+    if request.Mode == "public" && request.Confirmation != "ABRIR RF PUBLICO" {
+        writeJSON(w,http.StatusBadRequest,map[string]any{"ok":false,"error":"public_requires_explicit_confirmation"})
+        return
+    }
+    if len(request.Allowed)>200 {
+        writeJSON(w,http.StatusBadRequest,map[string]any{"ok":false,"error":"too_many_entries"})
+        return
+    }
+    list := make([]map[string]string,0,len(request.Allowed))
+    for _,item := range request.Allowed {
+        list=append(list,map[string]string{"callsign":item.Callsign,"dmr_id":item.DMRID})
+    }
+    payload := map[string]any{"mode":request.Mode,"confirmation":request.Confirmation,"allowed":list}
+    res,err := runPrivilegedRequest("2pny-rf-access.service",
+        "/run/2pny/access-request.json","/run/2pny/access-result.json",payload)
+    if err != nil {
+        writeJSON(w,http.StatusConflict,map[string]any{"ok":false,"error":err.Error(),"result":res})
+        return
+    }
+    writeJSON(w,http.StatusOK,res)
+}
+
+"""
+    handler = handler.replace("_BT_", chr(96))
+    text = replace_once(text, "func main() {", handler + "func main() {")
+    text = replace_once(text,
+        '\thttp.HandleFunc("/api/display/override", displayOverrideHandler)',
+        '\thttp.HandleFunc("/api/display/override", displayOverrideHandler)\n'
+        '\thttp.HandleFunc("/api/rf/access", rfAccessPolicyHandler)')
+    text = replace_once(text,
+        '\thttp.HandleFunc("/display", pageHandler(displayFile))',
+        '\thttp.HandleFunc("/display", pageHandler(displayFile))\n'
+        '\thttp.HandleFunc("/rf-access", pageHandler("/usr/share/2pny/rf-access.html"))')
     return text
 
 def patch_apply(text):
