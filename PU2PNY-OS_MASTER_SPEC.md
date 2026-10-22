@@ -1,3 +1,11 @@
+## REL-5.00.003 — restauração segura e candidato ARM32/ARM64
+- Persistência de protocolo: ativar no boot o serviço existente `2pny-profile-autostart`, que aceita somente perfil comprovado e exige MMDVM/uplink válidos; retentar com serviço guardião somente quando nenhum gateway estiver ativo.
+- Display: preservar NextionDriver ON7LDS aprovado, aplicar perfil salvo no reboot quando houver `display-settings.json`, manter UART exclusiva MMDVM e não instalar HMI/TFT automaticamente.
+- OLED: presença de MMDVM não implica Nextion; delegar OLED/LCD ao aplicador legado sem pré-desativar adaptador.
+- Build ARM32 e ARM64: overlays cirúrgicos em imagens v5.00.002 verificadas por SHA; SW/CI não é HW. Atualizações RF/gateway/Wi-Fi fora de escopo.
+
+---
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**
