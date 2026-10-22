@@ -55,6 +55,11 @@ class DisplayTests(unittest.TestCase):
         self.assertIn("subprocess.run([legacy], check=True", source)
         self.assertNotIn("ctl('disable', '--now', ADAPTER, check=False)", source)
 
+    def test_saved_nextion_layout_without_explicit_override(self):
+        source = (ROOT/'runtime/display/apply.py').read_text()
+        self.assertIn("if not OVERRIDE.exists() and SETTINGS.exists():", source)
+        self.assertIn("saved.get('requested_layout') in (0, 2, 3, 4)", source)
+
     def test_mqtt_remaining_length(self):
         self.assertEqual(packet(0x30, b'a'*128)[:3], b'\x30\x80\x01')
 
