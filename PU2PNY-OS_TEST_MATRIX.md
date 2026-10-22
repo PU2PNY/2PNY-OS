@@ -1065,3 +1065,16 @@ Critério final: após gravar a 4.00.001 em Raspberry Pi real, selecionar o layo
 | REL-400002-ARM64 / REL-052 | imagem ARM64 | XZ/fsck/mount/version/SHA PASS | PENDENTE | SW/CI |
 | HW-400002-DISPLAY | Nextion/OLED real | imagem/standby/RX/TX e controles respondem sem regressão MMDVMHost | PENDENTE | HW |
 | HW-400002-HELIX-AUDIO | áudio/process real | somente capacidade realmente conectada a backend/protocolo pode ser promovida | PENDENTE | HW |
+
+
+## 2026-10-22 — display isolado
+TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e MQTT framing: 6 testes PASS SW local. Renderer upstream/broker real: EM TESTE CI. Comparação integral rootfs, ELF, fsck, XZ/SHA: EM TESTE CI. Tela física standby/RX/TX, ON7LDS e toque: PENDENTE HW. OLED/LCD paridade: NÃO VERIFICADO; caminho anterior preservado.
+
+
+### Evidência local final — 5.00.002 / 2026-10-22
+- PASS SW: 6 testes de configuração/segredos/porta RF/MQTT.
+- PASS SW: renderer oficial 96a0705 compilado x86_64, broker Mosquitto isolado, comandos standby com identidade da fixture e DMR com chamador/TG da fixture capturados em host/display-in. Dados de teste não são instalados nem telemetria real.
+- PASS SW: ida e volta ON7LDS UDP loopback↔MQTT, preservando framing 0x80.
+- HW: PENDENTE. OLED/LCD paridade integral: NÃO VERIFICADO; implementação existente preservada.
+- GitHub push: BLOQUEADO pela revisão automática por publicação externa considerada não autorizada. Não contornar. Workflow ARM32/ARM64 e publicação não iniciados.
+- Imagens novas: NÃO ENTREGUES. Retomar por revisão/publicação da branch local pu2pny-os-5.00.002-display-only, executar CI e resolver falhas antes de disponibilizar assets.

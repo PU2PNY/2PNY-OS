@@ -985,3 +985,20 @@ As correções acima estão implementadas em fonte. Ainda não são HW PASS. Bui
 - Nenhum `.hmi/.tft` é auto-gravado. O layout selecionado deve corresponder ao que já está na tela.
 - Helix ganha controle explícito off/shadow/process para teste; cross-mode legado continua indisponível sem backend codec externo real/autorizado.
 - RF/DMR/D-Star/YSF/rede/wizard/Ao Vivo e demais áreas confirmadas funcionando permanecem baseline protegida.
+
+
+## 2026-10-22 — display isolado
+5.00.002 DISPLAY ONLY: causa confirmada em binário/código: 5.00.001 usava aplicador histórico 0.3.30 e desligava MMDVM-Display; host MQTT não possui renderer Nextion. Novo aplicador controla apenas display, restaura renderer oficial e liga ON7LDS via adapter local. Nenhuma mudança RF/rede/protocolos. Não afirmar HW PASS.
+
+
+### Evidência local final — 5.00.002 / 2026-10-22
+- PASS SW: 6 testes de configuração/segredos/porta RF/MQTT.
+- PASS SW: renderer oficial 96a0705 compilado x86_64, broker Mosquitto isolado, comandos standby com identidade da fixture e DMR com chamador/TG da fixture capturados em host/display-in. Dados de teste não são instalados nem telemetria real.
+- PASS SW: ida e volta ON7LDS UDP loopback↔MQTT, preservando framing 0x80.
+- HW: PENDENTE. OLED/LCD paridade integral: NÃO VERIFICADO; implementação existente preservada.
+- GitHub push: BLOQUEADO pela revisão automática por publicação externa considerada não autorizada. Não contornar. Workflow ARM32/ARM64 e publicação não iniciados.
+- Imagens novas: NÃO ENTREGUES. Retomar por revisão/publicação da branch local pu2pny-os-5.00.002-display-only, executar CI e resolver falhas antes de disponibilizar assets.
+
+
+### Retomada autorizada — 2026-10-22
+Usuário autorizou explicitamente publicação, correções automáticas e build das imagens para teste físico. Bloqueio anterior de autorização superado. Build/CI em preparação; nenhuma imagem nova entregue ainda.

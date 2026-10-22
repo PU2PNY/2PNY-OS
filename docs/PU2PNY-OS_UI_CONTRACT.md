@@ -62,3 +62,7 @@ Backup/restore de identidade, rede, RF, protocolos, display, APRS, Direct, Helix
 - Claro/escuro e alto contraste.
 - SSE/WebSocket/Event Bus preferidos; evitar polling agressivo.
 - Navegação e estado não podem depender de múltiplos escritores de configuração.
+
+
+## 2026-10-22 — display isolado
+DISPLAY-040 / 5.00.002: página Display preserva seleção G4KLX/ON7LDS existente; backend usa MMDVM-Display oficial externo. Serviço ativo não comprova atualização da tela. HMI/TFT jamais gravado automaticamente. Restante do painel congelado.

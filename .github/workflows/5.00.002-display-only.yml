@@ -1,0 +1,96 @@
+name: PU2PNY-OS 5.00.002 Official Displays Only
+on:
+  push:
+    branches: [pu2pny-os-5.00.002-display-only]
+    paths:
+      - 'runtime/display/**'
+      - 'ci/*5.00.002*'
+      - '.github/workflows/5.00.002-display-only.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: display-only-5.00.002
+  cancel-in-progress: false
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Display tests and official upstream integration
+        run: |
+          set -euo pipefail
+          python3 ci/test-5.00.002-display.py
+          bash -n ci/build-5.00.002-display.sh ci/patch-image-5.00.002-display.sh
+          git diff --check
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends mosquitto libmosquitto-dev nlohmann-json3-dev >/dev/null
+          git clone https://github.com/g4klx/MMDVM-Display.git /tmp/official-display
+          git -C /tmp/official-display checkout --detach 96a0705d818c4234960a61dd2837e32f9450f811
+          make -C /tmp/official-display -j2 MMDVM-Display
+          python3 ci/smoke-5.00.002-display.py /tmp/official-display/MMDVM-Display
+  build:
+    needs: source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            base_sha: 293e18cf6ec62a72a5f1f02a1f651c9ea88702aed2db6862409f325f7dcf6a1e
+          - arch: arm32
+            base_sha: a7f1ed85e667fbb169ae52c51327af5f4fca373d7af891eeb7352cb6798b292d
+    steps:
+      - uses: actions/checkout@v4
+      - name: Image tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Build and validate complete protected filesystem manifest
+        run: bash ci/build-5.00.002-display.sh '${{ matrix.arch }}' '${{ matrix.base_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: display-5.00.002-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            PU2PNY-OS-5.00.002-*.img.xz*
+            BUILD-INFO-*.txt
+            BASELINE-MANIFEST-*.txt
+            IMAGE-MANIFEST-*.txt
+            ARCH-*.txt
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: display-5.00.002-*
+          merge-multiple: true
+      - name: Verify and publish immutable physical-test candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for arch in arm32 arm64; do
+            test -s "PU2PNY-OS-5.00.002-$arch.img.xz"
+            xz -t "PU2PNY-OS-5.00.002-$arch.img.xz"
+            sha256sum -c "PU2PNY-OS-5.00.002-$arch.img.xz.sha256"
+            grep -Fq "source_commit=$GITHUB_SHA" "BUILD-INFO-$arch.txt"
+          done
+          cat >/tmp/notes.md <<EOF
+          PU2PNY-OS 5.00.002 — somente display. ALPHA / candidata para teste físico.
+          Commit: $GITHUB_SHA. Branch: pu2pny-os-5.00.002-display-only.
+          Base: imagens v5.00.001 verificadas por SHA-256.
+          Causa confirmada em código/binário: o MMDVM-Host MQTT instalado não possui renderer Nextion embutido. O aplicador anterior desligava MMDVM-Display e enviava configurações de renderer para um host que não as consumia.
+          Correção: MMDVM-Display oficial pinado, eventos MQTT reais e metadados locais com whitelist; ON7LDS L3/L3 HS via NextionDriver e bridge exclusiva de display. Nenhuma mudança em RF, protocolos, Wi-Fi, gateways ou binários de rádio. Sem HMI/TFT automático.
+          OLED/LCD diretos: caminho existente preservado; paridade integral com Pi-Star não foi comprovada para todos os modelos.
+          Validação: testes SW de configuração/segredos e integração com renderer oficial e broker MQTT isolado; comparação de manifesto completo; montagem somente leitura, arquitetura ELF, fsck, XZ e SHA-256.
+          HW: PENDENTE. COMOK não comprova HMI nem standby/RX/TX. Não é produção.
+          EOF
+          gh release create v5.00.002 PU2PNY-OS-5.00.002-*.img.xz* BUILD-INFO-*.txt ARCH-*.txt BASELINE-MANIFEST-*.txt IMAGE-MANIFEST-*.txt \
+            --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS 5.00.002 — Official Display Only (Alpha)' --notes-file /tmp/notes.md --prerelease
+          gh release view v5.00.002 --repo "$GH_REPO" --json tagName,targetCommitish,assets

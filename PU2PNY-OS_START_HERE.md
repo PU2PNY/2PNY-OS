@@ -77,3 +77,7 @@ Não liberar como completa com requisito crítico ausente, regressão conhecida 
 - A 0.3.30-alpha continua sendo a última candidata de display com SW/CI/VPS formalmente registrado: run `36341170897`, com Nextion/OLED/LCD físico ainda HW PENDENTE.
 - Baselines HW protegidas incluem DMR simplex, D-Star simplex e YSF/C4FM simplex conforme evidências consolidadas no snapshot; duplex e recursos avançados mantêm seus estados próprios.
 - `REL-026`: os cinco documentos canônicos devem distinguir código atual de evidência de validação e nunca inferir HW por SW/VPS.
+
+
+## 2026-10-22 — display isolado
+Ciclo corrente: 5.00.002, branch pu2pny-os-5.00.002-display-only, base publicada v5.00.001. Escopo exclusivo display; docs/DISPLAY-5.00.002.md. Demais subsistemas congelados por ordem do usuário.

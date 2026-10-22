@@ -1968,3 +1968,7 @@ Por confirmação explícita do usuário, todo o restante que já está funciona
 - **ARCH-011 — Helix testável, opcional e fail-safe.** A 4.00.002 pode expor `off`, `shadow` e `process` para teste explícito. `process` significa somente a ponte PCM local existente; não declarar AMBE/AMBE+2 ou cross-mode legado disponível sem backend externo autorizado/licenciado realmente detectado. Helix permanece `off` por padrão e não pode bloquear boot, RF ou protocolos legados. Nível: SW/VPS; áudio/transcoding final: HW.
 - **PERF-052 — Zero custo de Helix quando off.** Nenhum serviço Helix deve ser habilitado automaticamente na imagem; ativação ocorre somente por ação explícita. Nível: SW/VPS.
 - **REL-052 — Gate 4.00.002.** Gerar ARM32/ARMv6 e ARM64 sobre artefatos imutáveis 4.00.001, validar XZ, filesystem, arquitetura, versão, SHA-256 e hashes da baseline protegida. Classificação máxima antes do reteste físico: CANDIDATA PARA TESTE FÍSICO.
+
+
+## 2026-10-22 — display isolado
+DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização deve ocorrer no MMDVM-Display oficial externo. Nunca assumir suporte Nextion embutido. ON7LDS avançado exige renderer→PTY→NextionDriver→bridge MQTT de display. Configuração RF permanece somente leitura. Metadados whitelist; zero flash automático. OLED/LCD existentes preservados sem alegar paridade integral não comprovada.
