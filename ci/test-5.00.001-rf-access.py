@@ -13,6 +13,7 @@ spec.loader.exec_module(access)
 
 BASE = """[General]
 Callsign=PU2PNY
+Id=7241234
 Display=None
 [Modem]
 Port=/dev/serial0
@@ -20,7 +21,6 @@ RXFrequency=439000000
 TXFrequency=439000000
 [DMR]
 Enable=1
-Id=7241234
 ColorCode=1
 SelfOnly=0
 [DMR Network]
