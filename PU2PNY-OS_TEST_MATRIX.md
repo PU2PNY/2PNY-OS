@@ -1,3 +1,14 @@
+## 5.00.003 — regressões relatadas (2026-10-22)
+
+| ID | Caso | Estado | Nível |
+|---|---|---|---|
+| DISPLAY-042 | OLED não deve ser classificado Nextion apenas por MMDVM | CORREÇÃO EM CÓDIGO / CI PENDENTE | SW |
+| DISPLAY-043 | OLED real ativa e sobrevive reboot | FALHA REPORTADA / HW PENDENTE | HW |
+| DISPLAY-044 | Nextion ON7LDS restaura perfil após reboot | REGRESSÃO REPORTADA / NÃO CORRIGIDA | HW |
+| PROTO-REBOOT-001 | Último protocolo operacional retorna após reinício | REGRESSÃO REPORTADA / NÃO CORRIGIDA | HW |
+
+---
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**
