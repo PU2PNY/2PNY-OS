@@ -34,7 +34,15 @@ jobs:
               if test -f "$file"; then echo "--- ${file#$root}"; cat "$file"; fi
             done
             echo '=== persistence references (scripts, no secrets) ==='
-            sudo grep -RilE 'protocol.*(active|restore|current|save)|restore.*protocol|last.protocol|mmdvmhost' "$root/usr/local/sbin" "$root/etc/systemd/system" 2>/dev/null | head -70
+            sudo grep -RilE 'protocol.*(active|restore|current|save)|restore.*protocol|last.protocol|mmdvmhost' "$root/usr/local/sbin" "$root/etc/systemd/system" 2>/dev/null | head -70 || true
+            echo '=== protocol restore script (source only) ==='
+            for script in 2pny-profile-autostart 2pny-protocol-manager 2pny-protocol-profiles; do
+              echo "--- $script"; sudo sed -n '1,220p' "$root/usr/local/sbin/$script" | sed -E '/[Pp]ass(word)?|[Tt]oken|[Ss]ecret|[Kk]ey|credential/d' || true
+            done
+            echo '=== boot and protocol unit files ==='
+            for file in "$root/etc/systemd/system/2pny-display-boot.service" "$root/etc/systemd/system/2pny-profile-proven.service" "$root/etc/systemd/system/2pny-station.service"; do
+              if test -f "$file"; then echo "--- ${file#$root}"; sed -n '1,140p' "$file"; fi
+            done
           } | tee inspect-5.00.002.txt
           sudo umount "$root"
           sudo losetup -d "$loop"
