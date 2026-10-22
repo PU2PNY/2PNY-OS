@@ -9,7 +9,6 @@ cd "$REPO"
 if [[ "$ARCH" == arm32 ]]; then GOARCH_TARGET=arm; GOARM_TARGET=6; else GOARCH_TARGET=arm64; GOARM_TARGET=0; fi
 python3 ci/patch-backend-5.00.000.py src/2pnyd-main-0.3.27.go /tmp/go-500000.go
 python3 ci/patch-display-5.00.001.py go /tmp/go-500000.go /tmp/go-500001.go
-python3 ci/patch-display-5.00.001.py display-apply src/2pny-display-apply-0.3.30.py /tmp/display-apply-500001.py
 gofmt -w /tmp/go-500001.go
 go test /tmp/go-500001.go
 GOOS=linux GOARCH="$GOARCH_TARGET" GOARM="$GOARM_TARGET" CGO_ENABLED=0 \
@@ -21,7 +20,6 @@ else
 fi
 grep -Fq 'appVersion            = "5.00.001"' /tmp/go-500001.go
 grep -Fq 'rfAccessPolicyHandler' /tmp/go-500001.go
-python3 -m py_compile /tmp/display-apply-500001.py
 
 BASE="PU2PNY-OS-5.00.000-$ARCH.img.xz"
 curl -fL --retry 3 --retry-delay 2 \
@@ -42,6 +40,11 @@ LOOP="$(sudo losetup --find --show --partscan /tmp/pu2pny-recovery.img)"
 PART="$LOOP"p2
 sudo mount "$PART" "$ROOT"
 [[ "$(sudo cat "$ROOT/etc/2pny/version")" == '5.00.000' ]]
+# Patch the applicator ACTUALLY shipped in this SHA-verified image.
+# Never revert it to 0.3.30 and lose ON7LDS/Transparent Data lifecycle fixes.
+python3 ci/patch-display-5.00.001.py display-apply "$ROOT/usr/local/sbin/2pny-display-apply" /tmp/display-apply-500001.py
+python3 -m py_compile /tmp/display-apply-500001.py
+grep -Fq 'NEXTIONDRIVER="2pny-nextiondriver.service"' /tmp/display-apply-500001.py
 
 protect_manifest(){
   local out="$1" p
