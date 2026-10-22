@@ -1,3 +1,8 @@
+## RELEASE v5.00.003 PUBLICADA — 2026-10-22
+**STATUS: ALPHA / CANDIDATA A TESTE FÍSICO. SW/CI PASS; HW PENDENTE.** GitHub Actions execução `39852498690` concluiu testes, ARM32, ARM64 e publicação com sucesso. Tag `v5.00.003`, commit da imagem `b05cecba510534c6ae98ab3eb9dfc93e2523a5b6`. Downloads reais: https://github.com/PU2PNY/2PNY-OS/releases/tag/v5.00.003. ARM32: SHA256 `5bb82ddd11f582d6a33475255f3fd831acd7d785fb62ba0f6e750e8abae21e86` (683453836 bytes). ARM64: SHA256 `5919d58a25839745a0234bf65dbca14c4d033c74f0ea5e21b5e5c9015e65b93a` (597773012 bytes). Testes físicos OLED/Nextion/protocolo/RF não declarados PASS.
+
+---
+
 ## REL-5.00.003 — 2026-10-22, build condicionado ao CI
 Branch `fix/5.00.003-display-protocol-reboot`. Código de correção e pipeline ARM32/ARM64 adicionados em `ci/patch-image-5.00.003.sh`, `ci/build-5.00.003.sh` e `.github/workflows/5.00.003-release.yml`. Recuperação conservadora de protocolo com `2pny-profile-autostart` e timer que não intervém em gateway ativo. Reconciliação display no reboot com configuração salva. **Estado:** validação CI e imagens a verificar; físico OLED, Nextion e protocolo ainda PENDENTE. Sem atribuir PASS antes de evidências.
 
