@@ -1,3 +1,9 @@
+## 5.00.003 — correção parcial / não liberada (2026-10-22)
+
+Branch: `fix/5.00.003-display-protocol-reboot`. A falha de OLED e os defeitos de persistência/reboot foram registrados nas Issues #22 e #21. A inferência indevida Nextion-por-presença-MMDVM foi removida do aplicador de display; testes e build ainda pendentes. Nextion ON7LDS HW aprovado na 5.00.002 continua protegido. **NÃO ENTREGUE: sem imagem, SHA/CI ou release 5.00.003 verificados.**
+
+---
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**
