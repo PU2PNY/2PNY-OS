@@ -83,6 +83,10 @@ func rfAccessPolicyHandler(w http.ResponseWriter, r *http.Request) {
 
 """
     handler = handler.replace("_BT_", chr(96))
+    # Do not present a 5.00.000 backend as the newer 5.00.001 image.
+    if 'appVersion            = "5.00.000"' in text:
+        text = replace_once(text, 'appVersion            = "5.00.000"',
+                            'appVersion            = "5.00.001"')
     text = replace_once(text, "func main() {", handler + "func main() {")
     text = replace_once(text,
         '\thttp.HandleFunc("/api/display/override", displayOverrideHandler)',
