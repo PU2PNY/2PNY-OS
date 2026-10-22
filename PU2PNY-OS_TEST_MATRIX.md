@@ -1,3 +1,17 @@
+## v5.00.003 — validação efetiva SW/CI 2026-10-22
+| Caso | Status | Evidência |
+|---|---|---|
+| SW-500003-001 testes estáticos Python/shell | PASS | Actions 39852498690 tests |
+| SW-500003-002 base ARM32/ARM64 SHA256 v5.00.002 | PASS | Actions 39852498690 build |
+| SW-500003-003 escopo rootfs integral por manifesto | PASS | Actions 39852498690 build |
+| SW-500003-004 filesystem / XZ / SHA / assets | PASS | Actions 39852498690 build+publish |
+| HW-PROTO-500003 restaurar perfil | PENDENTE | exige reboot real |
+| HW-NEXTION-500003 restauração RX/TX | PENDENTE | exige Nextion real |
+| HW-OLED-500003 inicialização e reboot | PENDENTE | exige OLED real |
+| HW-RF-500003 regressão simplex/duplex | PENDENTE | exige rádio e modem reais |
+
+---
+
 ## REL-5.00.003 — critérios de liberação e HW
 | Teste | Esperado | Status |
 |---|---|---|
