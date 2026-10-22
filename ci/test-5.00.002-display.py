@@ -47,6 +47,14 @@ class DisplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'reservada'):
             app.make_config(self.host(), {'layout':0}, {'port':'/dev/serial0'}, 'nextion')
 
+    def test_oled_never_inferred_as_nextion(self):
+        source = (ROOT/'runtime/display/apply.py').read_text()
+        # The modem's existence alone cannot prove a Nextion screen.
+        self.assertNotIn("kind = 'nextion_mmdvm'", source)
+        # Legacy OLED manager retains ownership of its own services.
+        self.assertIn("subprocess.run([legacy], check=True", source)
+        self.assertNotIn("ctl('disable', '--now', ADAPTER, check=False)", source)
+
     def test_mqtt_remaining_length(self):
         self.assertEqual(packet(0x30, b'a'*128)[:3], b'\x30\x80\x01')
 
