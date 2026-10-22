@@ -63,7 +63,7 @@ cat >"$ROOT/etc/systemd/system/2pny-display-reconcile.service" <<'EOF'
 Description=PU2PNY reapply saved display on boot
 After=2pny-hardware-detect.service mosquitto.service 2pny-mmdvmhost.service
 Wants=2pny-hardware-detect.service mosquitto.service
-ConditionPathExists=/var/lib/2pny/display-override.json
+ConditionPathExists=/var/lib/2pny/display-settings.json
 [Service]
 Type=oneshot
 ExecStart=/usr/local/sbin/2pny-display-apply
