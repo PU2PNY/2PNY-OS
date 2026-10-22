@@ -1,3 +1,11 @@
+## 2026-10-22 — REL-5.00.003: correção boot/protocolos/display + construção de imagens
+- Identificada via montagem read-only da imagem ARM64 a presença de `2pny-profile-autostart`, mas sem symlink habilitado em `multi-user.target.wants`, mecanismo já validava último perfil comprovado, uplink, MMDVM, gateway.
+- Imagem overlay habilita serviço original e adiciona timer guardado contra troca de gateway já ativo. Não altera binários RF nem lógica de gateways.
+- Serviço de display reconciliador aplica somente perfil previamente salvo após detecção de hardware e inicialização do broker, usando gerenciamento de display isolado.
+- Adicionado build independente ARM32/ARM64 a partir da base v5.00.002 por SHA oficial; manifesto, checagem do filesystem, XZ e SHA obrigatórios antes da publicação alpha. HW continua pendente.
+
+---
+
 ## 2026-10-22 — 5.00.003 correção adicional conservadora
 
 `runtime/display/apply.py`: se não houver override explícito, usa layout salvo **somente** para tipos Nextion e layouts permitidos, sem forçar mudanças de RF. Teste estático acrescentado. Alterações anteriores de separação OLED/Nextion mantidas. **Sem declarar boot/protocolo corrigido, nem CI/HW PASS ou imagem gerada.**
