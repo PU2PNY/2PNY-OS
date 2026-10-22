@@ -1,0 +1,40 @@
+name: PU2PNY-OS 5.00.000 Display Read-Only Audit
+on:
+  push:
+    branches: [pu2pny-os-5.00.001-display-access-recovery]
+    paths:
+      - 'ci/audit-5.00.000-displays.sh'
+      - '.github/workflows/5.00.001-display-access-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            sha: 55402edeb87a748decc88f86092b15ebd0ed6bd45c59cdb40e9cf21c75117797
+          - arch: arm32
+            sha: 97ce1886567288cca361d21c63a14e78ae0ffe20cff2eafeb3529b84c2e59ef2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit published immutable image without modification
+        env:
+          ARCH: ${{ matrix.arch }}
+          EXPECTED_SHA: ${{ matrix.sha }}
+        run: |
+          set -euo pipefail
+          bash -n ci/audit-5.00.000-displays.sh
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils util-linux file binutils >/dev/null
+          bash ci/audit-5.00.000-displays.sh "$ARCH" "$EXPECTED_SHA" | tee "display-audit-$ARCH.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: display-audit-${{ matrix.arch }}
+          path: display-audit-*.txt
+          if-no-files-found: warn
