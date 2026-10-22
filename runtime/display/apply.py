@@ -123,6 +123,12 @@ def apply():
             raise RuntimeError('Aplicador OLED/LCD anterior ausente; nenhuma configuração alterada')
         subprocess.run([legacy], check=True, timeout=50)
         return
+    # Keep the explicit, last-applied display selection independent of probe
+    # classification. Never synthesize a display type from a detected modem.
+    if not OVERRIDE.exists() and SETTINGS.exists():
+        saved = read(SETTINGS)
+        if saved.get('type') in ('nextion', 'nextion_mmdvm') and saved.get('requested_layout') in (0, 2, 3, 4):
+            ov = {**ov, 'layout': saved['requested_layout'], 'enabled': saved.get('enabled', True)}
     units = (SERVICE, ADAPTER, DRIVER, CORE)
     old_active = {u: active(u) for u in units}
     old_enabled = {u: ctl('is-enabled', '--quiet', u, check=False) for u in units}
