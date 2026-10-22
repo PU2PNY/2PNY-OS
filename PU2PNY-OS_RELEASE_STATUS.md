@@ -1,3 +1,9 @@
+## 5.00.003 — atualização de código em 22/10/2026
+
+OLED: inferência Nextion-por-presença-MMDVM removida; Nextion: leitura conservadora do layout previamente aplicado quando não há override explícito. Branch em teste, sem alteração de firmware, RF ou protocolo. **NÃO ENTREGUE:** a persistência do protocolo continua sem solução identificada no controlador; não há CI, imagem ARM64 ou SHA validados. O ambiente de build local não resolve github.com. Teste físico segue pendente.
+
+---
+
 ## 5.00.003 — correção parcial / não liberada (2026-10-22)
 
 Branch: `fix/5.00.003-display-protocol-reboot`. A falha de OLED e os defeitos de persistência/reboot foram registrados nas Issues #22 e #21. A inferência indevida Nextion-por-presença-MMDVM foi removida do aplicador de display; testes e build ainda pendentes. Nextion ON7LDS HW aprovado na 5.00.002 continua protegido. **NÃO ENTREGUE: sem imagem, SHA/CI ou release 5.00.003 verificados.**
