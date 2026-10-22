@@ -1,3 +1,8 @@
+## REL-5.00.003 — 2026-10-22, build condicionado ao CI
+Branch `fix/5.00.003-display-protocol-reboot`. Código de correção e pipeline ARM32/ARM64 adicionados em `ci/patch-image-5.00.003.sh`, `ci/build-5.00.003.sh` e `.github/workflows/5.00.003-release.yml`. Recuperação conservadora de protocolo com `2pny-profile-autostart` e timer que não intervém em gateway ativo. Reconciliação display no reboot com configuração salva. **Estado:** validação CI e imagens a verificar; físico OLED, Nextion e protocolo ainda PENDENTE. Sem atribuir PASS antes de evidências.
+
+---
+
 ## 5.00.003 — atualização de código em 22/10/2026
 
 OLED: inferência Nextion-por-presença-MMDVM removida; Nextion: leitura conservadora do layout previamente aplicado quando não há override explícito. Branch em teste, sem alteração de firmware, RF ou protocolo. **NÃO ENTREGUE:** a persistência do protocolo continua sem solução identificada no controlador; não há CI, imagem ARM64 ou SHA validados. O ambiente de build local não resolve github.com. Teste físico segue pendente.
