@@ -1,3 +1,16 @@
+## REL-5.00.003 — critérios de liberação e HW
+| Teste | Esperado | Status |
+|---|---|---|
+| SW-500003-001 | Python/shell compila e teste de separação OLED/Nextion passa | PENDENTE CI |
+| SW-500003-002 | Base 5.00.002 ARM32/ARM64 SHA corresponde | PENDENTE CI |
+| SW-500003-003 | Manifesto raiz permite somente mudanças autorizadas | PENDENTE CI |
+| SW-500003-004 | Imagens .xz testadas, checksums verificados e versão correta | PENDENTE CI |
+| HW-PROTO-500003 | Perfil comprovado restaurado após reboot com uplink; não trocar se gateway já ativo | PENDENTE HW |
+| HW-NEXTION-500003 | ON7LDS sobe e atualiza RX/TX após reboot | PENDENTE HW |
+| HW-OLED-500003 | OLED real detectado, inicializa e mantém atualização após reboot | PENDENTE HW |
+
+---
+
 ## 5.00.003 — execução parcial e limite de validação
 
 - DISPLAY-042: atualização de código, SW/HW **NÃO VERIFICADOS**.
