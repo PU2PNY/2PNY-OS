@@ -72,7 +72,14 @@ TimeoutStartSec=75
 WantedBy=multi-user.target
 EOF
 ln -sfn ../2pny-display-reconcile.service "$ROOT/etc/systemd/system/multi-user.target.wants/2pny-display-reconcile.service"
-python3 -m py_compile "$ROOT/usr/local/sbin/2pny-display-apply" "$ROOT/usr/local/sbin/2pny-profile-autostart-safe"
+python3 - "$ROOT" <<'PY'
+from pathlib import Path
+import sys
+root=Path(sys.argv[1])
+for script in ('usr/local/sbin/2pny-display-apply','usr/local/sbin/2pny-profile-autostart-safe'):
+    p=root/script
+    compile(p.read_bytes(), str(p), 'exec')
+PY
 python3 - "$ROOT" <<'PY'
 import sys
 from pathlib import Path
