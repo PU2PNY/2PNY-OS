@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PU2PNY-OS — Acesso RF</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1118;--panel:#121b25;--line:#2a3a4d;--fg:#edf4fb;--muted:#9fb1c3;--blue:#58b5ff;--warn:#ffcc80}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:890px;margin:auto;padding:18px}.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+a{color:var(--blue);text-decoration:none}.card{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px;margin:18px 0}
+h1{font-size:24px;margin:.4em 0}h2{font-size:17px;margin-top:0}.muted{color:var(--muted)}.choice{display:block;padding:13px;margin:8px 0;border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.choice input{margin-right:10px}textarea,input[type=text]{width:100%;font:inherit;border:1px solid var(--line);border-radius:8px;color:var(--fg);background:#091018;padding:10px}
+textarea{min-height:108px}button{border:0;border-radius:9px;padding:12px 18px;background:var(--blue);color:#06121d;font-weight:700;cursor:pointer}
+button:disabled{opacity:.5}.warning{color:var(--warn)}.status{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:8px;padding:12px;background:#090f16}
+label[for]{display:block;margin:12px 0 6px}.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<div class="nav"><strong>PU2PNY-OS</strong><nav><a href="/dashboard" id="home">Painel</a> · <a href="/hotspot#protocols" id="protocols">Protocolos</a> · <a href="/display">Display</a></nav></div>
+<h1 id="title">Controle de acesso RF</h1>
+<p class="muted" id="intro">Controla quem pode transmitir pelo hotspot. Não altera frequência, TG, gateway nem o acesso ao painel web.</p>
+<section class="card">
+<h2 id="actual">Estado efetivo</h2>
+<div class="status" id="status" role="status" aria-live="polite">Consultando…</div>
+</section>
+<section class="card">
+<h2 id="setting">Tipo de acesso</h2>
+<label class="choice"><input type="radio" name="mode" value="private"><b id="privateLabel">Privado</b><div class="muted" id="privateInfo">Somente o proprietário.</div></label>
+<label class="choice"><input type="radio" name="mode" value="semi_public"><b id="semiLabel">Semi-público</b><div class="muted" id="semiInfo">Proprietário e indicativos/IDs autorizados. Disponível quando o protocolo RF suporta lista de origem.</div></label>
+<label class="choice"><input type="radio" name="mode" value="public"><b id="publicLabel">Público</b><div class="muted" id="publicInfo">Estações válidas, sujeito às restrições e à configuração de rádio existentes.</div></label>
+<div id="aclBlock" class="hide">
+<label for="acl" id="aclLabel">Estações autorizadas (uma por linha: INDICATIVO,DMR_ID)</label>
+<textarea id="acl" spellcheck="false" placeholder="PY2ABC,7241234&#10;PU2XYZ,7245678"></textarea>
+<p class="muted" id="aclHint">Liste somente as estações autorizadas. Lista vazia nunca habilita Semi-público.</p>
+</div>
+<div id="publicBlock" class="hide">
+<p class="warning" id="publicWarn">Atenção: o modo Público permite o uso do RF por outros radioamadores. Não é autenticação do painel.</p>
+<label for="confirmation" id="confirmLabel">Digite ABRIR RF PUBLICO para confirmar:</label>
+<input id="confirmation" type="text" autocomplete="off" spellcheck="false">
+</div>
+<p class="muted" id="protection">Mudanças são aplicadas sob demanda; caso o MMDVMHost não volte a funcionar, a configuração anterior será restaurada.</p>
+<button id="apply" type="button">Aplicar e verificar</button>
+<p class="status" id="result" role="status" aria-live="polite">Nenhuma alteração realizada.</p>
+</section>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const labels={
+pt:{home:'Painel',protocols:'Protocolos',title:'Controle de acesso RF',intro:'Controla quem pode transmitir pelo hotspot. Não altera frequência, TG, gateway nem o acesso ao painel web.',actual:'Estado efetivo',setting:'Tipo de acesso',privateLabel:'Privado',privateInfo:'Somente o proprietário.',semiLabel:'Semi-público',semiInfo:'Proprietário e indicativos/IDs autorizados. Disponível quando o protocolo RF suporta lista de origem.',publicLabel:'Público',publicInfo:'Estações válidas, sujeito às restrições e à configuração de rádio existentes.',aclLabel:'Estações autorizadas (uma por linha: INDICATIVO,DMR_ID)',aclHint:'Liste somente as estações autorizadas. Lista vazia nunca habilita Semi-público.',publicWarn:'Atenção: o modo Público permite o uso do RF por outros radioamadores. Não é autenticação do painel.',confirmLabel:'Digite ABRIR RF PUBLICO para confirmar:',protection:'Mudanças são aplicadas sob demanda; se o MMDVMHost falhar, a configuração anterior será restaurada.',apply:'Aplicar e verificar',unknown:'Não verificado (configuração anterior preservada)',pending:'Nenhuma alteração realizada.',loading:'Consultando…'},
+en:{home:'Dashboard',protocols:'Protocols',title:'RF access control',intro:'Controls who may transmit through this hotspot. Frequency, talkgroups, gateways and web access are unchanged.',actual:'Effective state',setting:'Access type',privateLabel:'Private',privateInfo:'Owner only.',semiLabel:'Semi-public',semiInfo:'Owner and explicitly allowed callsigns/IDs. Requires protocol source whitelist support.',publicLabel:'Public',publicInfo:'Valid stations subject to current RF configuration and restrictions.',aclLabel:'Allowed stations (one per line: CALLSIGN,DMR_ID)',aclHint:'List only authorized stations. An empty list never enables Semi-public.',publicWarn:'Warning: Public permits other amateurs to use RF. This is not web-panel authentication.',confirmLabel:'Enter ABRIR RF PUBLICO to confirm:',protection:'Changes are applied on request; the previous configuration is restored if MMDVMHost fails.',apply:'Apply and verify',unknown:'Unverified (existing configuration preserved)',pending:'No changes made.',loading:'Checking…'},
+es:{home:'Panel',protocols:'Protocolos',title:'Control de acceso RF',intro:'Controla quién puede transmitir por el hotspot. No modifica frecuencia, TG, gateways ni acceso web.',actual:'Estado efectivo',setting:'Tipo de acceso',privateLabel:'Privado',privateInfo:'Solo el propietario.',semiLabel:'Semipúblico',semiInfo:'Propietario e indicativos/IDs autorizados. Requiere una lista de origen compatible.',publicLabel:'Público',publicInfo:'Estaciones válidas según restricciones y configuración RF actuales.',aclLabel:'Estaciones autorizadas (una por línea: INDICATIVO,DMR_ID)',aclHint:'Solo estaciones autorizadas. Una lista vacía nunca activa Semipúblico.',publicWarn:'Aviso: el modo Público permite que otros radioaficionados usen RF. No autentica el panel.',confirmLabel:'Escriba ABRIR RF PUBLICO para confirmar:',protection:'Los cambios se aplican bajo demanda; si falla MMDVMHost se restaura la configuración previa.',apply:'Aplicar y verificar',unknown:'Sin verificar (se conserva la configuración previa)',pending:'Sin cambios.',loading:'Consultando…'}
+};
+let lang='pt';try{const v=JSON.parse(localStorage.getItem('2pny_lang')||'null');if(['pt','en','es'].includes(v))lang=v}catch(e){}
+const d=labels[lang];for(const [k,v] of Object.entries(d))if($(k))$(k).textContent=v;
+function currentMode(){return document.querySelector('input[name="mode"]:checked')?.value||''}
+function refreshFields(){const m=currentMode();$('aclBlock').classList.toggle('hide',m!=='semi_public');$('publicBlock').classList.toggle('hide',m!=='public')}
+document.querySelectorAll('input[name=mode]').forEach(n=>n.addEventListener('change',refreshFields));
+function allowed(){return $('acl').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{
+const p=line.split(',').map(x=>x.trim());if(p.length>2)throw Error('Use INDICATIVO,DMR_ID');
+return {callsign:p[0]||'',dmr_id:p[1]||''}
+})}
+async function load(){try{const resp=await fetch('/api/rf/access',{cache:'no-store'});if(!resp.ok)throw Error('HTTP '+resp.status);const v=await resp.json();const p=v.policy||{};$('status').textContent=p.mode==='legacy_unchanged'?d.unknown:JSON.stringify(p,null,2);if(['private','semi_public','public'].includes(p.mode)){const e=document.querySelector('input[name=mode][value="'+p.mode+'"]');if(e)e.checked=true;refreshFields()}}catch(e){$('status').textContent=String(e)}}
+$('apply').addEventListener('click',async()=>{
+const mode=currentMode();if(!mode){$('result').textContent='Selecione um tipo / Select a mode';return}
+let list=[];try{if(mode==='semi_public'){list=allowed();if(!list.length)throw Error('Lista vazia / Empty access list')}if(mode==='public'&&$('confirmation').value!=='ABRIR RF PUBLICO')throw Error('ABRIR RF PUBLICO')}catch(e){$('result').textContent=String(e);return}
+$('apply').disabled=true;$('result').textContent=d.loading;
+try{const resp=await fetch('/api/rf/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,allowed:list,confirmation:$('confirmation').value})});const out=await resp.json();$('result').textContent=out.ok?'OK — '+JSON.stringify(out):out.error||('HTTP '+resp.status);await load()}catch(e){$('result').textContent=String(e)}finally{$('apply').disabled=false}
+});
+$('status').textContent=d.loading;$('result').textContent=d.pending;load();
+</script>
+</body>
+</html>
