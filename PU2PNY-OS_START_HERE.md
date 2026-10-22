@@ -81,3 +81,6 @@ Não liberar como completa com requisito crítico ausente, regressão conhecida 
 
 ## 2026-10-22 — display isolado
 Ciclo corrente: 5.00.002, branch pu2pny-os-5.00.002-display-only, base publicada v5.00.001. Escopo exclusivo display; docs/DISPLAY-5.00.002.md. Demais subsistemas congelados por ordem do usuário.
+
+
+Entrega corrente: **5.00.002**, candidata para teste físico publicada. Fonte `56a0b6a4a97fee4cd35314e0f3943918a32fbc2d`; branch `pu2pny-os-5.00.002-display-only`. https://github.com/PU2PNY/2PNY-OS/releases/tag/v5.00.002 . CI/VPS conforme matriz; HW PENDENTE. Escopo somente display, demais subsistemas congelados.

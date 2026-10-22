@@ -1078,3 +1078,22 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 - HW: PENDENTE. OLED/LCD paridade integral: NÃO VERIFICADO; implementação existente preservada.
 - GitHub push: BLOQUEADO pela revisão automática por publicação externa considerada não autorizada. Não contornar. Workflow ARM32/ARM64 e publicação não iniciados.
 - Imagens novas: NÃO ENTREGUES. Retomar por revisão/publicação da branch local pu2pny-os-5.00.002-display-only, executar CI e resolver falhas antes de disponibilizar assets.
+
+
+### DISPLAY-040 — evidência da retomada
+- Fonte da candidata: `56a0b6a4a97fee4cd35314e0f3943918a32fbc2d`, branch `pu2pny-os-5.00.002-display-only`.
+- Run CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/39775950167 . Source/integration PASS.
+- VPS SentinelX / WartyWallaby / 2026-10-22: `VPS_DISPLAY_CONFIG_LAYOUTS_0_2_3_4_SECRET_WHITELIST_RF_READONLY_PASS`. Execução em memória, sem instalação/restart/alteração do servidor. Isso valida geração de configuração e whitelist, não display físico nem RF.
+- HMI, standby/RX/TX reais, toque e compatibilidade física: HW PENDENTE.
+
+
+## 5.00.002 — entrega verificada / 2026-10-22
+- Estado: ALPHA / CANDIDATA PARA TESTE FÍSICO, publicada. SW/CI PASS; VPS PASS para configuração/whitelist em memória; HW PENDENTE.
+- Branch: `pu2pny-os-5.00.002-display-only`. Commit fonte das imagens e tag: `56a0b6a4a97fee4cd35314e0f3943918a32fbc2d`.
+- Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/v5.00.002
+- CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/39775950167 — source, ARM32, ARM64 e publish PASS. Baseline Guard e CI Policy também PASS.
+- ARM64: `PU2PNY-OS-5.00.002-arm64.img.xz`, 597946604 bytes, SHA-256 `f14e952df5396cc04f30feefcc6c0485f54be3c78fcb07f887a5bb06178e4271`.
+- ARM32: `PU2PNY-OS-5.00.002-arm32.img.xz`, 683461636 bytes, SHA-256 `9189df04882eff46a2824e5af6a367545edc21ae6f1714bac5042537714f5f12`.
+- Ambos: arquitetura ELF, manifesto completo de conteúdo fora de display/versionamento preservado, fsck, montagem somente leitura, XZ e SHA-256 PASS. Assets existem e digest publicado corresponde ao checksum.
+- Sem mudança no motor RF, gateways, protocolos, Wi-Fi ou firmware/HMI. OLED/LCD diretos preservados, sem paridade física integral comprovada.
+- Para HMI que exibe USE NextionDriver/ON7LDS: habilitar Display e selecionar ON7LDS L3 (ou L3 HS somente se esse for o HMI instalado); salvar; testar standby/RX/TX e persistência após reboot. COMOK não comprova o HMI nem atualização visual.
