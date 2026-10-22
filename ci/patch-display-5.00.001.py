@@ -123,7 +123,7 @@ def main():
     p.add_argument("destination", type=Path)
     a = p.parse_args()
     before = a.source.read_text()
-    after = patch_go(before) if a.mode == "--go" else patch_apply(before)
+    after = patch_go(before) if a.mode == "go" else patch_apply(before)
     if after == before:
         raise SystemExit("display patch is a no-op")
     a.destination.write_text(after)
