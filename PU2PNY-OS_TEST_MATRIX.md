@@ -1,3 +1,12 @@
+## 5.00.003 — execução parcial e limite de validação
+
+- DISPLAY-042: atualização de código, SW/HW **NÃO VERIFICADOS**.
+- DISPLAY-044: fallback conservador de layout salvo, HW reboot **NÃO VERIFICADO**.
+- PROTO-REBOOT-001: **PENDENTE**, controlador não alterado.
+- REL-5.00.003-ARM64: **NÃO ENTREGUE**, sem XZ/SHA.
+
+---
+
 ## 5.00.003 — regressões relatadas (2026-10-22)
 
 | ID | Caso | Estado | Nível |
