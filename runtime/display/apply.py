@@ -115,14 +115,14 @@ def apply():
     d = hw.get('display') or {}
     kind = d.get('class', '')
     if kind not in ('nextion', 'nextion_mmdvm'):
-        if kind not in ('oled', 'lcd', 'lcd_i2c_candidate') and ov.get('enabled') and (hw.get('mmdvm') or {}).get('detected'):
-            kind = 'nextion_mmdvm'
-        else:
-            # Preserve the existing direct OLED/LCD bus path; do not fabricate support
-            # for compile-time drivers absent from the shipped upstream binary.
-            ctl('disable', '--now', ADAPTER, check=False)
-            subprocess.run(['/usr/local/sbin/2pny-display-apply.pre-5.00.002'], check=True, timeout=50)
-            return
+        # A detected modem does NOT imply a Nextion. In particular an I2C OLED
+        # must never be claimed as nextion_mmdvm solely because MMDVM is present.
+        # Preserve the legacy OLED/LCD renderer and its service decisions.
+        legacy = '/usr/local/sbin/2pny-display-apply.pre-5.00.002'
+        if not Path(legacy).is_file():
+            raise RuntimeError('Aplicador OLED/LCD anterior ausente; nenhuma configuração alterada')
+        subprocess.run([legacy], check=True, timeout=50)
+        return
     units = (SERVICE, ADAPTER, DRIVER, CORE)
     old_active = {u: active(u) for u in units}
     old_enabled = {u: ctl('is-enabled', '--quiet', u, check=False) for u in units}
