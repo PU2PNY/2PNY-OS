@@ -105,24 +105,31 @@ func rfAccessPolicyHandler(w http.ResponseWriter, r *http.Request) {
     return text
 
 def patch_apply(text):
-    # Important: Python's "0 or 9" discards the legitimate G4KLX layout 0.
-    text = replace_once(text,
-        'requested=int(ov.get("layout") or 9)',
-        'requested=int(ov.get("layout",9))')
-    # Ensure the advanced NextionDriver cannot fight the native or PU2PNY writer.
-    text = replace_once(text,
-        'LEGACY="2pny-display.service"',
-        'LEGACY="2pny-display.service"\nDRIVER="2pny-nextiondriver.service"')
-    text = text.replace('ctl("disable","--now",LEGACY);ctl("disable","--now",CORE)',
-                        'ctl("disable","--now",LEGACY);ctl("disable","--now",CORE);ctl("disable","--now",DRIVER)')
-    text = replace_once(text,
-        'ctl("disable","--now",LEGACY)\nif kind=="nextion_mmdvm":',
-        'ctl("disable","--now",LEGACY)\nctl("disable","--now",DRIVER)\nif kind=="nextion_mmdvm":')
-    # Never say physical Nextion is active just because the RF engine is active.
-    text = replace_once(text,
-        '"state":"active" if active(MMDVM) else "configured","active":active(MMDVM),',
-        '"state":"active" if d.get("physical_confirmed") is True and active(MMDVM) else "tx_only_unconfirmed",'
-        '"active":d.get("physical_confirmed") is True and active(MMDVM),')
+    # Compatible with both historical source tests and the ACTUAL preinstalled
+    # 5.00.000 applicator. The runtime branch already supports L3/Transparent Data;
+    # never replace it with the older 0.3.30 implementation.
+    if 'requested=int(ov.get("layout") or 9)' in text:
+        text = replace_once(text,
+            'requested=int(ov.get("layout") or 9)',
+            'requested=int(ov.get("layout",9))')
+    elif 'try:requested=int(raw_layout if raw_layout is not None else 0)' not in text:
+        raise SystemExit("unexpected installed layout parsing; refuse downgrade")
+    if 'NEXTIONDRIVER="2pny-nextiondriver.service"' in text:
+        # The installed 4/5.x applicator already coordinates single-writer
+        # native/L3 modes. Fix only dishonest physical success flags.
+        text = replace_once(text,
+            '"state":"active" if active(MMDVM) and active(NEXTIONDRIVER) else "configured","active":active(MMDVM) and active(NEXTIONDRIVER),',
+            '"state":"tx_only_unconfirmed" if active(MMDVM) and active(NEXTIONDRIVER) else "configured","active":False,')
+    else:
+        text = replace_once(text, 'LEGACY="2pny-display.service"',
+            'LEGACY="2pny-display.service"\\nDRIVER="2pny-nextiondriver.service"'.replace('\\n','\\n'))
+        text = text.replace('ctl("disable","--now",LEGACY);ctl("disable","--now",CORE)',
+            'ctl("disable","--now",LEGACY);ctl("disable","--now",CORE);ctl("disable","--now",DRIVER)')
+        text = replace_once(text, 'ctl("disable","--now",LEGACY)\\nif kind=="nextion_mmdvm":'.replace('\\n','\\n'),
+            'ctl("disable","--now",LEGACY)\\nctl("disable","--now",DRIVER)\\nif kind=="nextion_mmdvm":'.replace('\\n','\\n'))
+        text = replace_once(text,
+            '"state":"active" if active(MMDVM) else "configured","active":active(MMDVM),',
+            '"state":"active" if d.get("physical_confirmed") is True and active(MMDVM) else "tx_only_unconfirmed","active":d.get("physical_confirmed") is True and active(MMDVM),')
     ast.parse(text)
     return text
 
