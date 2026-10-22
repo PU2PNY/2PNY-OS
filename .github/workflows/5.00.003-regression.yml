@@ -1,0 +1,23 @@
+name: PU2PNY-OS 5.00.003 OLED regression (SW only)
+on:
+  push:
+    branches: [fix/5.00.003-display-protocol-reboot]
+    paths:
+      - 'runtime/display/**'
+      - 'ci/test-5.00.002-display.py'
+      - '.github/workflows/5.00.003-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  oled-static-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python and OLED/Nextion separation
+        run: |
+          set -euo pipefail
+          python3 -m py_compile runtime/display/apply.py runtime/display/adapter.py
+          python3 ci/test-5.00.002-display.py
+          git diff --check
