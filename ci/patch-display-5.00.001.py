@@ -16,9 +16,15 @@ def replace_once(text, old, new):
 
 def patch_go(text):
     # Previously, Go POST always coerced G4KLX (layout 0) to ON7LDS L2 (2).
-    text = replace_once(text,
-        'if in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }',
-        'if in.Layout != 0 && in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }')
+    if 'if in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }' in text:
+        text = replace_once(text,
+            'if in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }',
+            'if in.Layout != 0 && in.Layout != 2 && in.Layout != 3 { in.Layout = 2 }')
+    elif 'if in.Layout != 0 && in.Layout != 2 { in.Layout = 0 }' in text:
+        # The 0.3.31.119 patch chain already fixed G4KLX layout 0.
+        pass
+    else:
+        raise SystemExit('unrecognized display layout policy; refuse speculative change')
     # Do not silently swallow persistent display override write failures.
     text = replace_once(text,
         '_ = os.WriteFile(displayOverrideFile, raw, 0600)\n\t\t\tapplyDisplayOverrideToProbe()',
