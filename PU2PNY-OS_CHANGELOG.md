@@ -1,3 +1,9 @@
+## 2026-10-22 — 5.00.003 investigação e correção parcial OLED
+
+Commit de runtime: `19e012e19b45a548c1a36849bae78c2b307cbce5`. Removida a inferência de Nextion baseada apenas na presença de MMDVM e preservada a delegação OLED/LCD sem desabilitar antes o adaptador. Teste de regressão estático adicionado. **Ainda não houve CI nem teste HW e a falha de protocolo/reboot não foi corrigida. Imagem 5.00.003 não publicada.**
+
+---
+
 ## 2026-10-22 — DISPLAY-041 / aprovação física e consolidação
 
 Usuário aprovou explicitamente a tela da 5.00.002 em NextionDriver ON7LDS: “a tela funcionou perfeito”. Registrado HW PASS geral para o conjunto testado e baseline protegido. Documentação ativa passa a ter uma regra única; guia anterior preservado em histórico, sem servir como recomendação atual. Outros layouts/modelos/arquiteturas e subtestes não informados não recebem aprovação por inferência. Código, configuração, imagens publicadas e RF não foram alterados.
