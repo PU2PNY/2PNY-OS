@@ -1,3 +1,9 @@
+## 2026-10-22 — DISPLAY-041 / aprovação física e consolidação
+
+Usuário aprovou explicitamente a tela da 5.00.002 em NextionDriver ON7LDS: “a tela funcionou perfeito”. Registrado HW PASS geral para o conjunto testado e baseline protegido. Documentação ativa passa a ter uma regra única; guia anterior preservado em histórico, sem servir como recomendação atual. Outros layouts/modelos/arquiteturas e subtestes não informados não recebem aprovação por inferência. Código, configuração, imagens publicadas e RF não foram alterados.
+
+---
+
 # PU2PNY-OS — CHANGELOG
 
 ## 2026-09-19 — início do ciclo corretivo pós-0.3.3-alpha

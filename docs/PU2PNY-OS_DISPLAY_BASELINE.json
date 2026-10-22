@@ -1,0 +1,22 @@
+{
+  "requirement": "DISPLAY-041",
+  "version": "5.00.002",
+  "source_commit": "56a0b6a4a97fee4cd35314e0f3943918a32fbc2d",
+  "mode": "NextionDriver ON7LDS",
+  "renderer_id": "on7lds-compatible",
+  "validation": "HW PASS - user-reported general display operation",
+  "date": "2026-10-22",
+  "sublayout": "not specified by user; preserve working selection",
+  "architecture": "not specified by user",
+  "display_model": "not specified in this approval",
+  "source_sha256": {
+    "runtime/display/apply.py": "7088da91662e57bef46395af5d61d33e8cc511d229f2cf0ff0930671da4a666d",
+    "runtime/display/adapter.py": "b2ae6a87582ef1261c14da3ce7ce17e8be5bf153f09868dbe5a222c8453c51b8",
+    "runtime/display/mqtt_link.py": "c9ffe8b100b0f990e029fd9fc451cabe8b3efb59018d55feb80c70e7d1611c78"
+  },
+  "image_sha256": {
+    "arm64": "f14e952df5396cc04f30feefcc6c0485f54be3c78fcb07f887a5bb06178e4271",
+    "arm32": "9189df04882eff46a2824e5af6a367545edc21ae6f1714bac5042537714f5f12"
+  },
+  "runtime_changed": false
+}

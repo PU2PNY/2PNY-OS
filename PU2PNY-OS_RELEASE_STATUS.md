@@ -1,3 +1,18 @@
+## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
+
+**PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**
+
+A regra única de display está em `docs/PU2PNY-OS_DISPLAY_BASELINE.md` (a partir de docs/, usar o nome sem prefixo docs/). Este bloco substitui orientações anteriores conflitantes sobre o display testado. Conteúdo de versões anteriores abaixo é histórico de investigação, nunca instrução para reconfigurar o baseline atual.
+
+- Preservar o caminho MMDVM-Display oficial → PTY → NextionDriver ON7LDS → bridge exclusiva de display → MQTT → MMDVM-Host → modem/tela.
+- Não voltar ao renderer Nextion inexistente no MMDVM-Host MQTT; não reintroduzir PU2PNY Moderno, renderização própria, writers concorrentes, fallback automático ou flash HMI/TFT.
+- Manter a seleção, o layout, a porta, o baud e a configuração que funcionaram. O usuário confirmou ON7LDS, mas não informou nesta aprovação L3 versus L3 HS, arquitetura nem modelo: não inventar, alterar por suposição ou promover as alternativas a HW PASS.
+- Preservar o código de display da imagem `v5.00.002`, fonte `56a0b6a4a97fee4cd35314e0f3943918a32fbc2d`; alterações futuras exigem defeito reportado ou ordem explícita, comparação com este baseline, rollback e novo teste físico.
+- Aprovação é do funcionamento geral da tela no conjunto testado. Toque, reboot, cada métrica, outros displays/arquiteturas e modos não relatados mantêm seus próprios estados NÃO VERIFICADO/PENDENTE.
+- RF, protocolos, gateways, rede e demais funções continuam congelados. Nenhuma mudança de runtime/configuração é aplicada por este registro.
+
+---
+
 ## Estado corrente — 5.00.002 DISPLAY ONLY — 2026-10-22
 
 Branch `pu2pny-os-5.00.002-display-only`. Base publicada `v5.00.001`. PUBLICADA / CANDIDATA PARA TESTE FÍSICO; SW/CI PASS, HW PENDENTE. Evidência e hashes no último bloco 5.00.002. Somente display/versionamento; restante congelado. HW PENDENTE. Detalhes: `docs/DISPLAY-5.00.002.md`.

@@ -1,10 +1,10 @@
 # PU2PNY-OS 5.00.002 — somente display
 
-**Candidata para teste físico / Alpha. SW/CI PASS; HW PENDENTE.**
+**Display NextionDriver ON7LDS: HW PASS por aprovação do usuário em 22/10/2026. Baseline protegido. A aprovação não promove automaticamente outros dispositivos nem a release inteira a produção.**
 
 [Release e downloads](https://github.com/PU2PNY/2PNY-OS/releases/tag/v5.00.002) · [Build verificado](https://github.com/PU2PNY/2PNY-OS/actions/runs/39775950167) · [Guia de teste](docs/DISPLAY-5.00.002.md)
 
-Correção do caminho Nextion para o MMDVM-Host MQTT instalado: MMDVM-Display oficial externo, G4KLX/L2 e ON7LDS L3/L3 HS com NextionDriver e bridge exclusiva de display. Firmware/HMI, motor RF, protocolos, gateways e rede preservados. OLED/LCD diretos mantêm o caminho existente, sem alegação de paridade integral Pi-Star não testada.
+Correção do caminho Nextion para o MMDVM-Host MQTT instalado: MMDVM-Display oficial externo, NextionDriver ON7LDS com bridge exclusiva de display. Manter a configuração que funcionou; consulte a [única regra ativa](docs/PU2PNY-OS_DISPLAY_BASELINE.md). Firmware/HMI, motor RF, protocolos, gateways e rede preservados. OLED/LCD diretos mantêm o caminho existente, sem alegação de paridade integral Pi-Star não testada.
 
 | Arquitetura | Imagem | SHA-256 |
 |---|---|---|
