@@ -1,0 +1,30 @@
+name: PU2PNY-OS Access Policy Source Gates
+on:
+  push:
+    branches: [pu2pny-os-5.00.001-display-access-recovery]
+    paths:
+      - 'runtime/5x/2pny-rf-access.py'
+      - 'ci/test-5.00.001-rf-access.py'
+      - '.github/workflows/5.00.001-access-policy-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  access-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and fail-closed transactional access tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile runtime/5x/2pny-rf-access.py ci/test-5.00.001-rf-access.py
+          python3 ci/test-5.00.001-rf-access.py
+          git diff --check
+      - name: Existing RF engines untouched in this commit
+        run: |
+          set -euo pipefail
+          # This branch comes directly from the immutable v5.00.000 tag.
+          for p in src/2pnyd-main-0.3.27.go runtime/5x/2pny-protocol-manager.py; do
+            git diff --exit-code v5.00.000 -- "$p"
+          done
