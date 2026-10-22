@@ -118,11 +118,13 @@ def render_policy(src: str, request: dict) -> tuple[str, dict]:
         if "D-Star" in active and not calls:
             raise AccessError("semi_public_dstar_requires_callsigns")
     if "DMR" in active:
-        owner_id = normalize_id(data.get("General", {}).get("id", ""))
-        # ESSID extends the hotspot identity but RF self-only uses bare ID.
-        if len(owner_id) == 8 and int(owner_id) > 9999999:
-            owner_id = owner_id[:-1]
-        ids.add(owner_id)
+        encoded_id = data.get("General", {}).get("id", "").strip()
+        if not re.fullmatch(r"[0-9]{6,9}", encoded_id) or int(encoded_id) == 0:
+            raise AccessError("invalid_owner_dmr_id")
+        # Upstream strips 1 or 2 ESSID digits according to configured ID length.
+        owner_id = (encoded_id[:-2] if len(encoded_id) == 9 else
+                    encoded_id[:-1] if len(encoded_id) == 8 else encoded_id)
+        ids.add(normalize_id(owner_id))
     if "D-Star" in active:
         calls.add(normalize_call(data.get("General", {}).get("callsign", "")))
     # Require all expected sections to exist before writing anything.
