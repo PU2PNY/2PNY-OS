@@ -1,0 +1,94 @@
+name: PU2PNY-OS 5.00.003 ARM32 ARM64 physical test candidate
+on:
+  push:
+    branches: [fix/5.00.003-display-protocol-reboot]
+    paths:
+      - 'runtime/display/**'
+      - 'ci/build-5.00.003.sh'
+      - 'ci/patch-image-5.00.003.sh'
+      - 'ci/test-5.00.002-display.py'
+      - '.github/workflows/5.00.003-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-5.00.003-release
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scope and source tests
+        run: |
+          set -euo pipefail
+          bash -n ci/build-5.00.003.sh ci/patch-image-5.00.003.sh
+          python3 -m py_compile runtime/display/apply.py
+          python3 ci/test-5.00.002-display.py
+          git diff --check
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm32
+            sha256: 9189df04882eff46a2824e5af6a367545edc21ae6f1714bac5042537714f5f12
+          - arch: arm64
+            sha256: f14e952df5396cc04f30feefcc6c0485f54be3c78fcb07f887a5bb06178e4271
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install image tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Build image with full-content scope verification
+        run: bash ci/build-5.00.003.sh '${{ matrix.arch }}' '${{ matrix.sha256 }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-5.00.003-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            PU2PNY-OS-5.00.003-${{ matrix.arch }}.img.xz
+            PU2PNY-OS-5.00.003-${{ matrix.arch }}.img.xz.sha256
+            BUILD-INFO-${{ matrix.arch }}.txt
+            BASELINE-MANIFEST-${{ matrix.arch }}.txt
+            IMAGE-MANIFEST-${{ matrix.arch }}.txt
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-5.00.003-*
+          merge-multiple: true
+      - name: Validate both architectures before publication
+        run: |
+          set -euo pipefail
+          for arch in arm32 arm64; do
+            test -s "PU2PNY-OS-5.00.003-$arch.img.xz"
+            xz -t "PU2PNY-OS-5.00.003-$arch.img.xz"
+            sha256sum -c "PU2PNY-OS-5.00.003-$arch.img.xz.sha256"
+            grep -Fq "source_commit=$GITHUB_SHA" "BUILD-INFO-$arch.txt"
+            grep -Fq 'version=5.00.003' "BUILD-INFO-$arch.txt"
+          done
+      - name: Publish pre-release only if all checks pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS 5.00.003 — ALPHA / candidata a teste físico, não produção.
+          Fonte: $GITHUB_SHA
+          Base: v5.00.002 ARM32 e ARM64 imutáveis, checksums verificados.
+          Ajustes mínimos: separação OLED/Nextion, preservação do layout salvo, habilitação da recuperação do último perfil comprovado e reconciliação do display no boot.
+          Não altera binários de RF, gateway, rede, HMI/TFT nem firmware da MMDVM.
+          SW/CI: validação de integridade e escopo do filesystem. HW: pendente. Retestar RF, protocolos, OLED e Nextion.
+          EOF
+          gh release create v5.00.003 PU2PNY-OS-5.00.003-*.img.xz* BUILD-INFO-*.txt BASELINE-MANIFEST-*.txt IMAGE-MANIFEST-*.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS 5.00.003 ARM32 ARM64 — Alpha HW Test' --notes-file release-notes.txt --prerelease
+          gh release view v5.00.003 --repo "$GH_REPO" --json tagName,targetCommitish,assets
