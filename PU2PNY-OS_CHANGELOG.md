@@ -1,3 +1,8 @@
+## 2026-10-22 — v5.00.003 ARM32 + ARM64 publicados como ALPHA
+Build/release CI `39852498690` PASS. Imagens ARM32/ARM64, manifestos completos de filesystem e checksums SHA256 publicados na tag imutável `v5.00.003` (fonte `b05cecba510534c6ae98ab3eb9dfc93e2523a5b6`). A primeira tentativa CI detectou escrita de `__pycache__` no filesystem; teste de sintaxe corrigido para compilação apenas em memória; segunda execução passou. Alterações limitadas a gerenciamento de display e habilitação/retry segura de recuperação de perfil comprovado. Não foi feita validação HW; firmware HMI/MMDVM não modificado.
+
+---
+
 ## 2026-10-22 — REL-5.00.003: correção boot/protocolos/display + construção de imagens
 - Identificada via montagem read-only da imagem ARM64 a presença de `2pny-profile-autostart`, mas sem symlink habilitado em `multi-user.target.wants`, mecanismo já validava último perfil comprovado, uplink, MMDVM, gateway.
 - Imagem overlay habilita serviço original e adiciona timer guardado contra troca de gateway já ativo. Não altera binários RF nem lógica de gateways.
