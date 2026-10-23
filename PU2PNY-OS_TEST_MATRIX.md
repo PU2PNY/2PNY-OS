@@ -1,3 +1,14 @@
+## OLED-ONLY — 2026-10-23
+| Caso | Resultado | Nível |
+|---|---|---|
+| BASE-500003 | Todo o restante da 5.00.003 aprovado pelo usuário, preservar sem alteração | HW / RELATO |
+| OLED-500004-001 | OLED liga na escolha correta, sem confundir com Nextion | FALHA REPORTADA / INVESTIGAR | HW |
+| OLED-500004-002 | Identificar modelo real, endereço/barramento I2C e serviço de saída | NÃO VERIFICADO | HW |
+| OLED-500004-003 | Confirmar boot/reboot e conteúdo RX/TX sem regressão | PENDENTE | HW |
+| SCOPE-500004 | Diff restrito a OLED e diagnóstico necessário | PENDENTE | SW |
+
+---
+
 ## REL-5.00.003 — critérios de liberação e HW
 | Teste | Esperado | Status |
 |---|---|---|
