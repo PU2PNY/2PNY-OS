@@ -1,0 +1,45 @@
+name: PU2PNY 5.00.004 OLED-only forensic inspection
+on:
+  push:
+    branches: [fix/5.00.004-oled-only]
+    paths: ['.github/workflows/5.00.004-oled-inspect.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read 5.00.003 immutable image, inspect OLED software without changing RF
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"; trap 'sudo umount "$tmp/root" 2>/dev/null || :; test -z "${loop:-}" || sudo losetup -d "$loop"; rm -rf "$tmp"' EXIT
+          curl -fL --retry 3 'https://github.com/PU2PNY/2PNY-OS/releases/download/v5.00.003/PU2PNY-OS-5.00.003-arm64.img.xz' -o "$tmp/image.xz"
+          printf '%s  %s\n' '5919d58a25839745a0234bf65dbca14c4d033c74f0ea5e21b5e5c9015e65b93a' "$tmp/image.xz" | sha256sum -c -
+          xz -dc "$tmp/image.xz" > "$tmp/image.img"
+          loop="$(sudo losetup --find --show --read-only --partscan "$tmp/image.img")"
+          mkdir "$tmp/root"
+          sudo mount -o ro "${loop}p2" "$tmp/root"
+          root="$tmp/root"
+          {
+            echo '=== display legacy policy, OLED only ==='
+            for file in "$root/usr/local/sbin/2pny-display-apply.pre-5.00.002" "$root/usr/local/sbin/2pny-display-apply.pre-5.00.003" "$root/usr/local/sbin/2pny-display-core" "$root/usr/local/sbin/2pny-display-detector"; do
+              echo "FILE ${file#$root}"
+              if test -f "$file"; then
+                sudo grep -nEi -C 5 'oled|ssd1306|sh1106|i2c|display-core|active|enabled|override' "$file" | head -180 || :
+              fi
+            done
+            echo '=== display systemd config ==='
+            for file in "$root/etc/systemd/system/2pny-display-core.service" "$root/etc/systemd/system/2pny-display-detect.service" "$root/etc/systemd/system/2pny-display-reconcile.service"; do
+              echo "FILE ${file#$root}"
+              test ! -f "$file" || cat "$file"
+            done
+            echo '=== I2C and display packages installed ==='
+            sudo grep -Ei '^(Package): (python3-(luma|smbus)|i2c-tools|libi2c|python3-pil)' "$root/var/lib/dpkg/status" || :
+          } | tee oled-inspection.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oled-only-readonly-inspection
+          path: oled-inspection.txt
