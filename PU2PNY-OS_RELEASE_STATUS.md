@@ -1,3 +1,8 @@
+## 2026-10-23 — OLED-ONLY / BASELINE 5.00.003 CONGELADA
+Relato de teste real: **somente OLED não funciona; todo o restante foi aprovado pelo usuário e está congelado**. Fonte protegida: tag `v5.00.003`, commit `b05cecba510534c6ae98ab3eb9dfc93e2523a5b6`, imagens ARM32/ARM64 e SHA da release. Branch isolada `fix/5.00.004-oled-only`. O print de Display mostra tipo `nextion_mmdvm` e opção Nextion desmarcada; não há diagnóstico específico de OLED nem confirmação de driver I2C. **Ainda não existe correção OLED validada, nem imagem 5.00.004.** Não tocar protocolos, Nextion, display via modem, boot geral, RF, rede, painel fora da área estritamente OLED, HMI/TFT e demais comportamentos aprovados.
+
+---
+
 ## REL-5.00.003 — 2026-10-22, build condicionado ao CI
 Branch `fix/5.00.003-display-protocol-reboot`. Código de correção e pipeline ARM32/ARM64 adicionados em `ci/patch-image-5.00.003.sh`, `ci/build-5.00.003.sh` e `.github/workflows/5.00.003-release.yml`. Recuperação conservadora de protocolo com `2pny-profile-autostart` e timer que não intervém em gateway ativo. Reconciliação display no reboot com configuração salva. **Estado:** validação CI e imagens a verificar; físico OLED, Nextion e protocolo ainda PENDENTE. Sem atribuir PASS antes de evidências.
 
