@@ -1,3 +1,8 @@
+## 2026-10-23 — congelamento explícito da baseline 5.00.003
+Usuário confirma que todo o sistema **exceto OLED** funciona e determina congelamento integral. Branch de trabalho `fix/5.00.004-oled-only` criada diretamente da tag publicada `v5.00.003`. Análise do print: `nextion_mmdvm`, Nextion desmarcada, estado “Display desativado pelo usuário”; painel OLED/LCD apresenta texto de compatibilidade, não um estado de I2C/driver validado. Evitar tratar a foto como prova de modelo OLED ou de endereço I2C. Nenhuma correção OLED nem imagem anunciada antes de validação.
+
+---
+
 ## 2026-10-22 — REL-5.00.003: correção boot/protocolos/display + construção de imagens
 - Identificada via montagem read-only da imagem ARM64 a presença de `2pny-profile-autostart`, mas sem symlink habilitado em `multi-user.target.wants`, mecanismo já validava último perfil comprovado, uplink, MMDVM, gateway.
 - Imagem overlay habilita serviço original e adiciona timer guardado contra troca de gateway já ativo. Não altera binários RF nem lógica de gateways.
