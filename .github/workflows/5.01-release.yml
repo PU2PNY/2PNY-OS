@@ -1,0 +1,102 @@
+name: PU2PNY v5.01 ARM32 ARM64 AP split release
+on:
+  push:
+    branches: [fix/v5.01-ap-display]
+    paths:
+      - 'ci/build-5.01.sh'
+      - 'ci/patch-ap-v5.01.py'
+      - 'ci/patch-image-5.01.sh'
+      - '.github/workflows/5.01-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-v5.01-release
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source, syntax, and SSID-only mock validation
+        run: |
+          set -euo pipefail
+          bash -n ci/build-5.01.sh ci/patch-image-5.01.sh
+          python3 -m py_compile ci/patch-ap-v5.01.py
+          python3 - <<'PY'
+          import pathlib,subprocess,tempfile
+          for arch in ('arm32','arm64'):
+              with tempfile.TemporaryDirectory() as tmp:
+                  f=pathlib.Path(tmp)/'usr/share/2pny/network/hostapd.template'
+                  f.parent.mkdir(parents=True)
+                  f.write_bytes(b'interface=@IFACE@\nssid=PU2PNY-OS\nwpa=2\n')
+                  subprocess.run(['python3','ci/patch-ap-v5.01.py',tmp,arch],check=True)
+                  assert f.read_bytes()==f'interface=@IFACE@\nssid=pu2pny-{arch[3:]}\nwpa=2\n'.encode()
+          PY
+          git diff --check
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 115
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm32
+            sha256: f9d254e791ce5967c16c2af1e7dbbc37c979a268099efc5f93cdb122fbdc17f1
+          - arch: arm64
+            sha256: 79159eb803a6dc51f552e7fd72181733ae9379f75934897d2657e30581f5c8ce
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install image tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Verify scope, filesystem, build, and checksum
+        run: bash ci/build-5.01.sh '${{ matrix.arch }}' '${{ matrix.sha256 }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-v5.01-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            pu2pny-v5.01-${{ matrix.arch }}.img.xz
+            pu2pny-v5.01-${{ matrix.arch }}.img.xz.sha256
+            BUILD-INFO-${{ matrix.arch }}.txt
+            BASELINE-MANIFEST-${{ matrix.arch }}.txt
+            IMAGE-MANIFEST-${{ matrix.arch }}.txt
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-v5.01-*
+          merge-multiple: true
+      - name: Validate both architectures
+        run: |
+          set -euo pipefail
+          for arch in arm32 arm64; do
+            test -s "pu2pny-v5.01-$arch.img.xz"
+            xz -t "pu2pny-v5.01-$arch.img.xz"
+            sha256sum -c "pu2pny-v5.01-$arch.img.xz.sha256"
+            grep -Fq "source_commit=$GITHUB_SHA" "BUILD-INFO-$arch.txt"
+            grep -Fq 'version=5.01.000' "BUILD-INFO-$arch.txt"
+          done
+      - name: Publish candidacy (only when validated)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS v5.01 — ALPHA AP name split (test candidate, not production).
+          Source: $GITHUB_SHA
+          Base: immutable v5.00.004 ARM32 and ARM64 images, verified SHA-256.
+          AP ARM32: pu2pny-32. AP ARM64: pu2pny-64.
+          Only hostapd SSID template and version identity changed, verified by entire-filesystem allowlist.
+          RF, MMDVMHost, gateway, Wi-Fi connectivity logic, ON7LDS, OLED and display binaries preserved.
+          Nextion data, display font clipping and power stability are NOT claimed fixed. Those require further diagnostics and HW tests.
+          EOF
+          gh release create pu2pny-v5.01 pu2pny-v5.01-*.img.xz* BUILD-INFO-*.txt BASELINE-MANIFEST-*.txt IMAGE-MANIFEST-*.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS v5.01 — ARM32 ARM64 AP split Alpha' --notes-file release-notes.txt --prerelease
+          gh release view pu2pny-v5.01 --repo "$GH_REPO" --json tagName,targetCommitish,assets
