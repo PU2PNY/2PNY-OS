@@ -1,0 +1,95 @@
+name: PU2PNY-OS 5.00.004 ARM32 ARM64 physical test candidate
+on:
+  push:
+    branches: [fix/5.00.004-display-protocol-reboot]
+    paths:
+      - 'runtime/diagnostics/**'
+      - 'ci/build-5.00.004.sh'
+      - 'ci/patch-image-5.00.004.sh'
+      - 'runtime/diagnostics/**'
+      - '.github/workflows/5.00.004-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-5.00.004-release
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scope and source tests
+        run: |
+          set -euo pipefail
+          bash -n ci/build-5.00.004.sh ci/patch-image-5.00.004.sh
+          bash -n runtime/diagnostics/2pny-audit-v5.sh
+          bash runtime/diagnostics/2pny-audit-v5.sh >/tmp/audit-output.txt
+          grep -Fq 'No configuration changes were made' /tmp/audit-output.txt
+          git diff --check
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm32
+            sha256: 5bb82ddd11f582d6a33475255f3fd831acd7d785fb62ba0f6e750e8abae21e86
+          - arch: arm64
+            sha256: 5919d58a25839745a0234bf65dbca14c4d033c74f0ea5e21b5e5c9015e65b93a
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install image tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Build image with full-content scope verification
+        run: bash ci/build-5.00.004.sh '${{ matrix.arch }}' '${{ matrix.sha256 }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-5.00.004-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            PU2PNY-OS-5.00.004-${{ matrix.arch }}.img.xz
+            PU2PNY-OS-5.00.004-${{ matrix.arch }}.img.xz.sha256
+            BUILD-INFO-${{ matrix.arch }}.txt
+            BASELINE-MANIFEST-${{ matrix.arch }}.txt
+            IMAGE-MANIFEST-${{ matrix.arch }}.txt
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-5.00.004-*
+          merge-multiple: true
+      - name: Validate both architectures before publication
+        run: |
+          set -euo pipefail
+          for arch in arm32 arm64; do
+            test -s "PU2PNY-OS-5.00.004-$arch.img.xz"
+            xz -t "PU2PNY-OS-5.00.004-$arch.img.xz"
+            sha256sum -c "PU2PNY-OS-5.00.004-$arch.img.xz.sha256"
+            grep -Fq "source_commit=$GITHUB_SHA" "BUILD-INFO-$arch.txt"
+            grep -Fq 'version=5.00.004' "BUILD-INFO-$arch.txt"
+          done
+      - name: Publish pre-release only if all checks pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS 5.00.004 — ALPHA / candidata a teste físico, não produção.
+          Fonte: $GITHUB_SHA
+          Base: v5.00.003 ARM32 e ARM64 imutáveis, checksums verificados.
+          Ajuste isolado: utilitário 2pny-audit de diagnóstico somente leitura. Preserva os componentes já implementados de display, protocolos, rede e RF da v5.00.003. NÃO declara corrigida a inatividade nem exibição OLED/Nextion.
+          Não altera lógica RF, gateway, rede, HMI/TFT ou firmware da MMDVM. A identificação embutida no 2pnyd muda apenas a string da versão.
+          SW/CI: integridade e diff restrito do filesystem. HW: pendente. Necessário diagnóstico em hardware e teste de RF, protocolos, OLED e Nextion.
+          EOF
+          gh release create v5.00.004 PU2PNY-OS-5.00.004-*.img.xz* BUILD-INFO-*.txt BASELINE-MANIFEST-*.txt IMAGE-MANIFEST-*.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS v5.00 (5.00.004) ARM32 ARM64 — Alpha HW Test' --notes-file release-notes.txt --prerelease
+          gh release view v5.00.004 --repo "$GH_REPO" --json tagName,targetCommitish,assets
