@@ -5,6 +5,7 @@ import json
 import select
 import socket
 import subprocess
+import time
 from pathlib import Path
 from mqtt_link import Link
 
@@ -43,6 +44,28 @@ def addresses():
     return {'Addresses': out}
 
 
+def cpu_metadata(thermal=Path('/sys/class/thermal/thermal_zone0/temp'),
+                 frequency=Path('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq'),
+                 load=Path('/proc/loadavg')):
+    """MMDVM-Info compatible CPU metrics from real kernel state; never estimates."""
+    result = {}
+    for path, key, scale in ((thermal, 'temperature', 1000.0),
+                              (frequency, 'frequency', 1000.0)):
+        try:
+            value = int(path.read_text().strip())
+            if value > 0:
+                result[key] = round(value / scale, 3)
+        except (OSError, ValueError):
+            pass
+    try:
+        avg = float(load.read_text().split()[0])
+        if 0 <= avg < 100000:
+            result['load'] = avg
+    except (OSError, ValueError, IndexError):
+        pass
+    return result
+
+
 def main():
     cp = host_config()
     section = 'MQTT'
@@ -60,7 +83,13 @@ def main():
         udp.bind(('127.0.0.1', RX_PORT))
         topics.append(name+'/display-out')
     link.subscribe(topics)
+    cpu_deadline = 0.0
     while True:
+        if time.monotonic() >= cpu_deadline:
+            cpu = cpu_metadata()
+            if cpu:
+                link.publish(INFO+'/json', json.dumps({'CPU': cpu}, separators=(',', ':')))
+            cpu_deadline = time.monotonic() + 60.0
         ready, _, _ = select.select([link.sock] + ([udp] if udp else []), [], [], 1)
         if udp and udp in ready:
             data, peer = udp.recvfrom(4096)
