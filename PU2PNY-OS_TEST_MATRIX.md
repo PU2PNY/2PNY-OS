@@ -1,3 +1,13 @@
+## v5.01 / v5.01.1 — matriz específica
+- AP ARM32 `pu2pny-32`, ARM64 `pu2pny-64`: SW/CI PASS na release `pu2pny-v5.01` run 40419717747; SSID transmitido em HW PENDENTE.
+- Display Raspberry CPU MQTT: SW fonte PASS run 40420625670; build v5.01.1 / teste físico PENDENTE.
+- ON7LDS perfil salvo: teste lógico PASS, tela após boot/reconexão HW PENDENTE.
+- OLED/HD44780 e fontes cortadas: HW FAIL reportado; correção universal NÃO VERIFICADA, modelo/dimensões exigidos.
+- Energia: decodificação do firmware testada SW, subtensão física PENDENTE; Pi Zero pode retornar NÃO VERIFICADO.
+- RF, DMR simplex, D-Star simplex, YSF, Wi-Fi AP/STA, gateways: baseline não reescrita; novos testes HW de regressão PENDENTES.
+
+---
+
 ## REL-5.00.003 — critérios de liberação e HW
 | Teste | Esperado | Status |
 |---|---|---|
