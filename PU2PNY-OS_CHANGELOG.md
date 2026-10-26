@@ -1,3 +1,11 @@
+## 2026-10-26 — PU2PNY-OS v5.01
+- Primeiro alterado exclusivamente o AP hostapd por arquitetura: `pu2pny-32`/`pu2pny-64`; release `pu2pny-v5.01` ARM32/ARM64 SW/CI aprovado.
+- Após ajuste isolado do AP, preparado hotfix de informações da Raspberry e recuperação de perfil ON7LDS salvo, preservando binários RF/host e HMI. MMDVM-Info upstream confirma formato `CPU` com temperatura, frequência, carga; publicação leve de 60 s.
+- Adicionada leitura diagnóstica de `get_throttled` sem ação sobre clock/power. Não confundir diagnóstico com solução de fonte de alimentação ruim.
+- Cortes visuais de fonte de outras telas continuam pendentes de classificação/modelo/HMI e teste real; não alterar um renderer para "todas" as telas sem evidência.
+
+---
+
 ## 2026-10-22 — REL-5.00.003: correção boot/protocolos/display + construção de imagens
 - Identificada via montagem read-only da imagem ARM64 a presença de `2pny-profile-autostart`, mas sem symlink habilitado em `multi-user.target.wants`, mecanismo já validava último perfil comprovado, uplink, MMDVM, gateway.
 - Imagem overlay habilita serviço original e adiciona timer guardado contra troca de gateway já ativo. Não altera binários RF nem lógica de gateways.
