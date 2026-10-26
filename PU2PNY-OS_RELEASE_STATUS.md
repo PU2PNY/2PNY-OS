@@ -1,3 +1,8 @@
+### REL-5.00.004 — PUBLICADA, candidata HW (2026-10-26)
+Release https://github.com/PU2PNY/2PNY-OS/releases/tag/v5.00.004 ; run CI https://github.com/PU2PNY/2PNY-OS/actions/runs/40407954211 PASS testes, builds ARM32/ARM64, XZ, SHA, manifest/allowlist e publicação. Commit da imagem/tag: `a514f568d6ca8888b23ba453ecc2d8c5bc01bcdc`. ARM32 `f9d254e791ce5967c16c2af1e7dbbc37c979a268099efc5f93cdb122fbdc17f1` (684057448 bytes); ARM64 `79159eb803a6dc51f552e7fd72181733ae9379f75934897d2657e30581f5c8ce` (599881984 bytes). Escopo: auditoria somente leitura, alteração de versão. Hardware/RF/OLED/Nextion/inatividade NÃO VERIFICADOS na nova candidata; nenhum patch especulativo aplicado.
+
+---
+
 ### 5.00.004 / PU2PNY-OS v5.00 — EM TESTE (2026-10-26)
 Branch `fix/v5.00-observability-safe`, baseada no commit/tag 5.00.003 `b05cecba510534c6ae98ab3eb9dfc93e2523a5b6`. Código novo: `runtime/diagnostics/2pny-audit-v5.sh`; overlay somente leitura e revisão de versão; gate de manifest diff. CI iniciado: https://github.com/PU2PNY/2PNY-OS/actions/runs/40407954211. Nova imagem: NÃO ENTREGUE até build, release, XZ/SHA confirmados. Falhas de ócio, OLED e Nextion NÃO são declaradas corrigidas. Teste HW pendente. Não alterar baseline 5.00.002 ON7LDS.
 
