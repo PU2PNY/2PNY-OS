@@ -1,3 +1,8 @@
+### 2026-10-26 — release v5.00.004 publicada
+PRERELEASE intitulada PU2PNY-OS v5.00, com revisão 5.00.004. Builds ARM32 e ARM64 concluídos com CI PASS, arquivos publicados com SHA-256; imagens adicionam apenas utilitário de diagnóstico read-only e identificação técnica da revisão. Não foram alterados os runtimes/protocolos/display da base v5.00.003; melhorias de inatividade e telas permanecem hipóteses, pendentes de captura HW.
+
+---
+
 ### 2026-10-26 — candidata PU2PNY-OS v5.00 / revisão 5.00.004
 Adicionada ferramenta opcional `2pny-audit` somente leitura, para diagnóstico de estados antes/depois de falha, sem abrir modem nem mudar configurações. Implementado pipeline ARM32/ARM64 a partir das imagens imutáveis v5.00.003 e verificação de escopo restrito por manifesto completo. Sem implementação dos patches especulativos `usbcore.autosuspend`, `RFModeHang`, timers, `SIGHUP`, compilação `-march=native` ou outros controladores de configuração. Release/resultado da imagem dependem do CI. Baseline ON7LDS protegida.
 
