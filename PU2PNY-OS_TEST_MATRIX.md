@@ -1,3 +1,14 @@
+## REL-5.01.1 — Resultado SW/CI e pendências
+- Testes fonte CPU, ON7LDS profile, power: PASS, run 40420926226.
+- Builds, diff por manifesto, XZ e SHA ARM32/ARM64: PASS, release pu2pny-v5.01.1.
+- AP por arquitetura: SSID hostapd validado SW; emissão RF do Wi-Fi HW PENDENTE.
+- Publicação MQTT CPU real: SW contrato PASS; exibição Nextion/OLED HW PENDENTE.
+- Fonte/cut-off em telas diversas: HW ainda FAIL/PENDENTE conforme relatos; correção universal NÃO ENTREGUE.
+- Energia: ferramenta read-only disponível; falha elétrica real NÃO CORRIGIDA por software.
+- Proteção do caminho RF: binário MMDVMHost/gateways/MMDVM firmware não alterados; regressão física permanece PENDENTE.
+
+---
+
 ## v5.01 / v5.01.1 — matriz específica
 - AP ARM32 `pu2pny-32`, ARM64 `pu2pny-64`: SW/CI PASS na release `pu2pny-v5.01` run 40419717747; SSID transmitido em HW PENDENTE.
 - Display Raspberry CPU MQTT: SW fonte PASS run 40420625670; build v5.01.1 / teste físico PENDENTE.
