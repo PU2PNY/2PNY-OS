@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ARCH="${1:?arm32 or arm64}"
-BASE_SHA="${2:?published v5.01.000 sha256}"
+BASE_SHA="${2:?published v5.00.004 sha256}"
 [[ "$ARCH" == arm32 || "$ARCH" == arm64 ]] || exit 2
 [[ "$BASE_SHA" =~ ^[a-f0-9]{64}$ ]] || exit 2
 WORK="$(mktemp -d)"
@@ -48,7 +48,7 @@ for item in ('./etc/2pny/version','./usr/share/2pny/network/hostapd.template'):
 print('FULL_MANIFEST_SCOPE_PASS',len(changed))
 PY
 grep -Fxq "ssid=pu2pny-${ARCH#arm}" "$ROOT/usr/share/2pny/network/hostapd.template"
-[[ "$(cat "$ROOT/etc/2pny/version")" == "5.00.004" ]]
+[[ "$(cat "$ROOT/etc/2pny/version")" == "5.01.000" ]]
 test -s "$ROOT/usr/share/2pny/network/hostapd.template"
 sync
 sudo umount "$ROOT"
@@ -59,12 +59,12 @@ cmp "$WORK/after" "$WORK/readonly"
 sudo umount "$ROOT"
 sudo losetup -d "$LOOP"
 LOOP=''
-OUT="PU2PNY-OS-5.00.004-$ARCH.img.xz"
+OUT="pu2pny-v5.01-$ARCH.img.xz"
 xz -T2 -6 -c "$WORK/image.img" > "$OUT"
 test -s "$OUT"
 xz -t "$OUT"
 sha256sum "$OUT" > "$OUT.sha256"
-printf 'version=5.00.004\nbase_version=5.00.004\nbase_sha256=%s\nsource_commit=%s\narch=%s\nvalidation=SW_CI\nhw=NOT_VERIFIED\n' "$BASE_SHA" "$GITHUB_SHA" "$ARCH" > "BUILD-INFO-$ARCH.txt"
+printf 'version=5.01.000\nbase_version=5.00.004\nbase_sha256=%s\nsource_commit=%s\narch=%s\nvalidation=SW_CI\nhw=NOT_VERIFIED\n' "$BASE_SHA" "$GITHUB_SHA" "$ARCH" > "BUILD-INFO-$ARCH.txt"
 cat "$OUT.sha256" >> "BUILD-INFO-$ARCH.txt"
 cp "$WORK/before" "BASELINE-MANIFEST-$ARCH.txt"
 cp "$WORK/after" "IMAGE-MANIFEST-$ARCH.txt"
