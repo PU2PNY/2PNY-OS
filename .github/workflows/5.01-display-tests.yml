@@ -1,0 +1,25 @@
+name: PU2PNY v5.01 display/power isolated software tests
+on:
+  push:
+    branches: [fix/v5.01-display-info]
+    paths:
+      - 'runtime/display/**'
+      - 'runtime/diagnostics/2pny-power-status.py'
+      - 'ci/test-*v5.01.py'
+      - '.github/workflows/5.01-display-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax, power and display compatibility regression
+        run: |
+          set -euo pipefail
+          python3 -m py_compile runtime/display/apply.py runtime/display/adapter.py runtime/diagnostics/2pny-power-status.py
+          python3 ci/test-display-info-v5.01.py
+          python3 ci/test-display-profile-v5.01.py
+          python3 ci/test-power-v5.01.py
+          git diff --check
