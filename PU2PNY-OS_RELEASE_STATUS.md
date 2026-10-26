@@ -1,3 +1,13 @@
+## PU2PNY-OS v5.01.1 — PUBLICADA (ALPHA HW PENDENTE)
+Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.01.1
+CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/40420926226 — tests, build ARM32/ARM64, XZ/SHA e publish PASS.
+Commit da imagem/tag: `34d4ef7868d101144d25d4292ef6f1a917e38e1f`.
+ARM32 `pu2pny-v5.01.1-arm32.img.xz` 684040152 bytes, SHA-256 `5450a45fadd99aa95d97bf3d61b2569dffa49fdf71d29ceef5b6cf7d52e6c549`.
+ARM64 `pu2pny-v5.01.1-arm64.img.xz` 599866160 bytes, SHA-256 `b33ae8b80b24dfc3c7a5a48c519ffa3f33eee7a7952cb13f2a8cfd10c27b0fb1`.
+Base AP v5.01 preservada; CPU via MQTT, recuperação ON7LDS salvo e inspeção de subtensão acrescentadas. **Não declarar resolvidos os dados RX/TX de todos os displays, o recorte de fontes nem a alimentação real** sem testes HW por modelo. Produção NÃO APROVADA.
+
+---
+
 ## v5.01 — AP SEPARADO PUBLICADO; v5.01.1 EM BUILD
 - Release `pu2pny-v5.01` confirmada: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.01 ; source `33dbd5ea9c65347983a5734320a473d95088ec4c`; ARM32 SHA `be155fd7756088e15c88b1b877c1cf4fc4a9c67ad2c0d963b917dff88895ca84`, ARM64 SHA `76926b7b6ee6dd6003a0ae3fda27fae6a3ef9d3efe24a2d472e2f370107a7a27`.
 - Ajuste adicional v5.01.1: CPU info MQTT, persistência explícita ON7LDS, comando opcional de diagnóstico de subtensão. Run https://github.com/PU2PNY/2PNY-OS/actions/runs/40420926226. Sem HW e sem declaração de correção completa dos displays.
