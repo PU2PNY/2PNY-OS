@@ -1,3 +1,8 @@
+### 2026-10-26 — candidata PU2PNY-OS v5.00 / revisão 5.00.004
+Adicionada ferramenta opcional `2pny-audit` somente leitura, para diagnóstico de estados antes/depois de falha, sem abrir modem nem mudar configurações. Implementado pipeline ARM32/ARM64 a partir das imagens imutáveis v5.00.003 e verificação de escopo restrito por manifesto completo. Sem implementação dos patches especulativos `usbcore.autosuspend`, `RFModeHang`, timers, `SIGHUP`, compilação `-march=native` ou outros controladores de configuração. Release/resultado da imagem dependem do CI. Baseline ON7LDS protegida.
+
+---
+
 ## 2026-10-22 — REL-5.00.003: correção boot/protocolos/display + construção de imagens
 - Identificada via montagem read-only da imagem ARM64 a presença de `2pny-profile-autostart`, mas sem symlink habilitado em `multi-user.target.wants`, mecanismo já validava último perfil comprovado, uplink, MMDVM, gateway.
 - Imagem overlay habilita serviço original e adiciona timer guardado contra troca de gateway já ativo. Não altera binários RF nem lógica de gateways.
