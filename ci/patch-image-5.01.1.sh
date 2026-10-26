@@ -10,7 +10,12 @@ test -s "$DEST"
 cp -a "$DEST" "$DEST.pre-5.01"
 install -m 0755 "$REPO/runtime/display/adapter.py" "$DEST"
 install -m 0755 "$REPO/runtime/diagnostics/2pny-power-status.py" "$ROOT/usr/local/sbin/2pny-power-status"
-python3 -m py_compile "$DEST" "$ROOT/usr/local/sbin/2pny-power-status"
+python3 - "$DEST" "$ROOT/usr/local/sbin/2pny-power-status" <<'PY'
+from pathlib import Path
+import sys
+for filename in sys.argv[1:]:
+    compile(Path(filename).read_bytes(), filename, 'exec')
+PY
 python3 - "$ROOT" <<'PY'
 from pathlib import Path
 import sys
