@@ -1,3 +1,13 @@
+## NET-5.01 / DISPLAY-5.01 — 2026-10-26
+- Identidade pública da versão: `PU2PNY-OS v5.01`; técnica v5.01.000/v5.01.001.
+- AP ARM32: `pu2pny-32`; ARM64: `pu2pny-64`, via hostapd template da imagem. Preservar chave, AP recovery, IP, mDNS e DHCP.
+- DISPLAY-5.01: manter ON7LDS HW aprovado, recuperar somente perfil Nextion via modem efetivamente escolhido e persistido quando retorno físico não estiver disponível. Nunca declarar detecção física a partir do perfil salvo. Tela OLED detectada prevalece.
+- Informações Raspberry: publicar apenas temperatura/frequência/carga reais, em `InfoMQTTName/json` no formato `CPU` do MMDVM-Info, 60 s. Sem valores reais, omitir.
+- POWER-5.01: diagnosticar flag throttled/undervoltage sem alterar energia, kernel ou RF. Zero original pode não expor sensor.
+- Layout/fonte HMI/OLED/LCD: não mudar automaticamente tamanho sem saber display e resolução. Nextion HMI com fontes fixas só corrigível em HMI/layout compatível ou renderer aprovado e validado em HW.
+
+---
+
 ## REL-5.00.003 — restauração segura e candidato ARM32/ARM64
 - Persistência de protocolo: ativar no boot o serviço existente `2pny-profile-autostart`, que aceita somente perfil comprovado e exige MMDVM/uplink válidos; retentar com serviço guardião somente quando nenhum gateway estiver ativo.
 - Display: preservar NextionDriver ON7LDS aprovado, aplicar perfil salvo no reboot quando houver `display-settings.json`, manter UART exclusiva MMDVM e não instalar HMI/TFT automaticamente.
