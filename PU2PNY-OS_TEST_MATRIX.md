@@ -1,3 +1,13 @@
+### DIAG-500004 — verificação da candidata v5.00
+- DOC: script sem alterações em rádio/rede/display, opera sem abertura da UART (inspeção de código).
+- SW: sintaxe e execução somente leitura no runner CI (ver resultado do run 40407954211).
+- SW imagem: gate de filesystem com allowlist de `etc/2pny/version`, string de versão de `2pnyd` e utilitário `2pny-audit`; XZ e SHA por arquitetura: PENDENTE até jobs concluídos.
+- VPS: NÃO VERIFICADO.
+- HW: inatividade, RF, gateways, OLED, Nextion, Wi-Fi — PENDENTE.
+- Critério de bloqueio: qualquer diff fora da allowlist; sem evidência HW não declarar correção funcional.
+
+---
+
 ## REL-5.00.003 — critérios de liberação e HW
 | Teste | Esperado | Status |
 |---|---|---|
