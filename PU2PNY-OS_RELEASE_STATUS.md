@@ -1,3 +1,8 @@
+### 5.00.004 / PU2PNY-OS v5.00 — EM TESTE (2026-10-26)
+Branch `fix/v5.00-observability-safe`, baseada no commit/tag 5.00.003 `b05cecba510534c6ae98ab3eb9dfc93e2523a5b6`. Código novo: `runtime/diagnostics/2pny-audit-v5.sh`; overlay somente leitura e revisão de versão; gate de manifest diff. CI iniciado: https://github.com/PU2PNY/2PNY-OS/actions/runs/40407954211. Nova imagem: NÃO ENTREGUE até build, release, XZ/SHA confirmados. Falhas de ócio, OLED e Nextion NÃO são declaradas corrigidas. Teste HW pendente. Não alterar baseline 5.00.002 ON7LDS.
+
+---
+
 ## REL-5.00.003 — 2026-10-22, build condicionado ao CI
 Branch `fix/5.00.003-display-protocol-reboot`. Código de correção e pipeline ARM32/ARM64 adicionados em `ci/patch-image-5.00.003.sh`, `ci/build-5.00.003.sh` e `.github/workflows/5.00.003-release.yml`. Recuperação conservadora de protocolo com `2pny-profile-autostart` e timer que não intervém em gateway ativo. Reconciliação display no reboot com configuração salva. **Estado:** validação CI e imagens a verificar; físico OLED, Nextion e protocolo ainda PENDENTE. Sem atribuir PASS antes de evidências.
 
