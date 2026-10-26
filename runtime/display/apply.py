@@ -109,10 +109,27 @@ def make_config(host, ov, device, kind):
     return cp, driver, on7, layout, port
 
 
+def select_persisted_modem_display(d, saved, override):
+    """Honor an explicitly saved MMDVM-attached ON7LDS profile, never invent hardware."""
+    detected = d.get('class', '')
+    if detected in ('nextion', 'nextion_mmdvm'):
+        return d
+    # Never displace an actual OLED/LCD/TFT classification.
+    if detected not in ('', 'unknown', 'none'):
+        return d
+    if override.get('enabled') is False:
+        return d
+    if (saved.get('enabled') is True and saved.get('type') == 'nextion_mmdvm'
+            and saved.get('requested_layout') in (3, 4)):
+        return {'class': 'nextion_mmdvm', 'port': 'modem',
+                'physical_confirmed': False, 'source': 'saved_user_profile'}
+    return d
+
+
 def apply():
     ov = read(OVERRIDE)
     hw = read(HW)
-    d = hw.get('display') or {}
+    d = select_persisted_modem_display(hw.get('display') or {}, read(SETTINGS), ov)
     kind = d.get('class', '')
     if kind not in ('nextion', 'nextion_mmdvm'):
         # A detected modem does NOT imply a Nextion. In particular an I2C OLED
