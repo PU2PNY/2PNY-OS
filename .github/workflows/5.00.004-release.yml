@@ -1,12 +1,11 @@
 name: PU2PNY-OS 5.00.004 ARM32 ARM64 physical test candidate
 on:
   push:
-    branches: [fix/5.00.004-display-protocol-reboot]
+    branches: [fix/v5.00-observability-safe]
     paths:
       - 'runtime/diagnostics/**'
       - 'ci/build-5.00.004.sh'
       - 'ci/patch-image-5.00.004.sh'
-      - 'runtime/diagnostics/**'
       - '.github/workflows/5.00.004-release.yml'
   workflow_dispatch:
 permissions:
