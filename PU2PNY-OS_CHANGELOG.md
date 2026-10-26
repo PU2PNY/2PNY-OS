@@ -1,3 +1,8 @@
+## 2026-10-26 — v5.01.1 publicada
+A partir da v5.01 com AP `pu2pny-32` / `pu2pny-64`, adicionada publicação MQTT de CPU no contrato MMDVM-Info; recuperação de perfil ON7LDS salvo em modem sem confirmação bidirecional (sem alegar detecção); leitura opcional de flags firmware de energia, sem mexer em over_voltage ou power_save. Binários RF/firmware e HMI/TFT preservados. ARM32/ARM64 publicadas com CI verificado. Fontes/HMI e ausência de dados de protocolos continuam aguardando prova física, não marcadas como corrigidas.
+
+---
+
 ## 2026-10-26 — PU2PNY-OS v5.01
 - Primeiro alterado exclusivamente o AP hostapd por arquitetura: `pu2pny-32`/`pu2pny-64`; release `pu2pny-v5.01` ARM32/ARM64 SW/CI aprovado.
 - Após ajuste isolado do AP, preparado hotfix de informações da Raspberry e recuperação de perfil ON7LDS salvo, preservando binários RF/host e HMI. MMDVM-Info upstream confirma formato `CPU` com temperatura, frequência, carga; publicação leve de 60 s.
