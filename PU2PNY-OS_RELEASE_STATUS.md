@@ -1,3 +1,10 @@
+## v5.01 — AP SEPARADO PUBLICADO; v5.01.1 EM BUILD
+- Release `pu2pny-v5.01` confirmada: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.01 ; source `33dbd5ea9c65347983a5734320a473d95088ec4c`; ARM32 SHA `be155fd7756088e15c88b1b877c1cf4fc4a9c67ad2c0d963b917dff88895ca84`, ARM64 SHA `76926b7b6ee6dd6003a0ae3fda27fae6a3ef9d3efe24a2d472e2f370107a7a27`.
+- Ajuste adicional v5.01.1: CPU info MQTT, persistência explícita ON7LDS, comando opcional de diagnóstico de subtensão. Run https://github.com/PU2PNY/2PNY-OS/actions/runs/40420926226. Sem HW e sem declaração de correção completa dos displays.
+- Fonte de verdade para estado da segunda release: CI + API da release. Se build/publicação falhar: NÃO ENTREGUE.
+
+---
+
 ## REL-5.00.003 — 2026-10-22, build condicionado ao CI
 Branch `fix/5.00.003-display-protocol-reboot`. Código de correção e pipeline ARM32/ARM64 adicionados em `ci/patch-image-5.00.003.sh`, `ci/build-5.00.003.sh` e `.github/workflows/5.00.003-release.yml`. Recuperação conservadora de protocolo com `2pny-profile-autostart` e timer que não intervém em gateway ativo. Reconciliação display no reboot com configuração salva. **Estado:** validação CI e imagens a verificar; físico OLED, Nextion e protocolo ainda PENDENTE. Sem atribuir PASS antes de evidências.
 
