@@ -1,0 +1,26 @@
+name: PU2PNY v5.01 baseline AP display inventory
+on:
+  push:
+    branches: [fix/v5.01-ap-display]
+    paths: ['ci/inspect-v5.01-base.sh', '.github/workflows/5.01-inventory.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm32
+            sha256: f9d254e791ce5967c16c2af1e7dbbc37c979a268099efc5f93cdb122fbdc17f1
+          - arch: arm64
+            sha256: 79159eb803a6dc51f552e7fd72181733ae9379f75934897d2657e30581f5c8ce
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends xz-utils util-linux >/dev/null
+      - name: Read-only baseline inventory
+        run: bash ci/inspect-v5.01-base.sh '${{ matrix.arch }}' '${{ matrix.sha256 }}'
