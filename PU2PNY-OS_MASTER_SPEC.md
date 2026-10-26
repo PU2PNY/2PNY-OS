@@ -1,3 +1,8 @@
+### DIAG-500004 — diagnóstico seguro, sem intervenção em RF
+A candidata com marca pública PU2PNY-OS v5.00 (revisão 5.00.004) adiciona exclusivamente utilitário read-only para snapshots de sistema, serial, unidades e estado básico de rede. Sem alteração de MMDVMHost/gateways/firmware, rede, display, HMI, parâmetros RF ou boot. Saída não contém dados brutos do journal nem credenciais. Não afirma correção de inatividade/Nextion/OLED até diagnóstico HW.
+
+---
+
 ## REL-5.00.003 — restauração segura e candidato ARM32/ARM64
 - Persistência de protocolo: ativar no boot o serviço existente `2pny-profile-autostart`, que aceita somente perfil comprovado e exige MMDVM/uplink válidos; retentar com serviço guardião somente quando nenhum gateway estiver ativo.
 - Display: preservar NextionDriver ON7LDS aprovado, aplicar perfil salvo no reboot quando houver `display-settings.json`, manter UART exclusiva MMDVM e não instalar HMI/TFT automaticamente.
