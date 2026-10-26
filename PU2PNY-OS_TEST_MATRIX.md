@@ -1,3 +1,8 @@
+### REL-5.00.004 — resultados efetivos
+DOC: PASS (escopo diagnóstico separado). SW/CI: PASS (run 40407954211, testes, ARM32, ARM64 e publish concluídos). Imagens ARM32/ARM64: PASS XZ/SHA + diff de filesystem restrito; HW: PENDENTE para boot, RF, DMR, D-Star, YSF, Nextion/OLED, serial e inatividade. Produção: NÃO APROVADA. Validação futura deverá comparar o snapshot saudável/falha antes de corrigir causas.
+
+---
+
 ### DIAG-500004 — verificação da candidata v5.00
 - DOC: script sem alterações em rádio/rede/display, opera sem abertura da UART (inspeção de código).
 - SW: sintaxe e execução somente leitura no runner CI (ver resultado do run 40407954211).
