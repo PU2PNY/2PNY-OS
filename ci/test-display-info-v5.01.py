@@ -2,7 +2,9 @@
 """Offline tests for MMDVM-Info-compatible CPU JSON without hardware assumptions."""
 from pathlib import Path
 import importlib.util
+import sys
 import tempfile
+sys.path.insert(0, 'runtime/display')
 spec=importlib.util.spec_from_file_location('adapter','runtime/display/adapter.py')
 mod=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
