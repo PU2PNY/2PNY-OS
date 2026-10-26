@@ -1,0 +1,99 @@
+name: PU2PNY v5.01.1 ARM32 ARM64 display metadata update
+on:
+  push:
+    branches: [fix/v5.01-display-info]
+    paths:
+      - 'runtime/display/**'
+      - 'runtime/diagnostics/2pny-power-status.py'
+      - 'ci/build-5.01.1.sh'
+      - 'ci/patch-image-5.01.1.sh'
+      - 'ci/test-*v5.01.py'
+      - '.github/workflows/5.01.1-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-v5.01.1-release
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source and regression checks
+        run: |
+          set -euo pipefail
+          bash -n ci/build-5.01.1.sh ci/patch-image-5.01.1.sh
+          python3 -m py_compile runtime/display/apply.py runtime/display/adapter.py runtime/diagnostics/2pny-power-status.py
+          python3 ci/test-display-info-v5.01.py
+          python3 ci/test-display-profile-v5.01.py
+          python3 ci/test-power-v5.01.py
+          git diff --check
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 115
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm32
+            sha256: be155fd7756088e15c88b1b877c1cf4fc4a9c67ad2c0d963b917dff88895ca84
+          - arch: arm64
+            sha256: 76926b7b6ee6dd6003a0ae3fda27fae6a3ef9d3efe24a2d472e2f370107a7a27
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Diff-limited image overlay and validation
+        run: bash ci/build-5.01.1.sh '${{ matrix.arch }}' '${{ matrix.sha256 }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-v5.01.1-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            pu2pny-v5.01.1-${{ matrix.arch }}.img.xz
+            pu2pny-v5.01.1-${{ matrix.arch }}.img.xz.sha256
+            BUILD-INFO-${{ matrix.arch }}.txt
+            BASELINE-MANIFEST-${{ matrix.arch }}.txt
+            IMAGE-MANIFEST-${{ matrix.arch }}.txt
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-v5.01.1-*
+          merge-multiple: true
+      - name: Verify XZ, SHA and source identity
+        run: |
+          set -euo pipefail
+          for arch in arm32 arm64; do
+            test -s "pu2pny-v5.01.1-$arch.img.xz"
+            xz -t "pu2pny-v5.01.1-$arch.img.xz"
+            sha256sum -c "pu2pny-v5.01.1-$arch.img.xz.sha256"
+            grep -Fq "source_commit=$GITHUB_SHA" "BUILD-INFO-$arch.txt"
+            grep -Fq 'version=5.01.001' "BUILD-INFO-$arch.txt"
+          done
+      - name: Publish alpha for physical display and power checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS v5.01.1 — ALPHA / test candidate. Base: published pu2pny-v5.01.
+          Source: $GITHUB_SHA
+          AP SSIDs unchanged: pu2pny-32 ARM32 / pu2pny-64 ARM64.
+          Display data: real Raspberry CPU temperature, frequency and load published in official MMDVM-Info MQTT CPU JSON schema, once per 60 seconds.
+          Nextion: restore saved ON7LDS modem display profile if modem-side bidirectional probe is inconclusive, without falsely claiming hardware detection; preserve physically detected OLED/LCD.
+          Power: read-only firmware undervoltage/throttling diagnostic (unavailable on some devices, especially Pi Zero original). No kernel-power or RF changes.
+          Protected: RF, modem UART, DMR, D-Star, YSF, gateways, Wi-Fi logic, approved Nextion HMI/TFT and original binary.
+          Display font clipping and actual RX/TX rendering for all screen types still require model-specific hardware validation and may require HMI/TFT layout changes with explicit consent.
+          Full-image manifest scope, XZ, SHA in CI. No hardware/production approval.
+          EOF
+          gh release create pu2pny-v5.01.1 pu2pny-v5.01.1-*.img.xz* BUILD-INFO-*.txt BASELINE-MANIFEST-*.txt IMAGE-MANIFEST-*.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS v5.01.1 — Display Info and Power Diagnostics Alpha' --notes-file release-notes.txt --prerelease
+          gh release view pu2pny-v5.01.1 --repo "$GH_REPO" --json tagName,targetCommitish,assets
