@@ -9,8 +9,12 @@ test -s "$DEST"
 # Preserve old working display adapter byte for byte; never touch NextionDriver binary or HMI.
 cp -a "$DEST" "$DEST.pre-5.01"
 install -m 0755 "$REPO/runtime/display/adapter.py" "$DEST"
+APPLY="$ROOT/usr/local/sbin/2pny-display-apply"
+test -s "$APPLY"
+cp -a "$APPLY" "$APPLY.pre-v5.01"
+install -m 0755 "$REPO/runtime/display/apply.py" "$APPLY"
 install -m 0755 "$REPO/runtime/diagnostics/2pny-power-status.py" "$ROOT/usr/local/sbin/2pny-power-status"
-python3 - "$DEST" "$ROOT/usr/local/sbin/2pny-power-status" <<'PY'
+python3 - "$DEST" "$APPLY" "$ROOT/usr/local/sbin/2pny-power-status" <<'PY'
 from pathlib import Path
 import sys
 for filename in sys.argv[1:]:
