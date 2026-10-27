@@ -1,3 +1,8 @@
+## 2026-10-27 — v5.01.2 candidata de emergência
+Investigado bloqueio de Wizard Hardware com MMDVM não confirmado em Pi 4. Alterado somente detector /usr/local/sbin/2pny-hardware-probe: janelas GET_VERSION no baud GPIO 115200 de 0.18/0.22 para 0.60/0.65, sem tocar UART com MMDVMHost ativo. Evita status complete antigo sem modem confirmado. Base v5.01.1, código RF e display congelado. Resultado físico ainda não verificado.
+
+---
+
 ## 2026-10-22 — REL-5.00.003: correção boot/protocolos/display + construção de imagens
 - Identificada via montagem read-only da imagem ARM64 a presença de `2pny-profile-autostart`, mas sem symlink habilitado em `multi-user.target.wants`, mecanismo já validava último perfil comprovado, uplink, MMDVM, gateway.
 - Imagem overlay habilita serviço original e adiciona timer guardado contra troca de gateway já ativo. Não altera binários RF nem lógica de gateways.
