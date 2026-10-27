@@ -14,7 +14,7 @@ cleanup() {
  rm -rf "$WORK"
 }
 trap cleanup EXIT
-curl -fL --retry 3 "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.01.1/pu2pny-v5.01.2-$ARCH.img.xz" -o "$WORK/base.img.xz"
+curl -fL --retry 3 "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.01.1/pu2pny-v5.01.1-$ARCH.img.xz" -o "$WORK/base.img.xz"
 printf '%s  %s\n' "$BASE_SHA" "$WORK/base.img.xz" | sha256sum -c -
 xz -t "$WORK/base.img.xz"
 xz -dc "$WORK/base.img.xz" > "$WORK/image.img"
