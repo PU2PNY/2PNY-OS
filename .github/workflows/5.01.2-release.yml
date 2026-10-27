@@ -1,0 +1,94 @@
+name: PU2PNY v5.01.2 ARM32 ARM64 display metadata update
+on:
+  push:
+    branches: [fix/v5.01.2-mmdvm-detection]
+    paths:
+      - 'src/2pny-hardware-probe-0.3.26.py'
+      - 'ci/build-5.01.2.sh'
+      - 'ci/patch-image-5.01.2.sh'
+      - 'ci/test-mmdvm-probe-v5.01.2.py'
+      - '.github/workflows/5.01.2-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-v5.01.2-release
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Source and regression checks
+        run: |
+          set -euo pipefail
+          bash -n ci/build-5.01.2.sh ci/patch-image-5.01.2.sh
+          python3 -m py_compile src/2pny-hardware-probe-0.3.26.py
+          python3 ci/test-mmdvm-probe-v5.01.2.py
+          git diff --check
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 115
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm32
+            sha256: 5450a45fadd99aa95d97bf3d61b2569dffa49fdf71d29ceef5b6cf7d52e6c549
+          - arch: arm64
+            sha256: b33ae8b80b24dfc3c7a5a48c519ffa3f33eee7a7952cb13f2a8cfd10c27b0fb1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Diff-limited image overlay and validation
+        run: bash ci/build-5.01.2.sh '${{ matrix.arch }}' '${{ matrix.sha256 }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-v5.01.2-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            pu2pny-v5.01.2-${{ matrix.arch }}.img.xz
+            pu2pny-v5.01.2-${{ matrix.arch }}.img.xz.sha256
+            BUILD-INFO-${{ matrix.arch }}.txt
+            BASELINE-MANIFEST-${{ matrix.arch }}.txt
+            IMAGE-MANIFEST-${{ matrix.arch }}.txt
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-v5.01.2-*
+          merge-multiple: true
+      - name: Verify XZ, SHA and source identity
+        run: |
+          set -euo pipefail
+          for arch in arm32 arm64; do
+            test -s "pu2pny-v5.01.2-$arch.img.xz"
+            xz -t "pu2pny-v5.01.2-$arch.img.xz"
+            sha256sum -c "pu2pny-v5.01.2-$arch.img.xz.sha256"
+            grep -Fq "source_commit=$GITHUB_SHA" "BUILD-INFO-$arch.txt"
+            grep -Fq 'version=5.01.002' "BUILD-INFO-$arch.txt"
+          done
+      - name: Publish alpha for physical display and power checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS v5.01.2 — emergency MMDVM discovery ALPHA (not production).
+          Source: $GITHUB_SHA; immutable base pu2pny-v5.01.1.
+          Fix: increase firmware GET_VERSION response time on known GPIO UART baud 115200, preserving prior hardware and RF behavior.
+          Correct stale no-response snapshot to pending when RF engine already owns serial; never report unconfirmed modem as detected.
+          Full filesystem manifest scope: ONLY hardware probe, backup copy and version string. ModemHost, gateways, Nextion driver, WLAN and AP unchanged.
+          The pictured failure is confirmed as a detection symptom; root cause in physical hardware is NOT proven. Test on actual Raspberry required.
+          If still unconfirmed, the tool must not guess, fake modem identity, or bypass validation.
+          EOF
+          gh release create pu2pny-v5.01.2 pu2pny-v5.01.2-*.img.xz* BUILD-INFO-*.txt BASELINE-MANIFEST-*.txt IMAGE-MANIFEST-*.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS v5.01.2 — Display Info and Power Diagnostics Alpha' --notes-file release-notes.txt --prerelease
+          gh release view pu2pny-v5.01.2 --repo "$GH_REPO" --json tagName,targetCommitish,assets
