@@ -1,3 +1,10 @@
+## EMERGÊNCIA v5.01.2 — DETECÇÃO MMDVM (2026-10-27)
+Regressão relatada via screenshot na v5.01.1: Raspberry Pi 4 Model B Rev 1.2, Internet/Drivers OK, wizard 100%, MMDVM não confirmado, display não confirmado, próxima etapa bloqueada. Sem evidência de falha RF efetiva; detector pode falhar sem hardware ausente.
+Branch `fix/v5.01.2-mmdvm-detection`. Base imutável `pu2pny-v5.01.1`. CI https://github.com/PU2PNY/2PNY-OS/actions/runs/40441505964. Patch restrito à espera GET_VERSION em 115200 e à não confirmação indevida de status armazenado; sem alterar MMDVMHost, protocolos, Wi-Fi, displays ou firmware.
+Causa raiz HW não verificada; versão nova ainda NÃO ENTREGUE até release/assets/SHA verificados. Se não detectar, preservar estado não confirmado e solicitar evidência da UART física.
+
+---
+
 ## REL-5.00.003 — 2026-10-22, build condicionado ao CI
 Branch `fix/5.00.003-display-protocol-reboot`. Código de correção e pipeline ARM32/ARM64 adicionados em `ci/patch-image-5.00.003.sh`, `ci/build-5.00.003.sh` e `.github/workflows/5.00.003-release.yml`. Recuperação conservadora de protocolo com `2pny-profile-autostart` e timer que não intervém em gateway ativo. Reconciliação display no reboot com configuração salva. **Estado:** validação CI e imagens a verificar; físico OLED, Nextion e protocolo ainda PENDENTE. Sem atribuir PASS antes de evidências.
 
