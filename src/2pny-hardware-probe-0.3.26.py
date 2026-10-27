@@ -220,10 +220,10 @@ def probe_mmdvm(dev, driver=""):
                 time.sleep(1.8)
             request = bytes((0xE0, 0x03, 0x00))
             os.write(fd, request)
-            result = parse_mmdvm(read_for(fd, 0.18))
+            result = parse_mmdvm(read_for(fd, 0.60 if baud == 115200 else 0.18))
             if not result:
                 os.write(fd, request)
-                result = parse_mmdvm(read_for(fd, 0.22))
+                result = parse_mmdvm(read_for(fd, 0.65 if baud == 115200 else 0.22))
             if result:
                 result["baud"] = baud
                 return result, None
@@ -448,7 +448,9 @@ for line in read_text("/proc/cpuinfo").splitlines():
 if radio_service_active() and OUT.exists():
     try:
         previous = json.loads(OUT.read_text())
-        previous["state"] = "complete"
+        # A previous failed scan is never converted into a successful scan.
+        # Do not steal the UART from an active RF engine to retry.
+        previous["state"] = "complete" if previous.get("mmdvm", {}).get("detected") is True else "pending_modem_confirmation"
         previous["radio_engine"] = "active"
         save(previous)
         print(json.dumps(previous, ensure_ascii=False))
