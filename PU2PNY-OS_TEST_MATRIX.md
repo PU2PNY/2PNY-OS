@@ -1,3 +1,12 @@
+## REGRESSÃO: wizard hardware, v5.01.1
+- HW (relato com tela): FAIL, Pi 4 B Rev 1.2, MMDVM não confirmado no wizard e botão de configuração bloqueado.
+- PROVA DE CAUSA: NÃO VERIFICADO; 115200 timeout original GET_VERSION 0.18+0.22s, hipótese de latência/firmware.
+- Fix SW v5.01.2: read_for 0.60+0.65 em 115200; manter demais bauds; preservação do ownership lock serial; estado passado não confirmado não vira sucesso. Testes fonte CI (run 40441505964): a verificar.
+- RF/BER/RSSI/TX/RX após correção: HW PENDENTE; não inventar detecção física.
+- AP 32/64 e displays: baseline v5.01.1 preservada; novo teste HW PENDENTE.
+
+---
+
 ## REL-5.00.003 — critérios de liberação e HW
 | Teste | Esperado | Status |
 |---|---|---|
