@@ -1,3 +1,8 @@
+## Resultado v5.01.2
+SW/CI: PASS, run 40441505964. ARM32 build+sha+xz+manifest PASS. ARM64 build+sha+xz+manifest PASS. HW Pi4 detecção MMDVM: PENDENTE após regressão relatada na v5.01.1. Hardware físico de outros modelos: NÃO VERIFICADO. Regressão DMR/D-Star/YSF/Nextion/Wi-Fi: PENDENTE HW; arquivos binários anteriores preservados.
+
+---
+
 ## REGRESSÃO: wizard hardware, v5.01.1
 - HW (relato com tela): FAIL, Pi 4 B Rev 1.2, MMDVM não confirmado no wizard e botão de configuração bloqueado.
 - PROVA DE CAUSA: NÃO VERIFICADO; 115200 timeout original GET_VERSION 0.18+0.22s, hipótese de latência/firmware.
