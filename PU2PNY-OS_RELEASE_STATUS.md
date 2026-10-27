@@ -1,3 +1,11 @@
+## v5.01.2 — ALPHA PUBLICADA / TESTE FÍSICO PENDENTE (2026-10-27)
+Release https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.01.2 ; source commit da tag `59a93c6e8d760a81ca524f79dc2e91fb658977d7`. CI https://github.com/PU2PNY/2PNY-OS/actions/runs/40441505964 — SW, ARM32/ARM64, XZ/SHA, manifest e publish PASS.
+ARM32 `pu2pny-v5.01.2-arm32.img.xz` 682307784 B, SHA-256 `2145cdf81fffa8c3821289a68b2d35c99504f8387eed575d5f4f9ee7adf35533`.
+ARM64 `pu2pny-v5.01.2-arm64.img.xz` 599864456 B, SHA-256 `a3ae728d8cc21d894f29c934363a5da97a4898219c25c6b97ba69843aaeafef0`.
+Correção restrita: janelas de GET_VERSION da MMDVM 115200; não alterar RF, protocolos, displays ou rede. MMDVM reconhecida em Pi4: **NÃO VERIFICADO EM HW**. Release candidata, não produção.
+
+---
+
 ## EMERGÊNCIA v5.01.2 — DETECÇÃO MMDVM (2026-10-27)
 Regressão relatada via screenshot na v5.01.1: Raspberry Pi 4 Model B Rev 1.2, Internet/Drivers OK, wizard 100%, MMDVM não confirmado, display não confirmado, próxima etapa bloqueada. Sem evidência de falha RF efetiva; detector pode falhar sem hardware ausente.
 Branch `fix/v5.01.2-mmdvm-detection`. Base imutável `pu2pny-v5.01.1`. CI https://github.com/PU2PNY/2PNY-OS/actions/runs/40441505964. Patch restrito à espera GET_VERSION em 115200 e à não confirmação indevida de status armazenado; sem alterar MMDVMHost, protocolos, Wi-Fi, displays ou firmware.
