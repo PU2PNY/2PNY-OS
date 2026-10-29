@@ -1,3 +1,10 @@
+## PU2PNY-OS v5.02.000 — ALPHA para teste físico (29/10/2026)
+Imagens verificadas: [ARM32 — pu2pny-32-5.02.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.02/pu2pny-32-5.02.img.xz) · [ARM64 — pu2pny-64-5.02.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.02/pu2pny-64-5.02.img.xz).
+[Release, SHA-256 e manifestos](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.02) · [CI 40929270370 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/40929270370).
+**Não é produção.** Aprovado em software/build; RF, comandos pelo rádio, OLED/Nextion e Wi-Fi reais ainda exigem teste físico. A redução extrema de CPU/RAM não foi medida em Raspberry. Preservar Nextion ON7LDS e RF das baselines anteriores.
+
+---
+
 # PU2PNY-OS 5.00.002 — somente display
 
 **Display NextionDriver ON7LDS: HW PASS por aprovação do usuário em 22/10/2026. Baseline protegido. A aprovação não promove automaticamente outros dispositivos nem a release inteira a produção.**
