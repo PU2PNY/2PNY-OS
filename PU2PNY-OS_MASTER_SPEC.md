@@ -1,3 +1,14 @@
+## Requisitos de aceite específicos 5.02 — publicados em 2026-10-29
+- Identidades de SSID: pu2pny-32 e pu2pny-64. Mecanismo de acesso http://pu2pny.local/ em AP/STA/Ethernet; o portal cativo depende do comportamento do cliente, sem afirmar abertura forçada universal.
+- Performance: monitoramento CPU/RAM/boot ARM32 e ARM64 por hardware real. Reduzir polling e serviços inativos; nenhum ganho extremo pode ser presumido a partir do build.
+- Displays: Nextion ON7LDS aprovado deve permanecer intacto; OLED deve mostrar dados de MMDVM reais em páginas proporcionais, com BER/RSSI ausentes como indisponíveis. Cobertura de cada layout/hardware exige matriz HW.
+- Protocolos/repetidora: oferecer capacidades somente quando comprovadas pelo modem, backend e permissões. Comandos pelo rádio devem usar lista de ações seguras e autorização, sem shell remoto arbitrário; este gate ainda não está implementado/validado na candidata.
+- Expert: Reset explícito e com guardas para standby, sem apagar configuração; diagnóstico sob demanda e sanitizado.
+- Protocolo: apresentar indicativo e Radio ID conhecidos, sem inventar valores.
+A release v5.02.000 ALPHA teve CI PASS mas permanece PENDENTE HW e não promove funções ausentes a produção. Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.02
+
+---
+
 ## REL-5.00.003 — restauração segura e candidato ARM32/ARM64
 - Persistência de protocolo: ativar no boot o serviço existente `2pny-profile-autostart`, que aceita somente perfil comprovado e exige MMDVM/uplink válidos; retentar com serviço guardião somente quando nenhum gateway estiver ativo.
 - Display: preservar NextionDriver ON7LDS aprovado, aplicar perfil salvo no reboot quando houver `display-settings.json`, manter UART exclusiva MMDVM e não instalar HMI/TFT automaticamente.
