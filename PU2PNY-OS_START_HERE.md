@@ -1,3 +1,12 @@
+## ALERTA DE RELEASE 5.02 — 2026-10-29
+A versão 5.02.000 está publicada apenas como ALPHA / CANDIDATA PARA TESTE FÍSICO:
+https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.02
+CI PASS: https://github.com/PU2PNY/2PNY-OS/actions/runs/40929270370
+Código/imagem: eec7a9f7f5e81b90e18e30021c754673ad97a50f. Docs pós-imagem não alteram os binários da tag.
+O START_HERE, MASTER_SPEC, RELEASE_STATUS, TEST_MATRIX e CHANGELOG não podem confundir CI com validação física. O baseline NextionDriver ON7LDS 5.00.002 continua protegido. Funções RF/repetidora e otimizações de desempenho extremo não podem ser declaradas aprovadas sem medições/testes específicos.
+
+---
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**
