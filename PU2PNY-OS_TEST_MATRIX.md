@@ -1,3 +1,30 @@
+## Matriz 5.02.000 — 2026-10-29
+Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.02
+CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/40929270370
+Commit de código/imagens: eec7a9f7f5e81b90e18e30021c754673ad97a50f.
+ARM32: pu2pny-32-5.02.img.xz, 675176436 bytes, SHA-256 42ebdf5eb29f02629b6a294a6f6ae18e04f9b94b1ba42e7e09179fd6da557d89.
+ARM64: pu2pny-64-5.02.img.xz, 597096980 bytes, SHA-256 f4bf0b2f8cb6df1c936e2f182b8fcbbe840790e3869f8dd93efd9da74126c0d6.
+
+| Requisito | Nível | Resultado |
+|---|---|---|
+| Testes OLED, Reset, diagnóstico e watcher Go | SW | PASS |
+| Compilação ARM32/ARMv6 e ARM64 | CI | PASS |
+| SHA da base e diff completo; RF/Nextion preservados | CI | PASS |
+| XZ, SHA-256 e publicação | CI | PASS |
+| CPU/RAM reais ARM32/ARM64 | HW | NÃO VERIFICADO |
+| OLED 128x32/128x64 e informações | HW | PENDENTE |
+| Nextion ON7LDS sem regressão | HW | PENDENTE NOVO TESTE; baseline preservada |
+| Todos os recursos RF por hardware real | HW | NÃO VERIFICADO |
+| Repetidora: comandos seguros via rádio | SW/HW | NÃO CONCLUÍDO/SEM GATE |
+| Reset Expert em standby | HW | PENDENTE |
+| Diagnóstico sem segredos | SW/HW | SW PARCIAL; HW PENDENTE |
+| AP pu2pny-32/pu2pny-64, mDNS e handoff Wi-Fi | HW | PENDENTE |
+| Indicativo/ID em Protocolos | SW/HW | Código incluído; HW PENDENTE |
+
+**SW/CI não equivale a HW. A release não cumpre comprovadamente os oito requisitos.**
+
+---
+
 ## REL-5.00.003 — critérios de liberação e HW
 | Teste | Esperado | Status |
 |---|---|---|
