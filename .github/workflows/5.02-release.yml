@@ -1,0 +1,121 @@
+name: PU2PNY-OS 5.02 ARM32 ARM64 release
+on:
+  push:
+    branches: [release/pu2pny-5.02-verified]
+    paths: ['runtime/5.02/**','runtime/display/adapter.py','ci/*5.02*','.github/workflows/5.02-release.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-v5.02-alpha-release
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.9'
+      - name: Unit tests and backend regression
+        run: |
+          set -euo pipefail
+          python3 -m pip install --break-system-packages --quiet Pillow
+          python3 ci/test-5.02-safety.py
+          python3 ci/test-5.02-oled.py
+          python3 -m py_compile runtime/5.02/*.py runtime/display/adapter.py ci/*5.02*.py
+          python3 ci/prepare-5.02-backend.py "$RUNNER_TEMP/backend"
+          cp ci/test-5.02-watch.go "$RUNNER_TEMP/backend/live_watch_test.go"
+          (cd "$RUNNER_TEMP/backend" && GO111MODULE=off go test -count=1 -v)
+          git diff --check
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm32, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.9'
+      - name: Image tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Cross-build and verify published immutable base
+        run: |
+          set -euo pipefail
+          arch='${{ matrix.arch }}'
+          mkdir -p "$RUNNER_TEMP/work/output"
+          python3 ci/prepare-5.02-backend.py "$RUNNER_TEMP/backend"
+          if [ "$arch" = arm32 ]; then
+            (cd "$RUNNER_TEMP/backend" && GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o "$RUNNER_TEMP/work/2pnyd-arm" .)
+            file "$RUNNER_TEMP/work/2pnyd-arm" | grep -E 'ELF 32-bit.*ARM'
+            expected=2145cdf81fffa8c3821289a68b2d35c99504f8387eed575d5f4f9ee7adf35533
+          else
+            (cd "$RUNNER_TEMP/backend" && GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o "$RUNNER_TEMP/work/2pnyd-arm64" .)
+            file "$RUNNER_TEMP/work/2pnyd-arm64" | grep -Ei 'ELF 64-bit.*aarch64'
+            expected=a3ae728d8cc21d894f29c934363a5da97a4898219c25c6b97ba69843aaeafef0
+          fi
+          curl -fL --retry 4 --retry-all-errors "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.01.2/pu2pny-v5.01.2-$arch.img.xz" -o "$RUNNER_TEMP/work/base-$arch.img.xz"
+          echo "$expected  $RUNNER_TEMP/work/base-$arch.img.xz" | sha256sum -c -
+      - name: Verify isolated scope, build image and SHA
+        run: |
+          set -euo pipefail
+          sudo python3 ci/build-5.02.py "$RUNNER_TEMP/work" '${{ matrix.arch }}' "$GITHUB_SHA"
+          sudo chown -R "$USER:$USER" "$RUNNER_TEMP/work/output"
+          cd "$RUNNER_TEMP/work/output"
+          sha256sum -c *.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-5.02-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/work/output/pu2pny-*.img.xz
+            ${{ runner.temp }}/work/output/pu2pny-*.img.xz.sha256
+            ${{ runner.temp }}/work/output/BUILD-INFO-*.json
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-5.02-*
+          merge-multiple: true
+      - name: Final integrity and metadata
+        run: |
+          set -euo pipefail
+          for arch in 32 64; do
+            f="pu2pny-$arch-5.02.img.xz"
+            test -s "$f"
+            xz -t "$f"
+            sha256sum -c "$f.sha256"
+          done
+          python3 - <<'PY'
+          import json
+          for arch in ('arm32','arm64'):
+            info=json.load(open('BUILD-INFO-'+arch+'.json'))
+            assert info['version']=='5.02.000' and info['validation']['filesystem']=='PASS'
+            assert info['validation']['HW']=='NOT_VERIFIED'
+          PY
+      - name: Release two candidate images
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS v5.02.000 ALPHA; NOT PRODUCTION.
+          Source: $GITHUB_SHA. Base: verified v5.01.2 ARM32 and ARM64.
+          Scope: safe Expert reset, diagnostic export, OLED pages, protocol callsign/ID, captive portal, Wi-Fi handoff, event-driven Live and idle refresh optimization.
+          Baseline MMDVMHost, RF and protocol gateway binaries and approved Nextion ON7LDS remain untouched.
+          Advanced radio commands, complete RF modes, OLED/Nextion hardware and repeater are NOT HW VERIFIED.
+          EOF
+          gh release create pu2pny-v5.02 pu2pny-*.img.xz pu2pny-*.img.xz.sha256 BUILD-INFO-*.json --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS 5.02.000 ARM32 ARM64 ALPHA' --notes-file release-notes.txt --prerelease
+          gh release view pu2pny-v5.02 --repo "$GH_REPO" --json tagName,targetCommitish,assets
