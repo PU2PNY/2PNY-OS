@@ -1,3 +1,17 @@
+## PU2PNY-OS 5.02.000 — ALPHA PUBLICADA / TESTE FÍSICO PENDENTE (2026-10-29)
+Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.02
+CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/40929270370
+Commit de código/imagens: eec7a9f7f5e81b90e18e30021c754673ad97a50f.
+ARM32: pu2pny-32-5.02.img.xz, 675176436 bytes, SHA-256 42ebdf5eb29f02629b6a294a6f6ae18e04f9b94b1ba42e7e09179fd6da557d89.
+ARM64: pu2pny-64-5.02.img.xz, 597096980 bytes, SHA-256 f4bf0b2f8cb6df1c936e2f182b8fcbbe840790e3869f8dd93efd9da74126c0d6.
+
+**SW/CI:** testes Python/Go, builds independentes ARM32/ARM64, XZ, SHA, arquitetura, filesystem, escopo de diff e publicação: PASS. Builds a partir da baseline imutável 5.01.2, sem alteração dos binários protegidos RF/gateways/Nextion.
+**Implementado no overlay:** Ao Vivo por eventos, redução de atualizações inativas, páginas OLED, Reset explícito MMDVM em standby, diagnóstico sanitizado, indicativo/ID em Protocolo, portal AP e retorno Wi-Fi à URL canônica.
+**NÃO CONFIRMADO / NÃO CONCLUÍDO:** desempenho extremo medido em HW; todos os campos de OLED/Nextion em HW; todas as funções/protocolos em cada modem; novos comandos de repetidora pelo rádio; abertura automática do navegador em todos os clientes; fluxo Wi-Fi em HW. Reset não é reset físico/factory reset.
+**Estado:** candidata para testes HW, NÃO produção. Preservar NextionDriver ON7LDS HW PASS da 5.00.002.
+
+---
+
 ## REL-5.00.003 — 2026-10-22, build condicionado ao CI
 Branch `fix/5.00.003-display-protocol-reboot`. Código de correção e pipeline ARM32/ARM64 adicionados em `ci/patch-image-5.00.003.sh`, `ci/build-5.00.003.sh` e `.github/workflows/5.00.003-release.yml`. Recuperação conservadora de protocolo com `2pny-profile-autostart` e timer que não intervém em gateway ativo. Reconciliação display no reboot com configuração salva. **Estado:** validação CI e imagens a verificar; físico OLED, Nextion e protocolo ainda PENDENTE. Sem atribuir PASS antes de evidências.
 
