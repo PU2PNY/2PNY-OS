@@ -86,6 +86,9 @@ def main():
     cpu_deadline = 0.0
     while True:
         if time.monotonic() >= cpu_deadline:
+            # Host config polling stops after the first reply in the pinned official
+            # renderer. Refresh real identity/frequencies after user configuration changes.
+            link.publish(INFO+'/json', json.dumps(public_config(host_config()), separators=(',', ':')))
             cpu = cpu_metadata()
             if cpu:
                 link.publish(INFO+'/json', json.dumps({'CPU': cpu}, separators=(',', ':')))
