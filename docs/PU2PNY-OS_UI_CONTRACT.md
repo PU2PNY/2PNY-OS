@@ -1,3 +1,13 @@
+## Contrato 5.02 — 2026-10-29 (ALPHA)
+- Em Protocolos, exibir Indicativo e Radio ID configurados; se ausentes, usar marcador de indisponibilidade.
+- Em Expert, Reset MMDVM de software com confirmação explícita, preservação da configuração e indisponibilidade durante RF ativo, e relatório de diagnóstico baixável com segredos filtrados.
+- Em Internet, manter pu2pny-32/pu2pny-64 e http://pu2pny.local/ como URL preferencial do portal e do retorno após Wi-Fi. Não prometer abertura automática em qualquer sistema cliente.
+- Em Display, NextionDriver ON7LDS permanece baseline aprovado; dados OLED separados da Nextion e páginas condicionadas ao hardware.
+- Repetidora e controle remoto pelo rádio: exigem autorização e testes; não estão aprovados na release 5.02 ALPHA.
+Ver https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.02 e TEST_MATRIX.
+
+---
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**
