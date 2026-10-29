@@ -1,3 +1,20 @@
+## 2026-10-29 — PU2PNY-OS v5.02.000 ALPHA (ARM32/ARM64)
+Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.02
+CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/40929270370
+Commit de código/imagens: eec7a9f7f5e81b90e18e30021c754673ad97a50f.
+ARM32: pu2pny-32-5.02.img.xz, 675176436 bytes, SHA-256 42ebdf5eb29f02629b6a294a6f6ae18e04f9b94b1ba42e7e09179fd6da557d89.
+ARM64: pu2pny-64-5.02.img.xz, 597096980 bytes, SHA-256 f4bf0b2f8cb6df1c936e2f182b8fcbbe840790e3869f8dd93efd9da74126c0d6.
+
+- CI independente: código, filesystem, preservação de RF/Nextion, XZ, SHA e publicação PASS.
+- Ao Vivo: watcher inotify/eventos e redução de atualizações de resumo em segundo plano; sem alterar a via RF.
+- OLED: páginas de estado com dados reais e campos ausentes não inventados. NextionDriver ON7LDS aprovado preservado.
+- Expert: Reset confirmado de software MMDVM somente em standby; diagnóstico amplo, sanitizado e sob demanda.
+- Protocolos: indicativo/Radio ID; rede: URL canônica http://pu2pny.local/ em portal AP/handoff, preservados os nomes SSID.
+- Não comprovados: comandos via rádio e todas as capacidades RF, ganho extremo real CPU/RAM, 100% das informações em cada tela e Wi-Fi real em todos os clientes. NÃO PROD.
+- Documentação sincronizada depois da publicação/verificação dos downloads; código RF protegido não substituído.
+
+---
+
 ## 2026-10-22 — REL-5.00.003: correção boot/protocolos/display + construção de imagens
 - Identificada via montagem read-only da imagem ARM64 a presença de `2pny-profile-autostart`, mas sem symlink habilitado em `multi-user.target.wants`, mecanismo já validava último perfil comprovado, uplink, MMDVM, gateway.
 - Imagem overlay habilita serviço original e adiciona timer guardado contra troca de gateway já ativo. Não altera binários RF nem lógica de gateways.
