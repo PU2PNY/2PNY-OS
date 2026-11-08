@@ -1155,3 +1155,18 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 ## 2026-11-08 — NET-045
 - SW / 2026-11-08: `ci/test-net-045-wifi-autoconnect.py` → `TEST_NET_045_WIFI_AUTOCONNECT_OK` com nmcli simulado; falha (AssertionError) no `2pny-wifi-apply.py` original. Prova as chamadas ao nmcli, não reconexão real.
 - VPS: NÃO VERIFICADO. HW (Pi Zero W 32 bits; Pi 3/4 64 bits): PENDENTE.
+
+## 2026-11-08 — testes candidatos 5.03.000
+| ID | Critério | Nível | Estado | Evidência |
+|---|---|---|---|---|
+| BOOT-053-RED | wrapper antigo suprime retry se gateway ativo mas MMDVMHost parado; novo tenta recuperar | SW | EM TESTE | ci/test-5.03-profile-retry.py |
+| BOOT-053-EVENT | PathChanged do hardware-probe chama service de retry, timer pré-existente preservado | SW/HW | EM TESTE / HW PENDENTE | runtime/5.03/2pny-profile-autostart-retry.path |
+| BOOT-053-HW | último perfil retorna após cold boot e falha temporária de probe/uplink | HW | PENDENTE | logs do hotspot |
+| DISPLAY-053-SW | campos OLED 5.02 permanecem idênticos; CPU/uptime reais e URL acrescentados | SW | EM TESTE | ci/test-5.03-oled.py |
+| DISPLAY-053-HW | OLED real e demais displays mostram informação adequada ao hardware | HW | PENDENTE | Raspberry + OLED/SH1106/LCD/Nextion |
+| REL-053-32/64 | overlays somente autorizados, binários RF idênticos, filesystem/XZ/SHA, BUILD-INFO | SW/CI | PENDENTE | ci/build-5.03.py e .github/workflows/5.03-release.yml |
+| PERF-053 | medição do boot e troca de perfil/rede em Raspberry real | HW | PENDENTE | systemd-analyze/snapshot não fornecidos |
+| HW-053 | detecção Pi Zero W/Zero 2 W e LED corretos | HW | PENDENTE | erro exato/modelo/LED do aparelho |
+| UI-053 | indicativo e DMR ID via Protocolo com transação e rollback | SW/HW | PENDENTE | sem implementação aprovada |
+| NET-053 | URL mDNS após uplink e experiência captive viável por cliente/OS | HW | PENDENTE | sem testes |
+- A 5.02.1 foi publicada em 2026-11-08 com SW/CI PASS, mas ainda HW PENDENTE; inscrições anteriores sem release são registros históricos.

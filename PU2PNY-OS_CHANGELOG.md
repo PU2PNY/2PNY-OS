@@ -1057,3 +1057,10 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - Alteração mínima: `2pny-wifi-apply.py` passa a gravar `connection.autoconnect-retries=0`; novos `runtime/5x/2pny-wifi-retry-reconcile.py` e `.service` reparam perfis já salvos. Sem mudança em RF, MMDVMHost, gateways, protocolos, display ou wizard.
 - Teste novo: `ci/test-net-045-wifi-autoconnect.py` (falha no arquivo original, passa no corrigido).
 - Validação: SW PASS apenas pelo teste. VPS e HW: NÃO VERIFICADO / PENDENTE. Instalação do reconcile em imagem exige patch de imagem e pipeline ainda não criados.
+
+## 2026-11-08 — PU2PNY-OS 5.03 desenvolvimento, atualização de baseline
+- Release base 5.02.1 publicada em 2026-11-08: tag pu2pny-v5.02.1, commit 4763df6d03aa371554e813c2fed30e70f4601926; CI 42474128395, builds/publish PASS. Entradas históricas 5.02.1 “NÃO PUBLICADA” são snapshots anteriores a esse resultado e não retratam o estado atual.
+- Criada branch release/pu2pny-5.03 a partir da tag/commit da 5.02.1; primeira correção 9f0d6b0 (BOOT-053/DISPLAY-053), builder de imagem protegido 45380f2.
+- BOOT-053: corrigida a falsa condição de saudável no wrapper de retry; adicionada ativação do retry baseada em atualização de hardware-probe sem remover o timer existente. MMDVMHost, gateways, autostart principal e perfil comprovado não são alterados.
+- DISPLAY-053: OLED passa a listar URL, temperatura SoC real e uptime, sem tocar o fluxo aprovado Nextion ON7LDS nem os drivers LCD/OLED.
+- Nenhum erro físico do Pi Zero, LED ou ganho de performance medido foi dado como corrigido. Nem edição de indicativo/DMR ID nem abertura forçada de navegador em STA/Ethernet foram implementadas.

@@ -1170,3 +1170,11 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - Estado: código em branch de trabalho; nenhuma imagem ARM32/ARM64 gerada, nenhum CI executado, nada publicado.
 - SW: `ci/test-net-045-wifi-autoconnect.py` PASS. VPS: não executado. HW: PENDENTE (reconexão após reboot em Pi Zero W 32 bits e Pi 3/4 64 bits).
 - Bloqueador: falta patch de imagem/pipeline que instale `2pny-wifi-apply` atualizado e `2pny-wifi-retry-reconcile.service`; push ao GitHub recusado (403) até o app do Claude receber acesso.
+
+## 2026-11-08 — PU2PNY-OS 5.03.000 / CANDIDATA PARCIAL EM DESENVOLVIMENTO
+- Repositório PU2PNY/2PNY-OS; branch release/pu2pny-5.03; base confirmada 5.02.1 @ 4763df6d03aa371554e813c2fed30e70f4601926.
+- BOOT-053: fonte e teste automatizado adicionados; SW/CI ainda não aprovado neste registro. HW pendente; sem logs do cold boot não se comprovou causa única de perda de perfil.
+- DISPLAY-053: fonte e teste de preservação dos campos anteriores adicionados; SW/CI pendente. Display OLED físico pendente, Nextion existente protegido, LCD e SH1106 ainda não verificados.
+- REL-053: ci/build-5.03.py e ci/patch-image-5.03.py preparados com base SHA, manifesto e rollback. Imagem 5.03 e sua release NÃO ENTREGUES até CI final/publicação.
+- NET/performance: velocidade de boot/rede/troca não medida no Pi real; HW PENDENTE. Primeiro boot Pi Zero, LED, edição de identidade e captive em STA/Ethernet NÃO RESOLVIDOS.
+- Baseline histórica 5.02.1: CI 42474128395 PASS e release pu2pny-v5.02.1 publicada; essa informação substitui o status obsoleto de “sem imagem” para os ajustes 045.
