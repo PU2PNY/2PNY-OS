@@ -2009,3 +2009,14 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 - **DISPLAY-053:** OLED paginado mantém todos os campos e ordem existente, acrescentando URL pu2pny.local, temperatura de sensor SoC e uptime real de /proc/uptime, usando '-' quando indisponível. Sem alteração do Nextion, MMDVM-Display, OLED driver I2C ou RF. Teste SW e HW de cada família obrigatórios.
 - **REL-053:** build ARM32/ARMv6 + ARM64 derivado da release 5.02.1 por SHA, com manifesto completo, hashes dos binários protegidos, integridade XZ, fsck, mounts RO e BUILD-INFO independente. No máximo ALPHA PARCIAL PARA TESTE FÍSICO. Nada desta seção autoriza estado PROD.
 - **NET-053 / UI-053 / PERF-053 em investigação:** Pi Zero boot/modelo, LED real, métricas de boot, velocidade de troca, LCD/SH1106, edição de indicativo/DMR ID sem reinício desnecessário e captive portal não são considerados resolvidos sem evidência. Em STA/Ethernet, abrir arbitrariamente um navegador cliente não é garantia técnica de mDNS/captive portal.
+
+## 2026-11-08 — REL-053: PUBLICAÇÃO VERIFICADA 5.03.000
+- Tag: pu2pny-v5.03.000; commit da imagem e do CI: 9e4dce71cb16c9cd3bee7bcaf20533b418d25343.
+- Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.03.000
+- CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/42518978228 — tests, build ARM32, build ARM64, publish: success.
+- ARM32 (ARMv6 base preservada): pu2pny-32-5.03.img.xz, 675225472 bytes, SHA-256 d010b67ca9f13709b4ca47aab4767ed564008b3377a8f42c40ae53616d5c2ecd.
+- ARM64: pu2pny-64-5.03.img.xz, 597888840 bytes, SHA-256 12bf3ebe51df34392ffec1c6de5fbf97dd985250760c8cc424f38bba6e8aa9d7.
+- Dois BUILD-INFO-*.json e dois arquivos .sha256 presentes no GitHub. Verificações XZ, hash, filesystem, diff completo de escopo e preservação de binários RF passaram em CI.
+- BOOT-053, DISPLAY-053 e REL-053: SW/CI PASS. Níveis VPS/HW/PROD: NÃO VERIFICADO / PENDENTE / NÃO APROVADO, respectivamente.
+- Esta release é **ALPHA PARCIAL PARA TESTE FÍSICO**: o erro de reconhecimento no Pi Zero, LED por modelo, desempenho medido de boot/troca/rede, displays SH1106/LCD/Nextion de outros modelos, edição de indicativo/DMR ID e captive portal em STA/Ethernet NÃO foram resolvidos nesta versão. Não reivindicar a correção desses itens.
+- Os relatos anteriores de “sem imagem” aplicavam-se à fase de desenvolvimento; esta seção registra a publicação final real.

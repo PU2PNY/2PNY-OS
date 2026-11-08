@@ -1178,3 +1178,14 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - REL-053: ci/build-5.03.py e ci/patch-image-5.03.py preparados com base SHA, manifesto e rollback. Imagem 5.03 e sua release NÃO ENTREGUES até CI final/publicação.
 - NET/performance: velocidade de boot/rede/troca não medida no Pi real; HW PENDENTE. Primeiro boot Pi Zero, LED, edição de identidade e captive em STA/Ethernet NÃO RESOLVIDOS.
 - Baseline histórica 5.02.1: CI 42474128395 PASS e release pu2pny-v5.02.1 publicada; essa informação substitui o status obsoleto de “sem imagem” para os ajustes 045.
+
+## 2026-11-08 — REL-053: PUBLICAÇÃO VERIFICADA 5.03.000
+- Tag: pu2pny-v5.03.000; commit da imagem e do CI: 9e4dce71cb16c9cd3bee7bcaf20533b418d25343.
+- Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.03.000
+- CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/42518978228 — tests, build ARM32, build ARM64, publish: success.
+- ARM32 (ARMv6 base preservada): pu2pny-32-5.03.img.xz, 675225472 bytes, SHA-256 d010b67ca9f13709b4ca47aab4767ed564008b3377a8f42c40ae53616d5c2ecd.
+- ARM64: pu2pny-64-5.03.img.xz, 597888840 bytes, SHA-256 12bf3ebe51df34392ffec1c6de5fbf97dd985250760c8cc424f38bba6e8aa9d7.
+- Dois BUILD-INFO-*.json e dois arquivos .sha256 presentes no GitHub. Verificações XZ, hash, filesystem, diff completo de escopo e preservação de binários RF passaram em CI.
+- BOOT-053, DISPLAY-053 e REL-053: SW/CI PASS. Níveis VPS/HW/PROD: NÃO VERIFICADO / PENDENTE / NÃO APROVADO, respectivamente.
+- Esta release é **ALPHA PARCIAL PARA TESTE FÍSICO**: o erro de reconhecimento no Pi Zero, LED por modelo, desempenho medido de boot/troca/rede, displays SH1106/LCD/Nextion de outros modelos, edição de indicativo/DMR ID e captive portal em STA/Ethernet NÃO foram resolvidos nesta versão. Não reivindicar a correção desses itens.
+- Os relatos anteriores de “sem imagem” aplicavam-se à fase de desenvolvimento; esta seção registra a publicação final real.

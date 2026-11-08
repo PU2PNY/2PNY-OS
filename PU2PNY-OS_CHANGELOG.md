@@ -1064,3 +1064,14 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - BOOT-053: corrigida a falsa condição de saudável no wrapper de retry; adicionada ativação do retry baseada em atualização de hardware-probe sem remover o timer existente. MMDVMHost, gateways, autostart principal e perfil comprovado não são alterados.
 - DISPLAY-053: OLED passa a listar URL, temperatura SoC real e uptime, sem tocar o fluxo aprovado Nextion ON7LDS nem os drivers LCD/OLED.
 - Nenhum erro físico do Pi Zero, LED ou ganho de performance medido foi dado como corrigido. Nem edição de indicativo/DMR ID nem abertura forçada de navegador em STA/Ethernet foram implementadas.
+
+## 2026-11-08 — REL-053: PUBLICAÇÃO VERIFICADA 5.03.000
+- Tag: pu2pny-v5.03.000; commit da imagem e do CI: 9e4dce71cb16c9cd3bee7bcaf20533b418d25343.
+- Release: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.03.000
+- CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/42518978228 — tests, build ARM32, build ARM64, publish: success.
+- ARM32 (ARMv6 base preservada): pu2pny-32-5.03.img.xz, 675225472 bytes, SHA-256 d010b67ca9f13709b4ca47aab4767ed564008b3377a8f42c40ae53616d5c2ecd.
+- ARM64: pu2pny-64-5.03.img.xz, 597888840 bytes, SHA-256 12bf3ebe51df34392ffec1c6de5fbf97dd985250760c8cc424f38bba6e8aa9d7.
+- Dois BUILD-INFO-*.json e dois arquivos .sha256 presentes no GitHub. Verificações XZ, hash, filesystem, diff completo de escopo e preservação de binários RF passaram em CI.
+- BOOT-053, DISPLAY-053 e REL-053: SW/CI PASS. Níveis VPS/HW/PROD: NÃO VERIFICADO / PENDENTE / NÃO APROVADO, respectivamente.
+- Esta release é **ALPHA PARCIAL PARA TESTE FÍSICO**: o erro de reconhecimento no Pi Zero, LED por modelo, desempenho medido de boot/troca/rede, displays SH1106/LCD/Nextion de outros modelos, edição de indicativo/DMR ID e captive portal em STA/Ethernet NÃO foram resolvidos nesta versão. Não reivindicar a correção desses itens.
+- Os relatos anteriores de “sem imagem” aplicavam-se à fase de desenvolvimento; esta seção registra a publicação final real.
