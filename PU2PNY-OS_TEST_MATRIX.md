@@ -1181,3 +1181,13 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 - BOOT-053, DISPLAY-053 e REL-053: SW/CI PASS. Níveis VPS/HW/PROD: NÃO VERIFICADO / PENDENTE / NÃO APROVADO, respectivamente.
 - Esta release é **ALPHA PARCIAL PARA TESTE FÍSICO**: o erro de reconhecimento no Pi Zero, LED por modelo, desempenho medido de boot/troca/rede, displays SH1106/LCD/Nextion de outros modelos, edição de indicativo/DMR ID e captive portal em STA/Ethernet NÃO foram resolvidos nesta versão. Não reivindicar a correção desses itens.
 - Os relatos anteriores de “sem imagem” aplicavam-se à fase de desenvolvimento; esta seção registra a publicação final real.
+
+## 2026-11-08 — 5.04
+| ID | Teste | Nível | Estado | Evidência |
+|---|---|---|---|---|
+| IDENTITY-054 | ordem, validação e rollback do 2pny-identity-apply com ferramentas simuladas | SW | PASS | ci/test-identity-054.py |
+| IDENTITY-054 | troca real de indicativo/ID com rede em hotspot | HW | PENDENTE | sem teste |
+| EXPERT-054 | lista fixa, mascaramento de segredos, limite de saída, linha longa sem travar | SW | PASS | ci/test-expert-054.py |
+| DISPLAY-054 | páginas LCD 20x4 e 16x2, largura, ASCII, valores ausentes | SW | PASS | ci/test-lcd-054.py |
+| DISPLAY-054 | LCD físico 16x2 e 20x4 | HW | PENDENTE | sem teste |
+| REL-054 | overlay sobre 5.03 com âncoras únicas, backups e rejeição de base inesperada | SW | PASS | ci/test-5.04-overlay.py |

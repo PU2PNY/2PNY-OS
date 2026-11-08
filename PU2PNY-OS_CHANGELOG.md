@@ -1075,3 +1075,10 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - BOOT-053, DISPLAY-053 e REL-053: SW/CI PASS. Níveis VPS/HW/PROD: NÃO VERIFICADO / PENDENTE / NÃO APROVADO, respectivamente.
 - Esta release é **ALPHA PARCIAL PARA TESTE FÍSICO**: o erro de reconhecimento no Pi Zero, LED por modelo, desempenho medido de boot/troca/rede, displays SH1106/LCD/Nextion de outros modelos, edição de indicativo/DMR ID e captive portal em STA/Ethernet NÃO foram resolvidos nesta versão. Não reivindicar a correção desses itens.
 - Os relatos anteriores de “sem imagem” aplicavam-se à fase de desenvolvimento; esta seção registra a publicação final real.
+
+## 2026-11-08 — 5.04.000 (em desenvolvimento, SW)
+- IDENTITY-054: página Protocolos ganha card para alterar indicativo e DMR ID (`/api/identity/apply` -> `2pny-identity-apply`: 2pny-rf-apply, depois 2pny-protocol-profiles activate, depois config.json; falha restaura a identidade anterior).
+- EXPERT-054: página Expert ganha diagnóstico por botões (`/api/expert/cmd`): lista fixa de comandos somente leitura, senhas/chaves ocultadas, copiar/baixar. A requisição nunca carrega linha de comando.
+- DISPLAY-054: LCD HD44780 16x2/20x4 passa a exibir páginas rotativas (indicativo/ID, IP, pu2pny.local, temperatura SoC, uptime, dados de chamada); só valores medidos.
+- 2pnyd reconstruído (duas rotas novas); demais binários RF e perfil idênticos à 5.03. Defeito de regex (backtracking) no mascaramento de segredos encontrado e corrigido durante os testes.
+- Não resolvido: erro de reconhecimento do Pi Zero (sem causa no código; o código só lê o modelo), medição/ganho de velocidade, SH1106/Nextion ampliados, captive portal em STA/Ethernet. LED = telas (esclarecido pelo usuário).

@@ -1189,3 +1189,7 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - BOOT-053, DISPLAY-053 e REL-053: SW/CI PASS. Níveis VPS/HW/PROD: NÃO VERIFICADO / PENDENTE / NÃO APROVADO, respectivamente.
 - Esta release é **ALPHA PARCIAL PARA TESTE FÍSICO**: o erro de reconhecimento no Pi Zero, LED por modelo, desempenho medido de boot/troca/rede, displays SH1106/LCD/Nextion de outros modelos, edição de indicativo/DMR ID e captive portal em STA/Ethernet NÃO foram resolvidos nesta versão. Não reivindicar a correção desses itens.
 - Os relatos anteriores de “sem imagem” aplicavam-se à fase de desenvolvimento; esta seção registra a publicação final real.
+
+## 2026-11-08 — 5.04 (SW, aguardando CI/publicação)
+- IDENTITY-054, EXPERT-054, DISPLAY-054: SW PASS local (testes de script, overlay e compilação ARM32/ARM64 do backend). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.
+- Pi Zero primeiro boot, velocidade medida, SH1106/Nextion ampliados e captive em STA/Ethernet: NÃO RESOLVIDOS.

@@ -2020,3 +2020,8 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 - BOOT-053, DISPLAY-053 e REL-053: SW/CI PASS. Níveis VPS/HW/PROD: NÃO VERIFICADO / PENDENTE / NÃO APROVADO, respectivamente.
 - Esta release é **ALPHA PARCIAL PARA TESTE FÍSICO**: o erro de reconhecimento no Pi Zero, LED por modelo, desempenho medido de boot/troca/rede, displays SH1106/LCD/Nextion de outros modelos, edição de indicativo/DMR ID e captive portal em STA/Ethernet NÃO foram resolvidos nesta versão. Não reivindicar a correção desses itens.
 - Os relatos anteriores de “sem imagem” aplicavam-se à fase de desenvolvimento; esta seção registra a publicação final real.
+
+## 2026-11-08 — 5.04 (SW)
+- **IDENTITY-054:** alteração de indicativo e DMR ID somente por 2pny-identity-apply (valida `^[A-Z0-9/-]{3,16}$` e `^[0-9]{6,9}$`; rf-apply -> protocol-profiles activate -> config.json; rollback da identidade em falha). Sem alteração de servidores, senhas ou frequências.
+- **EXPERT-054:** `/api/expert/cmd` executa apenas identificadores de uma lista fixa em expert-cmd-504.py, somente leitura, saída limitada e com segredos mascarados.
+- **DISPLAY-054:** LCD HD44780 com páginas de 4 s; valores ausentes aparecem como '-'.
