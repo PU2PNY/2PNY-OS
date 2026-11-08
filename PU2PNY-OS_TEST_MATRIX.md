@@ -1145,3 +1145,8 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 - Ambos: arquitetura ELF, manifesto completo de conteúdo fora de display/versionamento preservado, fsck, montagem somente leitura, XZ e SHA-256 PASS. Assets existem e digest publicado corresponde ao checksum.
 - Sem mudança no motor RF, gateways, protocolos, Wi-Fi ou firmware/HMI. OLED/LCD diretos preservados, sem paridade física integral comprovada.
 - Para HMI que exibe USE NextionDriver/ON7LDS: habilitar Display e selecionar ON7LDS L3 (ou L3 HS somente se esse for o HMI instalado); salvar; testar standby/RX/TX e persistência após reboot. COMOK não comprova o HMI nem atualização visual.
+
+
+## 2026-11-08 — DISPLAY-045
+- SW / 2026-11-08: `ci/test-display-045-boot-reapply.py` → `TEST_DISPLAY_045_BOOT_REAPPLY_OK` no arquivo corrigido; falha (AssertionError) no `apply.py` original. Valida só a seleção do perfil salvo; não prova display físico nem RF.
+- VPS: NÃO VERIFICADO. HW (Nextion após reboot, Pi Zero): PENDENTE.

@@ -1157,3 +1157,10 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - Ambos: arquitetura ELF, manifesto completo de conteúdo fora de display/versionamento preservado, fsck, montagem somente leitura, XZ e SHA-256 PASS. Assets existem e digest publicado corresponde ao checksum.
 - Sem mudança no motor RF, gateways, protocolos, Wi-Fi ou firmware/HMI. OLED/LCD diretos preservados, sem paridade física integral comprovada.
 - Para HMI que exibe USE NextionDriver/ON7LDS: habilitar Display e selecionar ON7LDS L3 (ou L3 HS somente se esse for o HMI instalado); salvar; testar standby/RX/TX e persistência após reboot. COMOK não comprova o HMI nem atualização visual.
+
+
+## 2026-11-08 — DISPLAY-045 — candidata de correção, sem imagem
+- Estado: código alterado em branch de trabalho `work/arm32-fix-from-5.02` (base v5.02 `eec7a9f`). Nenhuma imagem ARM32/ARM64 gerada, nenhum CI executado, nada publicado.
+- SW: teste `ci/test-display-045-boot-reapply.py` PASS. VPS: não executado. HW: PENDENTE (Nextion real após reboot, em Pi Zero e demais).
+- Bloqueador de release: gate de escopo de `ci/build-5.02.py` não lista `usr/local/sbin/2pny-display-apply` entre os arquivos alteráveis; uma nova versão precisa de pipeline próprio, com baseline protegida e rollback.
+- Aberto: restauração do perfil de protocolo após reboot (causa não comprovada).

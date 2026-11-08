@@ -114,8 +114,15 @@ def select_persisted_modem_display(d, saved, override):
     detected = d.get('class', '')
     if detected in ('nextion', 'nextion_mmdvm'):
         return d
+    # After every boot the hardware probe rewrites hardware-probe.json and, when
+    # the modem answered but no display was proven, records class=display_candidate
+    # with state=mmdvm_display_candidate. That means "nothing proven yet" - it is
+    # not an OLED/LCD classification and must not discard the saved user profile
+    # (DISPLAY-045). I2C/HAT/framebuffer candidates keep a different state.
+    unproven_modem_port = (detected == 'display_candidate'
+                           and d.get('state') == 'mmdvm_display_candidate')
     # Never displace an actual OLED/LCD/TFT classification.
-    if detected not in ('', 'unknown', 'none'):
+    if detected not in ('', 'unknown', 'none') and not unproven_modem_port:
         return d
     if override.get('enabled') is False:
         return d

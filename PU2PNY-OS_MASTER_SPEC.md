@@ -1995,3 +1995,7 @@ Por confirmação explícita do usuário, todo o restante que já está funciona
 
 ## 2026-10-22 — display isolado
 DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização deve ocorrer no MMDVM-Display oficial externo. Nunca assumir suporte Nextion embutido. ON7LDS avançado exige renderer→PTY→NextionDriver→bridge MQTT de display. Configuração RF permanece somente leitura. Metadados whitelist; zero flash automático. OLED/LCD existentes preservados sem alegar paridade integral não comprovada.
+
+
+## 2026-11-08 — DISPLAY-045 reaplicação da Nextion após reboot
+- **DISPLAY-045 — Perfil Nextion via MMDVM salvo deve voltar após reboot.** Depois de cada boot o probe de hardware regrava `hardware-probe.json` e, quando o modem respondeu mas nenhum display foi comprovado, registra `class=display_candidate` com `state=mmdvm_display_candidate`. Esse estado significa "nada comprovado ainda" e não pode descartar o perfil `nextion_mmdvm` salvo (ON7LDS L3/L3 HS) em `display-settings.json`. Candidatos I2C/HAT/framebuffer/USB/SPI e displays OLED/LCD reais continuam protegidos; override `enabled=false` do usuário continua prevalecendo; nunca inventar display sem perfil salvo. Aceite: `ci/test-display-045-boot-reapply.py`. Nível mínimo: SW; funcionamento real da Nextion após reboot: HW.

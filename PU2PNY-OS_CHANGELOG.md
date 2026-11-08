@@ -1040,3 +1040,12 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - Ambos: arquitetura ELF, manifesto completo de conteúdo fora de display/versionamento preservado, fsck, montagem somente leitura, XZ e SHA-256 PASS. Assets existem e digest publicado corresponde ao checksum.
 - Sem mudança no motor RF, gateways, protocolos, Wi-Fi ou firmware/HMI. OLED/LCD diretos preservados, sem paridade física integral comprovada.
 - Para HMI que exibe USE NextionDriver/ON7LDS: habilitar Display e selecionar ON7LDS L3 (ou L3 HS somente se esse for o HMI instalado); salvar; testar standby/RX/TX e persistência após reboot. COMOK não comprova o HMI nem atualização visual.
+
+
+## 2026-11-08 — DISPLAY-045 (candidata de correção, base v5.02 `eec7a9f`) — NÃO PUBLICADA
+- Defeito reportado pelo usuário: telas conectadas não mostram os dados da MMDVM e o perfil anterior não volta após desligar/ligar (relatos de usuários da imagem 32 bits).
+- Causa no código (SW, reproduzida em teste): `runtime/display/apply.py::select_persisted_modem_display` tratava `display_candidate`/`mmdvm_display_candidate`, estado que o probe grava no boot, como classificação real de OLED/LCD, ignorava o perfil `nextion_mmdvm` salvo e seguia pelo aplicador OLED/LCD legado. O serviço `2pny-display-reconcile` então nunca reativava a Nextion.
+- Alteração mínima: apenas essa seleção em `runtime/display/apply.py`. Sem mudança em RF, MMDVMHost, gateways, protocolos, rede/Wi-Fi, wizard, NextionDriver, HMI/TFT.
+- Teste novo: `ci/test-display-045-boot-reapply.py` (falha no arquivo original, passa no corrigido).
+- NÃO resolvido nesta entrega: restauração automática do perfil de protocolo após reboot (`2pny-profile-autostart`). Causa não comprovada; depende de logs do aparelho afetado.
+- Validação: SW PASS apenas pelo teste acima. VPS, HW e imagem ARM32/ARM64: NÃO VERIFICADO / PENDENTE.
