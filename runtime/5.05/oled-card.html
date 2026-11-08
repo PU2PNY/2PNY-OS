@@ -1,0 +1,6 @@
+<section class="section" id="oledcard505"><article class="card"><h2>Tela OLED / LCD (I2C)</h2>
+<p class="sshhelp">O sistema procura a tela sozinho no barramento I2C (endereços 0x3C, 0x3D, 0x27, 0x3F). Se a imagem aparecer deslocada ou com ruído, escolha o tipo certo, como no Pi-Star e no WPSD.</p>
+<div class="row"><label>Tipo<select id="oledType"><option value="auto">Automático (SSD1306)</option><option value="ssd1306">OLED SSD1306</option><option value="sh1106">OLED SH1106</option><option value="lcd">LCD HD44780 (I2C)</option><option value="none">Sem tela I2C</option></select></label>
+<label>Tamanho<select id="oledSize"><option value="64">OLED 128x64</option><option value="32">OLED 128x32</option><option value="20x4">LCD 20x4</option><option value="16x2">LCD 16x2</option></select></label></div>
+<div class="row"><button class="btn primary" id="oledSave" type="button">Aplicar</button></div>
+<p id="oledMsg" class="statusmsg"></p></article></section>

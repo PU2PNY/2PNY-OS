@@ -2025,3 +2025,6 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 - **IDENTITY-054:** alteração de indicativo e DMR ID somente por 2pny-identity-apply (valida `^[A-Z0-9/-]{3,16}$` e `^[0-9]{6,9}$`; rf-apply -> protocol-profiles activate -> config.json; rollback da identidade em falha). Sem alteração de servidores, senhas ou frequências.
 - **EXPERT-054:** `/api/expert/cmd` executa apenas identificadores de uma lista fixa em expert-cmd-504.py, somente leitura, saída limitada e com segredos mascarados.
 - **DISPLAY-054:** LCD HD44780 com páginas de 4 s; valores ausentes aparecem como '-'.
+
+## 2026-11-08 — 5.05 (SW)
+- **DISPLAY-055:** quando o display é não comprovado (not_found / mmdvm_display_candidate / i2c_candidate), o display-core procura OLED/LCD I2C por leitura de endereço e usa a escolha explícita de oled.json; Nextion comprovado (nextion, nextion_mmdvm, physical_confirmed) nunca é substituído. A varredura não escreve no barramento e é repetida no máximo a cada 60 s.

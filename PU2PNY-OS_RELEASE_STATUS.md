@@ -1193,3 +1193,6 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 ## 2026-11-08 — 5.04 (SW, aguardando CI/publicação)
 - IDENTITY-054, EXPERT-054, DISPLAY-054: SW PASS local (testes de script, overlay e compilação ARM32/ARM64 do backend). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.
 - Pi Zero primeiro boot, velocidade medida, SH1106/Nextion ampliados e captive em STA/Ethernet: NÃO RESOLVIDOS.
+
+## 2026-11-08 — 5.05 (SW, aguardando CI/publicação)
+- DISPLAY-055: SW PASS local (reprodução do defeito na 5.03, descoberta I2C, escolha SSD1306/SH1106/LCD, linhas extras, overlay encadeado 5.03→5.04→5.05, compilação ARM32/ARM64). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.

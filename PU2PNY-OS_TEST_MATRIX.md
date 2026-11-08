@@ -1191,3 +1191,10 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 | DISPLAY-054 | páginas LCD 20x4 e 16x2, largura, ASCII, valores ausentes | SW | PASS | ci/test-lcd-054.py |
 | DISPLAY-054 | LCD físico 16x2 e 20x4 | HW | PENDENTE | sem teste |
 | REL-054 | overlay sobre 5.03 com âncoras únicas, backups e rejeição de base inesperada | SW | PASS | ci/test-5.04-overlay.py |
+
+## 2026-11-08 — 5.05
+| ID | Teste | Nível | Estado | Evidência |
+|---|---|---|---|---|
+| DISPLAY-055 | defeito reproduzido na 5.03 e corrigido: OLED/LCD criado pelo scan, Nextion preservado | SW | PASS | ci/test-5.05-display.py |
+| DISPLAY-055 | linhas MMDVM/Raspberry no OLED e páginas no LCD, ordem antiga preservada | SW | PASS | ci/test-5.05-display.py, ci/test-lcd-054.py |
+| DISPLAY-055 | SSD1306 128x64/128x32, SH1106, LCD 16x2/20x4 físicos em Pi Zero W e Pi 3/4 | HW | PENDENTE | sem teste |

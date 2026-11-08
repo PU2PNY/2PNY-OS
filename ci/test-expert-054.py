@@ -3,7 +3,9 @@
 import importlib.util
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('expert_cmd', ROOT / 'runtime/5.04/expert-cmd.py')
+import sys as _sys
+VERSION = _sys.argv[1] if len(_sys.argv) > 1 else '5.04'
+spec = importlib.util.spec_from_file_location('expert_cmd', ROOT / f'runtime/{VERSION}/expert-cmd.py')
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 
 # Only fixed read-only programs may ever run.

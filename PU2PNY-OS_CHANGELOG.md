@@ -1082,3 +1082,9 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - DISPLAY-054: LCD HD44780 16x2/20x4 passa a exibir páginas rotativas (indicativo/ID, IP, pu2pny.local, temperatura SoC, uptime, dados de chamada); só valores medidos.
 - 2pnyd reconstruído (duas rotas novas); demais binários RF e perfil idênticos à 5.03. Defeito de regex (backtracking) no mascaramento de segredos encontrado e corrigido durante os testes.
 - Não resolvido: erro de reconhecimento do Pi Zero (sem causa no código; o código só lê o modelo), medição/ganho de velocidade, SH1106/Nextion ampliados, captive portal em STA/Ethernet. LED = telas (esclarecido pelo usuário).
+
+## 2026-11-08 — 5.05.000 (em desenvolvimento, SW)
+- DISPLAY-055: causa do OLED apagado encontrada no código: o probe só lista I2C já registrado pelo kernel (um OLED comum nunca aparece) e, com MMDVM presente, substitui qualquer indício por "Nextion pelo modem"; o display-core então nunca iniciava o OLED/LCD. Agora o display-core varre o I2C (leitura, 0x3C/0x3D/0x27/0x3F), respeita /var/lib/2pny/oled.json e nunca sobrepõe Nextion comprovado/persistido.
+- Expert: seleção SSD1306 / SH1106 / 128x32 / LCD 16x2 / 20x4 / nenhuma (`/api/oled/config`), como no Pi-Star/WPSD; diagnóstico de telas mostra config.txt, módulos i2c/spi, oled.json e display-status.
+- OLED e LCD: páginas com modem MMDVM (tipo, firmware, porta@baud, modos, MCU, UDID curto) e Raspberry (placa, carga, RAM livre, SD livre, MHz). Valores ausentes são omitidos.
+- Não verificado em hardware. Habilitação do I2C no sistema (dtparam=i2c_arm=on) não foi verificada na partição de boot desta imagem.
