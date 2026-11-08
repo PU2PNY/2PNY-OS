@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Software regression, original failure reproduced, baseline protected
         run: |
           set -euo pipefail
