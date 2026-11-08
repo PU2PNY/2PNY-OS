@@ -1150,3 +1150,8 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 ## 2026-11-08 — DISPLAY-045
 - SW / 2026-11-08: `ci/test-display-045-boot-reapply.py` → `TEST_DISPLAY_045_BOOT_REAPPLY_OK` no arquivo corrigido; falha (AssertionError) no `apply.py` original. Valida só a seleção do perfil salvo; não prova display físico nem RF.
 - VPS: NÃO VERIFICADO. HW (Nextion após reboot, Pi Zero): PENDENTE.
+
+
+## 2026-11-08 — NET-045
+- SW / 2026-11-08: `ci/test-net-045-wifi-autoconnect.py` → `TEST_NET_045_WIFI_AUTOCONNECT_OK` com nmcli simulado; falha (AssertionError) no `2pny-wifi-apply.py` original. Prova as chamadas ao nmcli, não reconexão real.
+- VPS: NÃO VERIFICADO. HW (Pi Zero W 32 bits; Pi 3/4 64 bits): PENDENTE.

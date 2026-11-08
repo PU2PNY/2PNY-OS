@@ -46,11 +46,11 @@ def main() -> int:
     previous = current_active(); name = safe_name(ns.ssid)
     known = run(["-t", "-f", "NAME", "connection", "show"]).stdout.splitlines()
     if name in known:
-        cp = run(["connection", "modify", name, "802-11-wireless.ssid", ns.ssid, "802-11-wireless-security.key-mgmt", "wpa-psk", "802-11-wireless-security.psk", ns.password, "connection.autoconnect", "yes", "connection.autoconnect-priority", str(ns.priority)])
+        cp = run(["connection", "modify", name, "802-11-wireless.ssid", ns.ssid, "802-11-wireless-security.key-mgmt", "wpa-psk", "802-11-wireless-security.psk", ns.password, "connection.autoconnect", "yes", "connection.autoconnect-priority", str(ns.priority), "connection.autoconnect-retries", "0"])
     else:
         cp = run(["connection", "add", "type", "wifi", "ifname", iface, "con-name", name, "ssid", ns.ssid])
         if cp.returncode == 0:
-            cp = run(["connection", "modify", name, "wifi-sec.key-mgmt", "wpa-psk", "wifi-sec.psk", ns.password, "connection.autoconnect", "yes", "connection.autoconnect-priority", str(ns.priority)])
+            cp = run(["connection", "modify", name, "wifi-sec.key-mgmt", "wpa-psk", "wifi-sec.psk", ns.password, "connection.autoconnect", "yes", "connection.autoconnect-priority", str(ns.priority), "connection.autoconnect-retries", "0"])
     if cp.returncode != 0:
         print(json.dumps({"ok": False, "error": "profile_stage_failed", "detail": cp.stderr.strip()})); return 4
     cp = run(["connection", "up", name, "ifname", iface]); deadline = time.time() + 25

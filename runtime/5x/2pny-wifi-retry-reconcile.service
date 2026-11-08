@@ -1,0 +1,15 @@
+[Unit]
+Description=PU2PNY repair saved Wi-Fi profiles so NetworkManager never gives up reconnecting
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/sbin/2pny-wifi-retry-reconcile
+TimeoutStartSec=60
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

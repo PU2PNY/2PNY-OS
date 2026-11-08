@@ -1164,3 +1164,9 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - SW: teste `ci/test-display-045-boot-reapply.py` PASS. VPS: não executado. HW: PENDENTE (Nextion real após reboot, em Pi Zero e demais).
 - Bloqueador de release: gate de escopo de `ci/build-5.02.py` não lista `usr/local/sbin/2pny-display-apply` entre os arquivos alteráveis; uma nova versão precisa de pipeline próprio, com baseline protegida e rollback.
 - Aberto: restauração do perfil de protocolo após reboot (causa não comprovada).
+
+
+## 2026-11-08 — NET-045 — candidata de correção, sem imagem
+- Estado: código em branch de trabalho; nenhuma imagem ARM32/ARM64 gerada, nenhum CI executado, nada publicado.
+- SW: `ci/test-net-045-wifi-autoconnect.py` PASS. VPS: não executado. HW: PENDENTE (reconexão após reboot em Pi Zero W 32 bits e Pi 3/4 64 bits).
+- Bloqueador: falta patch de imagem/pipeline que instale `2pny-wifi-apply` atualizado e `2pny-wifi-retry-reconcile.service`; push ao GitHub recusado (403) até o app do Claude receber acesso.

@@ -1049,3 +1049,11 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - Teste novo: `ci/test-display-045-boot-reapply.py` (falha no arquivo original, passa no corrigido).
 - NÃO resolvido nesta entrega: restauração automática do perfil de protocolo após reboot (`2pny-profile-autostart`). Causa não comprovada; depende de logs do aparelho afetado.
 - Validação: SW PASS apenas pelo teste acima. VPS, HW e imagem ARM32/ARM64: NÃO VERIFICADO / PENDENTE.
+
+
+## 2026-11-08 — NET-045 (candidata de correção, base v5.02 `eec7a9f` + DISPLAY-045) — NÃO PUBLICADA
+- Defeito reportado: às vezes o hotspot não reconecta sozinho ao Wi-Fi depois de desligar/ligar (imagem 32 bits/Pi Zero).
+- Causa provável no código (SW): `runtime/5x/2pny-wifi-apply.py` não definia `connection.autoconnect-retries`; o NetworkManager desiste após poucas tentativas. Causa real em hardware: NÃO VERIFICADA (sem log de aparelho afetado).
+- Alteração mínima: `2pny-wifi-apply.py` passa a gravar `connection.autoconnect-retries=0`; novos `runtime/5x/2pny-wifi-retry-reconcile.py` e `.service` reparam perfis já salvos. Sem mudança em RF, MMDVMHost, gateways, protocolos, display ou wizard.
+- Teste novo: `ci/test-net-045-wifi-autoconnect.py` (falha no arquivo original, passa no corrigido).
+- Validação: SW PASS apenas pelo teste. VPS e HW: NÃO VERIFICADO / PENDENTE. Instalação do reconcile em imagem exige patch de imagem e pipeline ainda não criados.
