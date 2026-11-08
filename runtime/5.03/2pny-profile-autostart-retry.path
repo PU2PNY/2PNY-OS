@@ -1,0 +1,9 @@
+[Unit]
+Description=PU2PNY retry proven radio profile upon hardware-probe change
+
+[Path]
+PathChanged=/var/lib/2pny/hardware-probe.json
+Unit=2pny-profile-autostart-retry.service
+
+[Install]
+WantedBy=paths.target
