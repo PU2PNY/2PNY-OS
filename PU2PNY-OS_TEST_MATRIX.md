@@ -1230,3 +1230,8 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 | UI-058 | aparência no navegador real | HW | PENDENTE | sem teste |
 | EXPERT-058 | comandos no allowlist | SW | PASS | ci/test-expert-054.py 5.08 |
 | REL-058 | overlay 5.08 sobre 5.07, base alterada rejeitada | SW | PASS | ci/test-5.08.py |
+| WIZ-059 | espera de 150 s e queda para a consulta de estado ao cancelar | SW | PASS | ci/test-5.09.py |
+| WIZ-059 | salvar e ativar DMR no Pi Zero W sem "signal is aborted" | HW | PENDENTE | sem teste |
+| DISPLAY-059 | OLED 64 linhas nativa e nítida; 32 linhas inalterada; fallback sem fonte | SW | PASS | ci/test-5.09.py |
+| DISPLAY-059 | texto legível na OLED 128×64 real | HW | PENDENTE | sem teste |
+| REL-059 | overlay 5.09 sobre 5.08, base alterada rejeitada | SW | PASS | ci/test-5.09.py |

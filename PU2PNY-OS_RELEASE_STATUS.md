@@ -1210,3 +1210,8 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 
 ## 5.08 — 2026-11-09 (SW, candidata a teste de HW)
 Branch `release/pu2pny-5.08`, overlay sobre a 5.07 publicada (SHA-256 verificado). RF, MMDVMHost, DMRGateway, NextionDriver, probe, autostart, rf-apply, network-apply e protocol-profiles byte-idênticos (checado no build). HW: NÃO VERIFICADO. Não é release de produção. Pendências conhecidas no CHANGELOG (NÃO CORRIGIDO).
+
+---
+
+## 5.09 — 2026-11-09 (SW, candidata a teste de HW)
+Branch `release/pu2pny-5.09`, overlay sobre a 5.08 publicada (SHA-256 verificado). Só `wizard.html`, `oled-502.py` e a versão do daemon mudam; RF/MMDVMHost/DMRGateway/NextionDriver byte-idênticos. HW: NÃO VERIFICADO. Não é produção.

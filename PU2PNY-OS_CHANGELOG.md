@@ -1112,3 +1112,8 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - **UI-058:** barra Wi-Fi com % calculado de dBm quando ausente; cores verde/amarelo/vermelho por qualidade; logotipo transparente no cabeçalho/assistente e favicon (assets/brand/web).
 - **EXPERT-058:** comandos Wi-Fi (nmcli, iw, scan), NetworkManager, uptime/tempos de unidades, /dev/i2c-*, `errors`.
 - **NÃO CORRIGIDO (investigar com dados de campo):** lentidão de ativação (reinícios do MMDVMHost nos scripts protegidos), YSF sem conectar, Nextion exibindo só CPU, assistente preso em "Conectando…" após queda do AP, Wi-Fi não persistido no Pi 4, subtensão (throttled=0x50000).
+
+## 2026-11-09 — 5.09 (SW)
+- **WIZ-059:** relato de campo (32 bits): o DMR conectou, mas o assistente mostrou "signal is aborted without reason". Causa: `getj` cancelava toda chamada após 15 s e "salvar e ativar" demora mais no Pi Zero; o rádio continuava ativando. Agora a chamada tem 150 s e, se a espera for cancelada, o assistente segue para a consulta do estado real (`/api/rf`) em vez de acusar erro. Não altera RF, MMDVMHost nem gateways.
+- **DISPLAY-059:** relato de campo (OLED 128×64, funcionou pela primeira vez na 5.08): letras pequenas e borradas. Causa: fonte bitmap padrão (6×11) achatada à força para 9 px. Em painéis com 48+ linhas, o texto passa a usar DejaVu Sans Mono Bold 12 em tamanho nativo (4 linhas de dados + título); painéis de 32 linhas mantêm o desenho anterior. Falha ao abrir a fonte volta ao desenho anterior.
+- **NÃO CORRIGIDO:** lentidão de ativação, YSF sem conectar, assistente preso em "Conectando…", Wi-Fi não salvo no Pi 4. Crossmode e bases Orange Pi/NanoPi planejados para a 5.10.

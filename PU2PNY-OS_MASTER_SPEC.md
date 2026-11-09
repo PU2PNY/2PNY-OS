@@ -2048,3 +2048,7 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 - **BOOT-058:** serviços e timers de manutenção não essenciais ficam mascarados; boot não bloqueado por userconfig.
 - **UI-058:** identidade visual: logo transparente e favicon do projeto; qualidade de link por cor.
 - **EXPERT-058:** diagnóstico somente leitura ampliado (Wi-Fi, NetworkManager, erros do boot, I2C).
+
+## 2026-11-09 — 5.09 (SW)
+- **WIZ-059:** o assistente nunca declara erro de ativação por tempo de espera do navegador; só pelo estado informado pelo sistema. Aceite (HW): salvar e ativar DMR no Pi Zero W termina sem mensagem de abort.
+- **DISPLAY-059:** texto de OLED desenhado em tamanho nativo, sem esticar. Aceite (HW): legível e nítido na OLED 128×64.
