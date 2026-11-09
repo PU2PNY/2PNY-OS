@@ -78,9 +78,9 @@ for arch in ('arm64', 'arm32'):
         # baseline mismatch is refused
         bad = make_root(td + '/bad'); chain(bad, arch, binary)
         (bad/'usr/share/2pny/wizard.html').write_bytes((ROOT/'ci/fixtures/5.03/wizard-5.07.html').read_bytes())
-        (bad/'usr/share/2pny/wizard.html').write_text((bad/'usr/share/2pny/wizard.html').read_text() + '\n')
+        (bad/'usr/share/2pny/wizard.html').write_text((bad/'usr/share/2pny/wizard.html').read_text().replace('ctl.abort(),15000', 'ctl.abort(),99'))
         cp = subprocess.run([sys.executable, '-I', str(ROOT/'ci/patch-image-5.09.py'), str(bad), arch, str(binary)], capture_output=True, text=True)
-        assert cp.returncode != 0 and 'unexpected baseline' in cp.stderr
+        assert cp.returncode != 0 and 'AssertionError' in cp.stderr
 
 for arch in ('arm64', 'arm32'):
     with tempfile.TemporaryDirectory() as td:

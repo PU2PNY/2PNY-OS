@@ -42,7 +42,7 @@ shutil.copyfile(binary, root/'usr/local/bin/2pnyd')
 (root/'usr/local/bin/2pnyd').chmod(0o755)
 
 wizard = 'usr/share/2pny/wizard.html'
-assert (root/wizard).read_bytes() == (fix/'wizard-5.07.html').read_bytes(), 'unexpected baseline: ' + wizard
+# The 32- and 64-bit wizards differ (host name), so the two exact-once anchors below are the baseline check.
 backup(wizard)
 replace(wizard, 'timer=setTimeout(()=>ctl.abort(),15000);', 'timer=setTimeout(()=>ctl.abort(),(opt&&opt.timeout)||15000);')
 replace(wizard, "    await getj('/api/basic/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});\n",
