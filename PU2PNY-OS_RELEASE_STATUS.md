@@ -1205,3 +1205,8 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 ## 2026-11-09 — 5.07 (SW, aguardando CI/publicação)
 - BOOT-057, SPEED-057, EXPERT-057, HOST-057: SW PASS local (ci/test-5.07.py: portão de retomada, retomada DMR/YSF/D-Star, cadeia 5.04→5.07 em arm64 e arm32, renomeação 32 bits, compilação). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.
 - Ganho de velocidade, fim dos reinícios do MMDVMHost, Expert com dados, Nextion/OLED: NÃO VERIFICADOS. Direct privado P2P: NÃO INICIADO.
+
+---
+
+## 5.08 — 2026-11-09 (SW, candidata a teste de HW)
+Branch `release/pu2pny-5.08`, overlay sobre a 5.07 publicada (SHA-256 verificado). RF, MMDVMHost, DMRGateway, NextionDriver, probe, autostart, rf-apply, network-apply e protocol-profiles byte-idênticos (checado no build). HW: NÃO VERIFICADO. Não é release de produção. Pendências conhecidas no CHANGELOG (NÃO CORRIGIDO).

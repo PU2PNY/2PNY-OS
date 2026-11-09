@@ -1219,3 +1219,14 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 | HOST-057 | 32 bits sem `pu2pny.local` restante; 64 bits inalterado | SW | PASS | ci/test-5.07.py |
 | HOST-057 | pu2pny32.local resolve na rede/AP/captive | HW | PENDENTE | sem teste |
 | REL-057 | overlay 5.07 sobre 5.06, base alterada rejeitada | SW | PASS | ci/test-5.07.py |
+| CLOCK-058 | fuso confirmado por link, pedidos inválidos rejeitados, restore no boot | SW | PASS | ci/test-5.08.py |
+| CLOCK-058 | fuso persiste ao sair do menu e após reinício | HW | PENDENTE | sem teste |
+| DISPLAY-058 | I2C escolhido com nextion_mmdvm manual; Nextion confirmado preservado | SW | PASS | ci/test-5.08.py |
+| DISPLAY-058 | OLED/LCD mostra dados MMDVM (32 e 64 bits) | HW | PENDENTE | sem teste |
+| SPEED-058 | foto assíncrona com cache | SW | PASS | ci/test-5.08.py |
+| BOOT-058 | máscaras aplicadas, wants removidos | SW | PASS | ci/test-5.08.py |
+| BOOT-058 | boot conclui sem userconfig; ativação mais rápida | HW | PENDENTE | sem teste |
+| UI-058 | barra Wi-Fi %/cores, logo e favicon | SW | PASS | ci/test-5.08.py |
+| UI-058 | aparência no navegador real | HW | PENDENTE | sem teste |
+| EXPERT-058 | comandos no allowlist | SW | PASS | ci/test-expert-054.py 5.08 |
+| REL-058 | overlay 5.08 sobre 5.07, base alterada rejeitada | SW | PASS | ci/test-5.08.py |

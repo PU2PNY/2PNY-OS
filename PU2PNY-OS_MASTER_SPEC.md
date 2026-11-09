@@ -2040,3 +2040,11 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 - **SPEED-057:** o painel não pode bifurcar um processo por serviço por requisição; estados vêm de uma consulta em lote com cache curto.
 - **EXPERT-057:** diagnóstico somente leitura de carga/processos e aplicação de perfil.
 - **HOST-057:** a imagem 32 bits anuncia `pu2pny32.local`; a 64 bits, `pu2pny.local`.
+
+## 2026-11-09 — 5.08 (SW)
+- **CLOCK-058:** a fonte de verdade do fuso é o link `/etc/localtime`; confirmação por realpath; sem dependência de systemd-timedated. Aceite (HW): fuso persiste ao sair do menu e após reinício.
+- **DISPLAY-058:** OLED/LCD I2C deve ser detectado em ambas as arquiteturas, inclusive ao lado de um Nextion não confirmado fisicamente; módulo i2c-dev carregado no boot. Aceite (HW): OLED/LCD mostra dados do MMDVM em 32 e 64 bits.
+- **SPEED-058:** nenhuma operação de rede síncrona (foto, QRZ) no caminho de uma requisição de painel.
+- **BOOT-058:** serviços e timers de manutenção não essenciais ficam mascarados; boot não bloqueado por userconfig.
+- **UI-058:** identidade visual: logo transparente e favicon do projeto; qualidade de link por cor.
+- **EXPERT-058:** diagnóstico somente leitura ampliado (Wi-Fi, NetworkManager, erros do boot, I2C).

@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+STATE=/var/lib/2pny/settings/clock.json
+[[ -r "$STATE" ]] || exit 0
+TZ_NAME="$(python3 - "$STATE" <<'PY'
+import json,sys
+try:
+    value=str(json.load(open(sys.argv[1],encoding='utf-8')).get('timezone') or '').strip()
+except Exception:
+    value=''
+print(value)
+PY
+)"
+[[ -n "$TZ_NAME" ]] || exit 0
+[[ "$TZ_NAME" != /* ]] || exit 2
+[[ "$TZ_NAME" != *..* ]] || exit 2
+[[ -e "/usr/share/zoneinfo/$TZ_NAME" ]] || exit 2
+CURRENT="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
+if [[ "$CURRENT" != "$TZ_NAME" ]]; then
+    if ! timedatectl set-timezone "$TZ_NAME" >/dev/null 2>&1; then
+        ln -snf "/usr/share/zoneinfo/$TZ_NAME" /etc/localtime
+        printf '%s\n' "$TZ_NAME" > /etc/timezone
+    fi
+fi
+exit 0

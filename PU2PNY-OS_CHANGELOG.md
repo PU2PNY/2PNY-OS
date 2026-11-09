@@ -1103,3 +1103,12 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - EXPERT-057: comandos "Carga e processos" (`load`) e "Aplicação de perfil" (`apply`), e `boot` com jobs/cadeia crítica, para achar a causa da carga.
 - HOST-057 (somente imagem 32 bits): nome mDNS `pu2pny32.local` (hostname, hosts, avahi, guard, alias, wizard, captive, OLED/LCD, daemon). Imagem 64 bits mantém `pu2pny.local`.
 - Não resolvido/não verificado: reinícios repetidos do MMDVMHost (dentro dos scripts RF protegidos, não alterados), causa real da carga do Pi Zero, campos Nextion "?", OLED/LED, `2pny-display-boot.service` falhado, selo "Internet não conectada", modo Direct privado ponto a ponto (precisa de desenho: sem servidor/IP fixo exige ponto de encontro). Tudo SW; HW pendente.
+
+## 2026-11-09 — 5.08 (SW)
+- **CLOCK-058:** `timedatectl`/`systemd-timedated` retornam "Permission denied" nas imagens de campo, e `/etc/timezone` (lido pelo timedatectl) divergia do link `/etc/localtime` (lido pela libc). O fuso passa a ser lido e confirmado só pelo link; o helper grava o link de forma atômica, `/etc/timezone` e confirma por realpath. A restauração no boot usa o mesmo caminho. O painel deixa de consultar `timedatectl show`.
+- **DISPLAY-058:** `i2c-dev` carregado no boot e antes do display-core; varredura I2C também quando a classe é `nextion_mmdvm` sem confirmação física (override manual); `2pny-display-apply` mantém/inicia o display-core quando acha OLED/LCD; timeout do pedido 35→120 s. Nextion confirmado nunca é substituído.
+- **SPEED-058:** foto do operador baixada em job assíncrono (cache primeiro), espaçamento da consulta 15→4 s.
+- **BOOT-058:** mascarados `userconfig.service`, timers apt-daily/apt-daily-upgrade/man-db/e2scrub/dpkg-db-backup, ModemManager, triggerhappy e udisks2 (links para /dev/null; reversível removendo o link).
+- **UI-058:** barra Wi-Fi com % calculado de dBm quando ausente; cores verde/amarelo/vermelho por qualidade; logotipo transparente no cabeçalho/assistente e favicon (assets/brand/web).
+- **EXPERT-058:** comandos Wi-Fi (nmcli, iw, scan), NetworkManager, uptime/tempos de unidades, /dev/i2c-*, `errors`.
+- **NÃO CORRIGIDO (investigar com dados de campo):** lentidão de ativação (reinícios do MMDVMHost nos scripts protegidos), YSF sem conectar, Nextion exibindo só CPU, assistente preso em "Conectando…" após queda do AP, Wi-Fi não persistido no Pi 4, subtensão (throttled=0x50000).
