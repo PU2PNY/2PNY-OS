@@ -1,0 +1,16 @@
+#!/bin/bash
+set -u
+child=""
+last=""
+cleanup(){ [[ -n "$child" ]] && kill "$child" 2>/dev/null || true; }
+trap cleanup EXIT TERM INT
+while true; do
+  ip="$(ip -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -1)"
+  if [[ -n "$ip" && "$ip" != "$last" ]]; then
+    [[ -n "$child" ]] && kill "$child" 2>/dev/null || true
+    avahi-publish -a -f 2pny.local "$ip" >/dev/null 2>&1 &
+    child=$!
+    last="$ip"
+  fi
+  sleep 5
+done

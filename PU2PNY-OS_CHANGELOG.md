@@ -1095,3 +1095,11 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - BOOT-056: `2pny-fast-resume` (ExecStartPre do autostart) inicia MMDVMHost e o gateway D-Star sem regenerar configuração quando `network-radio.json` comprova o último perfil; qualquer dúvida cai na ativação original, inalterada. Ganho de tempo: NÃO MEDIDO.
 - PROTO-056/crossmode: leitura de documentação: `MMDVM_CM` (transcodificação por software) lista Pi 2/3/4 e não suporta Pi Zero/1, variantes D-Star "ainda não funcionais"; refletores XLX com transcodificação convertem no servidor. Expert mostra o estado real; runtime local permanece desabilitado conforme PROTO-047.
 - Não alterados: MMDVMHost, DMRGateway, NextionDriver, probe, autostart, apply de perfil/RF/Wi-Fi.
+
+## 2026-11-09 — 5.07.000 (em desenvolvimento, SW)
+- Origem: teste em Pi Zero W com 5.05 (carga 7,16 em núcleo único; `Failed to fetch` ao salvar DMR; Expert sem dados; `pu2pny.local` igual ao da imagem 64 bits).
+- BOOT-057: o timer de retomada (90 s) disputava CPU com o "Salvar" do usuário (rf-apply expirava em 45 s). Novo `ExecCondition` `2pny-retry-gate`: não roda durante ativação em curso, nem com carga > 2×núcleos, e recua 90 s → 30 min; reinicia o recuo quando há perfil novo. Timeouts de `2pny-protocol-profiles` 45/55 s → 150 s e espera do assistente 90 s → 240 s (só o limite). Drop-ins `CPUWeight` baixo em netdiag/aprs/station/display-core. Retomada rápida estendida a DMR e YSF (além de D-Star), mesma regra de prova completa.
+- SPEED-057: `/api/dashboard` chamava `systemctl is-active` 11 vezes por requisição; agora uma chamada em lote com cache de 3 s.
+- EXPERT-057: comandos "Carga e processos" (`load`) e "Aplicação de perfil" (`apply`), e `boot` com jobs/cadeia crítica, para achar a causa da carga.
+- HOST-057 (somente imagem 32 bits): nome mDNS `pu2pny32.local` (hostname, hosts, avahi, guard, alias, wizard, captive, OLED/LCD, daemon). Imagem 64 bits mantém `pu2pny.local`.
+- Não resolvido/não verificado: reinícios repetidos do MMDVMHost (dentro dos scripts RF protegidos, não alterados), causa real da carga do Pi Zero, campos Nextion "?", OLED/LED, `2pny-display-boot.service` falhado, selo "Internet não conectada", modo Direct privado ponto a ponto (precisa de desenho: sem servidor/IP fixo exige ponto de encontro). Tudo SW; HW pendente.

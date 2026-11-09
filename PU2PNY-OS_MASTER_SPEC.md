@@ -2034,3 +2034,9 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 - **VOICE-056:** hora cheia falada somente em D-Star, a partir de `TIME_en_GB.{indx,ambe}` (offsets/comprimentos em frames de 9 bytes), enviada por `dgwvoicetransmit`; exige voz e hora cheia habilitadas, MMDVMHost e gateway ativos. Sem voz em português disponível nos dados do gateway. Critério de aceite (HW): ouvir a hora no rádio a cada hora cheia.
 - **BOOT-056:** retomada rápida só para D-Star e só quando `last-active-profile.json`, `network-radio.json` (gateway_active), `config.json`, probe e arquivos gerados concordam e há rota padrão; senão, ativação original. Nunca reinicia unidade em execução nem reescreve configuração.
 - **PROTO-056:** crossmode permanece desabilitado até MMDVM-Transcoder físico validado (PROTO-047). Refletor XLX transcodificador é o caminho sem hardware extra. Utilitários de transcodificação por software (MMDVM_CM) não suportam Pi Zero/1.
+
+## 2026-11-09 — 5.07 (SW)
+- **BOOT-057:** a retomada periódica nunca roda junto de uma ativação nem com CPU ocupada, e recua exponencialmente (90 s a 30 min); não altera configuração. Limites de espera de `2pny-protocol-profiles` e do assistente aumentados sem mudar a lógica RF. Retomada rápida vale para D-Star, DMR e YSF somente com prova completa (perfil, network-radio, config, arquivos gerados, probe, rota padrão).
+- **SPEED-057:** o painel não pode bifurcar um processo por serviço por requisição; estados vêm de uma consulta em lote com cache curto.
+- **EXPERT-057:** diagnóstico somente leitura de carga/processos e aplicação de perfil.
+- **HOST-057:** a imagem 32 bits anuncia `pu2pny32.local`; a 64 bits, `pu2pny.local`.

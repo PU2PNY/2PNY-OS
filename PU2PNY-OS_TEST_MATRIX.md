@@ -1210,3 +1210,12 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 | BOOT-056 | tempo de reconexão ao refletor após ligar (Expert > Tempo de boot) em Pi Zero W e Pi 3/4 | HW | PENDENTE | sem teste |
 | EXPERT-056 | comandos "Relógio e fuso" e "Voz e hora cheia" no allowlist | SW | PASS | ci/test-expert-054.py 5.06 |
 | REL-056 | overlay 5.06 sobre 5.05 com âncoras únicas, backups, rejeição de base alterada e reaplicação | SW | PASS | ci/test-5.06.py |
+| BOOT-057 | portão: recua 90 s→30 min, pula com ativação/carga, reinicia com perfil novo | SW | PASS | ci/test-5.07.py |
+| BOOT-057 | retomada rápida DMR/YSF/D-Star só com prova completa | SW | PASS | ci/test-5.07.py |
+| BOOT-057 | salvar DMR no Pi Zero W sem erro e sem concorrência do timer | HW | PENDENTE | sem teste |
+| SPEED-057 | dashboard usa só estado em cache (≥10 chamadas trocadas) | SW | PASS | ci/test-5.07.py |
+| SPEED-057 | Expert mostra dados e log no Pi Zero W; carga medida | HW | PENDENTE | sem teste |
+| EXPERT-057 | comandos load/apply no allowlist | SW | PASS | ci/test-expert-054.py 5.07 |
+| HOST-057 | 32 bits sem `pu2pny.local` restante; 64 bits inalterado | SW | PASS | ci/test-5.07.py |
+| HOST-057 | pu2pny32.local resolve na rede/AP/captive | HW | PENDENTE | sem teste |
+| REL-057 | overlay 5.07 sobre 5.06, base alterada rejeitada | SW | PASS | ci/test-5.07.py |

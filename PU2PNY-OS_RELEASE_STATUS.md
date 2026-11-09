@@ -1201,3 +1201,7 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 - CLOCK-056, VOICE-056, BOOT-056, PROTO-056, EXPERT-056: SW PASS local (testes de script, overlay encadeado 5.03→5.04→5.05→5.06, compilação do backend). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.
 - Causa do retorno a Londres: NÃO COMPROVADA. Hora cheia no rádio e ganho de tempo do boot: NÃO VERIFICADOS. Crossmode: desabilitado (Transcoder necessário).
 - Alimentação: diagnóstico anterior mostrou `throttled=0x50000` e "Undervoltage detected" repetido (fonte fraca) — pode causar lentidão e falhas.
+
+## 2026-11-09 — 5.07 (SW, aguardando CI/publicação)
+- BOOT-057, SPEED-057, EXPERT-057, HOST-057: SW PASS local (ci/test-5.07.py: portão de retomada, retomada DMR/YSF/D-Star, cadeia 5.04→5.07 em arm64 e arm32, renomeação 32 bits, compilação). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.
+- Ganho de velocidade, fim dos reinícios do MMDVMHost, Expert com dados, Nextion/OLED: NÃO VERIFICADOS. Direct privado P2P: NÃO INICIADO.

@@ -1,0 +1,11 @@
+[Unit]
+Description=PU2PNY restore proven protocol if no gateway is running
+After=network-online.target mosquitto.service 2pny-hardware-detect.service
+Wants=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-profile-autostart-safe
+TimeoutStartSec=120
+NoNewPrivileges=yes
+[Install]
+WantedBy=multi-user.target

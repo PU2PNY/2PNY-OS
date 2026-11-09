@@ -1,0 +1,8 @@
+[Unit]
+Description=PU2PNY safe retry last proven profile after uplink delay
+[Timer]
+OnBootSec=45s
+OnUnitInactiveSec=90s
+Unit=2pny-profile-autostart-retry.service
+[Install]
+WantedBy=timers.target

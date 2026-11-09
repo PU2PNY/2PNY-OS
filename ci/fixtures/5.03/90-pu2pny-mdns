@@ -1,0 +1,9 @@
+#!/bin/sh
+# NET-038: event-driven re-announcement of pu2pny.local after an uplink change.
+# No polling and no modification of Wi-Fi/Ethernet profiles.
+case "${2:-}" in
+  up|dhcp4-change|dhcp6-change|connectivity-change)
+    /bin/systemctl try-restart avahi-daemon.service >/dev/null 2>&1 || true
+    ;;
+esac
+exit 0
