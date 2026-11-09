@@ -1,0 +1,144 @@
+name: PU2PNY-OS 5.06 ALPHA ARM32 ARM64
+on:
+  push:
+    branches: [release/pu2pny-5.06]
+    paths-ignore:
+      - 'PU2PNY-OS_MASTER_SPEC.md'
+      - 'PU2PNY-OS_CHANGELOG.md'
+      - 'PU2PNY-OS_RELEASE_STATUS.md'
+      - 'PU2PNY-OS_TEST_MATRIX.md'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-5.06-release
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.9'
+      - name: Software regression and backend compile
+        run: |
+          set -euo pipefail
+          python3 ci/test-5.03-profile-retry.py
+          python3 ci/test-5.03-oled.py
+          python3 ci/test-display-045-boot-reapply.py
+          python3 ci/test-net-045-wifi-autoconnect.py
+          python3 ci/test-5.02.1-overlay.py
+          python3 ci/test-expert-054.py 5.04
+          python3 ci/test-expert-054.py 5.05
+          python3 ci/test-expert-054.py 5.06
+          python3 ci/test-identity-054.py
+          python3 ci/test-lcd-054.py
+          python3 ci/test-5.04-overlay.py
+          python3 ci/test-5.05-display.py
+          python3 ci/test-5.06.py
+          python3 -m py_compile ci/build-5.06.py ci/patch-image-5.06.py ci/prepare-5.06-backend.py runtime/5.06/tz-apply.py runtime/5.06/hourly-voice.py runtime/5.06/fast-resume.py runtime/5.06/expert-cmd.py
+          python3 ci/prepare-5.06-backend.py "$RUNNER_TEMP/backend"
+          (cd "$RUNNER_TEMP/backend" && GO111MODULE=off go vet . && GO111MODULE=off go test -count=1 -v)
+          git diff --check
+
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm32, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.9'
+      - name: Image inspection tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends xz-utils e2fsprogs util-linux file >/dev/null
+      - name: Cross-build backend and download published immutable 5.05 base
+        run: |
+          set -euo pipefail
+          arch='${{ matrix.arch }}'
+          mkdir -p "$RUNNER_TEMP/work/output"
+          python3 ci/prepare-5.06-backend.py "$RUNNER_TEMP/backend"
+          if [ "$arch" = arm32 ]; then
+            (cd "$RUNNER_TEMP/backend" && GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o "$RUNNER_TEMP/work/2pnyd-arm" .)
+            file "$RUNNER_TEMP/work/2pnyd-arm" | grep -E 'ELF 32-bit.*ARM'
+            asset=pu2pny-32-5.05.img.xz
+          else
+            (cd "$RUNNER_TEMP/backend" && GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o "$RUNNER_TEMP/work/2pnyd-arm64" .)
+            file "$RUNNER_TEMP/work/2pnyd-arm64" | grep -Ei 'ELF 64-bit.*aarch64'
+            asset=pu2pny-64-5.05.img.xz
+          fi
+          curl -fL --retry 4 --retry-all-errors "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.05.000/$asset" -o "$RUNNER_TEMP/work/base-$arch.img.xz"
+      - name: Full-manifest scope, rollback, filesystem, XZ and SHA
+        run: |
+          set -euo pipefail
+          sudo python3 ci/build-5.06.py "$RUNNER_TEMP/work" '${{ matrix.arch }}' "$GITHUB_SHA"
+          sudo chown -R "$USER:$USER" "$RUNNER_TEMP/work/output"
+          cd "$RUNNER_TEMP/work/output"
+          sha256sum -c *.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-5.06-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/work/output/pu2pny-*.img.xz
+            ${{ runner.temp }}/work/output/pu2pny-*.img.xz.sha256
+            ${{ runner.temp }}/work/output/BUILD-INFO-*.json
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-5.06-*
+          merge-multiple: true
+      - name: Final integrity and metadata
+        run: |
+          set -euo pipefail
+          for arch in 32 64; do
+            f="pu2pny-$arch-5.06.img.xz"
+            test -s "$f"
+            xz -t "$f"
+            sha256sum -c "$f.sha256"
+          done
+          python3 - <<'PY'
+          import json
+          for arch in ('arm32', 'arm64'):
+              info = json.load(open('BUILD-INFO-' + arch + '.json'))
+              assert info['version'] == '5.06.000'
+              assert info['validation']['filesystem'] == 'PASS'
+              assert info['validation']['full_scope_manifest'] == 'PASS'
+              assert info['validation']['rf_binary_preservation'] == 'PASS'
+              assert info['validation']['HW'] == 'NOT_VERIFIED'
+          PY
+      - name: Publish hardware-test candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS 5.06.000 ALPHA / NOT PRODUCTION / NOT HW VERIFIED.
+          Source: $GITHUB_SHA. Base: published 5.05.000, SHA-256 verified.
+          CLOCK-056: timezone helper confirms the zone and falls back to the /etc/localtime link if timedatectl does not stick; System page aligns zone and, when NTP is not synchronized, the time with the browser (a zone chosen by hand is respected). Expert > Relogio collects the evidence if London still returns.
+          VOICE-056: spoken hour on D-Star at every full hour (timer), built from the gateway TIME_en_GB voice data and sent with dgwvoicetransmit; alias for the missing "linkedto" word. English words only (no Portuguese time voice exists in the gateway data). Whether the gateway accepts the transmission is NOT verified.
+          BOOT-056: quick resume of the last proven D-Star profile (starts MMDVMHost and gateway without regenerating configs); anything uncertain falls back to the unchanged activation.
+          PROTO-056: Expert page states the real crossmode status (Transcoder required; XLX transcoding reflector as the safe path).
+          2pnyd rebuilt (one new route). MMDVMHost, DMRGateway, NextionDriver, probe, profile autostart and apply helpers are byte-identical to 5.05.
+          HW tests needed: zone after leaving/returning to System and after reboot; hourly voice heard on the radio; D-Star reconnect time (Expert > Boot) on Pi Zero W and Pi 3/4.
+          EOF
+          gh release create pu2pny-v5.06.000 pu2pny-*.img.xz pu2pny-*.img.xz.sha256 BUILD-INFO-*.json --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'PU2PNY-OS 5.06 ALPHA (ARM32/ARM64)' --notes-file release-notes.txt --prerelease
+          gh release view pu2pny-v5.06.000 --repo "$GH_REPO" --json tagName,targetCommitish,assets

@@ -2028,3 +2028,9 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 
 ## 2026-11-08 — 5.05 (SW)
 - **DISPLAY-055:** quando o display é não comprovado (not_found / mmdvm_display_candidate / i2c_candidate), o display-core procura OLED/LCD I2C por leitura de endereço e usa a escolha explícita de oled.json; Nextion comprovado (nextion, nextion_mmdvm, physical_confirmed) nunca é substituído. A varredura não escreve no barramento e é repetida no máximo a cada 60 s.
+
+## 2026-11-09 — 5.06 (SW)
+- **CLOCK-056:** o fuso aplicado deve ser confirmado pelo sistema; o helper cai para o link `/etc/localtime` se `timedatectl` não fixar. Sem fuso manual, a página System alinha fuso e, se NTP não está sincronizado e a deriva passa de 2 minutos, também a hora pelo navegador, devolvendo o NTP em seguida. `timezone_source=manual` nunca é sobrescrito. Critério de aceite (HW): fuso escolhido permanece ao sair/voltar do menu e após reinicio.
+- **VOICE-056:** hora cheia falada somente em D-Star, a partir de `TIME_en_GB.{indx,ambe}` (offsets/comprimentos em frames de 9 bytes), enviada por `dgwvoicetransmit`; exige voz e hora cheia habilitadas, MMDVMHost e gateway ativos. Sem voz em português disponível nos dados do gateway. Critério de aceite (HW): ouvir a hora no rádio a cada hora cheia.
+- **BOOT-056:** retomada rápida só para D-Star e só quando `last-active-profile.json`, `network-radio.json` (gateway_active), `config.json`, probe e arquivos gerados concordam e há rota padrão; senão, ativação original. Nunca reinicia unidade em execução nem reescreve configuração.
+- **PROTO-056:** crossmode permanece desabilitado até MMDVM-Transcoder físico validado (PROTO-047). Refletor XLX transcodificador é o caminho sem hardware extra. Utilitários de transcodificação por software (MMDVM_CM) não suportam Pi Zero/1.

@@ -1196,3 +1196,8 @@ Usuário autorizou explicitamente publicação, correções automáticas e build
 
 ## 2026-11-08 — 5.05 (SW, aguardando CI/publicação)
 - DISPLAY-055: SW PASS local (reprodução do defeito na 5.03, descoberta I2C, escolha SSD1306/SH1106/LCD, linhas extras, overlay encadeado 5.03→5.04→5.05, compilação ARM32/ARM64). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.
+
+## 2026-11-09 — 5.06 (SW, aguardando CI/publicação)
+- CLOCK-056, VOICE-056, BOOT-056, PROTO-056, EXPERT-056: SW PASS local (testes de script, overlay encadeado 5.03→5.04→5.05→5.06, compilação do backend). VPS/HW: NÃO VERIFICADO / PENDENTE. PROD: NÃO APROVADO.
+- Causa do retorno a Londres: NÃO COMPROVADA. Hora cheia no rádio e ganho de tempo do boot: NÃO VERIFICADOS. Crossmode: desabilitado (Transcoder necessário).
+- Alimentação: diagnóstico anterior mostrou `throttled=0x50000` e "Undervoltage detected" repetido (fonte fraca) — pode causar lentidão e falhas.

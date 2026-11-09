@@ -9,7 +9,7 @@ spec = importlib.util.spec_from_file_location('expert_cmd', ROOT / f'runtime/{VE
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 
 # Only fixed read-only programs may ever run.
-allowed = {'cat', 'uname', 'systemd-analyze', 'systemctl', 'journalctl', 'nmcli', 'sh', 'ls'}
+allowed = {'cat', 'uname', 'systemd-analyze', 'systemctl', 'journalctl', 'nmcli', 'sh', 'ls', 'timedatectl'}
 for key, (label, items) in m.COMMANDS.items():
     for argv in items:
         assert argv[0] in allowed | {'sh'}, (key, argv)

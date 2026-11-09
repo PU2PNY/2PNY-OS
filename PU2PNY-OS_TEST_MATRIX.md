@@ -1198,3 +1198,15 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 | DISPLAY-055 | defeito reproduzido na 5.03 e corrigido: OLED/LCD criado pelo scan, Nextion preservado | SW | PASS | ci/test-5.05-display.py |
 | DISPLAY-055 | linhas MMDVM/Raspberry no OLED e páginas no LCD, ordem antiga preservada | SW | PASS | ci/test-5.05-display.py, ci/test-lcd-054.py |
 | DISPLAY-055 | SSD1306 128x64/128x32, SH1106, LCD 16x2/20x4 físicos em Pi Zero W e Pi 3/4 | HW | PENDENTE | sem teste |
+
+## 2026-11-09 — 5.06
+| ID | Teste | Nível | Estado | Evidência |
+|---|---|---|---|---|
+| CLOCK-056 | helper cai para o link quando timedatectl "aceita" mas não muda; entradas inválidas rejeitadas | SW | PASS | ci/test-5.06.py |
+| CLOCK-056 | fuso escolhido permanece ao sair/voltar do menu e após reinicio; hora correta após boot sem internet | HW | PENDENTE | sem teste |
+| VOICE-056 | frases das 24 horas formadas com palavras do índice real; recorte do .ambe coerente; portas lógicas (voz, marcador, protocolo, serviços) | SW | PASS | ci/test-5.06.py |
+| VOICE-056 | hora ouvida no rádio a cada hora cheia; aceitação do dgwvoicetransmit pelo gateway | HW | PENDENTE | sem teste |
+| BOOT-056 | retomada rápida só com prova completa, sem reiniciar unidade, ordem host→gateway | SW | PASS | ci/test-5.06.py |
+| BOOT-056 | tempo de reconexão ao refletor após ligar (Expert > Tempo de boot) em Pi Zero W e Pi 3/4 | HW | PENDENTE | sem teste |
+| EXPERT-056 | comandos "Relógio e fuso" e "Voz e hora cheia" no allowlist | SW | PASS | ci/test-expert-054.py 5.06 |
+| REL-056 | overlay 5.06 sobre 5.05 com âncoras únicas, backups, rejeição de base alterada e reaplicação | SW | PASS | ci/test-5.06.py |

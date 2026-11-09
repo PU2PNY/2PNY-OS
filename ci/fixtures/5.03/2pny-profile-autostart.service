@@ -1,0 +1,10 @@
+[Unit]
+Description=PU2PNY restore selected radio profile after network/boot
+After=NetworkManager.service 2pny-network-online.service
+ConditionPathExists=/var/lib/2pny/provisioned
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-profile-autostart
+Nice=5
+TimeoutStartSec=100

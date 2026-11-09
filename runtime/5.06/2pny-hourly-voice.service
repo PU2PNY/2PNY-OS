@@ -1,0 +1,11 @@
+[Unit]
+Description=PU2PNY spoken hour on D-Star
+After=2pny-dstargateway.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/2pny-hourly-voice
+TimeoutStartSec=60
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
