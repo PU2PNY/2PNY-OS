@@ -28,6 +28,9 @@ jobs:
       - name: Software regression and backend compile
         run: |
           set -euo pipefail
+          sudo apt-get install -y --no-install-recommends fonts-dejavu-core python3-pil
+          python3 -c 'import PIL'
+          test -f /usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf
           python3 ci/test-5.03-profile-retry.py
           python3 ci/test-5.03-oled.py
           python3 ci/test-display-045-boot-reapply.py
