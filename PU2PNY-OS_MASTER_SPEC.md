@@ -2052,3 +2052,10 @@ DISPLAY-040: com o binário MMDVM-Host MQTT pinado em 590c531, renderização de
 ## 2026-11-09 — 5.09 (SW)
 - **WIZ-059:** o assistente nunca declara erro de ativação por tempo de espera do navegador; só pelo estado informado pelo sistema. Aceite (HW): salvar e ativar DMR no Pi Zero W termina sem mensagem de abort.
 - **DISPLAY-059:** texto de OLED desenhado em tamanho nativo, sem esticar. Aceite (HW): legível e nítido na OLED 128×64.
+
+## 2026-11-09 — 5.10 (SW)
+- **CLOCK-060:** toda unidade que altera o fuso deve poder gravar `/etc/localtime`; teste de aceite exige execução sob as mesmas restrições da unidade (HW: fuso escolhido persiste e a hora local do painel e do Nextion muda).
+- **DIRECT-060:** cada arquitetura recebe o binário da própria arquitetura; nenhum serviço pode reiniciar indefinidamente.
+- **BOOT-060:** tarefas de manutenção não competem com o boot.
+- **UI-060:** logotipo e favicon oficiais do projeto; indicativo/ID editáveis em Protocolos.
+- **EXPERT-060:** diagnóstico de dono dos perfis do NetworkManager e do relógio.

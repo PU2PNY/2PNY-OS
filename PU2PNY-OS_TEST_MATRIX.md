@@ -1235,3 +1235,13 @@ TEST-DISPLAY-040: layout 0/2/3/4, metadados sem segredos, proteção UART RF e M
 | DISPLAY-059 | OLED 64 linhas nativa e nítida; 32 linhas inalterada; fallback sem fonte | SW | PASS | ci/test-5.09.py |
 | DISPLAY-059 | texto legível na OLED 128×64 real | HW | PENDENTE | sem teste |
 | REL-059 | overlay 5.09 sobre 5.08, base alterada rejeitada | SW | PASS | ci/test-5.09.py |
+| CLOCK-060 | drop-in libera /etc para a unidade do fuso; reprovação da ausência | SW | PASS | ci/test-5.10.py |
+| CLOCK-060 | fuso muda e persiste; hora do painel e do Nextion corretas (sandbox real da unidade) | HW | PENDENTE | sem teste |
+| DIRECT-060 | núcleo ARMv6 compila, ELF 32-bit ARM, autoteste sob qemu | SW | PASS | ci/test-5.10.py + CI qemu |
+| DIRECT-060 | substituição recusada se a base não for o AArch64 conhecido ou se a troca não for ARM 32 bits | SW | PASS | ci/test-5.10.py |
+| DIRECT-060 | Pi Zero W sem loop de reinício; carga baixa | HW | PENDENTE | sem teste |
+| BOOT-060 | atraso de 5 min nas tarefas de manutenção | SW | PASS | ci/test-5.10.py |
+| UI-060 | logo sem frase; botão de indicativo/ID em Protocolos | SW | PASS | ci/test-5.10.py |
+| UI-060 | aparência no navegador real | HW | PENDENTE | sem teste |
+| EXPERT-060 | comandos no allowlist | SW | PASS | ci/test-expert-054.py 5.10 |
+| REL-060 | overlay 5.10 sobre 5.09; base alterada rejeitada | SW | PASS | ci/test-5.10.py |

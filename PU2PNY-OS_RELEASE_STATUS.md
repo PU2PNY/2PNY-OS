@@ -1215,3 +1215,8 @@ Branch `release/pu2pny-5.08`, overlay sobre a 5.07 publicada (SHA-256 verificado
 
 ## 5.09 — 2026-11-09 (SW, candidata a teste de HW)
 Branch `release/pu2pny-5.09`, overlay sobre a 5.08 publicada (SHA-256 verificado). Só `wizard.html`, `oled-502.py` e a versão do daemon mudam; RF/MMDVMHost/DMRGateway/NextionDriver byte-idênticos. HW: NÃO VERIFICADO. Não é produção.
+
+---
+
+## 5.10 — 2026-11-09 (SW, candidata a teste de HW)
+Branch `release/pu2pny-5.10`, overlay sobre a 5.09 publicada. Mudam: 2pnyd (versão), `ui-language.js`, `protocols.html`, `expert-cmd-504.py`, `2pny-direct-core` (só 32 bits), drop-ins systemd e logo. RF/MMDVMHost/DMRGateway/NextionDriver/probe/autostart/apply byte-idênticos. HW: NÃO VERIFICADO. Pendências no CHANGELOG (ACHADOS NÃO ALTERADOS). Crossmode, Direct com grupos e Orange Pi/NanoPi: 5.11.
