@@ -1,0 +1,201 @@
+name: PU2PNY-OS 5.11 ALPHA quatro placas
+on:
+  push:
+    branches: [release/pu2pny-5.11]
+    paths-ignore: ['PU2PNY-OS_*.md', 'README.md', 'docs/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-5.11-release
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.9'
+      - name: Software regression and backend compile
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-dejavu-core
+          python3 -m pip install --quiet pillow
+          python3 -c 'import PIL'
+          test -f /usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf
+          python3 ci/test-5.03-profile-retry.py
+          python3 ci/test-5.03-oled.py
+          python3 ci/test-display-045-boot-reapply.py
+          python3 ci/test-net-045-wifi-autoconnect.py
+          python3 ci/test-5.02.1-overlay.py
+          python3 ci/test-expert-054.py 5.04
+          python3 ci/test-expert-054.py 5.05
+          python3 ci/test-expert-054.py 5.06
+          python3 ci/test-identity-054.py
+          python3 ci/test-lcd-054.py
+          python3 ci/test-5.04-overlay.py
+          python3 ci/test-5.05-display.py
+          python3 ci/test-5.06.py
+          python3 ci/test-5.07.py
+          python3 ci/test-5.08.py
+          python3 ci/test-5.09.py
+          python3 ci/test-5.10.py
+          sudo apt-get install -y --no-install-recommends qemu-user-static
+          (cd src/direct-core && GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -trimpath -o "$RUNNER_TEMP/core-arm" direct_types.go direct_session.go direct_transport.go direct_radio.go direct_main.go)
+          qemu-arm-static "$RUNNER_TEMP/core-arm" --selftest | grep DIRECT_SELFTEST_OK
+          python3 ci/test-expert-054.py 5.10
+          python3 ci/test-expert-054.py 5.07
+          python3 ci/test-expert-054.py 5.08
+          python3 ci/test-5.11.py
+          node --check runtime/5.11/panel.js
+          python3 -m py_compile ci/build-5.11.py ci/build-board-5.11.py ci/patch-image-5.11.py ci/prepare-5.11-backend.py
+          python3 ci/prepare-5.11-backend.py "$RUNNER_TEMP/backend"
+          (cd "$RUNNER_TEMP/backend" && GO111MODULE=off go vet . && GO111MODULE=off go test -count=1 -v)
+          python3 ci/prepare-5.11-backend.py "$RUNNER_TEMP/backend32" arm32
+          (cd "$RUNNER_TEMP/backend32" && GO111MODULE=off go vet .)
+          git diff --check
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oled-5.11-previews
+          path: test-output/5.11/*.png
+          if-no-files-found: error
+
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm32, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.9'
+      - name: Ferramentas de imagem e execução ARM
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support xz-utils e2fsprogs util-linux binutils git file
+          sudo update-binfmts --enable qemu-arm
+          sudo update-binfmts --enable qemu-aarch64
+      - name: Backend da arquitetura e base 5.10 publicada
+        run: |
+          set -euo pipefail
+          arch='${{ matrix.arch }}'
+          mkdir -p "$RUNNER_TEMP/work/output"
+          python3 ci/prepare-5.11-backend.py "$RUNNER_TEMP/backend" "$arch"
+          if [ "$arch" = arm32 ]; then
+            (cd "$RUNNER_TEMP/backend" && GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -trimpath -o "$RUNNER_TEMP/work/2pnyd-arm" .)
+            asset=pu2pny-32-5.10.img.xz
+          else
+            (cd "$RUNNER_TEMP/backend" && GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o "$RUNNER_TEMP/work/2pnyd-arm64" .)
+            asset=pu2pny-64-5.10.img.xz
+          fi
+          curl -fL --retry 4 "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.10.000/$asset" -o "$RUNNER_TEMP/work/base-$arch.img.xz"
+      - name: Compilar no rootfs descartável, aplicar e verificar imagem
+        run: |
+          set -euo pipefail
+          sudo python3 ci/build-5.11.py "$RUNNER_TEMP/work" '${{ matrix.arch }}' "$GITHUB_SHA"
+          sudo chown -R "$USER:$USER" "$RUNNER_TEMP/work/output"
+          (cd "$RUNNER_TEMP/work/output" && sha256sum -c *.sha256)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-5.11-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: ${{ runner.temp }}/work/output/*
+
+  boards:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [opizero, nanopineo]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar base oficial fixada
+        env:
+          BOARD: ${{ matrix.arch }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          row=json.load(open('ci/board-bases-5.11.json'))[os.environ['BOARD']]
+          assert row.get('url') and row.get('sha256'),row.get('blocked','Base ausente')
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: pu2pny-5.11-arm32
+          path: ${{ runner.temp }}/work
+      - name: Preparar ferramentas
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support xz-utils e2fsprogs util-linux
+          sudo update-binfmts --enable qemu-arm
+      - name: Transplantar userland e validar
+        run: |
+          set -euo pipefail
+          sudo python3 ci/build-board-5.11.py "$RUNNER_TEMP/work" '${{ matrix.arch }}' "$GITHUB_SHA"
+          sudo chown -R "$USER:$USER" "$RUNNER_TEMP/work/output"
+          (cd "$RUNNER_TEMP/work/output" && sha256sum -c *.sha256)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-5.11-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+          path: ${{ runner.temp }}/work/output/*
+
+  publish:
+    needs: [build, boards]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-5.11-*
+          merge-multiple: true
+      - name: Gate final das quatro imagens
+        run: |
+          set -euo pipefail
+          for board in 32 64 opizero nanopineo; do
+            image="pu2pny-$board-5.11.img.xz"
+            test -s "$image"
+            xz -t "$image"
+            sha256sum -c "$image.sha256"
+          done
+          python3 - <<'PY'
+          import json,os
+          for arch in ('arm32','arm64','opizero','nanopineo'):
+              data=json.load(open('BUILD-INFO-'+arch+'.json'))
+              assert data['version']=='5.11.000'
+              assert data['source_commit']==os.environ['GITHUB_SHA']
+              assert data['validation']['filesystem']=='PASS'
+              assert data['validation']['HW']=='NOT_VERIFIED'
+          PY
+      - name: Publicar prerelease candidata a teste físico
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cat >release-notes.txt <<EOF
+          PU2PNY-OS 5.11.000 ALPHA · CANDIDATA PARA TESTE FÍSICO · NÃO É PRODUÇÃO.
+          Commit fonte e tag: $GITHUB_SHA. Base Raspberry: 5.10 publicada, SHA-256 verificado.
+          SEC-511, PERF-511, NET-511, BOOT-511, DISPLAY-511, HOST-511, UI-511, VOICE-511, PROTO-511, P2P-511, BOARD-511 e REL-511. Consulte os documentos canônicos e BUILD-INFO de cada imagem.
+          SW/CI: PASS nos gates executados. HW: NÃO VERIFICADO. PROD: NÃO APROVADO.
+          RF/DMR/D-Star/YSF/Nextion ON7LDS preservados por conteúdo; imagem nova ainda exige reteste físico.
+          Compatibilidade MMDVM_CM, DHT/NAT real, áudio RF, displays físicos, boot e desempenho real não foram comprovados pelo CI. YSF→P25 exige VW. Direct grupo pode falhar com CGNAT simétrico; não há relay de áudio. A cifra depende da disponibilidade do módulo cryptography nos dois pares; a interface informa autenticação sem cifra quando houver fallback.
+          Checklist HW: boot e retomada do último protocolo; carga/temperatura do Pi Zero; Wi-Fi com roteador retornando depois; nomes mDNS; AP/abas; OLED e Nextion/CPU; voz por protocolo; cinco crossmodes; Direct em redes diferentes; Orange Pi Zero e NanoPi NEO do zero (NanoPi exige Ethernet ou Wi-Fi USB).
+          EOF
+          gh release create pu2pny-v5.11.000 pu2pny-*.img.xz pu2pny-*.img.xz.sha256 BUILD-INFO-*.json --target "$GITHUB_SHA" --title 'PU2PNY-OS 5.11 ALPHA — quatro placas' --notes-file release-notes.txt --prerelease
+          gh release view pu2pny-v5.11.000 --json tagName,targetCommitish,assets

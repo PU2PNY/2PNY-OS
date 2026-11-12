@@ -29,3 +29,5 @@ for line in list(dict.fromkeys(l for l in s.splitlines(True) if 'Pi-Star' in l o
 p.write_text(s)
 (out/'web511.go').write_bytes((repo/'runtime/5.11/web.go').read_bytes())
 print('PREPARE_511_OK',arch)
+
+(out/'web511_test.go').write_text((repo/'runtime/5.11/web_test.go').read_text().replace('EXPECTED_HOST',host))

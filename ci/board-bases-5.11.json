@@ -1,0 +1,20 @@
+{
+  "opizero": {
+    "board": "Orange Pi Zero H2+",
+    "distribution": "bookworm",
+    "variant": "minimal",
+    "url": "https://archive.armbian.com/orangepizero/archive/Armbian_25.5.1_Orangepizero_bookworm_current_6.12.23_minimal.img.xz",
+    "sha256": "804a656ba87c7f7ec167512cd67897fd785c9c63587dfe073a05129f987447c2",
+    "checksum_url": "https://archive.armbian.com/orangepizero/archive/Armbian_25.5.1_Orangepizero_bookworm_current_6.12.23_minimal.img.xz.sha",
+    "source": "https://armbian.com/boards/orangepizero"
+  },
+  "nanopineo": {
+    "board": "NanoPi NEO H3",
+    "distribution": "bookworm",
+    "variant": "minimal",
+    "url": null,
+    "sha256": null,
+    "blocked": "Base oficial Bookworm minimal com URL e SHA verificáveis ainda não localizada; não substituir por Trixie/Jammy, outra placa ou checksum inventado.",
+    "source": "https://armbian.com/boards/nanopineo"
+  }
+}

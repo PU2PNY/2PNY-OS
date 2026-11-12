@@ -75,22 +75,25 @@ class Channel:
         self.counter = 0
         self.replay = {}
 
-    def pack(self, payload):
+    def pack(self, payload, encrypt=None):
         self.counter += 1
-        header = b'PNY1'+self.node+struct.pack('!Q', self.counter)
-        if self.cipher:
-            return header+self.cipher.encrypt(self.node[:4]+header[-8:], payload, header)
-        return header+payload+hmac.digest(self.key, header+payload, 'sha256')
+        use_cipher = self.cipher is not None and encrypt is not False
+        header = b'PNY1'+self.node+struct.pack('!Q', self.counter)+(b'C' if use_cipher else b'H')
+        if use_cipher:
+            payload=self.cipher.encrypt(self.node[:4]+header[20:28],payload,header)
+        packet=header+payload
+        return packet+hmac.digest(self.key,packet,'sha256')
 
     def unpack(self, raw):
-        if len(raw) < 45 or len(raw) > 256 or raw[:4] != b'PNY1': raise ValueError('pacote inválido')
+        if len(raw) < 62 or len(raw) > 256 or raw[:4] != b'PNY1': raise ValueError('pacote inválido')
         node, count = raw[4:20], struct.unpack('!Q', raw[20:28])[0]
         if node == self.node or count == 0: raise ValueError('eco')
-        if self.cipher:
-            payload = ChaCha20Poly1305(hmac.digest(self.key, node, 'sha256')).decrypt(node[:4]+raw[20:28], raw[28:], raw[:28])
-        else:
-            if not hmac.compare_digest(raw[-32:], hmac.digest(self.key, raw[:-32], 'sha256')): raise ValueError('autenticação')
-            payload = raw[28:-32]
+        if not hmac.compare_digest(raw[-32:],hmac.digest(self.key,raw[:-32],'sha256')):raise ValueError('autenticação')
+        payload=raw[29:-32]
+        if raw[28:29]==b'C':
+            if not ChaCha20Poly1305:raise ValueError('cifra indisponível')
+            payload=ChaCha20Poly1305(hmac.digest(self.key,node,'sha256')).decrypt(node[:4]+raw[20:28],payload,raw[:29])
+        elif raw[28:29]!=b'H':raise ValueError('cifra desconhecida')
         high, mask = self.replay.get(node, (0, 0))
         if count > high:
             mask = ((mask << min(64, count-high)) | 1) & ((1 << 64)-1); high = count
@@ -120,7 +123,7 @@ class Group:
         ip = ipaddress.ip_address(addr[0])
         if public and not ip.is_global: return
         if not 0 < addr[1] <= 65535 or len(self.peers) >= 32 or addr == self.sock.getsockname(): return
-        self.peers.setdefault(addr, {'seen': -1e12, 'next': 0, 'since': time.monotonic()})
+        self.peers.setdefault(addr, {'seen': -1e12, 'next': 0, 'cipher':False, 'since': time.monotonic()})
 
     def query(self, addr, name, args):
         if len(self.pending) >= 8: return
@@ -174,7 +177,7 @@ class Group:
             if now-p['since'] > 900 and now-p['seen'] > 90:
                 del self.peers[addr]; continue
             if now >= p['next']:
-                try: self.sock.sendto(self.channel.pack(b'hello'), addr)
+                try: self.sock.sendto(self.channel.pack(b'hello:C' if self.channel.cipher else b'hello:H',False), addr)
                 except OSError: pass
                 p['next'] = now+(25 if now-p['seen'] < 75 else 5)
 
@@ -189,10 +192,9 @@ class Group:
                     self.radio.sendto(raw, self.host)
                 elif len(raw) == 55 and raw[:4] == b'DMRD':
                     if not self.accept_stream(('rf', raw[16:20])): continue
-                    packet = self.channel.pack(raw)
                     for peer, state in self.peers.items():
                         if time.monotonic()-state['seen'] < 75:
-                            try: self.sock.sendto(packet, peer)
+                            try: self.sock.sendto(self.channel.pack(raw,state['cipher']),peer)
                             except OSError: pass
             elif raw[:1] == b'd':
                 try: self.discovery(raw, addr)
@@ -203,8 +205,10 @@ class Group:
                 self.add_peer(addr, public=False)
                 if addr not in self.peers: continue
                 self.peers[addr]['seen'] = time.monotonic()
-                if payload == b'hello':
-                    self.sock.sendto(self.channel.pack(b'ack'), addr)
+                if payload in (b'hello:C',b'hello:H',b'ack:C',b'ack:H'):
+                    self.peers[addr]['cipher']=bool(payload.endswith(b':C') and self.channel.cipher)
+                    if payload.startswith(b'hello:'):
+                        self.sock.sendto(self.channel.pack(b'ack:C' if self.channel.cipher else b'ack:H',False),addr)
                 elif len(payload) == 55 and payload[:4] == b'DMRD' and self.accept_stream((addr, payload[16:20])):
                     self.radio.sendto(payload, self.host)
 
@@ -219,7 +223,7 @@ class Group:
         return {'encryption': 'ChaCha20-Poly1305' if self.channel.cipher else 'HMAC: áudio sem cifra',
                 'relay': False, 'peers': [{'endpoint': f'{ip}:{port}',
                  'state': 'conectado P2P' if now-p['seen'] < 75 else 'não foi possível conectar direto' if now-p['since'] > 90 else 'procurando',
-                 'via': 'UDP direto' if now-p['seen'] < 75 else '—'} for (ip,port),p in self.peers.items()]}
+                 'via': ('UDP direto · cifrado' if p['cipher'] else 'UDP direto · autenticado sem cifra') if now-p['seen'] < 75 else '—'} for (ip,port),p in self.peers.items()]}
 
     def close(self):
         self.sel.close(); self.sock.close(); self.radio.close()
