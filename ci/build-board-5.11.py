@@ -17,10 +17,18 @@ def sha(p):
     with p.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
 
 def copy(src,dst):
+    # Overlay arquivo a arquivo: copytree(dirs_exist_ok=True) falha se
+    # usr/local/man já for um symlink do Armbian. Nunca seguir symlinks.
     if src.is_dir() and not src.is_symlink():
-        shutil.copytree(src,dst,dirs_exist_ok=True,symlinks=True)
+        if dst.is_symlink() or (dst.exists() and not dst.is_dir()):
+            raise ValueError(f'destino inseguro para diretório: {dst}')
+        dst.mkdir(parents=True,exist_ok=True)
+        for item in sorted(src.iterdir()):
+            copy(item,dst/item.name)
     else:
         dst.parent.mkdir(parents=True,exist_ok=True)
+        if dst.is_dir() and not dst.is_symlink():
+            raise ValueError(f'destino inesperado para arquivo: {dst}')
         if dst.is_symlink() or dst.exists():dst.unlink()
         if src.is_symlink():dst.symlink_to(os.readlink(src))
         else:shutil.copy2(src,dst)
@@ -140,7 +148,17 @@ def main():
         table=json.loads(subprocess.check_output(['sfdisk','--json',str(image)],text=True))['partitiontable']
         assert len(table['partitions'])==1
         start=table['partitions'][0]['start']
-        run(['sfdisk','--no-reread','-N','1',str(image)],input=f'{start},,83\n',text=True)
+        original=table['partitions'][0]['size']
+        # sfdisk -N 1 com tamanho vazio preserva o tamanho antigo nas
+        # imagens sunxi. Informar o número exato de setores, sem mexer no
+        # início da partição ou nos setores que contêm o U-Boot.
+        sectors=image.stat().st_size//512
+        size=sectors-start-2048
+        assert size>original+1024**3//512,('expansão insuficiente',original,size)
+        run(['sfdisk','--no-reread','-N','1',str(image)],
+            input=f'{start},{size},83\n',text=True)
+        changed=json.loads(subprocess.check_output(['sfdisk','--json',str(image)],text=True))['partitiontable']['partitions'][0]
+        assert changed['start']==start and changed['size']==size,('partição não expandida',changed)
         loop=subprocess.check_output(['losetup','--find','--show','--partscan',str(image)],text=True).strip();loops.append(loop)
         result=subprocess.run(['e2fsck','-fy',loop+'p1'],check=False);assert result.returncode in (0,1),'fsck Armbian falhou'
         run(['resize2fs',loop+'p1']);run(['mount',loop+'p1',str(root)]);mounts.append(root)
