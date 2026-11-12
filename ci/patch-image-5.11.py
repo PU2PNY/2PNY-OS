@@ -189,7 +189,7 @@ replace('etc/NetworkManager/dispatcher.d/90-pu2pny-wifi-choice',
         '/usr/local/sbin/2pny-wifi-profiles auto-select >/dev/null 2>&1 || true',
         'systemctl start --no-block 2pny-wifi-autoselect.service >/dev/null 2>&1 || true')
 install('etc/systemd/system/2pny-wifi-autoselect.service',
-        '[Unit]\nDescription=Selecionar rede salva fora do dispatcher\n[Service]\nType=oneshot\nExecCondition=/usr/bin/test ! -f /run/2pny/ap-scan-hold\nExecStart=/usr/bin/flock -n /run/2pny/wifi-operation.lock /usr/local/sbin/2pny-wifi-profiles auto-select\nTimeoutStartSec=45\n',0o644)
+        '[Unit]\nDescription=Selecionar rede salva fora do dispatcher\nConditionPathExists=/var/lib/2pny/provisioned\nConditionPathExists=/var/lib/2pny/ap-disabled\n[Service]\nType=oneshot\nExecCondition=/usr/bin/test ! -f /run/2pny/ap-scan-hold\nExecStart=/usr/bin/flock -n /run/2pny/wifi-operation.lock /usr/local/sbin/2pny-wifi-profiles auto-select\nTimeoutStartSec=45\n',0o644)
 # HOST-511: os escritores legados também precisam preservar o hostname após troca de rede.
 for path in ('usr/local/sbin/2pny-network-switch','usr/local/sbin/2pny-firstboot','usr/local/sbin/2pny-wifi-profiles'):
     text=(root/path).read_text()

@@ -164,7 +164,7 @@ class Group:
         self.pending = {t: p for t, p in self.pending.items() if now-p[2] < 8}
         if now >= self.lookup_due:
             self.lookup_due = now+300; self.budget=64; self.queried=set()
-            for host, port in self.bootstrap:
+            for host, port in (self.bootstrap if not self.nodes else []):
                 try:
                     self.nodes.setdefault((socket.gethostbyname(host),port),b'')
                 except OSError: pass

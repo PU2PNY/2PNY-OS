@@ -51,7 +51,7 @@ jobs:
           python3 ci/test-expert-054.py 5.10
           python3 ci/test-expert-054.py 5.07
           python3 ci/test-expert-054.py 5.08
-          sudo python3 ci/test-5.11.py
+          sudo env PYTHONDONTWRITEBYTECODE=1 python3 ci/test-5.11.py
           node --check runtime/5.11/panel.js
           git clone --quiet https://github.com/juribeparada/MMDVM_CM.git "$RUNNER_TEMP/cm"
           git -C "$RUNNER_TEMP/cm" checkout --quiet 7328c9e9532d29cf4d9d7d24541d57f825207be4

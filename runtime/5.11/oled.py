@@ -15,7 +15,7 @@ def render(self, live, cfg, tel):
     a = live.get('active') or {}
     op = a.get('operator') or {}
     proto = str(a.get('protocol') or cfg.get('protocol') or '—')
-    call = str(a.get('source') if a else cfg.get('callsign') or '—')
+    call = str((a.get('source') or '—') if a else cfg.get('callsign') or '—')
     if a:
         mode = str(a.get('mode') or '—').upper()
         slot = ' TS' + str(a['slot']) if a.get('slot') is not None else ''
