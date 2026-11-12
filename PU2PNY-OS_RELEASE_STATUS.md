@@ -1252,3 +1252,12 @@ Fontes: [systemd 252](https://www.freedesktop.org/software/systemd/man/252/syste
 - SEC-511/REL-511: primeiro CI 43229285369 reprovou o teste de fixture porque o runner UID 1001 não tem permissão de chown. A normalização é operação root por projeto; o teste foi corrigido para executar como root e injetar explicitamente donos 1001. Não foi removido nem enfraquecido o gate de imagem.
 - VOICE-511/P2P-511: integração deve incluir as unidades `.path` dedicadas; timeout do backend para esses dois helpers passa a 180 s. O request é consumido antes de aplicar. Testes reais dos watchers ainda pendentes.
 - P2P-511: negociação autenticada de capacidade de cifra permite pares com e sem cryptography, com indicação por par. Direct individual recebe controles explícitos liga/desliga e preserva a limitação DIRECT-060.
+
+
+### 5.11 — evidência SW/VPS e ajuste de identidade, 2026-11-12
+- CI 43231353765: job tests PASS (regressão 5.10, novos testes 5.11, dois conversores nativos em Gateway raw e backend). Builds ARM32/ARM64 iniciados; isso ainda não comprova imagem entregue.
+- VPS SentinelX: backend nativo e testes HTTP PASS; watchers systemd reais com pastas/gateways simulados PASS para aplicação de voz, rollback de voz e rollback do modo, preservando INI RF. Script reproduzível: `ci/test-vps-5.11.py`. Nenhuma unidade RF de produção foi instalada ou acionada nesse teste.
+- P2P-511: teste acrescenta resposta get_peers simulada, token e announce_peer com implied_port=1; não comprova DHT pública/NAT.
+- PROTO-511: YSF→NXDN exige ID NXDN real (campo próprio, configuração explícita ou lookup por indicativo). Não reutilizar/supor DMR ID como NXDN ID.
+- NET-511: aguardar 2 min depois de subir o AP de recuperação antes da primeira retentativa e gravar a transição de recuperação uma vez, sem regravar o mesmo estado a cada 12 s.
+- BOARD-511: base NanoPi Bookworm minimal ainda BLOQUEADA. Há Bookworm CLI 23.11.1 no arquivo oficial, que não foi substituída silenciosamente pela variante minimal solicitada. Imagem 5.11 completa continua NÃO ENTREGUE.

@@ -82,7 +82,21 @@ radiob=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);radiob.bind(('127.0.0.1',
 a=g.Group(code,('127.0.0.1',0),('127.0.0.1',0),radioa.getsockname(),[])
 b=g.Group(code,('127.0.0.1',0),('127.0.0.1',0),radiob.getsockname(),[])
 try:
-    a.add_peer(b.sock.getsockname(),public=False)
+    # Descoberta BEP5 simulada em loopback, incluindo token e announce_peer.
+    dht=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);dht.bind(('127.0.0.1',0));dht.settimeout(1)
+    a.query(dht.getsockname(),b'get_peers',{b'info_hash':a.channel.infohash})
+    query,addr=dht.recvfrom(8192);query=g.decode(query)
+    original_add=a.add_peer
+    a.add_peer=lambda endpoint,public=True:original_add(endpoint,public=False)
+    import struct
+    endpoint=socket.inet_aton(b.sock.getsockname()[0])+struct.pack('!H',b.sock.getsockname()[1])
+    response=g.encode({b't':query[b't'],b'y':b'r',b'r':{b'id':b'x'*20,b'values':[endpoint],b'token':b'fixture-token'}})
+    a.discovery(response,dht.getsockname());a.add_peer=original_add
+    announce,_=dht.recvfrom(8192);assert code.encode() not in announce
+    announcement=g.decode(announce);assert announcement[b'q']==b'announce_peer'
+    assert announcement[b'a'][b'token']==b'fixture-token' and announcement[b'a'][b'implied_port']==1
+    assert announcement[b'a'][b'info_hash']==a.channel.infohash
+    dht.close()
     assert a.status()['peers'][0]['state']=='procurando'
     for _ in range(6):a.step(.01);b.step(.01)
     assert a.status()['peers'][0]['state']=='conectado P2P'
@@ -146,7 +160,7 @@ with tempfile.TemporaryDirectory() as td:
     (state/'protocol-profiles.json').write_text(json.dumps({'profiles':{'DMR':{'server_address':'example.invalid','server_port':62031,'network_kind':'BM'}}}))
     (state/'protocol-secrets/dmr.secret').write_text('fixture-secret')
     for mode,binary in modes.MODES.items():
-        (state/'config.json').write_text(json.dumps({'protocol':'DMR' if mode.startswith('dmr') else 'YSF','callsign':'TEST123','dmr_id':'1234567'}))
+        (state/'config.json').write_text(json.dumps({'protocol':'DMR' if mode.startswith('dmr') else 'YSF','callsign':'TEST123','dmr_id':'1234567','nxdn_id':'1234'}))
         plan=modes.plan(mode,'9999');assert b'fixture-secret' not in plan['ini'] or mode=='ysf2dmr'
         assert b'Password=fixture-secret' in plan['ini'] if mode=='ysf2dmr' else True
         (bins/binary).write_bytes(b'fixture')

@@ -58,7 +58,7 @@ def configure(root,source):
         assert 'not found' not in cp.stdout+cp.stderr,('dependência ausente',p.name,cp.stdout+cp.stderr)
         # Namespace de rede isolado e INI inexistente: nunca abrir RF ou portas do host de build.
         cp=subprocess.run(['unshare','--net','--fork','chroot',str(root),'/usr/bin/timeout','3','/usr/local/bin/'+p.name,'--version'],capture_output=True,text=True)
-        assert cp.returncode not in (126,127),('execução ARM falhou',p.name,cp.stderr[-300:])
+        assert cp.returncode not in (126,127) and 'unshare failed' not in cp.stderr,('execução ARM falhou',p.name,cp.stderr[-300:])
     if prior is None:policy.unlink()
     else:policy.write_bytes(prior);policy.chmod(0o755)
     run(['chroot',str(root),'/bin/sh','-c','getent group mmdvm >/dev/null || groupadd --system mmdvm; id mmdvm >/dev/null 2>&1 || useradd --system --gid mmdvm --no-create-home --shell /usr/sbin/nologin mmdvm; usermod -aG dialout mmdvm'])
@@ -128,8 +128,19 @@ def main():
         start=table['partitions'][0]['start']
         run(['sfdisk','--no-reread','-N','1',str(image)],input=f'{start},,83\n',text=True)
         loop=subprocess.check_output(['losetup','--find','--show','--partscan',str(image)],text=True).strip();loops.append(loop)
-        run(['e2fsck','-fy',loop+'p1']);run(['resize2fs',loop+'p1']);run(['mount',loop+'p1',str(root)]);mounts.append(root)
+        result=subprocess.run(['e2fsck','-fy',loop+'p1'],check=False);assert result.returncode in (0,1),'fsck Armbian falhou'
+        run(['resize2fs',loop+'p1']);run(['mount',loop+'p1',str(root)]);mounts.append(root)
+        spec=importlib.util.spec_from_file_location('builder511',REPO/'ci/build-5.11.py')
+        common=importlib.util.module_from_spec(spec);spec.loader.exec_module(common)
+        before=common.manifest(root)
+        with image.open('rb') as f:f.seek(512);bootloader=hashlib.sha256(f.read(start*512-512)).hexdigest()
         configure(root,source)
+        after=common.manifest(root)
+        for path,row in before.items():
+            if (path.startswith('boot/') and path!='boot/armbianEnv.txt') or path.startswith('usr/lib/modules/') or path.startswith('lib/modules/'):
+                assert row==after.get(path),('kernel/boot fora do escopo',path)
+        for path,row in after.items():assert row['uid']!=1001 and row['gid']!=1001,('dono CI',path)
+        with image.open('rb') as f:f.seek(512);assert hashlib.sha256(f.read(start*512-512)).hexdigest()==bootloader,'bootloader alterado'
         # Userland RF protegido é transplantado byte a byte.
         for name in ('MMDVM-Host','DMRGateway','NextionDriver-pu2pny','MMDVM-Display','2pny-direct-core'):
             assert sha(root/'usr/local/bin'/name)==sha(source/'usr/local/bin'/name),name
@@ -137,6 +148,7 @@ def main():
         run(['mount','-o','ro',loop+'p1',str(root)]);mounts.append(root)
         assert (root/'etc/2pny/version').read_text().strip()=='5.11.000'
         assert 'uart1' in (root/'boot/armbianEnv.txt').read_text()
+        assert common.manifest(root)==after,'manifesto RO da placa divergente'
         run(['umount',str(root)]);mounts.remove(root)
         for l in reversed(loops):run(['losetup','-d',l])
         loops=[]
@@ -144,8 +156,9 @@ def main():
         with dest.open('wb') as f:run(['xz','-T2','-6','-c',str(image)],stdout=f)
         run(['xz','-t',str(dest)]);digest=sha(dest)
         (output/(name+'.sha256')).write_text(digest+'  '+name+'\n')
-        info={'version':'5.11.000','classification':'ALPHA_HW_TEST_CANDIDATE','architecture':board,'source_commit':commit,'base':lock,'userland_sha256':sha(source_image),'image_sha256':digest,'bytes':dest.stat().st_size,'validation':{'filesystem':'PASS','xz':'PASS','sha256':'PASS','chroot':'PASS','HW':'NOT_VERIFIED','PROD':'NOT_APPROVED'}}
+        info={'version':'5.11.000','classification':'ALPHA_HW_TEST_CANDIDATE','architecture':board,'source_commit':commit,'base':lock,'userland_sha256':sha(source_image),'image_sha256':digest,'bytes':dest.stat().st_size,'validation':{'filesystem':'PASS','xz':'PASS','sha256':'PASS','chroot':'PASS','kernel_bootloader':'PASS','full_scope_manifest':'RECORDED','uid_gid_1001':'ABSENT','HW':'NOT_VERIFIED','PROD':'NOT_APPROVED'}}
         (output/f'BUILD-INFO-{board}.json').write_text(json.dumps(info,indent=2)+'\n')
+        (output/f'MANIFEST-{board}.json').write_text(json.dumps({'before':before,'after':after},sort_keys=True))
         print('BOARD_511_VERIFIED',board,digest)
     finally:
         for p in reversed(mounts):subprocess.run(['umount',str(p)],check=False)

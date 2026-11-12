@@ -63,7 +63,7 @@ def catalogue(proto):
             for r in rows if isinstance(r,dict) and str(r.get('designator') or '').isdigit()]
 
 
-def plan(mode,destination):
+def plan(mode,destination,nxdn_id=""):
     if mode not in MODES:raise ValueError('crossmode inválido')
     cfg=readj(BASE/'config.json');proto='DMR' if mode.startswith('dmr') else 'YSF'
     if cfg.get('protocol')!=proto:raise ValueError('ative primeiro o perfil '+proto)
@@ -73,6 +73,17 @@ def plan(mode,destination):
     identity=int(cfg.get('dmr_id') or 0)
     if not 10000<=identity<=999999999:raise ValueError('ID digital ausente')
     own=BASE/'crossmode'/mode
+    nxdn_identity=None
+    if mode=='ysf2nxdn':
+        value=str(nxdn_id or cfg.get('nxdn_id') or readj(BASE/'crossmode/settings.json').get('nxdn_id') or '')
+        if not value:
+            try:
+                for line in (BASE/'hosts/NXDN.csv').read_text().splitlines():
+                    fields=re.split(r'[,\t]',line)
+                    if len(fields)>1 and fields[1].strip().upper()==cfg['callsign'].upper():value=fields[0].strip();break
+            except OSError:pass
+        if not re.fullmatch(r'[0-9]{1,5}',value) or not 1<=int(value)<=65535:raise ValueError('informe o ID NXDN real no campo do crossmode')
+        nxdn_identity=int(value)
     setv(c,'Log',FileLevel=0,DisplayLevel=1,FilePath=str(RUN),FileRoot=mode)
     setv(c,'DMR Id Lookup',File=str(BASE/'hosts/DMRIds.dat'))
     if c.has_section('NXDN Id Lookup'):setv(c,'NXDN Id Lookup',File=str(BASE/'hosts/NXDN.csv'))
@@ -123,7 +134,7 @@ def plan(mode,destination):
             net=target+' Network'
             if mode=='dmr2nxdn':
                 setv(c,net,GatewayAddress='127.0.0.1',GatewayPort=lp,LocalAddress='127.0.0.1',LocalPort=rp,DefaultID=destination,Daemon=0)
-            else:setv(c,net,Id=identity,StartupDstId=destination,DstAddress='127.0.0.1',DstPort=lp,LocalAddress='127.0.0.1',LocalPort=rp,TGListFile=str(own/'tg-list.txt'))
+            else:setv(c,net,Id=nxdn_identity if target=='NXDN' else identity,StartupDstId=destination,DstAddress='127.0.0.1',DstPort=lp,LocalAddress='127.0.0.1',LocalPort=rp,TGListFile=str(own/'tg-list.txt'))
             setv(g,'General',Callsign=cfg['callsign'],RptAddress='127.0.0.1',RptPort=rp,LocalPort=lp,Daemon=0)
             if target=='NXDN':setv(g,'General',RptProtocol='Icom',Suffix='NXDN')
             setv(g,'Network',Port=np,HostsFile1=str(BASE/'hosts'/(target+'Hosts.json')),HostsFile2=str(BASE/'hosts'/(target+'Hosts.txt')),Static=destination,ReloadTime=60,RFHangTime=120,NetHangTime=60)
@@ -159,14 +170,14 @@ def off(control=ctl):
     if readj(BASE/'direct-settings.json').get('enabled') is True:control('start','2pny-direct.service')
 
 
-def activate(mode,destination='',code='',control=ctl,wait=time.sleep):
+def activate(mode,destination='',code='',control=ctl,wait=time.sleep,nxdn_id=''):
     if readj(BASE/'special-mode.json').get('mode'):raise ValueError('desligue o modo atual antes de trocar')
     if mode=='direct-group':
         if readj(BASE/'config.json').get('protocol')!='DMR':raise ValueError('ative primeiro DMR')
         if not re.fullmatch(r'[A-Za-z0-9_-]{22,128}',code):raise ValueError('código do grupo inválido')
         original=GATEWAYS['DMR'];unit='2pny-direct-group.service'
     else:
-        planned=plan(mode,destination);original=planned['original'];unit='2pny-cm@'+mode+'.service'
+        planned=plan(mode,destination,nxdn_id);original=planned['original'];unit='2pny-cm@'+mode+'.service'
         if not (BIN/MODES[mode]).is_file():raise ValueError('conversor não instalado')
         atomic(planned['dir']/'converter.ini',planned['ini']);atomic(planned['dir']/'tg-list.txt',planned['tglist'])
         atomic(planned['dir']/'XLXHosts.txt',planned['xlx'])
@@ -191,6 +202,7 @@ def activate(mode,destination='',code='',control=ctl,wait=time.sleep):
             wait(1)
             if not control('is-active','--quiet',unit):raise RuntimeError('modo encerrou no preflight')
         record['state']='process_active';atomic(BASE/'special-mode.json',json.dumps(record).encode())
+        if mode=='ysf2nxdn' and nxdn_id:atomic(BASE/'crossmode/settings.json',json.dumps({'nxdn_id':str(nxdn_id)}).encode())
     except Exception:
         off(control)
         raise
@@ -226,7 +238,7 @@ def main():
                     ctl('reset-failed','2pny-direct.service')
                     if not ctl('start' if mode=='legacy-on' else 'stop','2pny-direct.service'):raise RuntimeError('não foi possível alterar Direct individual')
                 elif mode=='off':off()
-                else:activate(mode,str(req.get('destination') or ''),code)
+                else:activate(mode,str(req.get('destination') or ''),code,nxdn_id=str(req.get('nxdn_id') or ''))
                 result={'ok':True,'code':code if mode=='direct-group' else ''}
                 atomic(RUN/'mode-result.json',json.dumps(result).encode())
             elif sys.argv[1:] == ['off']:off()

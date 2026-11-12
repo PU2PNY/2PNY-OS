@@ -46,7 +46,7 @@ def simulate(source):
             for name in ('nmcli','iw','ip','hostapd','dnsmasq','sleep','rfkill','systemctl','sysctl','logger','iptables'):
                 p=r/'bin'/name;p.write_text(MOCK);p.chmod(0o755)
             code=source.replace('RUN=/run/2pny','RUN='+shlex.quote(str(r/'run'))).replace('STATE=/var/lib/2pny','STATE='+shlex.quote(str(r/'state')))
-            code=code.replace('/usr/bin/nmcli',str(r/'bin/nmcli')).replace('/sys/class/net',str(r/'sys')).replace('RECOVERY_DUE=120','RECOVERY_DUE=0')
+            code=code.replace('/usr/bin/nmcli',str(r/'bin/nmcli')).replace('/sys/class/net',str(r/'sys')).replace('RECOVERY_DUE=120','RECOVERY_DUE=0').replace('RECOVERY_DUE=$((SECONDS+120)) # NET-511','RECOVERY_DUE=0 # NET-511')
             # Templates são dados de I/O; não alterar condições, locks nem retorno ao AP.
             for name in ('hostapd','dnsmasq-ap','dnsmasq-eth'):
                 f=r/(name+'.template');f.write_text('interface=@IFACE@\n')

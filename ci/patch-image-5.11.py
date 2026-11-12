@@ -67,6 +67,11 @@ replace(net, 'elif test "$NOW_CARRIER" = 1 && test "$ETH_MODE" = dhcp && ! has_g
 replace(net, '      LAST_CARRIER="$NOW_CARRIER"\n', '      LAST_CARRIER="$NOW_CARRIER"\n      HEAVY_TICK=0\n')
 replace(net, '    WIFI_MISS_COUNT=0\n    touch "$STATE/ap-disabled"', '    WIFI_MISS_COUNT=0\n    test -f "$STATE/ap-disabled" || touch "$STATE/ap-disabled"')
 replace(net, 'connection.autoconnect-retries 3', 'connection.autoconnect-retries 0')
+replace(net, '  log "Setup AP PU2PNY-OS active at http://$SETUP_IP/"',
+        '  log "Setup AP PU2PNY-OS active at http://$SETUP_IP/"\n  RECOVERY_DUE=$((SECONDS+120)) # NET-511: dar tempo de entrar no AP antes da retentativa')
+replace(net, '      write_connect_state recovery_ap "Wi-Fi cliente indisponível. O AP PU2PNY-OS está disponível para recuperação; a rede salva foi preservada." "$SAVED_SSID"',
+        '      if test "$WIFI_MISS_COUNT" = 4; then write_connect_state recovery_ap "Wi-Fi cliente indisponível. O AP PU2PNY-OS está disponível para recuperação; a rede salva foi preservada." "$SAVED_SSID"; fi')
+
 replace(net, 'WIFI_MISS_COUNT=0\nwifi_profile_link_ok()',
         'WIFI_MISS_COUNT=0\nHEAVY_TICK=0\nRECOVERY_DUE=120\nRECOVERY_DELAY=120\nwifi_profile_link_ok()')
 replace(net, '  ACTIVE_CLIENT="$(active_wifi)"\n', '  if test "$HEAVY_TICK" = 0; then\n  ACTIVE_CLIENT="$(active_wifi)"\n')
@@ -227,6 +232,7 @@ replace(system,'Avisos de link/status usam áudio AMBE do DMRGateway. O anúncio
 # Aviso de alimentação distingue eventos atuais de históricos; não implica falha presente.
 replace(system, "PNY.q('throttle').textContent=t.throttled_active===true?'Ativo':t.throttled_active===false?'Não':'—';",
         "var uv=t.throttled_raw==null?0:Number(t.throttled_raw);PNY.q('throttle').textContent=(uv&1)?'Subtensão agora: verifique fonte e cabo':(uv&65536)?'Subtensão registrada desde o boot: verifique fonte e cabo':t.throttled_active===true?'Ativo':t.throttled_active===false?'Não':'—';")
+replace(system, "PNY.q('throttle').className=t.throttled_active===true?'red':'green';", "PNY.q('throttle').className=(uv&1)?'red':(uv&65536)?'yellow':t.throttled_active===true?'red':'green';")
 # versionamento e SEC-511: corrigir somente dono de CI, nunca chmod global.
 backup('etc/2pny/version'); (root/'etc/2pny/version').write_text('5.11.000\n')
 for base, dirs, files in os.walk(root):

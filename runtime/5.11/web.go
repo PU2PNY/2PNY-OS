@@ -36,11 +36,11 @@ func init() { http.HandleFunc("/api/voice/settings",voice511Handler) }
 
 func mode511Handler(w http.ResponseWriter,r *http.Request) {
     if r.Method!=http.MethodPost || !sameOrigin(r) || !fileExists(provisionedFile) { http.Error(w,"pedido rejeitado",http.StatusForbidden);return }
-    var in struct { Mode string `json:"mode"`; Destination string `json:"destination"`; Code string `json:"code"`; Create bool `json:"create"` }
+    var in struct { Mode string `json:"mode"`; Destination string `json:"destination"`; Code string `json:"code"`; Create bool `json:"create"`; NXDNID string `json:"nxdn_id"` }
     if json.NewDecoder(http.MaxBytesReader(w,r.Body,2048)).Decode(&in)!=nil {http.Error(w,"pedido inválido",400);return}
     switch in.Mode {case "off","dmr2ysf","ysf2dmr","dmr2nxdn","ysf2nxdn","ysf2p25","direct-group","legacy-on","legacy-off":default:http.Error(w,"modo inválido",400);return}
     if !applyMu.TryLock(){http.Error(w,"outra alteração está em andamento",409);return};defer applyMu.Unlock()
-    req:=map[string]any{"mode":in.Mode,"destination":in.Destination,"code":in.Code,"create":in.Create}
+    req:=map[string]any{"mode":in.Mode,"destination":in.Destination,"code":in.Code,"create":in.Create,"nxdn_id":in.NXDNID}
     res,err:=runPrivilegedRequest("2pny-mode-apply.service","/run/2pny/mode-request.json","/run/2pny/mode-result.json",req)
     if err!=nil{writeJSON(w,503,map[string]any{"ok":false,"error":"não foi possível aplicar o modo","result":res});return}
     w.Header().Set("Cache-Control","no-store");writeJSON(w,200,res)
