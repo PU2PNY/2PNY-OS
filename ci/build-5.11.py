@@ -151,7 +151,7 @@ def main():
         run(['xz','-t',str(dest)]);digest=sha(dest)
         (output/(name+'.sha256')).write_text(digest+'  '+name+'\n')
         info={'version':'5.11.000','classification':'ALPHA_HW_TEST_CANDIDATE','architecture':arch,
-              'base_version':'5.10.000','base_sha256':BASE[arch],'source_commit':commit,'source_tree_sha':commit,
+              'base_version':'5.10.000','base_sha256':BASE[arch],'source_commit':commit,'source_tree_sha':subprocess.check_output(['git','rev-parse',commit+'^{tree}'],cwd=repo,text=True).strip(),
               'image_sha256':digest,'bytes':dest.stat().st_size,'cm_commit':'7328c9e9532d29cf4d9d7d24541d57f825207be4','cm_patch_sha256':sha(repo/'ci/patch-cm-gateway-5.11.py'),
               'validation':{'filesystem':'PASS','xz':'PASS','sha256':'PASS','full_scope_manifest':'PASS','rf_binary_preservation':'PASS','uid_gid_1001':'ABSENT','HW':'NOT_VERIFIED','PROD':'NOT_APPROVED'}}
         (output/f'BUILD-INFO-{arch}.json').write_text(json.dumps(info,indent=2)+'\n')
