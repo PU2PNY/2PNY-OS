@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import struct
 import subprocess
 import sys
@@ -54,7 +55,27 @@ def configure_boot_services(root):
     (root/'root/.not_logged_in_yet').unlink(missing_ok=True)
 
 
+def prepare_chroot_devices(root):
+    """As bases minimal Armbian podem trazer /dev/null não gravável.
+    Corrigir somente nós Linux padrão, sem bind-mount do /dev do runner."""
+    device=root/'dev'
+    assert device.is_dir() and not device.is_symlink(), 'dev inválido'
+    for name,major,minor in (('null',1,3),('zero',1,5),('random',1,8),
+                             ('urandom',1,9),('tty',5,0)):
+        node=device/name
+        assert not node.is_symlink(), ('dispositivo inesperado',name)
+        if node.exists():
+            st=node.stat()
+            if not (stat.S_ISCHR(st.st_mode) and
+                    (os.major(st.st_rdev),os.minor(st.st_rdev))==(major,minor)):
+                raise ValueError('dispositivo inválido: '+name)
+        else:
+            os.mknod(node,stat.S_IFCHR|0o666,os.makedev(major,minor))
+        os.chown(node,0,0)
+        os.chmod(node,0o666)
+
 def configure(root,source):
+    prepare_chroot_devices(root)
     for name in ('usr/local','usr/share/2pny','etc/2pny','var/lib/2pny','etc/avahi'):
         copy(source/name,root/name)
     for part in ('conf.d','dispatcher.d','dnsmasq-shared.d','system-connections'):
