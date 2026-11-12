@@ -1,6 +1,6 @@
 ## PU2PNY-OS 5.11 — em implementação
 
-**NÃO ENTREGUE.** Base: [5.10 publicada](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.10.000), commit `1a280662`. [Estado e bloqueios](PU2PNY-OS_RELEASE_STATUS.md) · [Requisitos](PU2PNY-OS_MASTER_SPEC.md) · [Testes](PU2PNY-OS_TEST_MATRIX.md). Não há links de imagem 5.11 verificados.
+**NÃO ENTREGUE.** Base: [5.10 publicada](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.10.000), commit `1a280662`. [Estado e bloqueios](PU2PNY-OS_RELEASE_STATUS.md) · [Requisitos](PU2PNY-OS_MASTER_SPEC.md) · [Testes](PU2PNY-OS_TEST_MATRIX.md). Builds Raspberry ARM32/ARM64 do CI 43233187118 passaram. Base NanoPi Bookworm minimal encontrada e verificada por SHA-256/XZ; novo CI das quatro placas pendente. Não há release 5.11 entregue.
 
 # PU2PNY-OS 5.00.002 — somente display
 

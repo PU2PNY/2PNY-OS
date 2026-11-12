@@ -2100,3 +2100,15 @@ Fontes: [systemd 252](https://www.freedesktop.org/software/systemd/man/252/syste
 - PROTO-511: YSF→NXDN exige ID NXDN real (campo próprio, configuração explícita ou lookup por indicativo). Não reutilizar/supor DMR ID como NXDN ID.
 - NET-511: aguardar 2 min depois de subir o AP de recuperação antes da primeira retentativa e gravar a transição de recuperação uma vez, sem regravar o mesmo estado a cada 12 s.
 - BOARD-511: base NanoPi Bookworm minimal ainda BLOQUEADA. Há Bookworm CLI 23.11.1 no arquivo oficial, que não foi substituída silenciosamente pela variante minimal solicitada. Imagem 5.11 completa continua NÃO ENTREGUE.
+
+
+### 5.11 — BOARD-511: base NanoPi desbloqueada e política de boot, 2026-11-12
+
+- Localizada no arquivo oficial antigo a **Armbian 23.8.1 NanoPi NEO Bookworm minimal**, kernel 6.1.47. A imagem foi baixada na VPS: **265906900 bytes**, SHA-256 `4167ff841ff68592c8d8704072079c18e44f38175f836a3d234be0594ad6ecda`, integridade XZ **PASS**. Checksum idêntico no servidor oficial e no espelho. URL e checksum fixados em `ci/board-bases-5.11.json`; nenhuma troca para Trixie/Jammy/CLI.
+- Montagem somente leitura confirma Debian 12 Bookworm, `BOARD=nanopineo`, overlays `sun8i-h3-uart1.dtbo` e `sun8i-h3-i2c0.dtbo`. Isso não comprova boot/UART/RF físico. A base é histórica; kernel e bootloader seguem preservados pelos gates.
+- A base NanoPi habilita `armbian-firstrun-config.service`, além de firstrun. O transplante agora mascara também essa unidade e os serviços/socket de systemd-networkd, habilitando NetworkManager explicitamente. Objetivo: nenhum assistente Armbian concorrente, um único dono da rede. O resize separado permanece intacto.
+- Teste novo reproduz essas unidades em filesystem temporário e verifica máscaras, NetworkManager, preservação de resize e idempotência. Na VPS: **TEST_511_BOARD_BOOT_POLICY_OK**, junto de **TEST_511_OK**, **TEST_511_MODE_I2C_OK** e **TEST_511_NETWORK_SIMULATION_OK**.
+- CI anterior [43233187118](https://github.com/PU2PNY/2PNY-OS/actions/runs/43233187118): testes e builds Raspberry ARM32/ARM64 **PASS**. O job NanoPi falhou por base ausente antes deste ajuste. As quatro imagens finais precisam de novo CI no mesmo commit; **release 5.11 ainda NÃO ENTREGUE; HW PENDENTE**.
+- Critério de aceite BOARD-511: as duas bases Bookworm minimal verificadas, chroot/dependências/unidades, NetworkManager exclusivo, kernel/U-Boot preservados, fsck/RO/XZ/SHA PASS; só promover boot/UART/RF após teste HW.
+
+Fontes: [arquivo oficial NanoPi](https://rsync.armbian.com/oldarchive/nanopineo/archive/), [checksum oficial](https://rsync.armbian.com/oldarchive/nanopineo/archive/Armbian_23.8.1_Nanopineo_bookworm_current_6.1.47_minimal.img.xz.sha), [espelho de download](https://armbian.hosthatch.com/archive/nanopineo/archive/), [pinout do fabricante](https://wiki.friendlyelec.com/wiki/index.php/NanoPi_NEO).

@@ -25,6 +25,27 @@ def copy(src,dst):
         if src.is_symlink():dst.symlink_to(os.readlink(src))
         else:shutil.copy2(src,dst)
 
+def configure_boot_services(root):
+    # BOARD-511: NetworkManager é o único dono da rede. As bases minimal
+    # podem habilitar networkd; a NanoPi 23.8.1 habilita firstrun-config.
+    units=root/'etc/systemd/system';units.mkdir(parents=True,exist_ok=True)
+    for unit in ('armbian-firstrun.service','armbian-firstrun-config.service',
+                 'armbian-firstlogin.service','unattended-upgrades.service',
+                 'apt-daily.timer','apt-daily-upgrade.timer','ssh.service',
+                 'systemd-networkd.service','systemd-networkd.socket',
+                 'systemd-networkd-wait-online.service'):
+        p=units/unit
+        if p.exists() or p.is_symlink():
+            if p.is_dir():raise ValueError('unidade inesperada')
+            p.unlink()
+        p.symlink_to('/dev/null')
+    wants=units/'multi-user.target.wants';wants.mkdir(parents=True,exist_ok=True)
+    nm=wants/'NetworkManager.service'
+    if nm.exists() or nm.is_symlink():nm.unlink()
+    nm.symlink_to('/lib/systemd/system/NetworkManager.service')
+    (root/'root/.not_logged_in_yet').unlink(missing_ok=True)
+
+
 def configure(root,source):
     for name in ('usr/local','usr/share/2pny','etc/2pny','var/lib/2pny','etc/avahi'):
         copy(source/name,root/name)
@@ -62,14 +83,7 @@ def configure(root,source):
     if prior is None:policy.unlink()
     else:policy.write_bytes(prior);policy.chmod(0o755)
     run(['chroot',str(root),'/bin/sh','-c','getent group mmdvm >/dev/null || groupadd --system mmdvm; id mmdvm >/dev/null 2>&1 || useradd --system --gid mmdvm --no-create-home --shell /usr/sbin/nologin mmdvm; usermod -aG dialout mmdvm'])
-    # Apenas serviços acessórios nomeados; preservar resize do filesystem e inicialização da placa.
-    for unit in ('armbian-firstrun.service','armbian-firstlogin.service','unattended-upgrades.service','apt-daily.timer','apt-daily-upgrade.timer','ssh.service'):
-        p=units/unit
-        if p.exists() or p.is_symlink():
-            if p.is_dir():raise ValueError('unidade inesperada')
-            p.unlink()
-        p.symlink_to('/dev/null')
-    (root/'root/.not_logged_in_yet').unlink(missing_ok=True)
+    configure_boot_services(root)
     (root/'etc/hostname').write_text('pu2pny32\n')
     hosts=root/'etc/hosts';lines=hosts.read_text().splitlines()
     lines=[l for l in lines if not l.startswith('127.0.1.1')];lines.append('127.0.1.1\tpu2pny32');hosts.write_text('\n'.join(lines)+'\n')

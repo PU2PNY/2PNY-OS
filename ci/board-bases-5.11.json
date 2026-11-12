@@ -12,9 +12,12 @@
     "board": "NanoPi NEO H3",
     "distribution": "bookworm",
     "variant": "minimal",
-    "url": null,
-    "sha256": null,
-    "blocked": "Base oficial Bookworm minimal com URL e SHA verificáveis ainda não localizada; não substituir por Trixie/Jammy, outra placa ou checksum inventado.",
-    "source": "https://armbian.com/boards/nanopineo"
+    "url": "https://armbian.hosthatch.com/archive/nanopineo/archive/Armbian_23.8.1_Nanopineo_bookworm_current_6.1.47_minimal.img.xz",
+    "sha256": "4167ff841ff68592c8d8704072079c18e44f38175f836a3d234be0594ad6ecda",
+    "checksum_url": "https://rsync.armbian.com/oldarchive/nanopineo/archive/Armbian_23.8.1_Nanopineo_bookworm_current_6.1.47_minimal.img.xz.sha",
+    "official_archive_url": "https://rsync.armbian.com/oldarchive/nanopineo/archive/Armbian_23.8.1_Nanopineo_bookworm_current_6.1.47_minimal.img.xz",
+    "bytes": 265906900,
+    "source": "https://armbian.com/boards/nanopineo",
+    "verified": "VPS: SHA-256 e XZ PASS; os-release Bookworm, BOARD=nanopineo, overlays UART1/I2C0 presentes; HW PENDENTE."
   }
 }

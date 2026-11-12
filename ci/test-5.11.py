@@ -210,3 +210,20 @@ print('TEST_511_MODE_I2C_OK')
 
 nettest=module('netsim511',ROOT/'ci/network-simulation-5.11.py')
 nettest.simulate(network_source)
+
+# BOARD-511: primeiro acesso Armbian e rede concorrente não podem voltar no boot.
+board=module('board511',ROOT/'ci/build-board-5.11.py')
+with tempfile.TemporaryDirectory() as td:
+    root=Path(td);units=root/'etc/systemd/system';units.mkdir(parents=True)
+    (units/'armbian-firstrun-config.service').write_text('[Service]\nExecStart=/fixture\n')
+    (root/'root').mkdir();(root/'root/.not_logged_in_yet').touch()
+    resize=units/'armbian-resize-filesystem.service';resize.write_text('preservar')
+    board.configure_boot_services(root)
+    for unit in ('armbian-firstrun.service','armbian-firstrun-config.service','systemd-networkd.service','systemd-networkd.socket','systemd-networkd-wait-online.service'):
+        assert os.readlink(units/unit)=='/dev/null'
+    assert os.readlink(units/'multi-user.target.wants/NetworkManager.service')=='/lib/systemd/system/NetworkManager.service'
+    assert resize.read_text()=='preservar'
+    assert not (root/'root/.not_logged_in_yet').exists()
+    board.configure_boot_services(root)  # idempotente
+    assert resize.read_text()=='preservar'
+print('TEST_511_BOARD_BOOT_POLICY_OK')
