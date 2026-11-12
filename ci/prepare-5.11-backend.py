@@ -26,6 +26,10 @@ replace(body,body.replace(old,f'http.Redirect(w, r, "http://{host}/wizard?captiv
 # Neutralizar somente texto conhecido, preservando URLs de dados.
 for line in list(dict.fromkeys(l for l in s.splitlines(True) if 'Pi-Star' in l or 'WPSD' in l)):
     replace(line,line.replace('Pi-Star','MMDVMHost').replace('WPSD','ON7LDS'))
+start=s.index('func runPrivilegedRequest(');end=s.index('\nfunc ',start+10)
+body=s[start:end];old='deadline := time.Now().Add(20 * time.Second)'
+assert body.count(old)==1
+replace(body,body.replace(old,'wait := 20*time.Second\n\tif service == "2pny-voice-apply.service" || service == "2pny-mode-apply.service" { wait = 180*time.Second }\n\tdeadline := time.Now().Add(wait)'))
 p.write_text(s)
 (out/'web511.go').write_bytes((repo/'runtime/5.11/web.go').read_bytes())
 print('PREPARE_511_OK',arch)

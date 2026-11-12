@@ -112,7 +112,17 @@ for arch in ('arm32','arm64'):
         (root/'var/lib/2pny').mkdir(parents=True,exist_ok=True)
         timer=root/'etc/systemd/system/2pny-hostfiles-update.timer'
         timer.write_text('[Timer]\nOnBootSec=5min\nPersistent=true\n')
+        if os.geteuid()==0:
+            os.chown(root/'usr/local/sbin/2pny-station-worker',1001,1001)
+            os.chown(root/'etc/NetworkManager/dispatcher.d/90-pu2pny-wifi-choice',1001,1001)
+            os.chmod(root/'var/lib/2pny',0o700)
         cp=subprocess.run([sys.executable,str(ROOT/'ci/patch-image-5.11.py'),str(root),arch,str(binary)],capture_output=True,text=True)
+        if os.geteuid()==0 and cp.returncode==0:
+            for d,dirs,files in os.walk(root):
+                for name in dirs+files:
+                    st=(Path(d)/name).lstat();assert st.st_uid!=1001 and st.st_gid!=1001
+            assert (root/'var/lib/2pny').stat().st_mode & 0o777 == 0o755
+
         assert cp.returncode==0,(arch,cp.stderr)
         assert (root/'etc/2pny/version').read_text().strip()=='5.11.000'
         if arch=='arm32':network_source=(root/'usr/local/sbin/2pny-network-core').read_text()

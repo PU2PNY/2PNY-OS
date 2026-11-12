@@ -10,6 +10,8 @@ if(q('cmMode511')){
  q('cmOff511').onclick=async()=>{try{await apply('off');message('cmStatus511','Modo normal restaurado.');}catch(e){message('cmStatus511',e.message);}};
 }
 if(q('group511')){
+ q('legacyOn511').onclick=async()=>{try{await apply('legacy-on');message('groupStatus511','Direct individual habilitado.');}catch(e){message('groupStatus511',e.message);}};
+ q('legacyOff511').onclick=async()=>{try{await apply('legacy-off');message('groupStatus511','Direct individual desligado.');}catch(e){message('groupStatus511',e.message);}};
  async function join(create){message('groupStatus511','Iniciando Direct em grupo…');try{const out=await apply('direct-group','',q('groupCode511').value,create);if(out.code)q('groupCode511').value=out.code;message('groupStatus511','Procurando participantes na DHT.');}catch(e){message('groupStatus511',e.message);}}
  q('groupCreate511').onclick=()=>join(true);q('groupJoin511').onclick=()=>join(false);
  q('groupCopy511').onclick=async()=>{try{await navigator.clipboard.writeText(q('groupCode511').value);message('groupStatus511','Código copiado.');}catch(e){q('groupCode511').type='text';q('groupCode511').select();message('groupStatus511','Selecione e copie o código.');}};
@@ -18,7 +20,7 @@ if(q('group511')){
  status();document.addEventListener('visibilitychange',()=>{if(!document.hidden)status();});
 }
 if(q('voiceDMR511')){
- request('/api/voice/settings').then(v=>{for(const [id,key] of [['voiceDMR511','dmr'],['voiceDStar511','dstar'],['voiceP25511','p25'],['voiceNXDN511','nxdn']])q(id).checked=v[key]===undefined?v.enabled!==false:v[key]!==false;q('voiceHourly').checked=!!v.hourly;q('voiceLang').value=v.language||'pt';}).catch(()=>{});
+ request('/api/voice/settings').then(v=>{for(const [id,key] of [['voiceDMR511','dmr'],['voiceDStar511','dstar'],['voiceP25511','p25'],['voiceNXDN511','nxdn']])q(id).checked=v[key]===undefined?(key==='dmr'?v.enabled!==false:key==='dstar'):v[key]!==false;q('voiceHourly').checked=!!v.hourly;q('voiceLang').value=v.language||'pt';}).catch(()=>{});
  q('voiceSave').onclick=async()=>{message('voiceResult','Aplicando voz…');try{await request('/api/voice/settings',{dmr:q('voiceDMR511').checked,dstar:q('voiceDStar511').checked,p25:q('voiceP25511').checked,nxdn:q('voiceNXDN511').checked,hourly:q('voiceHourly').checked,language:q('voiceLang').value});message('voiceResult','Voz aplicada aos perfis disponíveis.');}catch(e){message('voiceResult',e.message);}};
 }
 })();

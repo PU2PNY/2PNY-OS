@@ -168,6 +168,12 @@ for proto in ('dmr','dstar','p25','nxdn'):
     install(f'etc/systemd/system/2pny-{unit}.service.d/511-voice.conf',
             f'[Service]\nExecStartPre=+-/usr/local/sbin/2pny-voice-apply --only {proto} --no-restart\n',0o644)
 install('etc/systemd/system/2pny-voice-apply.service','[Unit]\nDescription=Aplicar voz PU2PNY-OS\n[Service]\nType=oneshot\nExecStart=/usr/local/sbin/2pny-voice-apply --request\nTimeoutStartSec=150\n',0o644)
+# Helpers privilegiados são acionados somente por watchers dedicados.
+for kind in ('voice','mode'):
+    name=f'2pny-{kind}-apply.path'
+    install('etc/systemd/system/'+name,f'[Unit]\nDescription=Pedido de {kind} PU2PNY-OS\n[Path]\nPathExists=/run/2pny/{kind}-request.json\nUnit=2pny-{kind}-apply.service\n[Install]\nWantedBy=multi-user.target\n',0o644)
+    link=root/'etc/systemd/system/multi-user.target.wants'/name
+    assert not link.exists();link.parent.mkdir(parents=True,exist_ok=True);link.symlink_to('../'+name)
 # UI-511: neutra e relógio oculto por CSS, DOM preservado.
 for path in sorted((root/'usr/share/2pny').glob('*')):
     if path.suffix not in ('.html','.js'):

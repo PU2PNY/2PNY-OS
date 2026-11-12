@@ -156,6 +156,7 @@ def off(control=ctl):
     atomic(BASE/'special-mode.json',b'{}\n')
     direct=readj(BASE/'direct-group.json');direct['enabled']=False
     atomic(BASE/'direct-group.json',json.dumps(direct).encode())
+    if readj(BASE/'direct-settings.json').get('enabled') is True:control('start','2pny-direct.service')
 
 
 def activate(mode,destination='',code='',control=ctl,wait=time.sleep):
@@ -207,13 +208,24 @@ def main():
             if sys.argv[1:] == ['--legacy-gate']:
                 raise SystemExit(0 if readj(BASE/'direct-settings.json').get('enabled') is True and not readj(BASE/'special-mode.json').get('mode') else 1)
             if sys.argv[1:] == ['--boot-reset']:
+                group=readj(BASE/'direct-group.json');group['enabled']=False
+                atomic(BASE/'direct-group.json',json.dumps(group).encode())
                 atomic(BASE/'special-mode.json',b'{}\n')
                 return
             if sys.argv[1:] == ['--request']:
-                req=readj(RUN/'mode-request.json');mode=req.get('mode','off')
+                request=RUN/'mode-request.json'
+                req=json.loads(request.read_text());request.unlink()
+                mode=req.get('mode')
+                if mode not in (*MODES,'off','direct-group','legacy-on','legacy-off'):raise ValueError('modo inválido')
                 code=str(req.get('code') or '')
                 if mode=='direct-group' and req.get('create'):code=secrets.token_urlsafe(24)
-                if mode=='off':off()
+                if mode in ('legacy-on','legacy-off'):
+                    if mode=='legacy-on' and readj(BASE/'special-mode.json').get('mode'):raise ValueError('saia do modo atual antes de ativar Direct individual')
+                    settings=readj(BASE/'direct-settings.json');settings['enabled']=mode=='legacy-on'
+                    atomic(BASE/'direct-settings.json',json.dumps(settings).encode())
+                    ctl('reset-failed','2pny-direct.service')
+                    if not ctl('start' if mode=='legacy-on' else 'stop','2pny-direct.service'):raise RuntimeError('não foi possível alterar Direct individual')
+                elif mode=='off':off()
                 else:activate(mode,str(req.get('destination') or ''),code)
                 result={'ok':True,'code':code if mode=='direct-group' else ''}
                 atomic(RUN/'mode-result.json',json.dumps(result).encode())

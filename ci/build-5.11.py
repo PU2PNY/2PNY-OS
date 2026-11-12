@@ -26,6 +26,8 @@ NEW={'usr/local/libexec/pu2pny/followers-511.py','usr/local/sbin/2pny-voice-appl
  'etc/systemd/system/2pny-profile-autostart.service.d/511-mode.conf','etc/systemd/system/2pny-profile-autostart-retry.service.d/511-mode.conf','etc/systemd/system/2pny-special-mode-reset.service','etc/systemd/system/multi-user.target.wants/2pny-special-mode-reset.service'}
 CONVERTERS=('DMR2YSF','YSF2DMR','DMR2NXDN','YSF2NXDN','YSF2P25')
 NEW|={f'usr/local/bin/{n}' for n in CONVERTERS}
+NEW|={f'etc/systemd/system/2pny-{k}-apply.path' for k in ('voice','mode')}
+NEW|={f'etc/systemd/system/multi-user.target.wants/2pny-{k}-apply.path' for k in ('voice','mode')}
 NEW|={f'usr/local/libexec/pu2pny/cm-templates/{n}.ini' for n in CONVERTERS}|{'usr/local/libexec/pu2pny/cm-templates/LICENCE'}
 NEW|={f'etc/systemd/system/2pny-{p}gateway.service.d/511-voice.conf' for p in ('dmr','dstar','p25','nxdn')}
 
@@ -91,6 +93,7 @@ def compile_cm(root,work,arch):
         shutil.copyfile('/etc/resolv.conf',resolver)
         run(['git','clone','--quiet','https://github.com/juribeparada/MMDVM_CM.git',str(copy/'build-cm')])
         run(['git','-C',str(copy/'build-cm'),'checkout','--quiet','7328c9e9532d29cf4d9d7d24541d57f825207be4'])
+        run(['python3',str(repo/'ci/patch-cm-gateway-5.11.py'),str(copy/'build-cm')])
         run(['chroot',str(copy),'/bin/sh','-c','apt-get update -qq && apt-get install -y --no-install-recommends build-essential'])
         output=work/'cm-output';output.mkdir(exist_ok=True)
         for name in CONVERTERS:
@@ -126,6 +129,8 @@ def main():
         run(['python3',str(repo/'ci/patch-image-5.11.py'),str(root),arch,str(binary)])
         for name in CONVERTERS:
             shutil.copy2(cm/name,root/'usr/local/bin'/name);os.chown(root/'usr/local/bin'/name,0,0)
+        for name in ('DMR2YSF','DMR2NXDN'):
+            run(['python3',str(repo/'ci/test-cm-gateway-5.11.py'),str(root/'usr/local/bin'/name),'--arch',arch,'--sysroot',str(root)])
         after=manifest(root);gate(before,after,arch)
         # Arquitetura dos binários operacionais, inclusive o Direct corrigido na 5.10.
         for name in ('MMDVM-Host','DMRGateway','NextionDriver-pu2pny','MMDVM-Display','2pny-direct-core','2pnyd',*CONVERTERS):
@@ -147,7 +152,7 @@ def main():
         (output/(name+'.sha256')).write_text(digest+'  '+name+'\n')
         info={'version':'5.11.000','classification':'ALPHA_HW_TEST_CANDIDATE','architecture':arch,
               'base_version':'5.10.000','base_sha256':BASE[arch],'source_commit':commit,'source_tree_sha':commit,
-              'image_sha256':digest,'bytes':dest.stat().st_size,'cm_commit':'7328c9e9532d29cf4d9d7d24541d57f825207be4',
+              'image_sha256':digest,'bytes':dest.stat().st_size,'cm_commit':'7328c9e9532d29cf4d9d7d24541d57f825207be4','cm_patch_sha256':sha(repo/'ci/patch-cm-gateway-5.11.py'),
               'validation':{'filesystem':'PASS','xz':'PASS','sha256':'PASS','full_scope_manifest':'PASS','rf_binary_preservation':'PASS','uid_gid_1001':'ABSENT','HW':'NOT_VERIFIED','PROD':'NOT_APPROVED'}}
         (output/f'BUILD-INFO-{arch}.json').write_text(json.dumps(info,indent=2)+'\n')
         (output/f'MANIFEST-{arch}.json').write_text(json.dumps({'before':before,'after':after},sort_keys=True))

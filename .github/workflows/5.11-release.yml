@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends fonts-dejavu-core
+          sudo apt-get install -y --no-install-recommends fonts-dejavu-core python3-pil
           python3 -m pip install --quiet pillow
           python3 -c 'import PIL'
           test -f /usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf
@@ -51,8 +51,15 @@ jobs:
           python3 ci/test-expert-054.py 5.10
           python3 ci/test-expert-054.py 5.07
           python3 ci/test-expert-054.py 5.08
-          python3 ci/test-5.11.py
+          sudo python3 ci/test-5.11.py
           node --check runtime/5.11/panel.js
+          git clone --quiet https://github.com/juribeparada/MMDVM_CM.git "$RUNNER_TEMP/cm"
+          git -C "$RUNNER_TEMP/cm" checkout --quiet 7328c9e9532d29cf4d9d7d24541d57f825207be4
+          python3 ci/patch-cm-gateway-5.11.py "$RUNNER_TEMP/cm"
+          for converter in DMR2YSF DMR2NXDN; do
+            make -C "$RUNNER_TEMP/cm/$converter" -j2 CFLAGS='-O1 -Wall -std=c++0x -pthread'
+            python3 ci/test-cm-gateway-5.11.py "$RUNNER_TEMP/cm/$converter/$converter"
+          done
           python3 -m py_compile ci/build-5.11.py ci/build-board-5.11.py ci/patch-image-5.11.py ci/prepare-5.11-backend.py
           python3 ci/prepare-5.11-backend.py "$RUNNER_TEMP/backend"
           (cd "$RUNNER_TEMP/backend" && GO111MODULE=off go vet . && GO111MODULE=off go test -count=1 -v)

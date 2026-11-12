@@ -33,7 +33,14 @@ def edited(raw, proto, settings):
     cp = configparser.ConfigParser(interpolation=None, strict=False)
     cp.optionxform = str
     cp.read_string(raw.decode())
-    enabled = settings.get(proto, settings.get('enabled', True)) is not False
+    if proto in settings:
+        enabled = settings[proto] is not False
+    elif proto == 'dmr':
+        enabled = settings.get('enabled', cp.get('Voice','Enabled',fallback='1') == '1') is not False
+    elif proto == 'dstar':
+        enabled = cp.get('Paths','Data',fallback='') != '/usr/share/2pny/audio/dstar-off/'
+    else:
+        enabled = cp.get('Voice','Enabled',fallback='0') == '1'
     section = 'Paths' if proto == 'dstar' else 'Voice'
     if not cp.has_section(section):
         raise ValueError('seção de voz ausente: ' + proto)
@@ -98,8 +105,10 @@ def main():
     with (run / 'voice-apply.lock').open('w') as lock:
         if not args.no_restart:fcntl.flock(lock, fcntl.LOCK_EX)
         path = run / 'voice-request.json' if args.request else state / 'voice-settings.json'
-        settings = json.loads(path.read_text()) if path.exists() else {}
+        settings = {}
         try:
+            settings = json.loads(path.read_text()) if path.exists() else {}
+            if args.request:path.unlink(missing_ok=True)
             if settings.get('language', 'pt') not in ('pt', 'en', 'es'):
                 raise ValueError('idioma inválido')
             for key in ('dmr', 'dstar', 'p25', 'nxdn', 'hourly'):
