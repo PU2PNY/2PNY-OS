@@ -1,3 +1,7 @@
+## Ciclo ativo: 5.11 — EM IMPLEMENTAÇÃO / NÃO ENTREGUE
+
+Base 5.10 `1a280662d4ab48bb1ea9726874a11c1e5a126c55`; branch `release/pu2pny-5.11`. Consulte a seção 5.11 mais recente dos documentos canônicos e a [ordem completa](docs/PU2PNY-OS_5.11_ORDEM_DE_TRABALHO.md). O histórico abaixo não promove a 5.11 a pronta.
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**

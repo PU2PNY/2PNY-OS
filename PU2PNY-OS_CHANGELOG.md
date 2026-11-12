@@ -1126,3 +1126,28 @@ Diagnósticos de campo da 5.08 (Pi Zero W 32 bits e Pi 4 64 bits) analisados con
 - **UI-060:** logo = nome PU2PNY-OS sem a frase pequena, 30/38 px; Protocolos ganha botão "Editar indicativo e ID" no topo (o cartão já existia no fim da página, com a API `/api/identity/apply`). `protocols.html` deixou de ser byte-idêntico por ordem explícita do usuário.
 - **EXPERT-060:** dono dos arquivos do NetworkManager e arquivos de pedido/resultado do relógio.
 - **ACHADOS NÃO ALTERADOS:** (a) o NetworkManager do 64 bits recusa `2pny-setup`, `2pny-ethernet-setup` e `2pny-ethernet` ("File owner (1001) is insecure"): possível relação com o AP/captive e com "Wi-Fi não salvo"; corrigir muda a rede e exige decisão/teste, então só foi instrumentado no Expert; (b) subtensão no 64 bits (`throttled=0x50000`, "Undervoltage detected" repetido): fonte/cabo; (c) 2 abas ao entrar no AP e wizard "welcome" em equipamento já configurado: causa não confirmada; (d) Nextion sem TEMP/CYCLES/LOAD/DISK/IP: causa não confirmada; (e) D-Star `connected:false` logo após ativar: sem log do gateway.
+
+
+## 2026-11-12 — 5.11 em implementação (não entregue)
+Base confirmada: `release/pu2pny-5.10`, tag `pu2pny-v5.10.000`, commit `1a280662d4ab48bb1ea9726874a11c1e5a126c55`. Branch de trabalho: `release/pu2pny-5.11`. Ordem completa: [docs/PU2PNY-OS_5.11_ORDEM_DE_TRABALHO.md](docs/PU2PNY-OS_5.11_ORDEM_DE_TRABALHO.md). CLOCK-060, DIRECT-060, BOOT-060, UI-060 e EXPERT-060 preservados. Nenhuma imagem 5.11 publicada; CI/VPS finais e HW ainda pendentes.
+
+| ID | Implementação e critério de aceite | Estado atual |
+| --- | --- | --- |
+| SEC-511 | Corrigir UID/GID 1001, preservar outros donos intencionais, gate global de donos e manifesto com metadados; `/var/lib/2pny` root:root 0755 | código; imagem pendente |
+| PERF-511 | Seguidor journal único, EOF removido, retentativa 5→60 s, select 1 s, probes 30 s ocioso/2 s ativo; preservar snapshots/histórico | SW local PASS para EOF/CPU; integração pendente |
+| NET-511 | Autoconnect infinito, recuperação AP sem clientes/sem operação manual, lock, recuo 2→5 min, checagens pesadas a cada 12 s; dispatchers fora de nmcli síncrono | código; simulação completa pendente |
+| BOOT-511 | Retomada MMDVM até 45 s com diagnóstico, mDNS atômico/idempotente e prioridade baixa de manutenção; preservar atraso BOOT-060 | código; VPS/HW pendente |
+| DISPLAY-511 | OLED fixa 128×64/128×32, páginas I2C incrementais, CPU standby próprio e sysfs legível; sem alterar ON7LDS/HMI/TFT | SW local OLED PASS; barramento/HW pendente |
+| HOST-511 | pu2pny64.local/pu2pny32.local, inclusive escritores legados de hostname; portal canônico | overlay fixture SW PASS; navegador/HW pendente |
+| UI-511 | Textos neutros, relógio oculto com DOM preservado, aviso de subtensão atual/histórica | código; navegador pendente |
+| VOICE-511 | DMR/D-Star/P25/NXDN separados, INIs aplicados com rollback; hora cheia só D-Star | SW local edição e rollback PASS; serviço/API/HW pendente |
+| PROTO-511 | MMDVM_CM pinado 7328c9e, compilação ARMv6 no rootfs Raspbian descartável, cinco modos, exclusividade e rollback | implementação em teste; CI/HW pendente |
+| P2P-511 | DMR em grupo, BEP5 a cada 5 min, UDP direto, autenticação/anti-replay e cifra quando disponível, sem relay | SW loopback autenticado PASS; DHT/NAT/RF pendente |
+| BOARD-511 | Orange Pi Zero H2+ e NanoPi NEO H3; bases Armbian Bookworm minimal, UART1/I2C0, chroot e gates | base Orange localizada; base Nano minimal verificável ainda não localizada |
+| REL-511 | Quatro imagens, SHA, commit/tag, CI, fsck, RO, manifesto e HW NOT_VERIFIED | NÃO ENTREGUE |
+
+Exceção de baseline autorizada PROTO-511: `2pny-protocol-profiles` recebe somente chamada a `2pny-crossmode off` antes de ativar outro perfil. A geração RF e de gateways permanece intacta; os binários MMDVM-Host, DMRGateway, NextionDriver, MMDVM-Display e Direct core permanecem protegidos byte a byte.
+
+Pendências herdadas: velocidade real, YSF remoto, D-Star logo após ativar, wizard após queda de AP e duplicação de abas não estão comprovadamente resolvidas. URL canônica não garante uma única aba. Chroot executa o userland, não testa boot do kernel nem UART/RF real. Subtensão requer verificar fonte/cabo; software não comprova a correção física.
+
+Fontes: [systemd 252](https://www.freedesktop.org/software/systemd/man/252/systemd.service.html), [BEP5](https://www.bittorrent.org/beps/bep_0005.html), [MMDVM_CM pinado](https://github.com/juribeparada/MMDVM_CM/tree/7328c9e9532d29cf4d9d7d24541d57f825207be4), [MMDVM-Host DMRNetwork pinado](https://github.com/g4klx/MMDVM-Host/blob/590c531/DMRNetwork.cpp), [NanoPi NEO fabricante](https://wiki.friendlyelec.com/wiki/index.php/NanoPi_NEO), [Armbian Orange Pi](https://armbian.com/boards/orangepizero), [Armbian NanoPi](https://armbian.com/boards/nanopineo).
