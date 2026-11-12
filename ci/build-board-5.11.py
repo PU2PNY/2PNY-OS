@@ -125,8 +125,23 @@ def main():
     source_image=work/'pu2pny-32-5.11.img.xz';info=json.loads((work/'BUILD-INFO-arm32.json').read_text())
     assert sha(source_image)==info['image_sha256'] and info['version']=='5.11.000' and info['source_commit']==commit
     base=work/f'{board}-base.img.xz'
-    run(['curl','-fL','--retry','3',lock['url'],'-o',str(base)])
-    assert sha(base)==lock['sha256'],'SHA Armbian divergente'
+    # A origem primária do arquivo Armbian pode retornar 502. Espelhos
+    # somente são aceitos com o SHA-256 imutável já validado; nunca mudar
+    # a distribuição, placa, kernel ou versão da imagem para contornar 502.
+    mirrors=[lock['url'],*lock.get('mirrors',[])]
+    for url in mirrors:
+        base.unlink(missing_ok=True)
+        status=subprocess.run(['curl','-fL','--retry','2','--retry-all-errors',
+                               '--connect-timeout','20','--max-time','360',
+                               url,'-o',str(base)],check=False).returncode
+        if status:
+            continue
+        if sha(base)!=lock['sha256']:
+            raise ValueError('SHA Armbian divergente em '+url)
+        print('BOARD_511_BASE_VERIFIED',board,url,flush=True)
+        break
+    else:
+        raise RuntimeError('BOARD-511: nenhuma origem do arquivo pinado respondeu com sucesso')
     run(['xz','-t',str(base)])
     image=work/(board+'.img');srcimage=work/'source32.img'
     for packed,out in ((base,image),(source_image,srcimage)):
