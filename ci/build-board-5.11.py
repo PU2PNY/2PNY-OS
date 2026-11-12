@@ -94,11 +94,34 @@ def configure(root,source):
     policy=root/'usr/sbin/policy-rc.d';prior=policy.read_bytes() if policy.exists() else None
     policy.write_text('#!/bin/sh\nexit 101\n');policy.chmod(0o755)
     resolver=root/'etc/resolv.conf'
+    resolver_link=os.readlink(resolver) if resolver.is_symlink() else None
+    resolver_data=resolver.read_bytes() if resolver.exists() and not resolver.is_symlink() else None
+    resolver_mode=stat.S_IMODE(resolver.stat().st_mode) if resolver_data is not None else None
     if resolver.exists() or resolver.is_symlink():resolver.unlink()
     shutil.copyfile('/etc/resolv.conf',resolver)
     deps=['python3','python3-pil','python3-smbus','i2c-tools','fonts-dejavu-core','mosquitto','mosquitto-clients','network-manager','avahi-daemon','dnsmasq-base','hostapd','iw','rfkill','iptables','libstdc++6','libgcc-s1','libc6','libmosquitto1','libgpiod2','libasound2','libusb-1.0-0','libcurl4','libssl3']
-    run(['chroot',str(root),'apt-get','update','-qq'])
-    run(['chroot',str(root),'apt-get','install','-y','--no-install-recommends',*deps])
+    # apt/dpkg em um filesystem offline precisam de /proc temporário.
+    # Preservar o conffile Avahi do PU2PNY, sem prompt interativo.
+    proc=root/'proc'
+    assert proc.is_dir() and not proc.is_symlink(), 'proc inválido'
+    run(['mount','-t','proc','proc',str(proc)])
+    try:
+        run(['chroot',str(root),'apt-get','update','-qq'])
+        run(['chroot',str(root),'env','DEBIAN_FRONTEND=noninteractive',
+             'APT_LISTCHANGES_FRONTEND=none','apt-get','install','-y',
+             '-o','Dpkg::Options::=--force-confdef',
+             '-o','Dpkg::Options::=--force-confold',
+             '--no-install-recommends',*deps])
+        audit=subprocess.run(['chroot',str(root),'dpkg','--audit'],
+                             capture_output=True,text=True,check=True)
+        assert not audit.stdout.strip(),('pacotes não configurados',audit.stdout)
+    finally:
+        run(['umount',str(proc)])
+        resolver.unlink(missing_ok=True)
+        if resolver_link is not None:resolver.symlink_to(resolver_link)
+        elif resolver_data is not None:
+            resolver.write_bytes(resolver_data)
+            resolver.chmod(resolver_mode)
     # Bibliotecas ausentes impedem a entrega. Não copiar ld-linux/libc da Raspberry sobre Armbian.
     for p in sorted((root/'usr/local/bin').iterdir()):
         if not p.is_file() or '.pre-' in p.name or p.read_bytes()[:4]!=b'\x7fELF':continue
