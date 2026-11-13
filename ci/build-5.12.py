@@ -39,6 +39,10 @@ def module(filename, name):
     spec.loader.exec_module(obj)
     return obj
 
+COMMON=module('build-5.11.py','builder511_manifest')
+manifest=COMMON.manifest
+PROTECTED=COMMON.PROTECTED
+
 def gate(before, after, protected):
     changes={p for p in set(before)|set(after) if before.get(p)!=after.get(p)}
     unexpected=changes-ALLOWED
