@@ -1,3 +1,9 @@
+## Ciclo em desenvolvimento: 5.12.000 P0 — NÃO ENTREGUE
+
+A branch de trabalho é [`release/pu2pny-5.12`](https://github.com/PU2PNY/2PNY-OS/tree/release/pu2pny-5.12), derivada da 5.11.000 **ALPHA já publicada**. A 5.12 ainda não possui imagem/release verificada; SW/VPS parcial (BOOT-512 / NET-512); **HW PENDENTE; PROD NÃO APROVADO**. [Issue #23](https://github.com/PU2PNY/2PNY-OS/issues/23) e [relatório dos testes](docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md) são a entrada atual. **Não usar a 5.12 para substituir a 5.11 em hardware sem os gates de CI, imagem e rollback.** Preservar DISPLAY-041 ON7LDS, DMR simplex e demais baselines. A seção 5.11 abaixo continua válida somente como histórico da release anterior.
+
+---
+
 ## Ciclo atual: 5.11.000 ALPHA — PUBLICADA, EM HOMOLOGAÇÃO FÍSICA
 
 [Release 5.11 e quatro imagens](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.11.000) · [CI completo: 6/6 jobs success](https://github.com/PU2PNY/2PNY-OS/actions/runs/43252249844). Commit fonte/tag: `92914a3a19b9713416b541cfa93fc98b37261c9c`. **SW/CI PASS; HW PENDENTE; PROD NÃO APROVADO.** Não aplicar a 5.11 automaticamente em equipamentos aprovados; antes, testar e confirmar rollback. As referências históricas abaixo a 5.00.002 e as afirmações antigas "não entregue" não são o estado atual da publicação. Preserve a baseline Nextion ON7LDS aprovada e todas as baselines RF.
