@@ -74,16 +74,7 @@ def prepare_chroot_devices(root):
         os.chown(node,0,0)
         os.chmod(node,0o666)
 
-def configure(root,source):
-    prepare_chroot_devices(root)
-    for name in ('usr/local','usr/share/2pny','etc/2pny','var/lib/2pny','etc/avahi'):
-        copy(source/name,root/name)
-    for part in ('conf.d','dispatcher.d','dnsmasq-shared.d','system-connections'):
-        p=source/'etc/NetworkManager'/part
-        if p.exists():copy(p,root/'etc/NetworkManager'/part)
-    for part in ('mosquitto/conf.d','udev/rules.d','systemd/journald.conf.d','tmpfiles.d'):
-        p=source/'etc'/part
-        if p.exists():copy(p,root/'etc'/part)
+def stage_pu2pny_units(root,source):
     units=root/'etc/systemd/system';units.mkdir(parents=True,exist_ok=True)
     for p in (source/'etc/systemd/system').glob('2pny-*'):copy(p,units/p.name)
     # NET-512: 2pnyd (sem hífen) era excluído por 2pny-* na 5.11.
@@ -106,6 +97,19 @@ def configure(root,source):
     enabled=units/'multi-user.target.wants/2pnyd.service'
     assert enabled.is_symlink(), 'NET-512: painel não habilitado em multi-user.target'
     assert os.path.basename(os.readlink(enabled))=='2pnyd.service', 'NET-512: symlink de painel incorreto'
+
+
+def configure(root,source):
+    prepare_chroot_devices(root)
+    for name in ('usr/local','usr/share/2pny','etc/2pny','var/lib/2pny','etc/avahi'):
+        copy(source/name,root/name)
+    for part in ('conf.d','dispatcher.d','dnsmasq-shared.d','system-connections'):
+        p=source/'etc/NetworkManager'/part
+        if p.exists():copy(p,root/'etc/NetworkManager'/part)
+    for part in ('mosquitto/conf.d','udev/rules.d','systemd/journald.conf.d','tmpfiles.d'):
+        p=source/'etc'/part
+        if p.exists():copy(p,root/'etc'/part)
+    stage_pu2pny_units(root,source)
     # Proibir a execução de serviços durante apt na imagem offline.
     policy=root/'usr/sbin/policy-rc.d';prior=policy.read_bytes() if policy.exists() else None
     policy.write_text('#!/bin/sh\nexit 101\n');policy.chmod(0o755)
