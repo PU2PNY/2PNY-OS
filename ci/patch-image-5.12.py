@@ -11,9 +11,6 @@ def apply(root: Path):
     version = root / 'etc/2pny/version'
     assert version.read_text().strip() == '5.11.000', 'exigir base 5.11 exata'
     previous = version.with_name('version.pre-5.12')
-    assert not previous.exists(), 'patch duplicado'
-    shutil.copy2(version, previous)
-
     units = root / 'etc/systemd/system'
     delayed = ('2pny-auto-maintenance', '2pny-hostfiles-update')
     # Pré-validação completa antes de tocar em qualquer serviço ou arquivo.
