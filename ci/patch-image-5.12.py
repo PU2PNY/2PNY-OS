@@ -16,33 +16,37 @@ def apply(root: Path):
 
     units = root / 'etc/systemd/system'
     delayed = ('2pny-auto-maintenance', '2pny-hostfiles-update')
-    for name in delayed:
-        delay = units / f'{name}.service.d/60-delay.conf'
-        assert delay.is_file(), 'BOOT-512: delay esperado ausente: ' + str(delay)
-        assert delay.read_text().count('ExecStartPre=/bin/sleep 300') == 1, (
-            'BOOT-512: mudou o contrato do delay; investigar antes de alterar: ' + name)
-        backup = delay.with_name('60-delay.conf.pre-5.12')
-        assert not backup.exists(), 'BOOT-512: backup já presente'
-        shutil.copy2(delay, backup)
-        delay.unlink()
-
-        # Unidades opcinais não devem ser WantedBy do multi-user.target.
-        link = units / 'multi-user.target.wants' / f'{name}.service'
-        if link.is_symlink():
-            assert os.path.basename(os.readlink(link)) == f'{name}.service', (
-                'BOOT-512: link não reconhecido: ' + str(link))
-            link.unlink()
-        assert not link.exists() and not link.is_symlink(), (
-            'BOOT-512: serviço ainda diretamente habilitado no boot: ' + name)
-
+    # Pré-validação completa antes de tocar em qualquer serviço ou arquivo.
+    assert not previous.exists(), 'patch duplicado'
     host_timer = units / '2pny-hostfiles-update.timer'
     host_wanted = units / 'timers.target.wants/2pny-hostfiles-update.timer'
     assert host_timer.is_file() and host_wanted.is_symlink(), (
-        'BOOT-512: timer de hostfiles já aprovado precisa ser preservado')
-
+        'BOOT-512: timer de hostfiles existente precisa ser preservado')
     maintenance_timer = units / '2pny-auto-maintenance.timer'
+    timer_link = units / 'timers.target.wants/2pny-auto-maintenance.timer'
     assert not maintenance_timer.exists() and not maintenance_timer.is_symlink(), (
-        'BOOT-512: timer manutenção existente; avaliar em vez de sobrescrever')
+        'BOOT-512: manutenção já possui timer; investigar')
+    assert not timer_link.exists() and not timer_link.is_symlink()
+    for name in delayed:
+        assert (units / f'{name}.service').is_file()
+        delay = units / f'{name}.service.d/60-delay.conf'
+        assert delay.is_file(), 'BOOT-512: delay esperado ausente: ' + str(delay)
+        assert delay.read_text().count('ExecStartPre=/bin/sleep 300') == 1, (
+            'BOOT-512: mudou contrato do delay, revisar: ' + name)
+        assert not delay.with_name('60-delay.conf.pre-5.12').exists()
+        link = units / 'multi-user.target.wants' / f'{name}.service'
+        assert not link.exists() or link.is_symlink(), 'link inválido'
+        if link.is_symlink():
+            assert os.path.basename(os.readlink(link)) == f'{name}.service'
+
+    shutil.copy2(version, previous)
+    for name in delayed:
+        delay = units / f'{name}.service.d/60-delay.conf'
+        shutil.copy2(delay, delay.with_name('60-delay.conf.pre-5.12'))
+        delay.unlink()
+        link = units / 'multi-user.target.wants' / f'{name}.service'
+        if link.is_symlink():link.unlink()
+
     maintenance_timer.write_text(
         '[Unit]\n'
         'Description=PU2PNY manutenção eventual fora do boot\n'
