@@ -1198,3 +1198,12 @@ Fontes: [arquivo oficial NanoPi](https://rsync.armbian.com/oldarchive/nanopineo/
 | Raspberry ARM64 | [`pu2pny-64-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-64-5.11.img.xz) | `b8b6d844230c0611566625ab050e30dfbf89ca7adb367412e4f14a4bcf0bb103` |
 | Orange Pi Zero H2+ | [`pu2pny-opizero-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-opizero-5.11.img.xz) | `343390b1c0d8edc1a4c3e32e2afb67f2103adfc136486756c79103c40ac8f1ad` |
 | NanoPi NEO H3 | [`pu2pny-nanopineo-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-nanopineo-5.11.img.xz) | `7119966a09e77d0297209973c5e9bc47a746cff18e4bf74f7c66786703c21eb7` |
+
+## 2026-11-13 — início das correções P0 da 5.12
+
+- Base confirmada: `release/pu2pny-5.11`; branch isolada `release/pu2pny-5.12`; issue #23 aberta para as evidências Raspberry Pi 3, Raspberry Pi 4, Orange Pi Zero e relato ARM32. Nada alterado na release 5.11 aprovada como origem/rollback.
+- **BOOT-512:** localizada a espera `ExecStartPre=/bin/sleep 300` introduzida na 5.10. Patch novo remove somente o drop-in de atraso após preflight, remove habilitação de boot direta de manutenção/listas, mantém hostfiles timer e agenda manutenção por timer. Backups preservados. **SW/VPS PASS em fixture**, tempo real em Raspberry segue HW PENDENTE.
+- **NET-512:** construtor Armbian 5.11 excluía `2pnyd.service` por usar glob `2pny-*`. Novo `ci/build-board-5.12.py` copia e valida explicitamente a unidade e seu link multi-user. **SW/VPS PASS em fixture**, acesso real pelo AP Orange Pi/Nano HW PENDENTE.
+- `ci/build-5.12.py` prepara overlay independente sobre a imagem 5.11 imutável, verifica diferenças autorizadas e arquivos RF protegidos. Build completo/CI/SHA/asset físico ainda PENDENTES nesta etapa.
+- Não foram alterados MMDVMHost, DMRGateway, NextionDriver, frequência, slots, TG, color code, configurações de rede ou IP de AP. Não foi aplicado redesign visual: UI-512 permanece registrado como PENDENTE e depende dos gates P0.
+- Evidências e matriz detalhada em `docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md`. Publicação da nova imagem requer gates documentados; nenhuma versão 5.12 foi declarada entregue.
