@@ -1,6 +1,17 @@
-## PU2PNY-OS 5.11 — em implementação
+## PU2PNY-OS 5.11.000 ALPHA — quatro imagens publicadas
 
-**NÃO ENTREGUE.** Base: [5.10 publicada](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.10.000), commit `1a280662`. [Estado e bloqueios](PU2PNY-OS_RELEASE_STATUS.md) · [Requisitos](PU2PNY-OS_MASTER_SPEC.md) · [Testes](PU2PNY-OS_TEST_MATRIX.md). Builds Raspberry ARM32/ARM64 do CI 43233187118 passaram. Base NanoPi Bookworm minimal encontrada e verificada por SHA-256/XZ; novo CI das quatro placas pendente. Não há release 5.11 entregue.
+[Release e downloads](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.11.000) · [CI 6/6 jobs aprovados](https://github.com/PU2PNY/2PNY-OS/actions/runs/43252249844) · [Estado](PU2PNY-OS_RELEASE_STATUS.md) · [Testes](PU2PNY-OS_TEST_MATRIX.md).
+
+**SW/CI PASS; HW PENDENTE; PROD NÃO APROVADO.** As quatro imagens foram criadas e publicadas a partir do commit/tag `92914a3a19b9713416b541cfa93fc98b37261c9c`. O CI conferiu integridade XZ, SHA-256 e BUILD-INFO; ainda não há validação de boot, RF, Wi-Fi, Nextion, OLED, crossmode ou Direct P2P em hardware real.
+
+| Placa | Artefato | SHA-256 (digest publicado) |
+|---|---|---|
+| Raspberry ARM32 | [`pu2pny-32-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-32-5.11.img.xz) | `6a90ac0080fd72c28d3df8d52b44d076bb7764bd530b5673798180987a1262d9` |
+| Raspberry ARM64 | [`pu2pny-64-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-64-5.11.img.xz) | `b8b6d844230c0611566625ab050e30dfbf89ca7adb367412e4f14a4bcf0bb103` |
+| Orange Pi Zero H2+ | [`pu2pny-opizero-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-opizero-5.11.img.xz) | `343390b1c0d8edc1a4c3e32e2afb67f2103adfc136486756c79103c40ac8f1ad` |
+| NanoPi NEO H3 | [`pu2pny-nanopineo-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-nanopineo-5.11.img.xz) | `7119966a09e77d0297209973c5e9bc47a746cff18e4bf74f7c66786703c21eb7` |
+
+Os arquivos `.sha256` e `BUILD-INFO-*.json` de cada placa estão na [mesma release](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.11.000). Os registros abaixo sobre a 5.00.002 preservam um baseline histórico de display, não a versão de entrega mais recente.
 
 # PU2PNY-OS 5.00.002 — somente display
 

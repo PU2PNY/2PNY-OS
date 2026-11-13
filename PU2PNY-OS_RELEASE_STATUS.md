@@ -1273,3 +1273,22 @@ Fontes: [systemd 252](https://www.freedesktop.org/software/systemd/man/252/syste
 - Critério de aceite BOARD-511: as duas bases Bookworm minimal verificadas, chroot/dependências/unidades, NetworkManager exclusivo, kernel/U-Boot preservados, fsck/RO/XZ/SHA PASS; só promover boot/UART/RF após teste HW.
 
 Fontes: [arquivo oficial NanoPi](https://rsync.armbian.com/oldarchive/nanopineo/archive/), [checksum oficial](https://rsync.armbian.com/oldarchive/nanopineo/archive/Armbian_23.8.1_Nanopineo_bookworm_current_6.1.47_minimal.img.xz.sha), [espelho de download](https://armbian.hosthatch.com/archive/nanopineo/archive/), [pinout do fabricante](https://wiki.friendlyelec.com/wiki/index.php/NanoPi_NEO).
+
+## 2026-11-12 — REL-511: prerelease 5.11.000 publicada (SW/CI PASS; HW pendente)
+
+- Release: [pu2pny-v5.11.000](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.11.000), publicada em 12/11/2026 às 16:18 UTC como **prerelease ALPHA**, não produção.
+- Código-fonte exato das quatro imagens e tag: [`92914a3a19b9713416b541cfa93fc98b37261c9c`](https://github.com/PU2PNY/2PNY-OS/commit/92914a3a19b9713416b541cfa93fc98b37261c9c); branch `release/pu2pny-5.11`.
+- [GitHub Actions `43252249844`](https://github.com/PU2PNY/2PNY-OS/actions/runs/43252249844): seis jobs concluídos com **success**: `tests`, `build (arm32)`, `build (arm64)`, `boards (opizero)`, `boards (nanopineo)` e `publish`.
+- A etapa `publish` verificou os quatro arquivos `.img.xz`, `xz -t`, `sha256sum -c` e os quatro `BUILD-INFO-*.json` com versão `5.11.000`, commit fonte correto, filesystem `PASS` e `HW=NOT_VERIFIED`.
+- Gate SW/CI: **PASS** para os testes executados e as quatro imagens publicadas. VPS: testes de backend e simulações anteriores documentados; não equivale a teste RF. **HW: PENDENTE; PROD: NÃO APROVADO**.
+- Regressões físicas ainda não homologadas na 5.11: boot/retomada do último protocolo, Ethernet e Wi-Fi de recuperação, hotspot/AP, mDNS, OLED, Nextion e dados CPU, voz DMR/D-Star/P25/NXDN, cinco crossmodes, Direct DMR em duas redes com DHT/NAT reais, RF e boot físico nas placas Orange Pi/NanoPi. Limitações MMDVM_CM, CGNAT e disponibilidade de cifra continuam explícitas nas notas da release.
+- As afirmações anteriores de que a 5.11 não foi entregue **eram verdadeiras no momento daqueles registros históricos**; esta evidência posterior as substitui somente quanto ao estado de build/publicação, sem converter pendências de hardware em PASS.
+
+| Placa | Artefato | SHA-256 (digest publicado) |
+|---|---|---|
+| Raspberry ARM32 | [`pu2pny-32-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-32-5.11.img.xz) | `6a90ac0080fd72c28d3df8d52b44d076bb7764bd530b5673798180987a1262d9` |
+| Raspberry ARM64 | [`pu2pny-64-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-64-5.11.img.xz) | `b8b6d844230c0611566625ab050e30dfbf89ca7adb367412e4f14a4bcf0bb103` |
+| Orange Pi Zero H2+ | [`pu2pny-opizero-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-opizero-5.11.img.xz) | `343390b1c0d8edc1a4c3e32e2afb67f2103adfc136486756c79103c40ac8f1ad` |
+| NanoPi NEO H3 | [`pu2pny-nanopineo-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-nanopineo-5.11.img.xz) | `7119966a09e77d0297209973c5e9bc47a746cff18e4bf74f7c66786703c21eb7` |
+
+**Próximo gate:** testes no equipamento físico e registro de evidências por placa/protocolo; não promover esta ALPHA a produção por causa de CI aprovado.

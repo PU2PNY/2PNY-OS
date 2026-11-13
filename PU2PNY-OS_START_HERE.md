@@ -1,6 +1,8 @@
-## Ciclo ativo: 5.11 — EM IMPLEMENTAÇÃO / NÃO ENTREGUE
+## Ciclo atual: 5.11.000 ALPHA — PUBLICADA, EM HOMOLOGAÇÃO FÍSICA
 
-Base 5.10 `1a280662d4ab48bb1ea9726874a11c1e5a126c55`; branch `release/pu2pny-5.11`. Consulte a seção 5.11 mais recente dos documentos canônicos e a [ordem completa](docs/PU2PNY-OS_5.11_ORDEM_DE_TRABALHO.md). O histórico abaixo não promove a 5.11 a pronta.
+[Release 5.11 e quatro imagens](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.11.000) · [CI completo: 6/6 jobs success](https://github.com/PU2PNY/2PNY-OS/actions/runs/43252249844). Commit fonte/tag: `92914a3a19b9713416b541cfa93fc98b37261c9c`. **SW/CI PASS; HW PENDENTE; PROD NÃO APROVADO.** Não aplicar a 5.11 automaticamente em equipamentos aprovados; antes, testar e confirmar rollback. As referências históricas abaixo a 5.00.002 e as afirmações antigas "não entregue" não são o estado atual da publicação. Preserve a baseline Nextion ON7LDS aprovada e todas as baselines RF.
+
+Base 5.10 `1a280662d4ab48bb1ea9726874a11c1e5a126c55`; branch `release/pu2pny-5.11`. Consulte a seção REL-511 mais recente dos documentos canônicos e a [ordem completa](docs/PU2PNY-OS_5.11_ORDEM_DE_TRABALHO.md).
 
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
