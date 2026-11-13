@@ -2124,3 +2124,21 @@ Estado consolidado de release, sem alterar os requisitos funcionais: a publicaç
 - Gate SW/CI: **PASS** para os testes executados e as quatro imagens publicadas. VPS: testes de backend e simulações anteriores documentados; não equivale a teste RF. **HW: PENDENTE; PROD: NÃO APROVADO**.
 - Regressões físicas ainda não homologadas na 5.11: boot/retomada do último protocolo, Ethernet e Wi-Fi de recuperação, hotspot/AP, mDNS, OLED, Nextion e dados CPU, voz DMR/D-Star/P25/NXDN, cinco crossmodes, Direct DMR em duas redes com DHT/NAT reais, RF e boot físico nas placas Orange Pi/NanoPi. Limitações MMDVM_CM, CGNAT e disponibilidade de cifra continuam explícitas nas notas da release.
 - As afirmações anteriores de que a 5.11 não foi entregue **eram verdadeiras no momento daqueles registros históricos**; esta evidência posterior as substitui somente quanto ao estado de build/publicação, sem converter pendências de hardware em PASS.
+
+## 2026-11-13 — Requisitos 5.12: feedback dos testadores
+
+**BOOT-512 (P0):** serviços de atualização de hostfiles e manutenção não podem bloquear `multi-user.target`. Remover os atrasos `ExecStartPre=/bin/sleep 300` introduzidos no BOOT-060 somente após preflight. Manter serviços disponíveis e agendar por timers assíncronos. Critério: testes unitários + manifesto de imagem com serviços fora do boot; tempo real aferido no hardware.
+
+**NET-512 (P0):** nas imagens Orange Pi Zero H2+ e NanoPi NEO H3, copiar e habilitar explicitamente `2pnyd.service`, excluído pelo glob `2pny-*` da 5.11, e provar que o binário HTTP está presente. Critério: teste de unidade/serviço no build e acesso efetivo no AP físico. Preservar `10.43.0.1` até teste transacional de mudança de IP.
+
+**PROTO-512 / DSTAR-512 / RF-512:** recolher causa específica do encerramento do DMRGateway e das reinicializações do MMDVMHost; nunca confundir serviço ativo com link confirmado no D-Star. Não alterar RF aprovado para corrigir indicação visual. SW/VPS não equivale a RF HW.
+
+**DISPLAY-512:** investigar SIGSEGV e ausência de TEMP/disco/IP/frequência no Nextion; preservar exatamente o baseline DISPLAY-041 ON7LDS, nenhum writer concorrente, nenhum flash TFT/HMI automático.
+
+**HW-512:** reconhecer subtensão `0x50005` como falha elétrica observada (Raspberry Pi 3 e 4). Corrigir fonte/cabo em hardware e reavaliar RF/rede/boot após tensão estável; o software só apresenta informação real.
+
+**NET-513 / HOST-512:** eliminar colisões de nomes de hotspots por identificação persistente, sem trocar arbitrariamente IP/AP/host do equipamento provisionado. Testar duas placas simultâneas. `192.168.4.1` é proposta nova que conflita com o IP de recuperação atual `10.43.0.1`; não forçar substituição sem rollback/teste.
+
+**UI-512:** requisito de redesenho leve, offline, inspirado nas Apple HIG, integrado ao contrato existente e com acessibilidade, PT/EN/ES, sem perder páginas e comportamentos aprovados. Não faz parte dos patches P0 iniciais e permanece PENDENTE até testes visuais e de regressão.
+
+Rastreio: [Feedback 5.12](docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md) · [Issue #23](https://github.com/PU2PNY/2PNY-OS/issues/23).
