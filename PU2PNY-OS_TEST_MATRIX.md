@@ -1321,3 +1321,22 @@ Fontes: [arquivo oficial NanoPi](https://rsync.armbian.com/oldarchive/nanopineo/
 - Gate SW/CI: **PASS** para os testes executados e as quatro imagens publicadas. VPS: testes de backend e simulações anteriores documentados; não equivale a teste RF. **HW: PENDENTE; PROD: NÃO APROVADO**.
 - Regressões físicas ainda não homologadas na 5.11: boot/retomada do último protocolo, Ethernet e Wi-Fi de recuperação, hotspot/AP, mDNS, OLED, Nextion e dados CPU, voz DMR/D-Star/P25/NXDN, cinco crossmodes, Direct DMR em duas redes com DHT/NAT reais, RF e boot físico nas placas Orange Pi/NanoPi. Limitações MMDVM_CM, CGNAT e disponibilidade de cifra continuam explícitas nas notas da release.
 - As afirmações anteriores de que a 5.11 não foi entregue **eram verdadeiras no momento daqueles registros históricos**; esta evidência posterior as substitui somente quanto ao estado de build/publicação, sem converter pendências de hardware em PASS.
+
+## 2026-11-13 — TEST MATRIX 5.12 P0 (antes de imagem)
+
+| ID | Nível | Estado | Critério / evidência |
+| --- | --- | --- | --- |
+| TEST-BOOT-512-001 | SW/VPS | **PASS** | `ci/test-boot-5.12.py`: retira sleep e Wants de manutenção/listas; preserva serviços/timers e backups |
+| TEST-BOOT-512-002 | SW/VPS | **PASS** | Preflight rejeita timer ausente antes de modificar versão/serviço |
+| TEST-NET-512-001 | SW/VPS | **PASS** | `ci/test-board-5.12.py`: ausência do `2pnyd` reproduzida na seleção 5.11; 5.12 transplanta unit e vínculo, recusa falta de ambos |
+| TEST-NET-512-002 | HW Orange Pi | **PENDENTE — 5.11 FALHOU** | AP com associação + abrir painel local por IP `10.43.0.1` e URL mDNS se disponível |
+| TEST-NET-512-003 | HW ARM32 | **PENDENTE — relato de falha 5.11** | Pi Zero W associa AP, abre painel, mantém recuperação Wi-Fi sem terminal |
+| TEST-BOOT-512-003 | HW Pi3/Pi4 | **PENDENTE — 5.11 FALHOU** | Boot não bloqueado, retorno real do rádio e tempo medido após alimentação normalizada |
+| TEST-RF-512-001 | HW | **FALHOU na 5.11; 5.12 PENDENTE** | DMRGateway permanece ativo e DMR RF↔rede confirmado, não basta rollback de erro |
+| TEST-DSTAR-512-001 | HW | **PENDENTE** | Indicação do painel coincide com estado confirmado no refletor, não somente serviço ativo |
+| TEST-DISPLAY-512-001 | HW | **FALHOU na 5.11; 5.12 PENDENTE** | Nextion não apresenta SIGSEGV; standby/TX/RX/frequência/IP/CPU/disco com dados reais |
+| TEST-HW-512-001 | HW | **FALHOU (subtensão)** | `get_throttled` sem subtensão em nova sessão com fonte/cabo adequados |
+| TEST-REL-512-001 | CI | **PENDENTE** | ARM32/ARM64/Orange/Nano, XZ, SHA, filesystem RO, código e commit exatos; imagem candidatas, não PROD |
+| TEST-UI-512-001 | SW/HW | **PENDENTE** | Redesign offline, acessibilidade e UI_CONTRACT sem regressões; não integra P0 inicial |
+
+[Feedback técnico](docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md).
