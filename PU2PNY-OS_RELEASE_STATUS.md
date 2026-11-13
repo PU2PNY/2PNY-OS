@@ -1292,3 +1292,13 @@ Fontes: [arquivo oficial NanoPi](https://rsync.armbian.com/oldarchive/nanopineo/
 | NanoPi NEO H3 | [`pu2pny-nanopineo-5.11.img.xz`](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.11.000/pu2pny-nanopineo-5.11.img.xz) | `7119966a09e77d0297209973c5e9bc47a746cff18e4bf74f7c66786703c21eb7` |
 
 **Próximo gate:** testes no equipamento físico e registro de evidências por placa/protocolo; não promover esta ALPHA a produção por causa de CI aprovado.
+
+## 2026-11-13 — 5.12.000 P0 em desenvolvimento (NÃO ENTREGUE)
+
+Branch `release/pu2pny-5.12` derivada de `release/pu2pny-5.11`; tag publicada anterior `pu2pny-v5.11.000`. A 5.11 continua baseline de rollback. Identificado no código: `ci/patch-image-5.10.py` introduziu `ExecStartPre=/bin/sleep 300` em serviços de manutenção e listas que continuam bloqueando o boot; `ci/build-board-5.11.py` transplantou unidades somente `2pny-*` e omitiu `2pnyd.service` das placas Armbian.
+
+Correções em código de P0: `ci/patch-image-5.12.py` (preflight/backup/retirada do caminho crítico e timers), `ci/build-board-5.12.py` (serviço HTTP explícito), `ci/build-5.12.py` (sobreposição verificada sem alterar RF) e testes `ci/test-boot-5.12.py`, `ci/test-board-5.12.py`. Testes executados na VPS de laboratório: `TEST_BOOT_512_DEFERRED_MAINTENANCE_OK` e `TEST_NET_512_BOARD_HTTP_UNIT_OK`. Ainda **NÃO** há CI completo, imagens 5.12, SHA-256 de artefatos ou nova release verificados nesta etapa. Classificação atual: `SW/VPS parcial PASS; HW FALHOU reportado na 5.11; 5.12 HW PENDENTE; PROD NÃO APROVADO`.
+
+Bloqueadores adicionais continuam: DMRGateway, D-Star connected:false com relato de link real, retomada MMDVMHost, Nextion SIGSEGV e telemetria, Avahi, hardware elétrico `0x50005`, AP/painel físicos em Orange Pi e Raspberry ARM32. UI-512/HOST-512 e demais backlog permanecem PENDENTES, sem mudança de comportamento aprovada por suposição.
+
+[Relatório consolidado](docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md) · [Issue #23](https://github.com/PU2PNY/2PNY-OS/issues/23).
