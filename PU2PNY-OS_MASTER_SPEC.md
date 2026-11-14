@@ -1,3 +1,9 @@
+## UI-NAV-510 — Gate de regressão obrigatório (14/11/2026)
+
+Uma captura do painel Ao Vivo em `pu2pny64.local/dashboard` mostrou a **navegação vazia** e métricas `—` após relatos de regressões desde 5.10. **FAIL/REGRESSÃO reportada em HW; causa NÃO VERIFICADA**. Antes de novo build candidato, comparar a montagem do `mainNav` (HTML dashboard e `/ui-common-0.3.0.js`), a entrega HTTP/JS real, rede/mDNS, backend `2pnyd` e APIs, sem confundir ausência de dados com falha RF. Exigir teste de navegação em todas as páginas e recuperação após falha temporária de API; `Failed to fetch` de DMR/YSF/D-Star é bloqueador relacionado `REG-511-BASIC-APPLY`. A 5.09 não foi homologada em HW e deve ser tratada apenas como candidata de comparação. Não promover versões 5.10–5.12 à produção com tais regressões não resolvidas. [#25](https://github.com/PU2PNY/2PNY-OS/issues/25) · [#24](https://github.com/PU2PNY/2PNY-OS/issues/24).
+
+---
+
 ## REL-512-P0 — Estado canônico após CI de 13/11/2026
 
 **Estado verificado em 13/11/2026:** a prerelease [PU2PNY-OS 5.12.000 P0 ALPHA](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.000-p0) está **PUBLICADA** como **candidata para teste físico**, não produção. Código/commit imutável dos quatro artefatos: [`1b2a0a0068303b9bf091c26c90012755708f2bb1`](https://github.com/PU2PNY/2PNY-OS/commit/1b2a0a0068303b9bf091c26c90012755708f2bb1). O [CI 43488577915](https://github.com/PU2PNY/2PNY-OS/actions/runs/43488577915) finalizou com **6/6 jobs success** (`tests`, `build (arm32)`, `build (arm64)`, `boards (opizero)`, `boards (nanopineo)`, `publish`). O publish executou `xz -t`, `sha256sum -c` e conferiu `BUILD-INFO` das quatro placas; na release há quatro arquivos não vazios .img.xz, quatro .sha256 e quatro manifestos. **HW NÃO VERIFICADO**; **PROD NÃO APROVADO**.
