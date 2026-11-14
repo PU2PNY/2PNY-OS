@@ -38,7 +38,14 @@ def apply(root):
     }
     for installed,baseline in originals.items():
         target=root/installed
-        assert target.is_file() and target.read_bytes()==(ROOT_DIR/baseline).read_bytes(), 'baseline alterado: '+installed
+        expected=(ROOT_DIR/baseline).read_bytes()
+        # HOST-057/511 changed only the advertised hostname in the legacy LCD module.
+        # Validate the exact variant; do not treat an arbitrary edited baseline as safe.
+        variants=[expected]
+        if installed.endswith('/lcd-504.py'):
+            variants += [expected.replace(b'pu2pny.local',host) for host in
+                         (b'pu2pny32.local',b'pu2pny64.local')]
+        assert target.is_file() and target.read_bytes() in variants, 'baseline alterado: '+installed
         assert not (root/(installed+SUFFIX)).exists(), 'patch duplicado'
     folder=root/'usr/share/2pny'
     assert folder.is_dir()
