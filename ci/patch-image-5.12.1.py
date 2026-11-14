@@ -28,7 +28,7 @@ def apply(root):
     assert version.is_file() and version.read_text().strip()=='5.12.000', 'base 5.12 P0 exata obrigatória'
     originals = {
         'usr/local/libexec/pu2pny/oled-502.py':'runtime/5.11/oled.py',
-        'usr/local/libexec/pu2pny/lcd-504.py':'runtime/5.04/lcd.py',
+        'usr/local/libexec/pu2pny/lcd-504.py':'runtime/5.05/lcd.py',
         'usr/local/libexec/pu2pny/expert-cmd-504.py':'runtime/5.10/expert-cmd.py',
     }
     replacements = {
