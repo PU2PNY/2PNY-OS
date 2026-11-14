@@ -1,3 +1,22 @@
+## 2026-11-14 — PU2PNY-OS 5.12.001 P1 ALPHA PUBLICADA: 4 placas, TESTE FÍSICO PENDENTE
+
+**Entrega verificável:** [release oficial P1](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1), [CI 43597269377](https://github.com/PU2PNY/2PNY-OS/actions/runs/43597269377) com **6/6 jobs concluídos em sucesso**, tag/commit do código `38f3ac23582e4c5a424b09a5901b03f828aa617a`. Quatro assets `.img.xz` de tamanho >0, quatro `.sha256`, quatro manifestos `BUILD-INFO`, verificados por CI (`xz -t` + `sha256sum -c`, filesystem RO, hashes e alterações autorizadas, Nextion/RF/kernel/bootloader protegidos). **HW: NÃO VERIFICADO para P1; PROD: NÃO APROVADO**.
+
+| Placa | Imagem publicada | SHA |
+|---|---|---|
+| Raspberry Pi ARM32 | [32-5.12.001.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-32-5.12.001.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-32-5.12.001.img.xz.sha256) |
+| Raspberry Pi ARM64 | [64-5.12.001.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-64-5.12.001.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-64-5.12.001.img.xz.sha256) |
+| Orange Pi Zero H2+ | [opizero-5.12.001.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-opizero-5.12.001.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-opizero-5.12.001.img.xz.sha256) |
+| NanoPi NEO H3 | [nanopineo-5.12.001.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-nanopineo-5.12.001.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-nanopineo-5.12.001.img.xz.sha256) |
+
+**Escopo implementado e SW PASS:** fallback de menu em HTML se o JS falhar (`UI-NAV-5121`); relógio da página Sistema novamente visível (`CLOCK-5121`, sem comprovação do fuso efetivo); OLED 128×32/64 e LCD HD44780 com PU2PNY-OS, indicativo, IP, protocolo, duração, BER/RSSI **somente se medidos**, CPU temperatura/disco (`DISPLAY-5121`); Expert `Rodar tudo` de leitura ampliado para diagnóstico HTTP/AP/gateways, arquivo TXT até 160 mil caracteres (`EXPERT-5121`). O **Nextion ON7LDS aprovado permanece byte-idêntico** no código da imagem; **novos campos Nextion não foram implementados nesta P1**.
+
+**Problemas não resolvidos:** DMRGateway falha e rollback (#23/#24), D-Star sem confirmação de link remoto (#23), navegação/HTTP HW não homologados (#25), AP Orange sem painel e NanoPi HW pendente (#29), transcodificação sem backend/vocoder real (#27), Direct privado/grupo em CGNAT sem relay operacional (#26), extras Nextion CPU/disco/IP pendentes (#28), badge backend ainda pode dizer 5.11.000 apesar de `/etc/2pny/version=5.12.001` (#30). O diagnóstico Pi4 ARM64 5.12.000 em 14/11/2026 mostrou `Europe/London` apesar de NTP sincronizado, DMRGateway rollback, D-Star `connected:false` e **subtensão real reiterada** (`throttled=0x50005`). Não inventar correção ou medição.
+
+**Checklist HW canônico:** [docs/PU2PNY-OS_5.12.001_HW_CHECKLIST.md](docs/PU2PNY-OS_5.12.001_HW_CHECKLIST.md). Preservar a imagem P0 para rollback, sem flash HMI/TFT e sem mudar RF aprovado. **Não declarar entrega plena do escopo 5.12** somente porque esta prerelease P1 está publicada.
+
+---
+
 ## UI-NAV-510 — Gate de regressão obrigatório (14/11/2026)
 
 Uma captura do painel Ao Vivo em `pu2pny64.local/dashboard` mostrou a **navegação vazia** e métricas `—` após relatos de regressões desde 5.10. **FAIL/REGRESSÃO reportada em HW; causa NÃO VERIFICADA**. Antes de novo build candidato, comparar a montagem do `mainNav` (HTML dashboard e `/ui-common-0.3.0.js`), a entrega HTTP/JS real, rede/mDNS, backend `2pnyd` e APIs, sem confundir ausência de dados com falha RF. Exigir teste de navegação em todas as páginas e recuperação após falha temporária de API; `Failed to fetch` de DMR/YSF/D-Star é bloqueador relacionado `REG-511-BASIC-APPLY`. A 5.09 não foi homologada em HW e deve ser tratada apenas como candidata de comparação. Não promover versões 5.10–5.12 à produção com tais regressões não resolvidas. [#25](https://github.com/PU2PNY/2PNY-OS/issues/25) · [#24](https://github.com/PU2PNY/2PNY-OS/issues/24).
