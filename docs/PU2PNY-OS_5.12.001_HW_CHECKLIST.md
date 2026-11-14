@@ -1,6 +1,6 @@
 # PU2PNY-OS 5.12.001 P1 — Plano de homologação física
 
-> **Classificação:** ALPHA, candidata para teste físico **somente se todas as imagens/SHAs forem efetivamente publicadas após CI**. Não é produção. O teste de build NÃO constitui evidência de RF, Nextion, Orange/Nano AP ou transcoding.
+> **Classificação confirmada em 14/11/2026:** ALPHA, candidata para teste físico. [Imagens 5.12.001 P1 publicadas](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1) com quatro SHA-256 e [CI 6/6 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/43597269377). **Não é produção.** O teste de build NÃO constitui evidência de RF, Nextion, Orange/Nano AP ou transcoding.
 
 ## Escopo limitado do P1
 
@@ -54,7 +54,7 @@ NextionDriver ON7LDS de 5.00.002 foi aprovado em hardware. Nenhum novo writer Ne
 - #26 — Direct P2P privado e grupo sob CGNAT com ICE/STUN e relay autenticado.
 - #27 — codecs e backend real de transcoding.
 - #28 — metadados extras NextionDriver ON7LDS.
-- #29 — Orange Pi AP sem painel e NanoPi Ethernet/compatibilidade.
+- #29 — Orange Pi AP sem painel e NanoPi Ethernet/compatibilidade.\n- #30 — divergência de versão: badge do backend 5.11.000 vs imagem 5.12.001.
 
 ## Fontes upstream
 
