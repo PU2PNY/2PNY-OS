@@ -1,3 +1,30 @@
+## 2026-11-13 — TEST-REL-512-P0: validação de release
+
+**Estado verificado em 13/11/2026:** a prerelease [PU2PNY-OS 5.12.000 P0 ALPHA](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.000-p0) está **PUBLICADA** como **candidata para teste físico**, não produção. Código/commit imutável dos quatro artefatos: [`1b2a0a0068303b9bf091c26c90012755708f2bb1`](https://github.com/PU2PNY/2PNY-OS/commit/1b2a0a0068303b9bf091c26c90012755708f2bb1). O [CI 43488577915](https://github.com/PU2PNY/2PNY-OS/actions/runs/43488577915) finalizou com **6/6 jobs success** (`tests`, `build (arm32)`, `build (arm64)`, `boards (opizero)`, `boards (nanopineo)`, `publish`). O publish executou `xz -t`, `sha256sum -c` e conferiu `BUILD-INFO` das quatro placas; na release há quatro arquivos não vazios .img.xz, quatro .sha256 e quatro manifestos. **HW NÃO VERIFICADO**; **PROD NÃO APROVADO**.
+
+| Placa | Imagem 5.12 P0 | Verificação |
+|---|---|---|
+| Raspberry ARM32 | [pu2pny-32-5.12.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-32-5.12.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-32-5.12.img.xz.sha256) |
+| Raspberry ARM64 | [pu2pny-64-5.12.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-64-5.12.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-64-5.12.img.xz.sha256) |
+| Orange Pi Zero H2+ | [pu2pny-opizero-5.12.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-opizero-5.12.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-opizero-5.12.img.xz.sha256) |
+| NanoPi NEO H3 | [pu2pny-nanopineo-5.12.img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-nanopineo-5.12.img.xz) | [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-nanopineo-5.12.img.xz.sha256) |
+
+**Escopo efetivamente corrigido em SW/CI (P0):** BOOT-512 (remove a espera artificial de 300 s dos serviços opcionais do caminho crítico e preserva timers) e NET-512 (inclui e habilita `2pnyd.service` no empacotamento Orange Pi Zero/NanoPi NEO). **Não comprova boot/AP/HTTP em hardware**. Continuam sem correção ou verificação física: DMRGateway, D-Star `connected:false`, reinicialização MMDVMHost, Nextion SIGSEGV, Avahi/mDNS, subtensão, nomes/IP por placa, redesign e backlog completo da 5.12. Preservar a baseline da 5.11, o ON7LDS HW aprovado e demais RF. Issue [#23](https://github.com/PU2PNY/2PNY-OS/issues/23) permanece aberta para as pendências.
+
+| ID | Nível | Status | Evidência |
+|---|---|---|---|
+| TEST-REL-512-001 | CI | **PASS** | 6/6 jobs, quatro .xz, SHA-256, BUILD-INFO, commit fonte, filesystem |
+| TEST-BOOT-512-001 | SW/CI | **PASS** | patch de serviço/timer e testes de regressão |
+| TEST-NET-512-001 | SW/CI | **PASS** | empacotamento `2pnyd` Orange/Nano, teste de falha quando ausente |
+| TEST-BOOT-512-003 | HW Pi3/Pi4 | **PENDENTE** | boot real com alimentação adequada e sem manutenção bloqueante |
+| TEST-NET-512-002 | HW Orange Pi | **PENDENTE** | abrir `http://10.43.0.1/` após conexão AP |
+| TEST-NET-512-003 | HW Pi Zero W ARM32 | **PENDENTE** | boot/AP/painel e retorno Wi-Fi |
+| TEST-BOARD-512-004 | HW NanoPi NEO | **PENDENTE** | boot/AP/HTTP com hardware real |
+| TEST-RF-512-001 | HW | **PENDENTE / falhou em 5.11** | DMRGateway e RF↔rede sem regressão |
+| TEST-DISPLAY-512-001 | HW | **PENDENTE / falhou em 5.11** | Nextion/ON7LDS sem SIGSEGV e dados corretos |
+
+---
+
 ## REL-5.00.003 — critérios de liberação e HW
 | Teste | Esperado | Status |
 |---|---|---|
