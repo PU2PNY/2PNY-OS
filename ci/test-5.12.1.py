@@ -70,7 +70,7 @@ with tempfile.TemporaryDirectory() as td:
     (root/'etc/2pny/version').write_text('5.12.000\n')
     for rel,baseline in {
         'usr/local/libexec/pu2pny/oled-502.py':'runtime/5.11/oled.py',
-        'usr/local/libexec/pu2pny/lcd-504.py':'runtime/5.04/lcd.py',
+        'usr/local/libexec/pu2pny/lcd-504.py':'runtime/5.05/lcd.py',
         'usr/local/libexec/pu2pny/expert-cmd-504.py':'runtime/5.10/expert-cmd.py'
     }.items():
         p=root/rel;p.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(REPO/baseline,p)
