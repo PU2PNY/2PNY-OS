@@ -1,0 +1,144 @@
+name: PU2PNY-OS 5.12.001 P1 ALPHA — UI, OLED, LCD e Expert (4 placas)
+on:
+  push:
+    branches: [release/pu2pny-5.12.001]
+    paths:
+      - '.github/workflows/5.12.001-p1-release.yml'
+      - 'ci/build-5.12.1.py'
+      - 'ci/patch-image-5.12.1.py'
+      - 'ci/test-5.12.1.py'
+      - 'runtime/5.12.1/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pu2pny-5.12.001-release
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar pré-requisitos de teste sem RF
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-pil
+      - name: Validações SW/CI de comportamento preservado
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ci/patch-image-5.12.1.py ci/build-5.12.1.py ci/test-5.12.1.py runtime/5.12.1/*.py
+          python3 ci/test-5.12.1.py
+          python3 ci/test-expert-054.py 5.10
+          python3 ci/test-boot-5.12.py
+          python3 ci/test-board-5.12.py
+
+  image:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [32, 64, opizero, nanopineo]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar somente utilitários para imagem offline
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xz-utils util-linux e2fsprogs python3-pil
+      - name: Baixar imagem P0 oficial já publicada
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/pny5121"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 25             "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.000-p0/pu2pny-${ARCH}-5.12.img.xz"             -o "$RUNNER_TEMP/pny5121/pu2pny-${ARCH}-5.12.img.xz"
+          xz -t "$RUNNER_TEMP/pny5121/pu2pny-${ARCH}-5.12.img.xz"
+      - name: Aplicar P1 limitado, comparar manifesto e preservar ARM/kernel/Nextion/RF
+        run: |
+          set -euo pipefail
+          sudo python3 ci/build-5.12.1.py "$RUNNER_TEMP/pny5121" "${{ matrix.arch }}" "$GITHUB_SHA"
+      - name: Publicar artefato candidato desta arquitetura
+        uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-5121-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/pny5121/output/*.img.xz
+            ${{ runner.temp }}/pny5121/output/*.img.xz.sha256
+            ${{ runner.temp }}/pny5121/output/BUILD-INFO-*.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  publish:
+    needs: [tests, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reunir as quatro imagens e os checksums
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-5121-*
+          path: artifacts
+          merge-multiple: true
+      - name: Confirmar quatro boards, checksum, xz, commit e restrição HW
+        run: |
+          set -euo pipefail
+          cd artifacts
+          python3 - <<'PY'
+          import json,os,pathlib
+          for arch in ('32','64','opizero','nanopineo'):
+              asset=pathlib.Path(f'pu2pny-{arch}-5.12.001.img.xz')
+              checksum=pathlib.Path(str(asset)+'.sha256')
+              info=pathlib.Path(f'BUILD-INFO-{arch}.json')
+              assert asset.is_file() and asset.stat().st_size>1000000,(arch,'missing image')
+              assert checksum.is_file() and info.is_file(),(arch,'missing integrity data')
+              i=json.loads(info.read_text())
+              assert i['version']=='5.12.001' and i['architecture']==arch
+              assert i['source_commit']==os.environ['GITHUB_SHA']
+              assert i['bytes']==asset.stat().st_size
+              assert i['validation']['HW']=='NOT_VERIFIED'
+              assert i['validation']['protected_rf_nextion']=='PASS'
+          print('FOUR_ARCH_GATES_SW_PASS')
+          PY
+          for arch in 32 64 opizero nanopineo; do
+            xz -t "pu2pny-${arch}-5.12.001.img.xz"
+            sha256sum -c "pu2pny-${arch}-5.12.001.img.xz.sha256"
+          done
+      - name: Publicar apenas como prerelease ALPHA (sem substituir P0)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd artifacts
+          TAG="pu2pny-v5.12.001-p1"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Tag P1 já publicada, não sobrescrever sem revisão" >&2
+            exit 1
+          fi
+          cat > release-notes.txt <<EOF
+          PU2PNY-OS 5.12.001 P1 ALPHA — CANDIDATA PARA TESTE FÍSICO, NÃO É PRODUÇÃO.
+
+          Código fonte: $GITHUB_SHA
+          Base: 5.12.000 P0 publicada; SHA-256 verificado para as quatro imagens.
+
+          Escopo limitado:
+          - UI-NAV-5121: navegação estática fallback em todas as páginas com mainNav, mesmo quando o JavaScript principal falha;
+          - CLOCK-5121: reexibição do bloco de relógio na página Sistema; ajuste pelo IANA do navegador permanece no backend;
+          - DISPLAY-5121: páginas OLED e LCD mostrando PU2PNY-OS, indicativo, protocolo, modo, duração, IP e métricas medidas quando disponíveis;
+          - EXPERT-5121: diagnósticos HTTP/AP/gateways de leitura e limite de exportação TXT aumentado.
+
+          As quatro imagens foram montadas sobre o firmware P0 original de cada placa.
+          MMDVMHost, RF apply, NextionDriver ON7LDS, bootloader, drivers, rede e presets foram preservados nos gates de manifesto.
+
+          NÃO AFIRMAR: acesso AP/HTTP Orange Pi e NanoPi em hardware; conectividade DMR/YSF/D-Star; Nextion CPU/disk custom HMI; transcoding AMBE; Direct privado/grupo através de CGNAT; alimentação Pi4. Esses itens seguem PENDENTES de testes ou backend funcional.
+
+          Consultar BUILD-INFO e checklist de teste físico em cada imagem. Nenhum resultado de hardware foi inventado.
+          EOF
+          gh release create "$TAG"             pu2pny-*.img.xz pu2pny-*.img.xz.sha256 BUILD-INFO-*.json             --repo "$GITHUB_REPOSITORY"             --target "$GITHUB_SHA"             --title 'PU2PNY-OS 5.12.001 P1 ALPHA — UI/Display/Expert 4 placas'             --notes-file release-notes.txt             --prerelease
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,targetCommitish,assets
