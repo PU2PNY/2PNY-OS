@@ -1,3 +1,9 @@
+## UI-5121 / DISPLAY-5121 — entrega SW publicada, teste físico pendente (14/11/2026)
+
+A prerelease [5.12.001 P1](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1) passou CI 6/6, com **navegação estática fallback** nas páginas `mainNav` para manter links se o script comum não executar, e **relógio Sistema visível** novamente. Fuso/NTP corretos no hardware e causa-raiz do erro de JavaScript permanecem **NÃO VERIFICADOS**. O código de **OLED/LCD** passou SW para indicativo, protocolo, IP, tempo de TX, temperatura, disco e BER/RSSI medidos; HW por placa/tela ainda PENDENTE. **Nextion ON7LDS 5.00.002 permanece baseline aprovado**, inalterado por byte no builder; nenhuma alteração HMI/TFT, baud ou writer, tampouco extras CPU/disco no Nextion comprovados. [Checklist de aceitação](PU2PNY-OS_5.12.001_HW_CHECKLIST.md); [Issue #28 — Nextion extras](https://github.com/PU2PNY/2PNY-OS/issues/28); [Issue #25 — menu](https://github.com/PU2PNY/2PNY-OS/issues/25).
+
+---
+
 ## Gate UI-NAV-510 — menu ausente em dispositivo (14/11/2026)
 
 A navegação do Ao Vivo foi observada vazia em `pu2pny64.local/dashboard`, com todas as métricas em `—`. **REGRESSÃO reportada, causa não comprovada**; histórico refere início desde a 5.10. O menu não pode desaparecer quando a coleta de telemetria está indisponível. Para corrigir, preservar as rotas/links aprovados, isolar montagem do menu da disponibilidade das APIs, confirmar HTTP 200 e execução de `/ui-common-0.3.0.js` na placa, testar em desktop/celular e validar DMR, D-Star, YSF e Nextion sem alterar seu comportamento. Sem teste de hardware, UI-NAV-510 fica **NÃO VERIFICADO**. [Investigação #25](https://github.com/PU2PNY/2PNY-OS/issues/25) e [ativação #24](https://github.com/PU2PNY/2PNY-OS/issues/24).
