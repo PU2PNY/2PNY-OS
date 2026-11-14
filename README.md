@@ -1,3 +1,9 @@
+## 5.12.001 P1 ALPHA — quatro imagens para teste físico (14/11/2026)
+
+[Baixar 5.12.001 P1](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1) · [CI 6/6 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/43597269377) · [Checklist de hardware](docs/PU2PNY-OS_5.12.001_HW_CHECKLIST.md). Quatro imagens ARM32/ARM64/Orange Pi Zero/NanoPi NEO e respectivos SHA-256 publicados, código do artefato `38f3ac23582e4c5a424b09a5901b03f828aa617a`. Implementação limitada: menu fallback, relógio visível, páginas OLED/LCD e diagnóstico Expert ampliado em TXT. **HW PENDENTE, NÃO É PRODUÇÃO.** RF, NextionDriver ON7LDS, bootloader e rede preservados por manifesto. **Não entregues/sem prova física:** correção DMR/YSF/D-Star, HTTP Orange, extras Nextion, transcoding e Direct CGNAT/relay. Versão exibida pelo backend pode permanecer `5.11.000` (#30); `/etc/2pny/version` registra `5.12.001`. Preservar cartão anterior e conferir [issues 23–30](https://github.com/PU2PNY/2PNY-OS/issues).
+
+---
+
 # PU2PNY-OS — release 5.12.000 P0 ALPHA (quatro imagens)
 
 **Estado verificado em 13/11/2026:** a prerelease [PU2PNY-OS 5.12.000 P0 ALPHA](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.000-p0) está **PUBLICADA** como **candidata para teste físico**, não produção. Código/commit imutável dos quatro artefatos: [`1b2a0a0068303b9bf091c26c90012755708f2bb1`](https://github.com/PU2PNY/2PNY-OS/commit/1b2a0a0068303b9bf091c26c90012755708f2bb1). O [CI 43488577915](https://github.com/PU2PNY/2PNY-OS/actions/runs/43488577915) finalizou com **6/6 jobs success** (`tests`, `build (arm32)`, `build (arm64)`, `boards (opizero)`, `boards (nanopineo)`, `publish`). O publish executou `xz -t`, `sha256sum -c` e conferiu `BUILD-INFO` das quatro placas; na release há quatro arquivos não vazios .img.xz, quatro .sha256 e quatro manifestos. **HW NÃO VERIFICADO**; **PROD NÃO APROVADO**.
