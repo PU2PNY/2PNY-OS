@@ -1,3 +1,9 @@
+## Gate UI-NAV-510 — menu ausente em dispositivo (14/11/2026)
+
+A navegação do Ao Vivo foi observada vazia em `pu2pny64.local/dashboard`, com todas as métricas em `—`. **REGRESSÃO reportada, causa não comprovada**; histórico refere início desde a 5.10. O menu não pode desaparecer quando a coleta de telemetria está indisponível. Para corrigir, preservar as rotas/links aprovados, isolar montagem do menu da disponibilidade das APIs, confirmar HTTP 200 e execução de `/ui-common-0.3.0.js` na placa, testar em desktop/celular e validar DMR, D-Star, YSF e Nextion sem alterar seu comportamento. Sem teste de hardware, UI-NAV-510 fica **NÃO VERIFICADO**. [Investigação #25](https://github.com/PU2PNY/2PNY-OS/issues/25) e [ativação #24](https://github.com/PU2PNY/2PNY-OS/issues/24).
+
+---
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**
