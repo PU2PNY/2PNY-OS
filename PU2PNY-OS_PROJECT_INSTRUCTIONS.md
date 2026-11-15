@@ -1,3 +1,21 @@
+## DOC-README-001 — atualização obrigatória da página principal (15/11/2026)
+
+A cada nova release, hotfix, mudança de estado de validação, correção comprovada ou bloqueador relevante, atualizar o README da branch padrão `main` e o da branch da versão, sem depender de novo pedido do usuário.
+
+Antes de encerrar o ciclo ou entregar links:
+1. Conferir a versão publicada real, data, tag, branch e commit.
+2. Atualizar versão em destaque, novidades, downloads por placa/arquitetura, SHA-256, CI, documentação, checklist físico e pendências.
+3. Verificar assets existentes e não vazios, correspondência de arquitetura/tag/commit e evidências de integridade; nunca inventar links ou promover SW/CI a HW/PROD.
+4. Distinguir versão publicada, código em desenvolvimento e baseline aprovado. Retirar versões antigas do destaque atual preservando histórico e rollback.
+5. Manter START_HERE, MASTER_SPEC, RELEASE_STATUS, TEST_MATRIX e CHANGELOG coerentes; links relativos devem funcionar na branch que exibe o README.
+6. Ler novamente o README publicado na branch padrão para confirmar que a página vista no GitHub foi atualizada.
+
+**Gate documental:** ciclo só pode ser considerado encerrado com a página principal coerente com o estado verificável. Se houver bloqueio de acesso/permissão, registrar a pendência e o ponto de retomada, sem afirmar que a página foi atualizada.
+
+Esta é uma obrigação de execução em cada ciclo; não representa automação de atualização já instalada. Preservar runtime, RF, rede e displays durante alterações exclusivamente documentais.
+
+---
+
 ## DISPLAY-041 — BASELINE ATIVO APROVADO EM HARDWARE — 2026-10-22
 
 **PU2PNY-OS 5.00.002 / NextionDriver ON7LDS = HW PASS por relato explícito do usuário: “a tela funcionou perfeito”. FUNCIONANDO + APROVADO = PROTEGER.**

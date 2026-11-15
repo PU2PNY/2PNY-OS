@@ -1,3 +1,9 @@
+## 15/11/2026 — DOC-README-001: página principal sempre atualizada
+
+Antes de encerrar qualquer ciclo de release/hotfix ou mudança relevante de estado, atualizar e reler os READMEs da branch padrão e da versão. Seguir a regra completa DOC-README-001 em [PROJECT_INSTRUCTIONS](PU2PNY-OS_PROJECT_INSTRUCTIONS.md). Obrigação documental; nenhuma alteração de runtime.
+
+---
+
 ## 2026-11-14 — PU2PNY-OS 5.12.001 P1 ALPHA PUBLICADA: 4 placas, TESTE FÍSICO PENDENTE
 
 **Entrega verificável:** [release oficial P1](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1), [CI 43597269377](https://github.com/PU2PNY/2PNY-OS/actions/runs/43597269377) com **6/6 jobs concluídos em sucesso**, tag/commit do código `38f3ac23582e4c5a424b09a5901b03f828aa617a`. Quatro assets `.img.xz` de tamanho >0, quatro `.sha256`, quatro manifestos `BUILD-INFO`, verificados por CI (`xz -t` + `sha256sum -c`, filesystem RO, hashes e alterações autorizadas, Nextion/RF/kernel/bootloader protegidos). **HW: NÃO VERIFICADO para P1; PROD: NÃO APROVADO**.

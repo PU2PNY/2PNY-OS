@@ -1,3 +1,9 @@
+## Regra permanente de atualização
+
+**DOC-README-001:** a cada release/hotfix ou mudança relevante de validação, correção ou bloqueador, atualizar e reler a página principal da `main` e o README da versão antes de encerrar o ciclo. Conferir versão, data, tag, branch, commit, downloads, SHA-256, CI, documentação e pendências. Preservar histórico e distinguir SW/CI de HW/PROD. [Regra completa](PU2PNY-OS_PROJECT_INSTRUCTIONS.md).
+
+---
+
 ## 5.12.001 P1 ALPHA — quatro imagens para teste físico (14/11/2026)
 
 [Baixar 5.12.001 P1](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1) · [CI 6/6 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/43597269377) · [Checklist de hardware](docs/PU2PNY-OS_5.12.001_HW_CHECKLIST.md). Quatro imagens ARM32/ARM64/Orange Pi Zero/NanoPi NEO e respectivos SHA-256 publicados, código do artefato `38f3ac23582e4c5a424b09a5901b03f828aa617a`. Implementação limitada: menu fallback, relógio visível, páginas OLED/LCD e diagnóstico Expert ampliado em TXT. **HW PENDENTE, NÃO É PRODUÇÃO.** RF, NextionDriver ON7LDS, bootloader e rede preservados por manifesto. **Não entregues/sem prova física:** correção DMR/YSF/D-Star, HTTP Orange, extras Nextion, transcoding e Direct CGNAT/relay. Versão exibida pelo backend pode permanecer `5.11.000` (#30); `/etc/2pny/version` registra `5.12.001`. Preservar cartão anterior e conferir [issues 23–30](https://github.com/PU2PNY/2PNY-OS/issues).
