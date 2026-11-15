@@ -52,7 +52,9 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq xz-utils util-linux e2fsprogs python3-pil
+          sudo apt-get install -y -qq xz-utils util-linux e2fsprogs python3-pil qemu-user-static binfmt-support
+          sudo update-binfmts --enable qemu-arm
+          sudo update-binfmts --display qemu-arm
       - name: Baixar imagem P1 oficial já publicada
         env:
           ARCH: ${{ matrix.arch }}
@@ -121,14 +123,14 @@ jobs:
           cd artifacts
           TAG="pu2pny-v5.12.002-p2"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Tag P1 já publicada, não sobrescrever sem revisão" >&2
+            echo "Tag P2 já publicada, não sobrescrever sem revisão" >&2
             exit 1
           fi
           cat > release-notes.txt <<EOF
           PU2PNY-OS 5.12.002 P2 ALPHA — CANDIDATA PARA TESTE FÍSICO, NÃO É PRODUÇÃO.
 
           Código fonte: $GITHUB_SHA
-          Base: 5.12.000 P0 publicada; SHA-256 verificado para as quatro imagens.
+          Base: 5.12.001 P1 publicada; SHA-256 verificado para as quatro imagens.
 
           Escopo limitado:
           - DMR-VOICE-5122: reparar permissões de leitura do INI para o usuário mmdvm, também em rollback e alteração de voz;
