@@ -1,4 +1,4 @@
-## 15/11/2026 — 5.12.002 P2: regressões DMR, ARMv6 e painéis Orange/Nano (em validação CI)
+## 15/11/2026 — 5.12.002 P2 ALPHA PUBLICADA (6/6 CI PASS, HW PENDENTE)
 
 **Base comprovada:** diagnóstico Expert de Raspberry Pi Zero W (ARMv6l) com SO **5.12.001**, carga média **7,75 em 1 CPU**, DMRGateway em ciclos de restart por **`cannot read .../DMRGateway.ini`**, restaurador de perfil e manutenção concorrentes; a mesma placa tinha Wi-Fi DHCP/IPv4, painel HTTP 200 e UART MMDVM detectada. O relatório não comprova áudio de RF nem conexão ao XLX. Causa em código verificada: **VOICE-511 regravava INIs `root:root 0600`**, enquanto DMRGateway usa `mmdvm`. Status de DMR 5.12.001 no hardware: **FAIL**.
 
@@ -8,7 +8,7 @@
 
 **Baselines preservados:** binários MMDVMHost, DMRGateway, Nextion ON7LDS, configurações de RF, kernel, bootloader, UART, Network Core e displays aprovados não são reescritos. Baselines históricos DMR simplex, D-Star simplex e YSF/C4FM simplex são documentados em 0.3.x, **sem afirmar equivalência de HW em 5.x**. Regra funcionando+aprovado=proteger. Transcoding, Direct/CGNAT e extras Nextion **não fazem parte desta correção**.
 
-**Status de entrega:** código em [branch P2](https://github.com/PU2PNY/2PNY-OS/tree/release/pu2pny-5.12.002); [CI de integração 43727451516](https://github.com/PU2PNY/2PNY-OS/actions/runs/43727451516). **Se CI, SHA, release assets e commit/tag não estiverem verificados: STATUS=IMAGENS NÃO ENTREGUES.** A imagem 5.12.001 anterior segue preservada. [Checklist HW 5.12.002](docs/PU2PNY-OS_5.12.002_HW_CHECKLIST.md). Issues [#24](https://github.com/PU2PNY/2PNY-OS/issues/24) e [#29](https://github.com/PU2PNY/2PNY-OS/issues/29).
+**Status de entrega comprovado em 15/11/2026:** [release oficial 5.12.002 P2](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.002-p2), quatro imagens `.img.xz` não vazias, quatro `.sha256`, quatro `BUILD-INFO`, [GitHub CI 43727451516 — 6/6 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/43727451516); tag do código **`a5f9f286d48a88b9fb658f56cb111c9acaa8a737`** verificada. XZ, SHA, ext4, manifesto, preservação de RF/Nextion e smoke HTTP Armbian em namespace: **SW/CI PASS**. Hardware Orange/Nano/DMR RF: **NÃO VERIFICADO/REGRESSÃO REPORTADA**; **PROD NÃO APROVADO**. A imagem 5.12.001 permanece para rollback. [Checklist HW 5.12.002](docs/PU2PNY-OS_5.12.002_HW_CHECKLIST.md). Issues [#24](https://github.com/PU2PNY/2PNY-OS/issues/24) e [#29](https://github.com/PU2PNY/2PNY-OS/issues/29).
 
 ---
 
