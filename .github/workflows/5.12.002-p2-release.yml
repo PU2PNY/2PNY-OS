@@ -3,7 +3,7 @@ on:
   push:
     branches: [release/pu2pny-5.12.002]
     paths:
-      - '.github/workflows/5.12.002-p1-release.yml'
+      - '.github/workflows/5.12.002-p2-release.yml'
       - 'ci/build-5.12.2.py'
       - 'ci/patch-image-5.12.2.py'
       - 'ci/test-5.12.2.py'
@@ -59,8 +59,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/pny5122"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 25             "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-${ARCH}-5.12.001.img.xz"             -o "$RUNNER_TEMP/pny5122/pu2pny-${ARCH}-5.12.img.xz"
-          xz -t "$RUNNER_TEMP/pny5122/pu2pny-${ARCH}-5.12.img.xz"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 25             "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.001-p1/pu2pny-${ARCH}-5.12.001.img.xz"             -o "$RUNNER_TEMP/pny5122/pu2pny-${ARCH}-5.12.001.img.xz"
+          xz -t "$RUNNER_TEMP/pny5122/pu2pny-${ARCH}-5.12.001.img.xz"
       - name: Aplicar P2 limitado, comparar manifesto e preservar ARM/kernel/Nextion/RF
         run: |
           set -euo pipefail
