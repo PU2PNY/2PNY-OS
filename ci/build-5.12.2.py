@@ -71,15 +71,7 @@ def main():
    assert after['etc/systemd/system/hostapd.service'].get('link')=='/dev/null'
    assert 'MemoryMax=128M' in (root/'etc/systemd/system/2pnyd.service.d/62-board-portal.conf').read_text()
    assert (root/'etc/systemd/system/multi-user.target.wants/2pnyd.service').is_symlink()
-   # Standalone HTTP on real ARMv7 userspace in isolated network namespace.
-   script=("set -eu; ip link set lo up; "
-           "chroot \"$1\" /usr/local/bin/2pnyd >/tmp/pny5122-http-check.log 2>&1 & "
-           "pid=$!; trap 'kill \"$pid\" 2>/dev/null || true; wait \"$pid\" 2>/dev/null || true' EXIT; "
-           "for i in 1 2 3 4 5 6 7 8 9 10; do "
-           "if chroot \"$1\" /usr/bin/curl -fsS --noproxy '*' --connect-timeout 1 --max-time 2 "
-           "http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then "
-           "echo BOARD_HTTP_NAMESPACE_PASS; exit 0; fi; sleep 1; done; exit 1")
-   run(['unshare','--net','--fork','sh','-c',script,'sh',str(root)])
+
   assert (root/'usr/local/sbin/2pny-voice-apply').read_bytes()==(REPO/'runtime/5.12.2/voice-apply.py').read_bytes()
   for p,v in after.items():
    assert v['uid']!=1001 and v['gid']!=1001,('CI owner leaked',p)
@@ -88,6 +80,16 @@ def main():
   fsck=subprocess.run(['e2fsck','-fn',loop+partition],check=False)
   assert fsck.returncode==0,'ext4 integrity FAIL'
   run(['mount','-o','ro',loop+partition,str(root)]);mounted=True
+  # Validate Armbian HTTP while ext4 is mounted read-only: no test writes to image.
+  if board in ('opizero','nanopineo'):
+   script=("set -eu; ip link set lo up; "
+           "chroot \"$1\" /usr/local/bin/2pnyd >/tmp/pny5122-http-check.log 2>&1 & "
+           "pid=$!; trap 'kill \"$pid\" 2>/dev/null || true; wait \"$pid\" 2>/dev/null || true' EXIT; "
+           "for i in 1 2 3 4 5 6 7 8 9 10; do "
+           "if chroot \"$1\" /usr/bin/curl -fsS --noproxy '*' --connect-timeout 1 --max-time 2 "
+           "http://127.0.0.1/healthz 2>/dev/null | grep -q 'PU2PNY OK'; then "
+           "echo BOARD_HTTP_NAMESPACE_PASS; exit 0; fi; sleep 1; done; exit 1")
+   run(['unshare','--net','--fork','sh','-c',script,'sh',str(root)])
   assert M.manifest(root)==after,'read-only remount differs'
   assert (root/'etc/2pny/version').read_text().strip()=='5.12.002'
   run(['umount',str(root)]);mounted=False
