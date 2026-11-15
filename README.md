@@ -2,7 +2,24 @@
 
 Sistema próprio para hotspots digitais MMDVM, com painel web, operação sem terminal e foco em baixo consumo, estabilidade e recuperação. A evolução da geração 5.x preserva as configurações e funções já aprovadas em hardware.
 
-## Versão publicada: 5.12.001 P1 ALPHA
+## Versão publicada: 5.12.002 P2 ALPHA — 15/11/2026
+
+**Status:** [release P2 publicada](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.002-p2) · [GitHub Actions 6/6 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/43727451516) · [checklist de teste físico](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.12.002/docs/PU2PNY-OS_5.12.002_HW_CHECKLIST.md). Tag aponta ao código **`a5f9f286d48a88b9fb658f56cb111c9acaa8a737`**. Quatro imagens `.img.xz`, checksums `.sha256` e quatro manifestos `BUILD-INFO` verificados. **ALPHA PARA TESTE FÍSICO; não homologada em hardware; NÃO produção.**
+
+| Placa | Baixar imagem 5.12.002 | SHA-256 |
+|---|---|---|
+| Raspberry Pi ARM32 (inclui Pi Zero W) | [Download .img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-32-5.12.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-32-5.12.002.img.xz.sha256) |
+| Raspberry Pi ARM64 | [Download .img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-64-5.12.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-64-5.12.002.img.xz.sha256) |
+| Orange Pi Zero H2+ | [Download .img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-opizero-5.12.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-opizero-5.12.002.img.xz.sha256) |
+| NanoPi NEO H3 | [Download .img.xz](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-nanopineo-5.12.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-nanopineo-5.12.002.img.xz.sha256) |
+
+**Correções SW:** permissões dos arquivos `DMRGateway.ini` quando alterados pelo serviço de avisos de voz (leitura comprovada por `mmdvm` e rollback); tarefas de manutenção em Pi Zero W adiadas durante boot/CPU saturada, restaurador operacional com backoff; Orange/Nano com dono único do processo `hostapd` e maior margem de memória do painel. Em CI, `/healthz` das imagens Armbian respondeu em rede isolada; **não é teste físico de AP/DHCP**. RF, modem, MMDVMHost, NextionDriver ON7LDS e bootloader protegidos por manifesto.
+
+**Pendências:** redução efetiva de CPU em Pi Zero ainda precisa ser medida; acesso ao AP/HTTP Orange/Nano ainda não verificado em hardware; DMR, D-Star e YSF simplex tiveram baselines HW históricos, mas precisam de TX/RX e link de gateway comprovados nesta release. Relógio/fuso, transcodificação real, Direct/CGNAT e campos Nextion extras não foram corrigidos ou homologados por este patch. Evitar sobrescrever o microSD anterior.
+
+---
+
+## Histórico — 5.12.001 P1 ALPHA
 
 **Informações conferidas em 15/11/2026.** A [5.12.001 P1](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1) foi publicada em **14/11/2026**, com quatro imagens. **Candidata para teste físico; hardware ainda não homologado nesta versão; produção não aprovada.**
 
