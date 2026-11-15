@@ -75,6 +75,12 @@ Os links abaixo apontam para o snapshot documental posterior à publicação da 
 - [PROJECT INSTRUCTIONS — regras de execução](https://github.com/PU2PNY/2PNY-OS/blob/1e375c761f8b2ce9fa009065e831081be2ab9a82/PU2PNY-OS_PROJECT_INSTRUCTIONS.md)
 - [UI CONTRACT — contrato do painel](https://github.com/PU2PNY/2PNY-OS/blob/1e375c761f8b2ce9fa009065e831081be2ab9a82/docs/PU2PNY-OS_UI_CONTRACT.md)
 
+## Regra permanente: manter esta página atualizada
+
+**DOC-README-001 — aprovada em 15/11/2026.** A cada nova release, hotfix ou mudança relevante de validação, correção comprovada ou bloqueador, atualizar o README da `main` e o da branch da versão, sem depender de novo pedido. Conferir versão, data, tag, branch, commit, downloads por arquitetura, SHA-256, CI, documentação, checklist físico e pendências. Preservar histórico e baselines; distinguir código em desenvolvimento, versão publicada e níveis SW/HW/PROD. Reler a página publicada antes de encerrar o ciclo. Se houver bloqueio real, registrar a pendência sem afirmar conclusão.
+
+[Regra completa nas instruções permanentes](https://github.com/PU2PNY/2PNY-OS/blob/27fc0ba2d5c1d5a10bbdc78c46415b8f052d658a/PU2PNY-OS_PROJECT_INSTRUCTIONS.md). Obrigação de execução por ciclo; automação de atualização não instalada por este registro.
+
 ## Histórico e organização do repositório
 
 A branch padrão `main` ainda contém o código histórico da fundação; **o código da versão 5.12.001 está na branch e no commit indicados acima**. Esta atualização altera apenas a apresentação documental da página principal.
