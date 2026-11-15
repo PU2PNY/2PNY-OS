@@ -84,7 +84,7 @@ with tempfile.TemporaryDirectory() as td:
     wants.parent.mkdir(parents=True)
     wants.symlink_to('/etc/systemd/system/2pnyd.service')
     net=root/'usr/local/sbin/2pny-network-core'
-    net.parent.mkdir(parents=True)
+    net.parent.mkdir(parents=True,exist_ok=True)
     net.write_text('SETUP_IP=10.43.0.1\n')
     dns=root/'usr/share/2pny/network/dnsmasq-ap.template'
     dns.parent.mkdir(parents=True);dns.write_text('listen-address=10.43.0.1\n')
