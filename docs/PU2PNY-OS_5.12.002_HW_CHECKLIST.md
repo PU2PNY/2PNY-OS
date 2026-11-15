@@ -1,6 +1,6 @@
 # PU2PNY-OS 5.12.002 P2 — critérios de testes reais
 
-**Status inicial:** candidato P2 ALPHA; ARM32/ARM64/Orange Pi Zero/NanoPi NEO somente quando CI e assets publicados e verificados. **Nada de PRODUÇÃO** sem confirmação física. Versão base publicada 5.12.001 P1, mantida para retorno. 15/11/2026.
+**Status confirmado 15/11/2026:** [P2 ALPHA publicada](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.002-p2) para Raspberry ARM32/ARM64, Orange Pi Zero e NanoPi NEO, com SHA-256, 4 manifestos e [CI 6/6 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/43727451516). Tag/código `a5f9f286d48a88b9fb658f56cb111c9acaa8a737`. **Nada de PRODUÇÃO** sem confirmação física. Versão base 5.12.001 P1, preservada para rollback.
 
 ## Regressões priorizadas — evidência
 - **Raspberry Pi Zero W ARMv6** (diagnóstico enviado em 14/11/2026): carga média 7.75 em CPU de 1 núcleo, `2pny-operational-restore` reiniciando, `2pny-hostfiles-update` timeouts, `DMRGateway` não consegue ler `/var/lib/2pny/dmr/DMRGateway.ini`. Wi-Fi/IPv4 `192.168.0.26` e HTTP local `/healthz` e `/dashboard` retornaram 200. O modem MMDVM detectou serial0/115200. NTP sincronizado, **fuso incorreto Europe/London**. Não publicar dados da rede nem logs brutos com segredos.
@@ -24,7 +24,7 @@
 ## Resultado e rollback
 | Item | Critério | Estado inicial |
 |---|---|---|
-| Composição de imagens | SHA-256, xz, ext4, versão/commit, manifestos | CI PENDENTE ATÉ PUBLICAÇÃO |
+| Composição de imagens | SHA-256, xz, ext4, versão/commit, manifestos | **CI PASS / quatro assets publicados** |
 | MMDVM/Nextion protegidos | Binários/configuração RF byte-idênticos à P1 | Teste SW durante CI |
 | DMRGate INI | root:mmdvm 0640 e usuário mmdvm pode ler | SW PASS local; HW PENDENTE |
 | DMR/D-Star/YSF | link externo e TX/RX reais | HW NÃO VERIFICADO |
