@@ -1,3 +1,17 @@
+## 15/11/2026 — 5.12.002 P2: regressões DMR, ARMv6 e painéis Orange/Nano (em validação CI)
+
+**Base comprovada:** diagnóstico Expert de Raspberry Pi Zero W (ARMv6l) com SO **5.12.001**, carga média **7,75 em 1 CPU**, DMRGateway em ciclos de restart por **`cannot read .../DMRGateway.ini`**, restaurador de perfil e manutenção concorrentes; a mesma placa tinha Wi-Fi DHCP/IPv4, painel HTTP 200 e UART MMDVM detectada. O relatório não comprova áudio de RF nem conexão ao XLX. Causa em código verificada: **VOICE-511 regravava INIs `root:root 0600`**, enquanto DMRGateway usa `mmdvm`. Status de DMR 5.12.001 no hardware: **FAIL**.
+
+**P2 proposto:** `runtime/5.12.2/voice-apply.py` corrige dono `root:mmdvm`/modo `0640` apenas para INIs de gateway, repara arquivos existentes mesmo se conteúdo idêntico, preserva `0600` de configurações privadas, autoriza leitura somente por `mmdvm` e preserva rollback. Teste SW com usuário `mmdvm`, conteúdo anterior e rollback **PASS**. Para Raspberry Pi Zero W, adia manutenção de listas durante boot/carga elevada e limita restarts de restaurador operacional; **redução percentual de CPU NÃO MEDIDA em hardware**.
+
+**Board P2:** na imagem Orange/Nano mascára somente o `hostapd.service` de distribuição (o `2pny-network-core` continua dono do AP manualmente) e amplia `MemoryMax` do serviço web para 128 MB sem reservar/alocar memória extra. **AP de usuário continua REGRESSÃO NÃO COMPROVADAMENTE CORRIGIDA**. Um teste do executável Go ARMv7 no sistema de arquivos Armbian em namespace de rede na VPS respondeu `PU2PNY OK`; isso é prova **VPS/SW**, **não** de funcionamento AP em hardware. NanoPi NEO H3 original depende de **Ethernet** ou adaptador Wi-Fi de AP compatível.
+
+**Baselines preservados:** binários MMDVMHost, DMRGateway, Nextion ON7LDS, configurações de RF, kernel, bootloader, UART, Network Core e displays aprovados não são reescritos. Baselines históricos DMR simplex, D-Star simplex e YSF/C4FM simplex são documentados em 0.3.x, **sem afirmar equivalência de HW em 5.x**. Regra funcionando+aprovado=proteger. Transcoding, Direct/CGNAT e extras Nextion **não fazem parte desta correção**.
+
+**Status de entrega:** código em [branch P2](https://github.com/PU2PNY/2PNY-OS/tree/release/pu2pny-5.12.002); [CI de integração 43727451516](https://github.com/PU2PNY/2PNY-OS/actions/runs/43727451516). **Se CI, SHA, release assets e commit/tag não estiverem verificados: STATUS=IMAGENS NÃO ENTREGUES.** A imagem 5.12.001 anterior segue preservada. [Checklist HW 5.12.002](docs/PU2PNY-OS_5.12.002_HW_CHECKLIST.md). Issues [#24](https://github.com/PU2PNY/2PNY-OS/issues/24) e [#29](https://github.com/PU2PNY/2PNY-OS/issues/29).
+
+---
+
 ## TEST-DOC-README-001 — página principal atualizada (15/11/2026)
 
 | Caso | Nível | Estado | Evidência / aceite |
