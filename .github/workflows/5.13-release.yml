@@ -4,6 +4,8 @@ on:
     branches: [release/pu2pny-5.13]
     paths: ['.github/workflows/5.13-release.yml', 'ci/*5.13*.py', 'runtime/5.13/**']
   workflow_dispatch:
+env:
+  SOURCE_COMMIT: 800f715e4973f612a1500373f6a54cd35ea69c14
 permissions:
   contents: read
 concurrency:
@@ -21,6 +23,8 @@ jobs:
       BOARD: ${{ matrix.board }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_COMMIT }}
       - uses: actions/setup-go@v5
         with:
           go-version: '1.24.9'
@@ -55,7 +59,7 @@ jobs:
           curl -fL --retry 5 --retry-all-errors --connect-timeout 25 \
             "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-${BOARD}-5.12.002.img.xz" \
             -o "$RUNNER_TEMP/pu2pny/pu2pny-${BOARD}-5.12.002.img.xz"
-          sudo python3 ci/build-5.13.py "$RUNNER_TEMP/pu2pny" "$BOARD" "$GITHUB_SHA" "$RUNNER_TEMP/2pnyd"
+          sudo python3 ci/build-5.13.py "$RUNNER_TEMP/pu2pny" "$BOARD" "$SOURCE_COMMIT" "$RUNNER_TEMP/2pnyd"
       - uses: actions/upload-artifact@v4
         with:
           name: pu2pny-513-${{ matrix.board }}
@@ -71,6 +75,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_COMMIT }}
       - uses: actions/download-artifact@v4
         with:
           pattern: pu2pny-513-*
@@ -88,12 +94,12 @@ jobs:
             test -s "$image"
             xz -t "$image"
             sha256sum -c "$image.sha256"
-            jq -e --arg board "$board" --arg sha "$GITHUB_SHA" \
+            jq -e --arg board "$board" --arg sha "$SOURCE_COMMIT" \
               '.version=="5.13.002" and .architecture==$board and .source_commit==$sha and .validation.HW=="NOT_VERIFIED"' \
               "BUILD-INFO-$board.json"
           done
           gh release create pu2pny-v5.13.002 \
             ./*.img.xz ./*.img.xz.sha256 ./BUILD-INFO-*.json \
-            --target "$GITHUB_SHA" --prerelease --title 'PU2PNY-OS 5.13 para teste físico' \
+            --repo "$GITHUB_REPOSITORY" --target "$SOURCE_COMMIT" --prerelease --title 'PU2PNY-OS 5.13 para teste físico' \
             --notes-file ../docs/PU2PNY-OS_5.13_HW_CHECKLIST.md
-          gh release view pu2pny-v5.13.002 --json tagName,targetCommitish,assets
+          gh release view pu2pny-v5.13.002 --repo "$GITHUB_REPOSITORY" --json tagName,targetCommitish,assets
