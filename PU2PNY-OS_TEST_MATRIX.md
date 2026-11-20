@@ -1,3 +1,15 @@
+## 5.13.002 · Manutenção de 19/11/2026
+
+| Cenário | Nível | Estado |
+|---|---|---|
+| Salvar perfil Wi-Fi 2 e restaurar o anterior após falha simulada | SW | PASS |
+| Primeiro acesso com e sem uplink e redirecionamento por IP do AP | SW | PASS |
+| Persistência de fuso, precedência manual e carregamento do aplicador RF | SW | PASS |
+| Configuração Nextion ON7LDS e aplicação das alterações nas quatro imagens-base | SW | PASS |
+| Queda física da rede principal e ativação da reserva, Orange/Nano AP, Nextion/OLED e RF | HW | PENDENTE |
+
+[Checklist físico](docs/PU2PNY-OS_5.13_HW_CHECKLIST.md)
+
 ## 15/11/2026 — 5.12.002 P2 ALPHA PUBLICADA (6/6 CI PASS, HW PENDENTE)
 
 **Base comprovada:** diagnóstico Expert de Raspberry Pi Zero W (ARMv6l) com SO **5.12.001**, carga média **7,75 em 1 CPU**, DMRGateway em ciclos de restart por **`cannot read .../DMRGateway.ini`**, restaurador de perfil e manutenção concorrentes; a mesma placa tinha Wi-Fi DHCP/IPv4, painel HTTP 200 e UART MMDVM detectada. O relatório não comprova áudio de RF nem conexão ao XLX. Causa em código verificada: **VOICE-511 regravava INIs `root:root 0600`**, enquanto DMRGateway usa `mmdvm`. Status de DMR 5.12.001 no hardware: **FAIL**.

@@ -1,3 +1,13 @@
+## 5.13.002 · Manutenção de 19/11/2026
+
+- A segunda rede Wi-Fi é gravada como reserva. O salvamento mantém a associação atual, restaura o perfil anterior se a atualização falhar e inclui a segunda rede nas tentativas de recuperação.
+- O AP mantém DHCP/DNS estáveis durante o primeiro acesso e envia as sondas do navegador ao endereço de configuração. O painel das placas Armbian pode voltar após falhas transitórias de inicialização.
+- O relógio inicial usa o fuso do navegador local, mantém a escolha manual e exibe UTC separadamente. O NanoPi lê o estado de sincronização do Chrony.
+- O boot restaura o perfil Nextion salvo e preenche as frequências e os modos disponíveis no layout ON7LDS. O Expert oferece rotação de 180° no OLED.
+- O executador de Acesso RF carrega o componente instalado e preserva dono, grupo e permissões do INI ao aplicar ou desfazer uma política. O backend e o rodapé mostram 5.13.002.
+
+[Checklist físico](docs/PU2PNY-OS_5.13_HW_CHECKLIST.md)
+
 ## 15/11/2026 — 5.12.002 P2 ALPHA PUBLICADA (6/6 CI PASS, HW PENDENTE)
 
 **Base comprovada:** diagnóstico Expert de Raspberry Pi Zero W (ARMv6l) com SO **5.12.001**, carga média **7,75 em 1 CPU**, DMRGateway em ciclos de restart por **`cannot read .../DMRGateway.ini`**, restaurador de perfil e manutenção concorrentes; a mesma placa tinha Wi-Fi DHCP/IPv4, painel HTTP 200 e UART MMDVM detectada. O relatório não comprova áudio de RF nem conexão ao XLX. Causa em código verificada: **VOICE-511 regravava INIs `root:root 0600`**, enquanto DMRGateway usa `mmdvm`. Status de DMR 5.12.001 no hardware: **FAIL**.
