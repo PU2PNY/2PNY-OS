@@ -1,3 +1,7 @@
+## PU2PNY-OS 5.13.002 · Teste físico · 19/11/2026
+
+A [release candidata](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.002) oferece quatro imagens com SHA-256. Commit fonte `800f715e4973f612a1500373f6a54cd35ea69c14`, branch `release/pu2pny-5.13`, [CI 5/5 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/44647034376). Base oficial 5.12.002 P2. Foram validados XZ, SHA-256, ext4, o manifesto das alterações e a preservação dos binários de RF e do driver Nextion. O teste HTTP isolado foi executado com os binários ARMv7 de Orange Pi e NanoPi. Teste físico pendente conforme o [checklist](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.13/docs/PU2PNY-OS_5.13_HW_CHECKLIST.md). A implantação na VPS de teste não foi realizada porque a política do host não permitia a escrita de arquivos.
+
 ## 15/11/2026 — 5.12.002 P2 ALPHA PUBLICADA (6/6 CI PASS, HW PENDENTE)
 
 **Base comprovada:** diagnóstico Expert de Raspberry Pi Zero W (ARMv6l) com SO **5.12.001**, carga média **7,75 em 1 CPU**, DMRGateway em ciclos de restart por **`cannot read .../DMRGateway.ini`**, restaurador de perfil e manutenção concorrentes; a mesma placa tinha Wi-Fi DHCP/IPv4, painel HTTP 200 e UART MMDVM detectada. O relatório não comprova áudio de RF nem conexão ao XLX. Causa em código verificada: **VOICE-511 regravava INIs `root:root 0600`**, enquanto DMRGateway usa `mmdvm`. Status de DMR 5.12.001 no hardware: **FAIL**.

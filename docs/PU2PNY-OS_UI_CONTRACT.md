@@ -1,8 +1,6 @@
-## 5.13.000 · Manutenção para teste físico
+## PU2PNY-OS 5.13.002 · Teste físico · 19/11/2026
 
-O rodapé consulta a versão do backend. O relógio do sistema mostra o fuso escolhido e UTC. O Expert oferece orientação normal ou invertida para OLED. A página de configuração do AP usa um único endereço de destino por estado de provisionamento.
-
-[Checklist 5.13](PU2PNY-OS_5.13_HW_CHECKLIST.md)
+O rodapé consulta a versão do backend. A segunda rede Wi-Fi é salva na própria página Internet, que confirma o salvamento sem redirecionar. O relógio do sistema mostra fuso selecionado e UTC. O Expert oferece orientação normal ou invertida para OLED. O portal de configuração usa um endereço de destino por estado de provisionamento. A política Pública de Acesso RF mantém confirmação explícita.
 
 ## UI-5121 / DISPLAY-5121 — entrega SW publicada, teste físico pendente (14/11/2026)
 

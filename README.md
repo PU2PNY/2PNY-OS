@@ -1,10 +1,19 @@
-## 5.13.000 · Manutenção para teste físico
+## PU2PNY-OS 5.13.002 · Teste físico · 19/11/2026
 
-As correções de relógio, Nextion, rotação OLED e AP estão na branch 5.13. Consulte o checklist de teste físico. A versão publicada mais recente está na seção abaixo até a validação da nova imagem.
+[Release candidata](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.002) · [GitHub Actions](https://github.com/PU2PNY/2PNY-OS/actions/runs/44647034376) · [Checklist físico](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.13/docs/PU2PNY-OS_5.13_HW_CHECKLIST.md)
 
-[Checklist 5.13](docs/PU2PNY-OS_5.13_HW_CHECKLIST.md)
+O salvamento da segunda rede Wi-Fi mantém a conexão atual e a recuperação tenta a reserva quando a principal falha. A versão também corrige o relógio e o fuso, a restauração da Nextion, o portal de configuração de rede e a aplicação da política de Acesso RF. O OLED tem opção de rotação de 180° em Expert.
 
-## Versão publicada: 5.12.002 P2 ALPHA — 15/11/2026
+| Placa | Imagem | SHA-256 |
+|---|---|---|
+| Raspberry Pi ARM32 | [Baixar imagem](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-32-5.13.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-32-5.13.002.img.xz.sha256) |
+| Raspberry Pi ARM64 | [Baixar imagem](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-64-5.13.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-64-5.13.002.img.xz.sha256) |
+| Orange Pi Zero H2+ | [Baixar imagem](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-opizero-5.13.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-opizero-5.13.002.img.xz.sha256) |
+| NanoPi NEO H3 | [Baixar imagem](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-nanopineo-5.13.002.img.xz) | [Verificar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.002/pu2pny-nanopineo-5.13.002.img.xz.sha256) |
+
+Commit fonte `800f715e4973f612a1500373f6a54cd35ea69c14`. Os quatro builds passaram em integridade XZ, SHA-256 e ext4. Wi-Fi, HMI, tela, RF e acesso ao painel nas placas ainda precisam de teste físico.
+
+## Versão anterior: 5.12.002 P2 ALPHA — 15/11/2026
 
 **Status:** [release P2 publicada](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.002-p2) · [GitHub Actions 6/6 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/43727451516) · [checklist de teste físico](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.12.002/docs/PU2PNY-OS_5.12.002_HW_CHECKLIST.md). Tag aponta ao código **`a5f9f286d48a88b9fb658f56cb111c9acaa8a737`**. Quatro imagens `.img.xz`, checksums `.sha256` e quatro manifestos `BUILD-INFO` verificados. **ALPHA PARA TESTE FÍSICO; não homologada em hardware; NÃO produção.**
 
