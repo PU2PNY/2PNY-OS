@@ -108,3 +108,31 @@ save_secondary reserva '' ''
         assert not (root/'PU2PNY-WIFI-SECONDARY-BACKUP').exists(), result
 
 print('5.13 secondary Wi-Fi save and rollback checks passed')
+
+# Exercise the exact loader in the privileged request entrypoint, with the
+# extensionless installed name. The stub records that request validation ran.
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    patch_spec = importlib.util.spec_from_file_location('image513',REPO/'ci/patch-image-5.13.py')
+    overlay_module = importlib.util.module_from_spec(patch_spec)
+    patch_spec.loader.exec_module(overlay_module)
+    import ast
+    tree = ast.parse(Path(overlay_module.__file__).read_text())
+    edit = next(node for node in ast.walk(tree) if isinstance(node,ast.Call)
+                and node.args and isinstance(node.args[0],ast.Constant)
+                and node.args[0].value == 'usr/local/libexec/pu2pny/2pny-rf-access-request')
+    entry = (REPO/'runtime/5x/2pny-rf-access-request.py').read_text()
+    for old,new in ast.literal_eval(edit.args[1]):
+        assert entry.count(old)==1
+        entry=entry.replace(old,new,1)
+    module = {}
+    exec(compile(entry,'rf-access-request','exec'),module)
+    module['SRC'] = root/'2pny-rf-access'
+    module['REQUEST'] = root/'request.json'
+    module['RESULT'] = root/'result.json'
+    module['SRC'].write_text('DEFAULT_INI=DEFAULT_STATE=DEFAULT_UNIT=None\ndef apply(a,b,c,r,d):\n    return {"ok": r["confirmation"] == "ABRIR RF PUBLICO"}\n')
+    module['REQUEST'].write_text('{"mode":"public","confirmation":"ABRIR RF PUBLICO"}')
+    assert module['main']()==0
+    assert json.loads(module['RESULT'].read_text())['ok']
+
+print('5.13 RF request resolves the extensionless installed helper')

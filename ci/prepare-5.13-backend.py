@@ -18,7 +18,7 @@ def replace(old, new):
     source = source.replace(old,new,1)
 
 
-replace('appVersion            = "5.11.000"', 'appVersion            = "5.13.001"')
+replace('appVersion            = "5.11.000"', 'appVersion            = "5.13.002"')
 replace('func runTimezoneRequest(tz string)', 'func runTimezoneRequest(tz, action string, dstManual bool, epochMS int64)')
 replace('map[string]any{"request_id": requestID, "timezone": tz}', 'map[string]any{"request_id": requestID, "timezone": tz, "action": action, "dst_manual": dstManual, "epoch_ms": epochMS}')
 replace('"local": time.Now().Format(time.RFC3339)', '"local": localClock513(tz).Format(time.RFC3339)')
@@ -50,6 +50,13 @@ replace('in.SSID=strings.TrimSpace(in.SSID); in.BSSID=strings.TrimSpace(in.BSSID
 replace('in.SSID=="" || len(in.SSID)>64 || len(in.Password)>128',
         'strings.TrimSpace(in.SSID)=="" || len(in.SSID)>32 || len(in.Password)>64 || strings.ContainsAny(in.SSID+in.Password,"\\r\\n\\x00")')
 replace('Segunda rede salva e pronta para uso.', 'Segunda rede salva para recuperação.')
+replace('    payload := map[string]any{"mode":request.Mode,"confirmation":request.Confirmation,"allowed":list}',
+        """    if !applyMu.TryLock() {
+        writeJSON(w,http.StatusConflict,map[string]any{"ok":false,"error":"outra alteração está em andamento"})
+        return
+    }
+    defer applyMu.Unlock()
+    payload := map[string]any{"mode":request.Mode,"confirmation":request.Confirmation,"allowed":list}""")
 start=source.index('func captiveAPIHandler(')
 end=source.index('func readPublicJSON(',start)
 block=source[start:end]

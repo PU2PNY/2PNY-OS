@@ -33,11 +33,11 @@ def apply(root, board, backend):
         for old,new in replacements:
             assert source.count(old) == 1, (relative,old,source.count(old))
             source = source.replace(old,new,1)
-        if relative.endswith('.py') or relative.endswith('/2pny-display-apply'):
+        if relative.endswith(('.py','/2pny-display-apply','/2pny-rf-access','/2pny-rf-access-request')):
             compile(source,relative,'exec')
         put(relative,source)
 
-    put('etc/2pny/version','5.13.001\n',0o644)
+    put('etc/2pny/version','5.13.002\n',0o644)
     put('usr/local/bin/2pnyd',Path(backend).read_bytes(),0o755)
     previous = root/'usr/local/sbin/2pny-timezone-apply'
     assert previous.read_bytes() == (REPO/'runtime/5.08/tz-apply.py').read_bytes()
@@ -114,6 +114,27 @@ if nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq 'PU2PNY-WIFI'; then"
             ('RestartSec=4','RestartSec=15'),
         ])
 
+    edit('usr/local/libexec/pu2pny/2pny-rf-access-request',[
+        ('import importlib.util','import importlib.machinery\nimport importlib.util'),
+        ('        spec = importlib.util.spec_from_file_location("rfaccess", SRC)',
+         """        # The installed helper is executable Python without a .py suffix.
+        loader = importlib.machinery.SourceFileLoader("rfaccess", str(SRC))
+        spec = importlib.util.spec_from_loader(loader.name, loader)"""),
+    ])
+    edit('usr/local/libexec/pu2pny/2pny-rf-access',[
+        ('def atomic_write(target: Path, data: bytes, mode: int) -> None:',
+         'def atomic_write(target: Path, data: bytes, mode: int, owner=None) -> None:'),
+        ('        os.chmod(path, mode)\n        os.replace(path, target)',
+         """        if owner is not None:
+            os.chown(path, *owner)
+        os.chmod(path, mode)
+        os.replace(path, target)"""),
+        ('        snapshot = state.with_suffix(".rollback.ini")','        owner = (stat.st_uid, stat.st_gid)\n        snapshot = state.with_suffix(".rollback.ini")'),
+        ('atomic_write(ini, updated.encode("utf-8"), stat.st_mode & 0o777)',
+         'atomic_write(ini, updated.encode("utf-8"), stat.st_mode & 0o777, owner)'),
+        ('atomic_write(ini, original, stat.st_mode & 0o777)',
+         'atomic_write(ini, original, stat.st_mode & 0o777, owner)'),
+    ])
     put(units+'2pny-display-reconcile.service.d/65-persisted.conf',
         '[Unit]\nConditionPathExists=\n'
         'ConditionPathExists=|/var/lib/2pny/display-settings.json\n'

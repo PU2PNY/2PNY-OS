@@ -1,4 +1,4 @@
-name: PU2PNY-OS 5.13.001 candidate images
+name: PU2PNY-OS 5.13.002 candidate images
 on:
   push:
     branches: [release/pu2pny-5.13]
@@ -8,7 +8,7 @@ permissions:
   contents: read
 concurrency:
   group: pu2pny-5.13.001-images
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   image:
     runs-on: ubuntu-24.04
@@ -40,6 +40,7 @@ jobs:
           if [[ "$BOARD" == opizero || "$BOARD" == nanopineo ]]; then export GOARM=7; fi
           python3 ci/prepare-5.13-backend.py "$RUNNER_TEMP/backend" "$arch"
           python3 ci/test-5.13.py
+          python3 ci/test-5.00.001-rf-access.py
           cd "$RUNNER_TEMP/backend"
           env -u GOOS -u GOARCH -u GOARM go test ./...
           go build -trimpath -o "$RUNNER_TEMP/2pnyd" .
@@ -83,16 +84,16 @@ jobs:
           set -euo pipefail
           cd artifacts
           for board in 32 64 opizero nanopineo; do
-            image="pu2pny-${board}-5.13.001.img.xz"
+            image="pu2pny-${board}-5.13.002.img.xz"
             test -s "$image"
             xz -t "$image"
             sha256sum -c "$image.sha256"
             jq -e --arg board "$board" --arg sha "$GITHUB_SHA" \
-              '.version=="5.13.001" and .architecture==$board and .source_commit==$sha and .validation.HW=="NOT_VERIFIED"' \
+              '.version=="5.13.002" and .architecture==$board and .source_commit==$sha and .validation.HW=="NOT_VERIFIED"' \
               "BUILD-INFO-$board.json"
           done
-          gh release create pu2pny-v5.13.001 \
+          gh release create pu2pny-v5.13.002 \
             ./*.img.xz ./*.img.xz.sha256 ./BUILD-INFO-*.json \
             --target "$GITHUB_SHA" --prerelease --title 'PU2PNY-OS 5.13 para teste físico' \
             --notes-file ../docs/PU2PNY-OS_5.13_HW_CHECKLIST.md
-          gh release view pu2pny-v5.13.001 --json tagName,targetCommitish,assets
+          gh release view pu2pny-v5.13.002 --json tagName,targetCommitish,assets
