@@ -1,3 +1,9 @@
+## 5.13.000 · Manutenção para teste físico
+
+O rodapé consulta a versão do backend. O relógio do sistema mostra o fuso escolhido e UTC. O Expert oferece orientação normal ou invertida para OLED. A página de configuração do AP usa um único endereço de destino por estado de provisionamento.
+
+[Checklist 5.13](PU2PNY-OS_5.13_HW_CHECKLIST.md)
+
 ## UI-5121 / DISPLAY-5121 — entrega SW publicada, teste físico pendente (14/11/2026)
 
 A prerelease [5.12.001 P1](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.12.001-p1) passou CI 6/6, com **navegação estática fallback** nas páginas `mainNav` para manter links se o script comum não executar, e **relógio Sistema visível** novamente. Fuso/NTP corretos no hardware e causa-raiz do erro de JavaScript permanecem **NÃO VERIFICADOS**. O código de **OLED/LCD** passou SW para indicativo, protocolo, IP, tempo de TX, temperatura, disco e BER/RSSI medidos; HW por placa/tela ainda PENDENTE. **Nextion ON7LDS 5.00.002 permanece baseline aprovado**, inalterado por byte no builder; nenhuma alteração HMI/TFT, baud ou writer, tampouco extras CPU/disco no Nextion comprovados. [Checklist de aceitação](PU2PNY-OS_5.12.001_HW_CHECKLIST.md); [Issue #28 — Nextion extras](https://github.com/PU2PNY/2PNY-OS/issues/28); [Issue #25 — menu](https://github.com/PU2PNY/2PNY-OS/issues/25).
