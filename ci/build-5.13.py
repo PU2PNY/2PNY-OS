@@ -89,22 +89,22 @@ def main():
            "curl -fsS --noproxy '*' --max-time 3 http://10.43.0.1/healthz | grep -q 'PU2PNY OK'; "
            "curl -fsS --noproxy '*' --max-time 3 -D - -o /dev/null http://10.43.0.1/generate_204 | tr -d '\\r' | grep -q '^Location: http://10.43.0.1/wizard$'; "
            "curl -fsSL --noproxy '*' --max-time 3 http://10.43.0.1/ | grep -q 'PU2PNY-OS'; "
-           "curl -fsS --noproxy '*' --max-time 15 http://10.43.0.1/api/status | grep -q '5.13.000'")
+           "curl -fsS --noproxy '*' --max-time 15 http://10.43.0.1/api/status | grep -q '5.13.001'")
    run(['unshare','--net','--fork','sh','-c',script,'sh',str(root)])
   assert M.manifest(root)==after,'read-only remount differs'
-  assert (root/'etc/2pny/version').read_text().strip()=='5.13.000'
+  assert (root/'etc/2pny/version').read_text().strip()=='5.13.001'
   run(['umount',str(root)]);mounted=False
   run(['losetup','-d',loop]);loop=''
   with image.open('rb') as f:assert hashlib.sha256(f.read(1048576)).hexdigest()==boot_hash,'boot sector modified'
   output=work/'output';output.mkdir(exist_ok=True)
-  name=f'pu2pny-{board}-5.13.000.img.xz'
+  name=f'pu2pny-{board}-5.13.001.img.xz'
   dest=output/name
   assert not dest.exists()
   with dest.open('wb') as out:run(['xz','-T2','-4','-c',str(image)],stdout=out)
   run(['xz','-t',str(dest)])
   digest=sha(dest)
   (output/(name+'.sha256')).write_text(digest+'  '+name+'\n')
-  info={'version':'5.13.000','scope':['clock','nextion','oled','setup-ap','board-http','version'],
+  info={'version':'5.13.001','scope':['clock','nextion','oled','setup-ap','board-http','version'],
         'classification':'ALPHA_HW_TEST_CANDIDATE','architecture':board,
         'source_commit':commit,'base_version':'5.12.002','base_sha256':expected,
         'image_sha256':digest,'bytes':dest.stat().st_size,

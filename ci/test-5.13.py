@@ -61,3 +61,50 @@ with tempfile.TemporaryDirectory() as temporary:
     assert desired('') == '0'
 
 print('5.13 clock and DHCP regression checks passed')
+
+with tempfile.TemporaryDirectory() as temporary:
+    # Run the installed transaction with predictable NetworkManager effects.
+    secondary = REPO/'runtime/5.13/wifi-secondary.sh'
+    fixture = r'''
+set -euo pipefail
+PRIMARY=PU2PNY-WIFI
+SECONDARY=PU2PNY-WIFI-SECONDARY
+source "$1"
+cd "$2"
+touch "$SECONDARY"
+wifi_if(){ echo wlan0; }
+profile_ssid(){ echo principal; }
+profile_uuid(){ echo candidate-uuid; }
+active_name(){ echo "$PRIMARY"; }
+exists(){ test -e "$1"; }
+nm(){ return 1; }
+timeout(){
+  shift 4
+  test "$1" = connection || return 1
+  shift
+  case "$1:$2" in
+    add:type)
+      [[ " $* " = *' connection.autoconnect no '* ]] || return 8
+      touch PU2PNY-WIFI-SECONDARY-CANDIDATE ;;
+    delete:uuid) rm -f PU2PNY-WIFI-SECONDARY-CANDIDATE ;;
+    delete:*) rm -f "$2" ;;
+    modify:uuid)
+      if test "$4" = connection.id; then
+        test "${FAIL_COMMIT:-0}" != 1 || return 19
+        mv PU2PNY-WIFI-SECONDARY-CANDIDATE "$5"
+      fi ;;
+    modify:*) mv "$2" "$4" ;;
+  esac
+}
+save_secondary reserva '' ''
+'''
+    root = Path(temporary)
+    for fail in ('0','1'):
+        result = subprocess.run(['bash','-c',fixture,'bash',secondary,root],capture_output=True,
+                                env={**__import__('os').environ,'FAIL_COMMIT':fail})
+        assert (result.returncode == 0) == (fail == '0'), result
+        assert (root/'PU2PNY-WIFI-SECONDARY').exists(), result
+        assert not (root/'PU2PNY-WIFI-SECONDARY-CANDIDATE').exists(), result
+        assert not (root/'PU2PNY-WIFI-SECONDARY-BACKUP').exists(), result
+
+print('5.13 secondary Wi-Fi save and rollback checks passed')

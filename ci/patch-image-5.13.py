@@ -37,7 +37,7 @@ def apply(root, board, backend):
             compile(source,relative,'exec')
         put(relative,source)
 
-    put('etc/2pny/version','5.13.000\n',0o644)
+    put('etc/2pny/version','5.13.001\n',0o644)
     put('usr/local/bin/2pnyd',Path(backend).read_bytes(),0o755)
     previous = root/'usr/local/sbin/2pny-timezone-apply'
     assert previous.read_bytes() == (REPO/'runtime/5.08/tz-apply.py').read_bytes()
@@ -53,6 +53,59 @@ def apply(root, board, backend):
     edit('usr/local/sbin/2pny-network-core',[
         ('test -n "$outif" && test "$outif" != "$AP_WIFI" && now=1',
          'test -f "$STATE/provisioned" && test -n "$outif" && test "$outif" != "$AP_WIFI" && now=1'),
+        ("\nif nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq 'PU2PNY-WIFI'; then",
+         """
+try_secondary_wifi(){
+  local iface="$1" ssid
+  ssid="$(nmcli --escape no -g 802-11-wireless.ssid connection show PU2PNY-WIFI-SECONDARY 2>/dev/null | head -1 || true)"
+  test -n "$ssid" && test -n "$iface" || return 1
+  timeout -k 2 26 /usr/bin/nmcli --wait 22 connection up PU2PNY-WIFI-SECONDARY ifname "$iface" >/dev/null 2>&1 &&
+    wifi_profile_link_ok "$iface" "$ssid" || return 1
+  SECONDARY_SSID="$ssid"
+}
+if nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq 'PU2PNY-WIFI'; then"""),
+        ('  if test "$WIFI_BOOT_OK" != 1; then\n',
+         """  if test "$WIFI_BOOT_OK" != 1 && try_secondary_wifi "$SAVED_IF"; then
+    WIFI_BOOT_OK=1
+    touch "$STATE/ap-disabled"
+    rm -f "$STATE/ap-auto-disabled" "$STATE/wifi-pending"
+    write_connect_state connected "Rede Wi-Fi 2 conectada." "$SECONDARY_SSID"
+    /usr/local/sbin/2pny-mdns-guard >/dev/null 2>&1 || true
+  fi
+  if test "$WIFI_BOOT_OK" != 1; then
+"""),
+        ('            if timeout -k 2 35 /usr/bin/nmcli --wait 30 connection up PU2PNY-WIFI >/dev/null 2>&1 && wifi_profile_link_ok "$AP_WIFI" "$SAVED_SSID"; then',
+         """            RECOVERED_SSID="$SAVED_SSID"
+            recover_wifi(){
+              if timeout -k 2 35 /usr/bin/nmcli --wait 30 connection up PU2PNY-WIFI >/dev/null 2>&1 && wifi_profile_link_ok "$AP_WIFI" "$SAVED_SSID"; then
+                return 0
+              fi
+              if try_secondary_wifi "$AP_WIFI"; then RECOVERED_SSID="$SECONDARY_SSID"; return 0; fi
+              return 1
+            }
+            if recover_wifi; then"""),
+        ('write_connect_state connected "Wi-Fi salvo reconectado." "$SAVED_SSID"',
+         'write_connect_state connected "Wi-Fi salvo reconectado." "$RECOVERED_SSID"'),
+    ])
+    profiles = 'usr/local/sbin/2pny-wifi-profiles'
+    source = (root/profiles).read_text()
+    start = source.index('save_secondary(){')
+    end = source.index('scan_signal(){',start)
+    edit(profiles,[
+        (source[start:end], (REPO/'runtime/5.13/wifi-secondary.sh').read_text()),
+        ('nm -g 802-11-wireless.ssid connection show', 'nm --escape no -g 802-11-wireless.ssid connection show'),
+        ('exec 9>"$LOCK"; flock -w 35 9',
+         'lock_wait=35\nif test "${1:-}" = save-secondary; then lock_wait=8; fi\nexec 9>"$LOCK"; flock -w "$lock_wait" 9'),
+        ('nm -m multiline --escape no -f SSID,SIGNAL', 'nm -t -m multiline --escape no -f SSID,SIGNAL'),
+        ('  if test "$current" != "$chosen"; then nm --wait 18 connection up "$chosen" ifname "$iface" >/dev/null; fi',
+         """  if test "$current" != "$chosen" && test "$best_sig" -ge 0; then
+    if ! nm --wait 18 connection up "$chosen" ifname "$iface" >/dev/null 2>&1 ||
+        test -z "$(active_ip)" || test "$(active_ssid)" != "$(profile_ssid "$chosen")"; then
+      if test -n "$current"; then nm --wait 18 connection up "$current" ifname "$iface" >/dev/null 2>&1 || true; fi
+      echo "A segunda rede não confirmou associação e IPv4." >&2
+      return 5
+    fi
+  fi"""),
     ])
     if board in ('opizero','nanopineo'):
         # Keep the HTTP service eligible to recover from transient Armbian startup failures.
@@ -156,6 +209,31 @@ try{
     body:JSON.stringify({timezone:zone,epoch_ms:Date.now()})}).catch(function(){});
 }catch(_){}
 </script></body>"""),
+    ])
+    internet = (root/(ui+'internet.html')).read_text()
+    start = internet.index('async function followSecondaryToLive(')
+    end = internet.index("PNY.q('wifiSavePrimary')",start)
+    secondary = next(line for line in internet.splitlines() if line.startswith("PNY.q('wifiSaveSecond').onclick="))
+    edit(ui+'internet.html',[
+        (internet[start:end], ''),
+        (secondary, """PNY.q('wifiSaveSecond').onclick=async function(){
+  var button=this,select=PNY.q('wifiSecondSelect'),option=select.options[select.selectedIndex];
+  var manual=PNY.q('wifiSecondManual').value,ssid=manual||select.value,bssid=manual?'':(option?option.dataset.bssid||'':'');
+  var result=PNY.q('wifiProfileResult');
+  if(!ssid.trim()){result.textContent=PNYT('Busque uma rede ou informe o SSID manualmente.');return}
+  button.disabled=true;
+  var op=PNY.operation('Salvando Rede Wi‑Fi 2','Validando o perfil sem alterar a Rede Wi‑Fi 1...');
+  try{
+    await PNY.getj('/api/network/wifi/profiles',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'save-secondary',ssid:ssid,password:PNY.q('wifiSecondPass').value,bssid:bssid})},90000);
+    PNY.q('wifiSecondPass').value='';
+    PNY.q('wifiSecondManual').value='';
+    result.textContent=PNYT('Rede de backup salva.');
+    op.done(result.textContent);
+    await loadProfiles();
+  }catch(e){result.textContent=e.message;op.error(e.message)}
+  finally{button.disabled=false}
+};""".replace("PNYT(", "(window.PNYT||String)(")),
     ])
     edit(ui+'expert.html',[
         ('<button class="btn primary" id="oledSave"',

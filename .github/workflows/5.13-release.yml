@@ -1,4 +1,4 @@
-name: PU2PNY-OS 5.13 candidate images
+name: PU2PNY-OS 5.13.001 candidate images
 on:
   push:
     branches: [release/pu2pny-5.13]
@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: pu2pny-5.13-images
+  group: pu2pny-5.13.001-images
   cancel-in-progress: false
 jobs:
   image:
@@ -83,16 +83,16 @@ jobs:
           set -euo pipefail
           cd artifacts
           for board in 32 64 opizero nanopineo; do
-            image="pu2pny-${board}-5.13.000.img.xz"
+            image="pu2pny-${board}-5.13.001.img.xz"
             test -s "$image"
             xz -t "$image"
             sha256sum -c "$image.sha256"
             jq -e --arg board "$board" --arg sha "$GITHUB_SHA" \
-              '.version=="5.13.000" and .architecture==$board and .source_commit==$sha and .validation.HW=="NOT_VERIFIED"' \
+              '.version=="5.13.001" and .architecture==$board and .source_commit==$sha and .validation.HW=="NOT_VERIFIED"' \
               "BUILD-INFO-$board.json"
           done
-          gh release create pu2pny-v5.13.000 \
+          gh release create pu2pny-v5.13.001 \
             ./*.img.xz ./*.img.xz.sha256 ./BUILD-INFO-*.json \
             --target "$GITHUB_SHA" --prerelease --title 'PU2PNY-OS 5.13 para teste físico' \
             --notes-file ../docs/PU2PNY-OS_5.13_HW_CHECKLIST.md
-          gh release view pu2pny-v5.13.000 --json tagName,targetCommitish,assets
+          gh release view pu2pny-v5.13.001 --json tagName,targetCommitish,assets
