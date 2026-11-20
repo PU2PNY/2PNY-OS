@@ -111,7 +111,8 @@ def set_timezone(req,request_id):
             if action=="initialize-zone" and settings.get("ntp") is not False:
                 epoch_ms=req.get("epoch_ms")
                 if (type(epoch_ms) is int and 1704067200000<epoch_ms<4102444800000
-                        and not Path("/run/systemd/timesync/synchronized").exists()):
+                        and not Path("/run/systemd/timesync/synchronized").exists()
+                        and not Path("/run/chrony/chronyd.pid").exists()):
                     epoch=epoch_ms/1000
                     now=datetime.datetime.now(datetime.timezone.utc).timestamp()
                     if abs(epoch-now)>120:

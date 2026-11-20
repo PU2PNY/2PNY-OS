@@ -22,6 +22,8 @@ replace('appVersion            = "5.11.000"', 'appVersion            = "5.13.002
 replace('func runTimezoneRequest(tz string)', 'func runTimezoneRequest(tz, action string, dstManual bool, epochMS int64)')
 replace('map[string]any{"request_id": requestID, "timezone": tz}', 'map[string]any{"request_id": requestID, "timezone": tz, "action": action, "dst_manual": dstManual, "epoch_ms": epochMS}')
 replace('"local": time.Now().Format(time.RFC3339)', '"local": localClock513(tz).Format(time.RFC3339)')
+replace('"ntp_synchronized": syncv == "yes"', '"ntp_synchronized": syncv == "yes" && clockSettings["ntp"] != false')
+
 start=source.index('\tcase "auto-time":',source.index('func systemControlHandler('))
 end=source.index('\tcase "voice-settings":',start)
 replace(source[start:end],'''
@@ -148,3 +150,9 @@ func clock506Handler(w http.ResponseWriter, r *http.Request) {
     writeJSON(w,http.StatusOK,result)
 }
 """)
+
+clock_status = out/'web508.go'
+source = clock_status.read_text()
+replace('if _, err := os.Stat("/run/systemd/timesync/synchronized"); err == nil {',
+        'if _, err := os.Stat("/run/systemd/timesync/synchronized"); err == nil || kernelClockSynced513() {')
+clock_status.write_text(source)
