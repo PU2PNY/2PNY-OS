@@ -85,6 +85,18 @@ A regra única de display está em `docs/PU2PNY-OS_DISPLAY_BASELINE.md` (a parti
 
 # PU2PNY-OS — START HERE
 
+## Trabalho atual — 5.13.003 Orange Pi Zero
+
+**Objetivo:** corrigir o primeiro acesso pelo AP em Orange Pi Zero/NanoPi e exibir telemetria real da placa e da MMDVM nos displays suportados.
+
+- Branch de trabalho: fix/5.13.003-orange-pi-zero-ap-display.
+- Base de preservação: release 5.13.002; não substituir a imagem anterior.
+- Escopo: recuperação do AP, DHCP/DNS/HTTP, persistência de serviços e páginas de telemetria do display em Armbian.
+- Raspberry Pi: manter o caminho de display aprovado; sem alteração intencional do renderer Raspberry.
+- Estado desta revisão: EM TESTE. CI e imagens ainda precisam ser confirmados; teste físico de Orange Pi, RF e display permanece obrigatório.
+- Não usar imagem 5.13.003 até a release publicar o asset, SHA-256 e commit verificados.
+
+
 **Documento obrigatório de entrada do projeto.**
 
 Antes de analisar, corrigir, programar, publicar, gerar imagem, alterar GitHub, CI/CD, servidor, RF, rede, display ou documentação do PU2PNY-OS, leia nesta ordem:
