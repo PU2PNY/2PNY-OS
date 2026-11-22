@@ -46,7 +46,7 @@ def main():
     assert display_core.is_file()
     compile(display_core.read_text(),str(display_core),"exec")
 
-    required=("ip","dnsmasq","dhclient","curl","chroot")
+    required=("ip","dnsmasq","busybox","curl","chroot")
     missing=[x for x in required if not shutil.which(x)]
     assert not missing,"missing host test tools: "+",".join(missing)
 
@@ -91,34 +91,32 @@ def main():
                 time.sleep(.25)
             else:raise RuntimeError("dnsmasq did not bind DHCP/DNS sockets; ss="+socket_state+" log="+(temp/"dnsmasq-process.log").read_text())
 
-            dhscript=temp/"dhclient-script"
+            dhscript=temp/"udhcpc-script"
             dhscript.write_text("""#!/bin/sh
-printf "reason=%s iface=%s ip=%s\\n" "$reason" "$interface" "$new_ip_address" >> "@TRACE@"
-case "$reason" in
-  BOUND|RENEW|REBIND)
+printf 'event=%s iface=%s ip=%s\n' "$1" "$interface" "$ip" >> "@TRACE@"
+case "$1" in
+  bound|renew)
     ip -4 addr flush dev "$interface" 2>/dev/null || true
-    ip -4 addr add "$new_ip_address/24" dev "$interface"
-    if [ -n "$new_routers" ]; then
-      ip route replace default via "$(printf '%s' "$new_routers" | awk '{print $1}')" dev "$interface"
+    ip -4 addr add "$ip/24" dev "$interface" || exit 1
+    if [ -n "$router" ]; then
+      ip route replace default via "$(printf '%s' "$router" | awk '{print $1}')" dev "$interface" || exit 1
     fi
-    if [ -n "$new_domain_name_servers" ]; then
-      printf 'nameserver %s\\n' "$(printf '%s' "$new_domain_name_servers" | awk '{print $1}')" >"$TEST_RESOLV"
+    if [ -n "$dns" ]; then
+      printf 'nameserver %s\n' "$(printf '%s' "$dns" | awk '{print $1}')" > "$TEST_RESOLV" || exit 1
     fi
     ;;
 esac
 exit 0
-""".replace("@TRACE@",str(temp/"dhclient-script.log")))
+""".replace("@TRACE@",str(temp/"udhcpc-script.log")))
             dhscript.chmod(0o755)
             resolv=temp/"client-resolv.conf"
-            dhcmd=["ip","netns","exec",ns,"dhclient","-4","-1","-v","-e","TEST_RESOLV="+str(resolv),
-                   "-sf",str(dhscript),"-lf",str(temp/"client.leases"),"-pf",str(temp/"client.pid"),client_if]
-            dhresult=run(dhcmd,check=False,timeout=20)
-            if dhresult.returncode:
-                dns_debug=(temp/"dnsmasq-process.log").read_text(errors="replace")
-                link_debug=run(["ip","netns","exec",ns,"ip","-d","addr","show"],check=False).stdout
-                raise RuntimeError("dhclient exit="+str(dhresult.returncode)+
-                                   " output="+dhresult.stdout+
-                                   " dnsmasq="+dns_debug+" namespace="+link_debug)
+            clientcmd=["ip","netns","exec",ns,"env","TEST_RESOLV="+str(resolv),
+                       "busybox","udhcpc","-f","-q","-n","-i",client_if,"-s",str(dhscript),"-t","5","-T","2"]
+            client_result=run(clientcmd,check=False,timeout=25)
+            if client_result.returncode:
+                raise RuntimeError("udhcpc exit="+str(client_result.returncode)+
+                                   " output="+client_result.stdout+" dnsmasq="+
+                                   (temp/"dnsmasq-process.log").read_text(errors="replace"))
             addr=""
             for _ in range(30):
                 addr=run(["ip","netns","exec",ns,"ip","-4","-o","addr","show","dev",client_if]).stdout
@@ -126,14 +124,14 @@ exit 0
                 time.sleep(0.2)
             match=re.search(r"inet (10\.43\.0\.(\d+)/24)",addr)
             if not match or not 20<=int(match.group(2))<=200:
-                script_trace=temp/"dhclient-script.log"
+                script_trace=temp/"udhcpc-script.log"
                 script_info=script_trace.read_text(errors="replace") if script_trace.exists() else "(not executed)"
-                raise RuntimeError("DHCP IPv4 missing: stdout="+dhresult.stdout+" addr="+repr(addr)+
+                raise RuntimeError("DHCP IPv4 missing: stdout="+client_result.stdout+" addr="+repr(addr)+
                                    " script="+script_info+" dnsmasq="+
                                    (temp/"dnsmasq-process.log").read_text(errors="replace"))
             route=run(["ip","netns","exec",ns,"ip","route","show","default"]).stdout
             assert "via 10.43.0.1" in route,route
-            assert "nameserver 10.43.0.1" in resolv.read_text(),resolv.read_text()
+            assert resolv.is_file() and "nameserver 10.43.0.1" in resolv.read_text()
             dns_query(ns,"pu2pny.local")
             dns_query(ns,"connectivitycheck.gstatic.com")
 
