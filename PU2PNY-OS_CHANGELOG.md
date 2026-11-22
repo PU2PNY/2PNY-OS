@@ -104,7 +104,7 @@ Usuário aprovou explicitamente a tela da 5.00.002 em NextionDriver ON7LDS: “a
 
 # PU2PNY-OS — CHANGELOG
 
-## 5.13.003 — EM TESTE
+## 5.13.003 — ALPHA PARA TESTE FÍSICO (CI PASS)
 
 - Corrigir a experiência de primeiro acesso pelo AP nas placas Orange Pi Zero e NanoPi NEO.
 - Usar leases DHCP em /run/2pny e monitorar DHCP/DNS/HTTP do AP com recuperação limitada.
@@ -112,7 +112,9 @@ Usuário aprovou explicitamente a tela da 5.00.002 em NextionDriver ON7LDS: “a
 - Adicionar páginas de telemetria real da placa e da MMDVM ao renderer de display Armbian.
 - Alternar informações de sistema/MMDVM em standby; priorizar RF durante RX/TX.
 - Preservar renderer Raspberry, MMDVMHost, gateways, RF e protocolos.
-- Validação física ainda pendente; esta entrada não declara funcionamento de hardware.
+- CI [45008193973](https://github.com/PU2PNY/2PNY-OS/actions/runs/45008193973) PASS para opizero, nanopineo, 32 e 64; publicação https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.003, fonte `e6645024e25ab425e3456b7853c67fca3b51d78d`.
+- Compatibilidade dos avisos de voz preservada por manifesto; nenhuma ativação nova de FM/transcodificação AMBE sem hardware real.
+- Validação física de Wi-Fi, RF, áudio e displays ainda pendente; esta entrada não declara homologação em hardware.
 
 ## 2026-09-19 — início do ciclo corretivo pós-0.3.3-alpha
 

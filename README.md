@@ -1,3 +1,20 @@
+## PU2PNY-OS 5.13.003 · Candidata ALPHA para teste físico · 22/11/2026
+
+[Release oficial](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.003) · [GitHub Actions 5/5 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/45008193973) · [Checklist físico](docs/PU2PNY-OS_5.13.003_HW_CHECKLIST.md)
+
+**Orange Pi Zero H2+:** correção específica do AP de primeiro acesso, monitoramento DHCP/DNS/HTTP com recuperação controlada e telemetria de placa/MMDVM em standby nos displays compatíveis. O tráfego RF, MMDVMHost, gateways e os avisos de voz existentes foram preservados. Não habilitar FM/áudio analógico sem suporte físico confirmado.
+
+| Placa | Imagem .img.xz | SHA-256 |
+|---|---|---|
+| Orange Pi Zero H2+ | [Baixar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-opizero-5.13.003.img.xz) | [Conferir](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-opizero-5.13.003.img.xz.sha256) |
+| NanoPi NEO H3 | [Baixar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-nanopineo-5.13.003.img.xz) | [Conferir](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-nanopineo-5.13.003.img.xz.sha256) |
+| Raspberry Pi ARM32 | [Baixar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-32-5.13.003.img.xz) | [Conferir](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-32-5.13.003.img.xz.sha256) |
+| Raspberry Pi ARM64 | [Baixar](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-64-5.13.003.img.xz) | [Conferir](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-64-5.13.003.img.xz.sha256) |
+
+**Evidência:** commit fonte `e6645024e25ab425e3456b7853c67fca3b51d78d`; 4/4 imagens + publicação 1/1 PASS; XZ, SHA-256, ext4 e validação do escopo aprovados no CI. Testes de Orange Pi real, Wi-Fi físico, Nextion/OLED, MMDVM e áudio pelo rádio continuam **HW PENDENTE**. **Não é versão de produção.** O release 5.13.002 permanece disponível para rollback.
+
+---
+
 ## PU2PNY-OS 5.13.002 · Teste físico · 19/11/2026
 
 [Release candidata](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.002) · [GitHub Actions](https://github.com/PU2PNY/2PNY-OS/actions/runs/44647034376) · [Checklist físico](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.13/docs/PU2PNY-OS_5.13_HW_CHECKLIST.md)

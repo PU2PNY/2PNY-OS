@@ -2252,3 +2252,9 @@ Rastreio: [Feedback 5.12](docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md) · [Issue #
 ### Compatibilidade e proteção
 - Renderer 0.3.31 aplicado às imagens opizero e nanopineo; renderer Raspberry aprovado permanece preservado.
 - Build, CI e simulação não substituem teste físico de Wi-Fi, display, MMDVM e RF.
+
+### Áudio MMDVM / Voice — 5.13.003
+- Permanecem habilitáveis as funções nativas de voz digital de cada protocolo e os avisos de voz já previstos pelos gateways, sem alterar o baseline RF.
+- Um modem MMDVM capaz de transportar quadros de voz digital não comprova possuir conversor PCM, placa AMBE, saída de áudio analógico ou FM funcional.
+- Não ativar FM, áudio analógico, transcodificação AMBE ou cross-mode sem confirmar hardware e backend. Em Orange Pi Zero, áudio RF e anúncios continuam HW PENDENTE.
+- Ver TEST_MATRIX AUDIO-OPI-001/002/003; os campos do display devem depender de dados reais.

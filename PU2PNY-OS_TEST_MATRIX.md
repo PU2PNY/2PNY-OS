@@ -1439,18 +1439,23 @@ Fontes: [arquivo oficial NanoPi](https://rsync.armbian.com/oldarchive/nanopineo/
 
 ## 5.13.003 — testes Orange Pi / displays
 
+**Fonte:** [CI 45008193973](https://github.com/PU2PNY/2PNY-OS/actions/runs/45008193973), commit `e6645024e25ab425e3456b7853c67fca3b51d78d`; SW/CI confirmado. O AP real e o modem não foram conectados ao CI.
+
 | ID | Teste | Nível | Estado | Evidência/critério |
 |---|---|---|---|---|
-| OPI-AP-001 | Sintaxe do network core e marcadores de recuperação | SW | EM TESTE | bash -n; lease em /run/2pny; sem reinício MMDVMHost |
-| OPI-AP-002 | DHCP por namespace/veth | SW/CI | EM TESTE | Cliente recebe endereço da faixa AP e gateway 10.43.0.1 |
-| OPI-AP-003 | DNS local/captive DNS | SW/CI | EM TESTE | pu2pny.local e domínio de verificação resolvem para 10.43.0.1 |
-| OPI-AP-004 | Portal HTTP | SW/CI | EM TESTE | /healthz responde e /generate_204 encaminha ao wizard |
-| OPI-AP-005 | Serviços e links systemd | SW | EM TESTE | 2pnyd e 2pny-network-core habilitados para boot |
+| OPI-AP-001 | Sintaxe do network core e marcadores de recuperação | SW | PASS | bash -n; lease em /run/2pny; sem reinício MMDVMHost |
+| OPI-AP-002 | DHCP por namespace/veth | SW/CI | PASS | Cliente recebe endereço da faixa AP e gateway 10.43.0.1 |
+| OPI-AP-003 | DNS local/captive DNS | SW/CI | PASS | pu2pny.local e domínio de verificação resolvem para 10.43.0.1 |
+| OPI-AP-004 | Portal HTTP | SW/CI | PASS | /healthz responde e /generate_204 encaminha ao wizard |
+| OPI-AP-005 | Serviços e links systemd | SW | PASS | 2pnyd e 2pny-network-core habilitados para boot |
 | OPI-AP-006 | Orange Pi Zero AP físico | HW | PENDENTE | Associar telefone, receber DHCP, abrir painel e navegar |
-| DISP-OPI-001 | Coleta CPU/temperatura/RAM/armazenamento/uptime | SW | EM TESTE | Dados de teste e sensores ausentes sem valores inventados |
-| DISP-OPI-002 | Perfil/firmware/capacidades MMDVM | SW | EM TESTE | Exibir somente campos confirmados pelo hardware probe |
+| DISP-OPI-001 | Coleta CPU/temperatura/RAM/armazenamento/uptime | SW | PASS | Dados de teste e sensores ausentes sem valores inventados |
+| DISP-OPI-002 | Perfil/firmware/capacidades MMDVM | SW | PASS | Exibir somente campos confirmados pelo hardware probe |
 | DISP-OPI-003 | Nextion/OLED/LCD em Orange Pi | HW | PENDENTE | Standby, RX/TX, reinício e persistência |
 | RF-REG-513003 | Regressão RF | HW | PENDENTE | DMR simplex, D-Star e YSF preservados |
-| ARM-513003 | Builds ARM32/ARM64 e imagens Armbian | SW/CI | EM TESTE | Build, XZ, manifest, SHA-256 e assets publicados |
+| ARM-513003 | Builds ARM32/ARM64 e imagens Armbian | SW/CI | PASS | Build, XZ, manifest, SHA-256 e assets publicados |
+| AUDIO-OPI-001 | Voz digital DMR/D-Star/YSF real pela MMDVM | HW | PENDENTE | Requer TX/RX físico com modem/rádio; binários RF preservados pelo manifesto |
+| AUDIO-OPI-002 | Anúncios de voz de gateways existentes | HW | PENDENTE | Voice-apply e INIs preservados; disponibilidade depende de arquivos de áudio e gateway |
+| AUDIO-OPI-003 | FM/áudio analógico | HW | NÃO VERIFICADO | Somente habilitar após comprovar suporte físico a FM e interface de áudio; não habilitado neste patch |
 
 **Regra:** nenhum PASS de SW/CI promove automaticamente um teste HW para PASS.

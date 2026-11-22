@@ -43,6 +43,9 @@
 - [ ] Testar YSF RX/TX.
 - [ ] Verificar BER/RSSI somente se fornecidos pelo modem.
 - [ ] Confirmar que falha de display/AP não reinicia MMDVMHost nem gateways.
+- [ ] Ouvir a voz digital real DMR/D-Star/YSF pelo rádio e comprovar RF→rede e rede→RF.
+- [ ] Confirmar se avisos de voz DMR/gateway configurados são transmitidos sem colisão com tráfego real.
+- [ ] Não habilitar FM ou reprodução analógica sem hardware/sensor/interface compatíveis.
 
 ## 5. Dados a enviar no relatório
 - Modelo/revisão da placa Orange Pi.

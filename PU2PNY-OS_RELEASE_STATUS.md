@@ -108,18 +108,18 @@ Branch `pu2pny-os-5.00.002-display-only`. Base publicada `v5.00.001`. PUBLICADA 
 
 # PU2PNY-OS — RELEASE STATUS
 
-## PU2PNY-OS 5.13.003 — EM TESTE
+## PU2PNY-OS 5.13.003 — ALPHA PARA TESTE FÍSICO
 
 - Branch: fix/5.13.003-orange-pi-zero-ap-display
 - Base: 5.13.002, preservada.
 - Objetivo: AP Orange Pi/NanoPi com DHCP/DNS/HTTP recuperáveis e display com telemetria real da placa/MMDVM.
-- Código: implementação e pipeline em validação.
-- SW/CI: execução em andamento; ainda não aprovado nesta anotação.
+- Código: commit fonte e6645024e25ab425e3456b7853c67fca3b51d78d; branch fix/5.13.003-orange-pi-zero-ap-display.
+- SW/CI: PASS — 4 imagens construídas e aprovadas, publicação PASS; https://github.com/PU2PNY/2PNY-OS/actions/runs/45008193973.
 - HW: PENDENTE — Orange Pi Zero, Wi-Fi AP, Nextion/OLED/LCD, MMDVM, DMR simplex, D-Star e YSF.
-- Release/assets/SHA-256: NÃO PUBLICADOS nesta etapa.
-- Classificação pretendida: candidata Alpha para teste físico, somente após build, CI, integridade e SHA verificados.
+- Release/assets/SHA-256: PASS — quatro .img.xz e checksums .sha256 publicados e verificados; https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.003.
+- Classificação confirmada: ALPHA PARA TESTE FÍSICO; **NÃO PROD**. O CI não comprova TX/RX físico nem áudio analógico.
 
-A 5.13.002 continua sendo a última referência anterior; não renomear nem substituir seus assets.
+A 5.13.002 foi preservada e continua sendo a opção de rollback. A 5.13.003 não altera configurações RF/voz preexistentes. Orange Pi Zero H2+ e NanoPi H3 estão SW PASS / HW PENDENTE.
 
 **Branch de trabalho:** `pu2pny-os-0.3.30-alpha`  
 **Base preservada:** `pu2pny-os-0.3.29-alpha`  

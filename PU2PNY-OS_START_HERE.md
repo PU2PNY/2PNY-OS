@@ -93,8 +93,8 @@ A regra única de display está em `docs/PU2PNY-OS_DISPLAY_BASELINE.md` (a parti
 - Base de preservação: release 5.13.002; não substituir a imagem anterior.
 - Escopo: recuperação do AP, DHCP/DNS/HTTP, persistência de serviços e páginas de telemetria do display em Armbian.
 - Raspberry Pi: manter o caminho de display aprovado; sem alteração intencional do renderer Raspberry.
-- Estado desta revisão: EM TESTE. CI e imagens ainda precisam ser confirmados; teste físico de Orange Pi, RF e display permanece obrigatório.
-- Não usar imagem 5.13.003 até a release publicar o asset, SHA-256 e commit verificados.
+- Estado: ALPHA PARA TESTE FÍSICO. CI 5/5 PASS; imagens e SHA-256 publicados. O teste físico de Orange Pi, RF, áudio e displays ainda é obrigatório.
+- Release oficial: https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.003; CI: https://github.com/PU2PNY/2PNY-OS/actions/runs/45008193973; commit da imagem: e6645024e25ab425e3456b7853c67fca3b51d78d.
 
 
 **Documento obrigatório de entrada do projeto.**
