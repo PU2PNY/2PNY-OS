@@ -136,15 +136,15 @@ check_ap_health(){
         AP_HTTP_RESTART_LAST="$now"
         AP_HTTP_FAILS=0
         log "AP HTTP health check failed; restarting 2pnyd.service"
-        systemctl restart --no-block 2pnyd.service >/dev/null 2>&1 || true
+        systemctl --no-block restart 2pnyd.service >/dev/null 2>&1 || true
       fi
     fi
   else
     AP_HTTP_STATE=starting
-    systemctl start --no-block 2pnyd.service >/dev/null 2>&1 || true
+    systemctl --no-block start 2pnyd.service >/dev/null 2>&1 || true
   fi
 }
-enable_ap_forwarding{"""),
+enable_ap_forwarding(){"""),
         ('    if alive "$DNS_ETH_PID"; then echo \'dnsmasq_eth=active\'; else echo \'dnsmasq_eth=inactive\'; fi\n',
          """    if alive "$DNS_ETH_PID"; then echo 'dnsmasq_eth=active'; else echo 'dnsmasq_eth=inactive'; fi
     echo "board_id=$BOARD_ID"

@@ -22,7 +22,8 @@ def main():
         compile(path.read_text(),str(path),"exec")
     for marker in ("dhcp-leasefile=%s/dnsmasq-ap.leases",
                    "check_ap_health","ap_dhcp=","ap_dns=","ap_http=",
-                   "2pny-display-core-0.3.31.py","board-id"):
+                   "2pny-display-core-0.3.31.py","board-id","enable_ap_forwarding(){",
+                   "systemctl --no-block restart 2pnyd.service"):
         assert marker in patch_text, "missing patch marker: "+marker
     display=load_display()
     with tempfile.TemporaryDirectory(prefix="pny-display-test-") as tmp:
