@@ -109,7 +109,7 @@ exit 0
 """)
             dhscript.chmod(0o755)
             resolv=temp/"client-resolv.conf"
-            dhcmd=["ip","netns","exec",ns,"env","TEST_RESOLV="+str(resolv),"dhclient","-1","-v","-timeout","12",
+            dhcmd=["ip","netns","exec",ns,"env","TEST_RESOLV="+str(resolv),"dhclient","-4","-1","-v",
                    "-sf",str(dhscript),"-lf",str(temp/"client.leases"),"-pf",str(temp/"client.pid"),client_if]
             dhresult=run(dhcmd,check=False,timeout=20)
             if dhresult.returncode:
