@@ -85,8 +85,8 @@ def main():
             while time.time()<deadline:
                 if dns.poll() is not None:raise RuntimeError("dnsmasq exited: "+(temp/"dnsmasq-process.log").read_text())
                 socket_state=run(["ss","-H","-lun"],check=False).stdout
-                has_dhcp=any(re.search(r":67(?:\\s|$)",line) for line in socket_state.splitlines())
-                has_dns=any(re.search(r":53(?:\\s|$)",line) for line in socket_state.splitlines())
+                has_dhcp=any(re.search(r":67(?:\s|$)",line) for line in socket_state.splitlines())
+                has_dns=any(re.search(r":53(?:\s|$)",line) for line in socket_state.splitlines())
                 if has_dhcp and has_dns:break
                 time.sleep(.25)
             else:raise RuntimeError("dnsmasq did not bind DHCP/DNS sockets; ss="+socket_state+" log="+(temp/"dnsmasq-process.log").read_text())
