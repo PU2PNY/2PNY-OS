@@ -19,14 +19,14 @@ def main():
     with tempfile.TemporaryDirectory(prefix="pny-display-test-") as tmp:
         base=Path(tmp);proc=base/"proc";sys=base/"sys";root=base/"root"
         (proc/"device-tree").mkdir(parents=True)
-        (proc/"device-tree"/"model").write_bytes(b"Orange Pi Zero H2+\\0")
-        (proc/"meminfo").write_text("MemTotal: 524288 kB\\nMemAvailable: 262144 kB\\n")
-        (proc/"uptime").write_text("172800.0 0.0\\n")
-        (proc/"stat").write_text("cpu 100 0 100 800 0 0 0 0 0 0\\n")
+        (proc/"device-tree"/"model").write_bytes(b"Orange Pi Zero H2+\0")
+        (proc/"meminfo").write_text("MemTotal: 524288 kB\nMemAvailable: 262144 kB\n")
+        (proc/"uptime").write_text("172800.0 0.0\n")
+        (proc/"stat").write_text("cpu 100 0 100 800 0 0 0 0 0 0\n")
         (sys/"class/thermal/thermal_zone0").mkdir(parents=True)
-        (sys/"class/thermal/thermal_zone0"/"temp").write_text("52000\\n")
+        (sys/"class/thermal/thermal_zone0"/"temp").write_text("52000\n")
         (sys/"devices/system/cpu/cpu0/cpufreq").mkdir(parents=True)
-        (sys/"devices/system/cpu/cpu0/cpufreq"/"scaling_cur_freq").write_text("1000000\\n")
+        (sys/"devices/system/cpu/cpu0/cpufreq"/"scaling_cur_freq").write_text("1000000\n")
         root.mkdir()
         telemetry={"cpu_percent":24,"temperature_c":52,"memory_used_mb":256,
                    "memory_total_mb":512,"disk_used_percent":71}

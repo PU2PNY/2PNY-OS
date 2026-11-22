@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PU2PNY Display Core 0.3.30 — Moderno V2 incremental.
+"""PU2PNY Display Core 0.3.31 — Moderno V2 incremental.
 
 Adaptive local renderer for Nextion (direct or through MMDVM MQTT bridge),
 SSD1306/SH1106 OLED and HD44780/PCF8574 LCD.  It never owns RF settings and
@@ -209,12 +209,12 @@ def display_uptime(info):
 
 def display_info_line(info,slot=0):
     if slot%3==0:
-        return safe(f"{info.get('board_model') or 'BOARD'} | {info.get('uplink_type') or 'NET'} {info.get('ip') or '—'}",50)
+        return safe(f"{info.get('board_model') or 'BOARD'} | {info.get('uplink_type') or 'NET'} {info.get('ip') or '—'}",38)
     if slot%3==1:
         if not info.get("mmdvm_detected"):return "MMDVM NOT CONFIRMED"
         description=info.get("mmdvm_description") or info.get("mmdvm_profile") or "MMDVM"
         caps=" ".join(info.get("mmdvm_capabilities") or [])
-        return safe(f"{description} {caps}".strip(),50)
+        return safe(f"{description} {caps}".strip(),38)
     freq=_number(info.get("cpu_frequency_mhz"))
     frequency="—" if freq is None else f"{freq:.0f}MHz"
     return safe(f"CPU {frequency} | {display_uptime(info)}",50)
@@ -513,6 +513,7 @@ class OLED(I2CBase):
         proto=str(a.get("protocol") or cfg.get("protocol") or "PU2PNY").replace("DSTAR","D-STAR")
         op=a.get("operator") or {};ns=read_network_status();net=live.get("internet") or {}
         img=self.Image.new("1",(128,self.h));d=self.ImageDraw.Draw(img)
+        info=tel.get("_display_info") or {};slot=int(time.time()//8)%3
         if self.h==32:
             d.rectangle((0,0,127,10),fill=255)
             d.text((2,1),"PU2PNY",font=self.font,fill=0)
@@ -529,7 +530,7 @@ class OLED(I2CBase):
                     self.label(d,(1,22),display_info_line(info,2))
             else:
                 self.label(d,(1,12),f"{proto[:6]} {str(a.get('source') or '-')[:13]}")
-                self.label(d,(1,22),str(a.get("target") or "-")[:12])
+                self.label(d,(1,22),display_system_compact(info) if slot%2 else str(a.get("target") or "-")[:12])
                 self.bars(d,109,21,a.get("rssi_avg",a.get("rssi")))
             self.show_image(img)
             return
@@ -575,7 +576,7 @@ class OLED(I2CBase):
             # Footer line with target / BER or network status.
             ber=a.get("ber")
             extra=f"B{ber}%" if ber is not None else str(net.get("quality") or "").upper()[:4]
-            self.label(d,(3,54),f"{target[:12]} {extra}")
+            self.label(d,(3,54),f"{target[:12]} {extra}" if slot%2==0 else display_system_compact(info))
         self.show_image(img)
 
 class LCD(I2CBase):
