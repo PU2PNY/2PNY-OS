@@ -145,7 +145,7 @@ check_ap_health(){
   fi
 }
 enable_ap_forwarding{"""),
-        ('    if alive "$DNS_ETH_PID"; then echo \\'dnsmasq_eth=active\\'; else echo \\'dnsmasq_eth=inactive\\'; fi\n',
+        ('    if alive "$DNS_ETH_PID"; then echo \'dnsmasq_eth=active\'; else echo \'dnsmasq_eth=inactive\'; fi\n',
          """    if alive "$DNS_ETH_PID"; then echo 'dnsmasq_eth=active'; else echo 'dnsmasq_eth=inactive'; fi
     echo "board_id=$BOARD_ID"
     case "$BOARD_ID" in
