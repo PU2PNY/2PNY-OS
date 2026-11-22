@@ -93,6 +93,7 @@ def main():
 
             dhscript=temp/"dhclient-script"
             dhscript.write_text("""#!/bin/sh
+printf "reason=%s iface=%s ip=%s\\n" "$reason" "$interface" "$new_ip_address" >> "@TRACE@"
 case "$reason" in
   BOUND|RENEW|REBIND)
     ip -4 addr flush dev "$interface" 2>/dev/null || true
@@ -106,10 +107,10 @@ case "$reason" in
     ;;
 esac
 exit 0
-""")
+""".replace("@TRACE@",str(temp/"dhclient-script.log")))
             dhscript.chmod(0o755)
             resolv=temp/"client-resolv.conf"
-            dhcmd=["ip","netns","exec",ns,"env","TEST_RESOLV="+str(resolv),"dhclient","-4","-1","-v",
+            dhcmd=["ip","netns","exec",ns,"dhclient","-4","-1","-v","-e","TEST_RESOLV="+str(resolv),
                    "-sf",str(dhscript),"-lf",str(temp/"client.leases"),"-pf",str(temp/"client.pid"),client_if]
             dhresult=run(dhcmd,check=False,timeout=20)
             if dhresult.returncode:
@@ -118,9 +119,18 @@ exit 0
                 raise RuntimeError("dhclient exit="+str(dhresult.returncode)+
                                    " output="+dhresult.stdout+
                                    " dnsmasq="+dns_debug+" namespace="+link_debug)
-            addr=run(["ip","netns","exec",ns,"ip","-4","-o","addr","show","dev",client_if]).stdout
-            match=re.search(r"inet (10\.43\.0\.(\d+)/24)",addr)
-            assert match and 20<=int(match.group(2))<=200,addr
+            addr=""
+            for _ in range(30):
+                addr=run(["ip","netns","exec",ns,"ip","-4","-o","addr","show","dev",client_if]).stdout
+                if re.search(r"inet (10\\.43\\.0\\.(\\d+)/24)",addr):break
+                time.sleep(0.2)
+            match=re.search(r"inet (10\\.43\\.0\\.(\\d+)/24)",addr)
+            if not match or not 20<=int(match.group(2))<=200:
+                raise RuntimeError("DHCP client received no expected IPv4 address; stdout="+
+                                   dhresult.stdout+" addr="+repr(addr)+" script="+
+                                   (temp/"dhclient-script.log").read_text(errors="replace") if (temp/"dhclient-script.log").exists() else
+                                   "no-script-log"+" dnsmasq="+
+                                   (temp/"dnsmasq-process.log").read_text(errors="replace"))
             route=run(["ip","netns","exec",ns,"ip","route","show","default"]).stdout
             assert "via 10.43.0.1" in route,route
             assert "nameserver 10.43.0.1" in resolv.read_text(),resolv.read_text()

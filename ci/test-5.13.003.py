@@ -60,6 +60,32 @@ def main():
                                              sys_root=base/"missing-sys",root_path=root)
         assert unknown["temperature_c"] is None and unknown["mmdvm_detected"] is False
         assert "MMDVM NOT CONFIRMED" in display.display_info_line(unknown,1)
+
+    # Active RF panels retain the previously approved network, source/target
+    # and quality fields. New hardware telemetry rotates only on standby.
+    original_reader=display.read_network_status
+    display.read_network_status=lambda: {"uplink_type":"wifi","default_ip":"10.43.0.1"}
+    try:
+        live={"active":{"mode":"rx","protocol":"DMR","source":"TEST","target":"TG 6",
+                        "direction":"NET","operator":{"name":"TEST NAME"}},
+              "internet":{"quality":"good","latency_ms":42}}
+        drv=display.Nextion("nextion_mmdvm",width=320,height=240)
+        nextion_commands=[]
+        drv.send_page=lambda page,cmds:nextion_commands.extend(cmds)
+        drv.render(live,{"protocol":"DMR"},{"_display_info":info})
+        assert any("TEST" in c for c in nextion_commands)
+        assert any("TG 6" in c for c in nextion_commands)
+        assert any("10.43.0.1" in c for c in nextion_commands), "Nextion network information lost during RX"
+        lcd=object.__new__(display.LCD)
+        lcd.cols=20;lcd.rows=4
+        captured=[]
+        lcd.show=lambda lines:captured.extend(lines)
+        lcd.render(live,{"protocol":"DMR"},{"_display_info":info})
+        assert captured[0].startswith("RX DMR")
+        assert captured[2]=="TG 6"
+        assert "10.43.0.1" in captured[3], "LCD network information lost during RX"
+    finally:
+        display.read_network_status=original_reader
     print("5.13.003_DISPLAY_TELEMETRY_SW_PASS")
 
 if __name__=="__main__":main()

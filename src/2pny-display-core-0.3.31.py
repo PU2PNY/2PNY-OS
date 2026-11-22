@@ -412,7 +412,7 @@ class Nextion:
                          label(17,135,286,26,destination,CYAN,1),
                          label(13,168,145,25,f"{origin}  {duration}",YELLOW),
                          label(162,168,145,25,rfline or "—",WHITE),
-                         box(10,194,300,1,GRAY),label(13,198,294,18,sysline,WHITE,1),label(13,218,294,18,display_info_line(info,slot),GREEN if qual not in ("poor","offline") else RED)]
+                         box(10,194,300,1,GRAY),label(13,201,294,26,net_label,RED if qual=="offline" else GREEN)]
                 if tot_left is not None and tot_left<=20:
                     cmds += [box(0,196,320,44,RED if tot_left<=10 else YELLOW),
                              label(6,199,308,35,f"TOT {tot_left} s",WHITE if tot_left<=10 else BLACK,1,RED if tot_left<=10 else YELLOW)]
@@ -458,8 +458,8 @@ class Nextion:
             else:
                 net_color=GREEN if qual not in ("poor","offline") else RED
                 cmds += [f"line 10,{h-58},{w-10},{h-58},{GRAY}",
-                         self.text(12,h-54,w-24,21,sysline,WHITE,0,0),
-                         self.text(12,h-31,w-24,19,display_info_line(info,0),GRAY,0,0)]
+                         self.text(12,h-54,w-24,21,f"{uplink} {ip}  NET {qual}",net_color,0,0),
+                         self.text(12,h-31,w-24,19,f"LAT {lat if lat is not None else '-'} ms  PER {loss if loss is not None else '-'}%",GRAY,0,0)]
         self.send_page(page,cmds)
 
 class I2CBase:
@@ -530,7 +530,7 @@ class OLED(I2CBase):
                     self.label(d,(1,22),display_info_line(info,2))
             else:
                 self.label(d,(1,12),f"{proto[:6]} {str(a.get('source') or '-')[:13]}")
-                self.label(d,(1,22),display_system_compact(info) if slot%2 else str(a.get("target") or "-")[:12])
+                self.label(d,(1,22),str(a.get("target") or "-")[:12])
                 self.bars(d,109,21,a.get("rssi_avg",a.get("rssi")))
             self.show_image(img)
             return
@@ -576,7 +576,7 @@ class OLED(I2CBase):
             # Footer line with target / BER or network status.
             ber=a.get("ber")
             extra=f"B{ber}%" if ber is not None else str(net.get("quality") or "").upper()[:4]
-            self.label(d,(3,54),f"{target[:12]} {extra}" if slot%2==0 else display_system_compact(info))
+            self.label(d,(3,54),f"{target[:12]} {extra}")
         self.show_image(img)
 
 class LCD(I2CBase):
@@ -610,7 +610,7 @@ class LCD(I2CBase):
                            f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"]
                 elif slot==1:
                     lines=[safe(info.get("board_model") or "BOARD",self.cols),
-                           display_system_line(info),
+                           display_system_compact(info),
                            display_info_line(info,2),
                            f"{info.get('uplink_type') or 'NET'} {info.get('ip') or '—'}"]
                 else:
@@ -622,19 +622,20 @@ class LCD(I2CBase):
                 rv=a.get("rssi_avg",a.get("rssi"));rf=[]
                 if a.get("ber") is not None:rf.append(f"B{a.get('ber')}%")
                 if rv is not None:rf.append(f"R{rv}")
+                place=" / ".join(x for x in (str(op.get("city") or ""),str(op.get("country") or "")) if x)
                 who=((a.get("source") or "-")+" "+(op.get("name") or "")).strip()
-                lines=[f"{mode.upper()} {proto}",who[:self.cols],
-                       safe(a.get("target") or "-",self.cols),
-                       display_system_line(info)]
+                internet=live.get("internet") or {};qual=str(internet.get("quality") or "?").upper()
+                net=f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'} {qual[:3]}"
+                lines=[f"{mode.upper()} {proto}",who,place or (a.get("target") or "-"),net]
         else:
             if mode=="standby" and slot!=0:
-                lines=[display_info_line(info,slot),display_system_line(info)]
+                lines=[display_info_line(info,slot),display_system_compact(info)]
             elif mode=="standby":
                 lines=[f"{mode.upper()} {proto} {display_hm()}",
                        f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"]
             else:
                 lines=[f"{mode.upper()} {proto} {a.get('source') or 'PU2PNY'}",
-                       safe(a.get('target') or display_system_compact(info),self.cols)]
+                       f"{(ns.get('uplink_type') or 'NET').upper()} {ns.get('default_ip') or '-'}"]
         self.show(lines)
 
 def nextion_size(model,settings=None):
