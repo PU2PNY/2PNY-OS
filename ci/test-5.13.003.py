@@ -18,6 +18,8 @@ def load_display():
 def main():
     patch_text=PATCH.read_text()
     compile(patch_text,str(PATCH),"exec")
+    for path in (ROOT/"ci/build-5.13.003.py",ROOT/"ci/test-5.13.003-ap.py"):
+        compile(path.read_text(),str(path),"exec")
     for marker in ("dhcp-leasefile=%s/dnsmasq-ap.leases",
                    "check_ap_health","ap_dhcp=","ap_dns=","ap_http=",
                    "2pny-display-core-0.3.31.py","board-id"):

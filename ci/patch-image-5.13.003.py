@@ -85,7 +85,7 @@ if nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq 'PU2PNY-WIFI'; then"
             }
             if recover_wifi; then"""),
         ('write_connect_state connected "Wi-Fi salvo reconectado." "$SAVED_SSID"',
-         'write_connect_state connected "Wi-Fi salvo reconectado." "$RECOVERED_SSID"'),,
+         'write_connect_state connected "Wi-Fi salvo reconectado." "$RECOVERED_SSID"'),
         ('  sed "s/@IFACE@/$ETH/g" /usr/share/2pny/network/dnsmasq-eth.template >"$RUN/dnsmasq-eth.conf"\n',
          '  sed "s/@IFACE@/$ETH/g" /usr/share/2pny/network/dnsmasq-eth.template >"$RUN/dnsmasq-eth.conf"\n  grep -q \'^dhcp-leasefile=\' "$RUN/dnsmasq-eth.conf" || printf \'dhcp-leasefile=%s/dnsmasq-eth.leases\\n\' "$RUN" >>"$RUN/dnsmasq-eth.conf"\n'),
         ('  sed "s/@IFACE@/$AP_WIFI/g" /usr/share/2pny/network/dnsmasq-ap.template >"$RUN/dnsmasq-ap.conf"\n',
