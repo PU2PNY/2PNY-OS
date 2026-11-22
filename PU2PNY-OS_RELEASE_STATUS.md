@@ -108,6 +108,19 @@ Branch `pu2pny-os-5.00.002-display-only`. Base publicada `v5.00.001`. PUBLICADA 
 
 # PU2PNY-OS — RELEASE STATUS
 
+## PU2PNY-OS 5.13.003 — EM TESTE
+
+- Branch: fix/5.13.003-orange-pi-zero-ap-display
+- Base: 5.13.002, preservada.
+- Objetivo: AP Orange Pi/NanoPi com DHCP/DNS/HTTP recuperáveis e display com telemetria real da placa/MMDVM.
+- Código: implementação e pipeline em validação.
+- SW/CI: execução em andamento; ainda não aprovado nesta anotação.
+- HW: PENDENTE — Orange Pi Zero, Wi-Fi AP, Nextion/OLED/LCD, MMDVM, DMR simplex, D-Star e YSF.
+- Release/assets/SHA-256: NÃO PUBLICADOS nesta etapa.
+- Classificação pretendida: candidata Alpha para teste físico, somente após build, CI, integridade e SHA verificados.
+
+A 5.13.002 continua sendo a última referência anterior; não renomear nem substituir seus assets.
+
 **Branch de trabalho:** `pu2pny-os-0.3.30-alpha`  
 **Base preservada:** `pu2pny-os-0.3.29-alpha`  
 **Rollback do ciclo:** `backup/0.3.29-pre-0.3.30-display-20260927`  

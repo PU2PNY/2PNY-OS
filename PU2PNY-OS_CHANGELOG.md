@@ -104,6 +104,16 @@ Usuário aprovou explicitamente a tela da 5.00.002 em NextionDriver ON7LDS: “a
 
 # PU2PNY-OS — CHANGELOG
 
+## 5.13.003 — EM TESTE
+
+- Corrigir a experiência de primeiro acesso pelo AP nas placas Orange Pi Zero e NanoPi NEO.
+- Usar leases DHCP em /run/2pny e monitorar DHCP/DNS/HTTP do AP com recuperação limitada.
+- Corrigir habilitação/persistência dos serviços 2pnyd e 2pny-network-core nas imagens Armbian, preservando rollback dos links anteriores.
+- Adicionar páginas de telemetria real da placa e da MMDVM ao renderer de display Armbian.
+- Alternar informações de sistema/MMDVM em standby; priorizar RF durante RX/TX.
+- Preservar renderer Raspberry, MMDVMHost, gateways, RF e protocolos.
+- Validação física ainda pendente; esta entrada não declara funcionamento de hardware.
+
 ## 2026-09-19 — início do ciclo corretivo pós-0.3.3-alpha
 
 ### Governança
