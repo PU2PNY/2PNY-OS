@@ -9,7 +9,7 @@ env:
 permissions:
   contents: read
 concurrency:
-  group: pu2pny-5.13.001-images
+  group: pu2pny-5.13.003-images
   cancel-in-progress: true
 jobs:
   image:
@@ -80,7 +80,7 @@ jobs:
           ref: ${{ env.SOURCE_COMMIT }}
       - uses: actions/download-artifact@v4
         with:
-          pattern: pu2pny-513-*
+          pattern: pu2pny-513003-*
           path: artifacts
           merge-multiple: true
       - name: Verify integrity and publish for physical testing

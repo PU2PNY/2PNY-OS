@@ -110,7 +110,7 @@ exit 0
                  "-sf",str(dhscript),"-lf",str(temp/"client.leases"),"-pf",str(temp/"client.pid"),client_if],
                 timeout=20)
             addr=run(["ip","netns","exec",ns,"ip","-4","-o","addr","show","dev",client_if]).stdout
-            match=re.search(r"inet (10\\.43\\.0\\.(\\d+)/24)",addr)
+            match=re.search(r"inet (10\.43\.0\.(\d+)/24)",addr)
             assert match and 20<=int(match.group(2))<=200,addr
             route=run(["ip","netns","exec",ns,"ip","route","show","default"]).stdout
             assert "via 10.43.0.1" in route,route
@@ -128,7 +128,7 @@ exit 0
                 if health.returncode==0 and "PU2PNY OK" in health.stdout:break
                 time.sleep(.5)
             else:raise RuntimeError("2pnyd HTTP health failed: "+(temp/"2pnyd.log").read_text())
-            headers=run(["ip","netns","exec",ns,"curl","--noproxy","*","-sS","-D","-","-o","/dev/null","http://10.43.0.1/generate_204"]).stdout.replace("\\r","")
+            headers=run(["ip","netns","exec",ns,"curl","--noproxy","*","-sS","-D","-","-o","/dev/null","http://10.43.0.1/generate_204"]).stdout.replace("\r","")
             assert "Location: http://10.43.0.1/wizard" in headers,headers
             page=run(["ip","netns","exec",ns,"curl","--noproxy","*","-fsSL","--max-time","5","http://10.43.0.1/"]).stdout
             assert "PU2PNY-OS" in page
@@ -143,6 +143,6 @@ exit 0
                 try:dns.wait(timeout=3)
                 except subprocess.TimeoutExpired:dns.kill()
             if namespace_created:run(["ip","netns","del",ns],check=False)
-            elif link_created:run(["ip","link","del",ap_if],check=False)
+            if link_created:run(["ip","link","del",ap_if],check=False)
 
 if __name__=="__main__":main()

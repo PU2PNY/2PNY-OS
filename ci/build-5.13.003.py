@@ -91,8 +91,7 @@ def main():
            "curl -fsSL --noproxy '*' --max-time 3 http://10.43.0.1/ | grep -q 'PU2PNY-OS'; "
            "curl -fsS --noproxy '*' --max-time 15 http://10.43.0.1/api/status | grep -q '5.13.003'")
    run(['unshare','--net','--fork','sh','-c',script,'sh',str(root)])
-   if board in ('opizero','nanopineo'):
-    run([sys.executable,str(REPO/'ci/test-5.13.003-ap.py'),str(root)])
+   run([sys.executable,str(REPO/'ci/test-5.13.003-ap.py'),str(root)])
   assert M.manifest(root)==after,'read-only remount differs'
   assert (root/'etc/2pny/version').read_text().strip()=='5.13.003'
   run(['umount',str(root)]);mounted=False
