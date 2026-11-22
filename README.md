@@ -1,3 +1,13 @@
+## PU2PNY-OS 5.13.003 — ALPHA para teste físico (22/11/2026)
+
+[Release 5.13.003](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.003) · [CI 5/5 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/45008193973) · [Checklist físico](https://github.com/PU2PNY/2PNY-OS/blob/fix/5.13.003-orange-pi-zero-ap-display/docs/PU2PNY-OS_5.13.003_HW_CHECKLIST.md)
+
+**Orange Pi Zero H2+:** [baixar imagem própria](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-opizero-5.13.003.img.xz) · [SHA-256](https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.13.003/pu2pny-opizero-5.13.003.img.xz.sha256). Correções de DHCP/DNS/HTTP do AP e informações reais da placa/MMDVM nos displays compatíveis. Imagens para NanoPi NEO e Raspberry ARM32/ARM64 também estão na release.
+
+Commit **da imagem**: `e6645024e25ab425e3456b7853c67fca3b51d78d`. Testes de integridade e rede simulada **PASS**; Wi-Fi real, RX/TX de áudio digital, avisos de voz e displays **HW PENDENTE**. O FM analógico não foi ativado sem prova do hardware. **NÃO É PRODUÇÃO.** Código da release permanece na branch de manutenção; a `main` não recebe alterações de RF nesta atualização de README.
+
+---
+
 ## PU2PNY-OS 5.13.002 · Teste físico · 19/11/2026
 
 [Release candidata](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.002) · [GitHub Actions](https://github.com/PU2PNY/2PNY-OS/actions/runs/44647034376) · [Checklist físico](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.13/docs/PU2PNY-OS_5.13_HW_CHECKLIST.md)
