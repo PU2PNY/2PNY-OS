@@ -2210,3 +2210,45 @@ Estado consolidado de release, sem alterar os requisitos funcionais: a publicaç
 **UI-512:** requisito de redesenho leve, offline, inspirado nas Apple HIG, integrado ao contrato existente e com acessibilidade, PT/EN/ES, sem perder páginas e comportamentos aprovados. Não faz parte dos patches P0 iniciais e permanece PENDENTE até testes visuais e de regressão.
 
 Rastreio: [Feedback 5.12](docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md) · [Issue #23](https://github.com/PU2PNY/2PNY-OS/issues/23).
+
+
+---
+
+## 5.13.003 — Orange Pi AP e telemetria de display
+
+**Estado:** EM TESTE. Requisitos desta revisão; SW/CI não substitui homologação física.
+
+### NET-OPI-AP-001 — Primeiro acesso pelo AP
+- O AP de recuperação deve oferecer IPv4 10.43.0.1/24, DHCP, DNS local e portal HTTP.
+- O usuário deve abrir o painel por http://10.43.0.1 e http://pu2pny.local quando o cliente suportar resolução local.
+- DHCP/DNS e leases devem usar armazenamento temporário em /run/2pny.
+- Estado exibido deve diferenciar AP, DHCP, DNS e HTTP; não declarar acesso funcional sem resposta real.
+
+### NET-OPI-AP-002 — Recuperação controlada
+- Aplicável somente às imagens Armbian identificadas como opizero ou nanopineo.
+- Verificar endereço AP, sockets DHCP/DNS e endpoint HTTP em intervalo limitado.
+- Reaplicar IPv4 do AP quando ausente.
+- Recuperar dnsmasq após falhas consecutivas, com intervalo mínimo entre reinícios.
+- Reiniciar somente 2pnyd.service quando o endpoint HTTP falhar repetidamente.
+- Não reiniciar MMDVMHost, gateways ou RF como resposta a falha do AP.
+- Não assumir Wi-Fi integrado em NanoPi NEO; a capacidade depende do adaptador presente.
+
+### DISP-BOARD-001 — Telemetria real da placa
+- Exibir modelo da placa, CPU, temperatura, RAM, armazenamento, frequência de CPU, uptime, interface e IP quando disponíveis.
+- Obter valores de /proc, /sys, telemetria e estado de rede existentes.
+- Dado ausente ou sensor não suportado deve aparecer como —; nunca estimar.
+
+### DISP-MMDVM-001 — Informações reais do modem
+- Exibir somente perfil, descrição/firmware, versão de protocolo, MCU e capacidades confirmadas pela detecção.
+- Capacidade do firmware não significa protocolo ativo.
+- BER, RSSI, slot, Color Code, frequências e atividade RF dependem de dados reais do MMDVMHost/modem.
+
+### DISP-ROTATION-001 — Páginas de display
+- Em standby, alternar páginas de rádio, placa/rede e MMDVM em cadência moderada.
+- Durante RX/TX, priorizar informações RF.
+- Manter um único writer por display e preservar a serial do modem.
+- Não alterar MMDVMHost, gateways ou configuração RF para atualizar telemetria.
+
+### Compatibilidade e proteção
+- Renderer 0.3.31 aplicado às imagens opizero e nanopineo; renderer Raspberry aprovado permanece preservado.
+- Build, CI e simulação não substituem teste físico de Wi-Fi, display, MMDVM e RF.

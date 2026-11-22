@@ -97,3 +97,25 @@ Backup/restore de identidade, rede, RF, protocolos, display, APRS, Direct, Helix
 
 ## 2026-10-22 — display isolado
 DISPLAY-040 / 5.00.002: página Display preserva seleção G4KLX/ON7LDS existente; backend usa MMDVM-Display oficial externo. Serviço ativo não comprova atualização da tela. HMI/TFT jamais gravado automaticamente. Restante do painel congelado.
+
+
+---
+
+## Display — telemetria de placa/MMDVM (5.13.003)
+
+### Páginas de standby
+O renderer Armbian pode alternar em intervalo moderado entre:
+1. Estado de rádio/rede e horário.
+2. Modelo da placa, CPU, temperatura, RAM, armazenamento, IP/uplink.
+3. Perfil/descrição do MMDVM, versão de protocolo, MCU e capacidades reportadas.
+
+### RX/TX
+- Estado RF, protocolo, origem/destino, BER e RSSI disponíveis continuam prioritários.
+- Telemetria de sistema não pode ocultar indicação essencial de transmissão/recepção.
+- Campos não fornecidos pelo modem ou sistema aparecem como —.
+
+### Compatibilidade
+- Renderer 0.3.31 aplicado às imagens Armbian opizero e nanopineo.
+- Renderer Raspberry aprovado permanece sem alteração nesta revisão.
+- Um único processo mantém a propriedade do display e da porta correspondente.
+- A interface não deve inferir que um protocolo está ativo apenas porque o firmware declara capacidade.

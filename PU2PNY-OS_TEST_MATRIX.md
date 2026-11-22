@@ -1435,3 +1435,22 @@ Fontes: [arquivo oficial NanoPi](https://rsync.armbian.com/oldarchive/nanopineo/
 | TEST-UI-512-001 | SW/HW | **PENDENTE** | Redesign offline, acessibilidade e UI_CONTRACT sem regressões; não integra P0 inicial |
 
 [Feedback técnico](docs/PU2PNY-OS_5.12_RETORNO_TESTADORES.md).
+
+
+## 5.13.003 — testes Orange Pi / displays
+
+| ID | Teste | Nível | Estado | Evidência/critério |
+|---|---|---|---|---|
+| OPI-AP-001 | Sintaxe do network core e marcadores de recuperação | SW | EM TESTE | bash -n; lease em /run/2pny; sem reinício MMDVMHost |
+| OPI-AP-002 | DHCP por namespace/veth | SW/CI | EM TESTE | Cliente recebe endereço da faixa AP e gateway 10.43.0.1 |
+| OPI-AP-003 | DNS local/captive DNS | SW/CI | EM TESTE | pu2pny.local e domínio de verificação resolvem para 10.43.0.1 |
+| OPI-AP-004 | Portal HTTP | SW/CI | EM TESTE | /healthz responde e /generate_204 encaminha ao wizard |
+| OPI-AP-005 | Serviços e links systemd | SW | EM TESTE | 2pnyd e 2pny-network-core habilitados para boot |
+| OPI-AP-006 | Orange Pi Zero AP físico | HW | PENDENTE | Associar telefone, receber DHCP, abrir painel e navegar |
+| DISP-OPI-001 | Coleta CPU/temperatura/RAM/armazenamento/uptime | SW | EM TESTE | Dados de teste e sensores ausentes sem valores inventados |
+| DISP-OPI-002 | Perfil/firmware/capacidades MMDVM | SW | EM TESTE | Exibir somente campos confirmados pelo hardware probe |
+| DISP-OPI-003 | Nextion/OLED/LCD em Orange Pi | HW | PENDENTE | Standby, RX/TX, reinício e persistência |
+| RF-REG-513003 | Regressão RF | HW | PENDENTE | DMR simplex, D-Star e YSF preservados |
+| ARM-513003 | Builds ARM32/ARM64 e imagens Armbian | SW/CI | EM TESTE | Build, XZ, manifest, SHA-256 e assets publicados |
+
+**Regra:** nenhum PASS de SW/CI promove automaticamente um teste HW para PASS.
