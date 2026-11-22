@@ -58,7 +58,13 @@ def main():
   for path in changed:
    if path.endswith('.pre-5.13'):
     original=path[:-len('.pre-5.13')]
-    assert before[original]['sha256']==after[path]['sha256'],'rollback hash mismatch: '+path
+    old_row=before[original];backup_row=after[path]
+    if 'link' in old_row:
+     assert backup_row.get('link')==old_row['link'],'rollback symlink mismatch: '+path
+    elif 'sha256' in old_row:
+     assert backup_row.get('sha256')==old_row['sha256'],'rollback hash mismatch: '+path
+    else:
+     assert backup_row.get('dir')==old_row.get('dir'),'rollback metadata mismatch: '+path
   assert after['etc/2pny/version']['sha256']!=before['etc/2pny/version']['sha256']
   assert (root/'usr/local/bin/2pnyd').read_bytes()[:4]==b'\x7fELF'
   for bin_name in ('MMDVM-Host','DMRGateway','NextionDriver-pu2pny','MMDVM-Display','2pnyd'):
