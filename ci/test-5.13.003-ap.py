@@ -122,14 +122,14 @@ exit 0
             addr=""
             for _ in range(30):
                 addr=run(["ip","netns","exec",ns,"ip","-4","-o","addr","show","dev",client_if]).stdout
-                if re.search(r"inet (10\\.43\\.0\\.(\\d+)/24)",addr):break
+                if re.search(r"inet (10\.43\.0\.(\d+)/24)",addr):break
                 time.sleep(0.2)
-            match=re.search(r"inet (10\\.43\\.0\\.(\\d+)/24)",addr)
+            match=re.search(r"inet (10\.43\.0\.(\d+)/24)",addr)
             if not match or not 20<=int(match.group(2))<=200:
-                raise RuntimeError("DHCP client received no expected IPv4 address; stdout="+
-                                   dhresult.stdout+" addr="+repr(addr)+" script="+
-                                   (temp/"dhclient-script.log").read_text(errors="replace") if (temp/"dhclient-script.log").exists() else
-                                   "no-script-log"+" dnsmasq="+
+                script_trace=temp/"dhclient-script.log"
+                script_info=script_trace.read_text(errors="replace") if script_trace.exists() else "(not executed)"
+                raise RuntimeError("DHCP IPv4 missing: stdout="+dhresult.stdout+" addr="+repr(addr)+
+                                   " script="+script_info+" dnsmasq="+
                                    (temp/"dnsmasq-process.log").read_text(errors="replace"))
             route=run(["ip","netns","exec",ns,"ip","route","show","default"]).stdout
             assert "via 10.43.0.1" in route,route
