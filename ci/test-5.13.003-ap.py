@@ -109,9 +109,15 @@ exit 0
 """)
             dhscript.chmod(0o755)
             resolv=temp/"client-resolv.conf"
-            run(["ip","netns","exec",ns,"env","TEST_RESOLV="+str(resolv),"dhclient","-1","-v","-timeout","12",
-                 "-sf",str(dhscript),"-lf",str(temp/"client.leases"),"-pf",str(temp/"client.pid"),client_if],
-                timeout=20)
+            dhcmd=["ip","netns","exec",ns,"env","TEST_RESOLV="+str(resolv),"dhclient","-1","-v","-timeout","12",
+                   "-sf",str(dhscript),"-lf",str(temp/"client.leases"),"-pf",str(temp/"client.pid"),client_if]
+            dhresult=run(dhcmd,check=False,timeout=20)
+            if dhresult.returncode:
+                dns_debug=(temp/"dnsmasq-process.log").read_text(errors="replace")
+                link_debug=run(["ip","netns","exec",ns,"ip","-d","addr","show"],check=False).stdout
+                raise RuntimeError("dhclient exit="+str(dhresult.returncode)+
+                                   " output="+dhresult.stdout+
+                                   " dnsmasq="+dns_debug+" namespace="+link_debug)
             addr=run(["ip","netns","exec",ns,"ip","-4","-o","addr","show","dev",client_if]).stdout
             match=re.search(r"inet (10\.43\.0\.(\d+)/24)",addr)
             assert match and 20<=int(match.group(2))<=200,addr
