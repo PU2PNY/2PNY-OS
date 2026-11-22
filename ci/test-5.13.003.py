@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+PATCH=ROOT/"ci/patch-image-5.13.003.py"
 DISPLAY=ROOT/"src/2pny-display-core-0.3.31.py"
 
 def load_display():
@@ -15,6 +16,12 @@ def load_display():
     return module
 
 def main():
+    patch_text=PATCH.read_text()
+    compile(patch_text,str(PATCH),"exec")
+    for marker in ("dhcp-leasefile=%s/dnsmasq-ap.leases",
+                   "check_ap_health","ap_dhcp=","ap_dns=","ap_http=",
+                   "2pny-display-core-0.3.31.py","board-id"):
+        assert marker in patch_text, "missing patch marker: "+marker
     display=load_display()
     with tempfile.TemporaryDirectory(prefix="pny-display-test-") as tmp:
         base=Path(tmp);proc=base/"proc";sys=base/"sys";root=base/"root"
