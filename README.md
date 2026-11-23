@@ -1,3 +1,11 @@
+## PU2PNY-OS 5.15.000 · Candidata ALPHA para teste físico · 23/11/2026
+
+Overlay sobre a 5.12.002 (mantém 5.14/5.13.003). **Escopo:** OTA-515 (aviso de atualização corrigido — antes mostrava "disponível" sempre), YSF-515 (YSF reconecta sozinho ao refletor após queda, via drop-in systemd, sem tocar RF protegido), PERF-515 (medição do tempo de "ativar perfil" para diagnosticar a lentidão no Pi Zero). **Guia de gravação (Etcher/RPi Imager/Rufus)** no checklist. Não reescreve RF protegido, probe, MMDVMHost nem gateways.
+
+Branch `fix/5.15-pizero-ysf-ota`. Backend compila e passa em go test; imagens por CI. **HW NÃO VERIFICADO · PROD NÃO APROVADO.** Imagens + SHA-256 na release `pu2pny-v5.15.000` após o CI. Checklist: [docs/PU2PNY-OS_5.15_HW_CHECKLIST.md](docs/PU2PNY-OS_5.15_HW_CHECKLIST.md).
+
+---
+
 ## PU2PNY-OS 5.14.000 · Candidata ALPHA para teste físico · 23/11/2026
 
 Overlay sobre a 5.12.002 P2 (mantém todas as correções da 5.13.003). **Escopo:** destravar o primeiro acesso do wizard na Orange Pi Zero / NanoPi (WIZ-514: a etapa de hardware não congela mais em 12%; libera "continuar" se a detecção falhar; grava modelo da placa e `probe_error` para diagnóstico) e deixar o banner responsivo (UI-514). **Não altera RF, MMDVMHost, gateways, o probe de hardware protegido nem a baseline Nextion.**

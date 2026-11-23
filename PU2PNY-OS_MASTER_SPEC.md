@@ -1,3 +1,10 @@
+## 5.15.000 · 23/11/2026 — OTA-515 / YSF-515 / PERF-515
+
+- **OTA-515:** a comparação de versão do notificador deve normalizar a tag de release (`pu2pny-v<versão>`) antes de comparar com a versão instalada; o aviso só aparece quando há versão mais nova. Aceite: SW.
+- **YSF-515:** o YSF/C4FM deve reconectar automaticamente ao refletor após uma queda, sem reescrever os scripts de RF protegidos (drop-in systemd `Restart=always`, `StartLimitIntervalSec=0`). Troca de protocolo (que usa `systemctl stop`) não deve ser afetada. Aceite: SW para a config; HW para a reconexão real.
+- **PERF-515:** "ativar perfil" deve medir e registrar o tempo gasto no apply protegido (`took_ms`/log), para diagnóstico da lentidão em Pi Zero sem alterar RF. Aceite: SW.
+- **Autorização de baseline:** o usuário autorizou alterar scripts de RF protegidos; a 5.15 restringiu-se às mudanças seguras acima; alterações diretas nos scripts de RF exigem evidência (logs/medição) e teste em hardware.
+
 ## 5.14.000 · 23/11/2026 — WIZ-514 / UI-514
 
 - **WIZ-514:** o assistente de primeiro acesso nunca pode congelar. A detecção de hardware tem espera limitada (30 s) e, em falha/estouro, deve liberar o avanço ("Ir para configuração básica") com aviso explícito, sem inventar MMDVM e sem avançar sozinho (avanço automático apenas com MMDVM confirmada). Em falha, registrar modelo da placa e motivo (`probe_error`) em `hardware-probe.json`. Aceite: SW para a lógica; HW para a Orange Pi real.

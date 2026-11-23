@@ -1,3 +1,15 @@
+## 5.15.000 · 23/11/2026
+
+| Cenário | Nível | Estado |
+|---|---|---|
+| OTA-515: aviso só quando há versão mais nova (tag normalizada) | SW | APROVADO |
+| YSF-515: drop-in Restart=always instalado | SW | APROVADO / HW PENDENTE |
+| YSF reconecta sozinho após queda | HW | PENDENTE |
+| PERF-515: ativar perfil registra took_ms/log | SW | APROVADO / HW PENDENTE |
+| Backend 5.15 compila + `go test ./...` | SW | APROVADO |
+| Scripts RF protegidos não reescritos | SW | APROVADO (gate) |
+| Lentidão real do perfil (Pi Zero) | HW | PENDENTE (medir) |
+
 ## 5.14.000 · 23/11/2026
 
 | Cenário | Nível | Estado |

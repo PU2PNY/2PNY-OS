@@ -1,0 +1,108 @@
+name: PU2PNY-OS 5.15 candidate images
+on:
+  push:
+    branches: [fix/5.15-pizero-ysf-ota]
+    paths: ['.github/workflows/5.15-release.yml', 'ci/*5.15*.py', 'ci/*5.14*.py', 'ci/*5.13*.py', 'runtime/5.13/**', 'src/2pny-display-core-0.3.31.py']
+  workflow_dispatch:
+env:
+  SOURCE_COMMIT: ${{ github.sha }}
+permissions:
+  contents: read
+concurrency:
+  group: pu2pny-5.15.000-images
+  cancel-in-progress: true
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      matrix:
+        board: ['32', '64', opizero, nanopineo]
+    env:
+      BOARD: ${{ matrix.board }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_COMMIT }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.9'
+          cache: false
+      - name: Rebuild and test the scoped panel backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GO111MODULE=off CGO_ENABLED=0
+          export GOOS=linux GOARCH=arm GOARM=6
+          arch=arm32
+          if [[ "$BOARD" == 64 ]]; then
+            arch=arm64
+            export GOARCH=arm64
+            unset GOARM
+          fi
+          if [[ "$BOARD" == opizero || "$BOARD" == nanopineo ]]; then export GOARM=7; fi
+          python3 ci/prepare-5.15-backend.py "$RUNNER_TEMP/backend" "$arch"
+          python3 ci/test-5.13.py
+          python3 ci/test-5.13.003.py
+          python3 ci/test-5.14.py
+          python3 ci/test-5.15.py
+          python3 ci/test-5.00.001-rf-access.py
+          cd "$RUNNER_TEMP/backend"
+          env -u GOOS -u GOARCH -u GOARM go test ./...
+          go build -trimpath -o "$RUNNER_TEMP/2pnyd" .
+      - name: Validate base and generate candidate image
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-user-static binfmt-support xz-utils e2fsprogs dnsmasq-base busybox-static iproute2 curl
+          sudo update-binfmts --enable qemu-arm
+          mkdir -p "$RUNNER_TEMP/pu2pny"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 25 \
+            "https://github.com/PU2PNY/2PNY-OS/releases/download/pu2pny-v5.12.002-p2/pu2pny-${BOARD}-5.12.002.img.xz" \
+            -o "$RUNNER_TEMP/pu2pny/pu2pny-${BOARD}-5.12.002.img.xz"
+          sudo python3 ci/build-5.15.py "$RUNNER_TEMP/pu2pny" "$BOARD" "$SOURCE_COMMIT" "$RUNNER_TEMP/2pnyd"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pu2pny-515000-${{ matrix.board }}
+          path: ${{ runner.temp }}/pu2pny/output/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+  publish:
+    needs: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_COMMIT }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pu2pny-515000-*
+          path: artifacts
+          merge-multiple: true
+      - name: Verify integrity and publish for physical testing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd artifacts
+          for board in 32 64 opizero nanopineo; do
+            image="pu2pny-${board}-5.15.000.img.xz"
+            test -s "$image"
+            xz -t "$image"
+            sha256sum -c "$image.sha256"
+            jq -e --arg board "$board" --arg sha "$SOURCE_COMMIT" \
+              '.version=="5.15.000" and .architecture==$board and .source_commit==$sha and .validation.HW=="NOT_VERIFIED"' \
+              "BUILD-INFO-$board.json"
+          done
+          gh release create pu2pny-v5.15.000 \
+            ./*.img.xz ./*.img.xz.sha256 ./BUILD-INFO-*.json \
+            --repo "$GITHUB_REPOSITORY" --target "$SOURCE_COMMIT" --prerelease --title 'PU2PNY-OS 5.15 — OTA aviso + YSF reconecta + medição de perfil' \
+            --notes-file ../docs/PU2PNY-OS_5.15_HW_CHECKLIST.md
+          gh release view pu2pny-v5.15.000 --repo "$GITHUB_REPOSITORY" --json tagName,targetCommitish,assets

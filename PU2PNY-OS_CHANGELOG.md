@@ -1,3 +1,11 @@
+## 5.15.000 · 23/11/2026 — OTA aviso + YSF reconecta + medição de perfil (overlay sobre 5.12.002, mantém 5.14/5.13.003)
+
+- **OTA-515:** corrigido o aviso de atualização (a tag `pu2pny-v<versão>` agora é normalizada antes de comparar com a versão instalada; antes mostrava "disponível" sempre).
+- **YSF-515:** YSF/C4FM reconecta sozinho ao refletor após queda, via drop-in systemd (`Restart=always`, `StartLimitIntervalSec=0`), sem reescrever RF protegido; troca de protocolo não é afetada (usa `systemctl stop`).
+- **PERF-515:** "ativar perfil" mede e registra o tempo (`PERF-515 ... levou Xms`, campo `took_ms`) para localizar a lentidão no Pi Zero.
+- **Guia de gravação** (Etcher/RPi Imager/Rufus) incluído no checklist.
+- **Não reescritos:** scripts de RF protegidos, probe de hardware, MMDVMHost, gateways.
+
 ## 5.14.000 · 23/11/2026 — wizard sem travar + banner responsivo (overlay sobre 5.12.002, mantém 5.13.003)
 
 - **WIZ-514:** a etapa "Preparando hardware" não congela mais em 12%. A espera do probe caiu de 60 s para 30 s; se a detecção falhar/demorar, o botão "Ir para configuração básica" é liberado com aviso, e o avanço automático continua só quando a MMDVM é confirmada. Nenhum dado de MMDVM é inventado.

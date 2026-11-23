@@ -1,3 +1,11 @@
+## Trabalho atual — 5.15.000 (23/11/2026): OTA aviso + YSF reconecta + medição de perfil
+
+**Objetivo:** corrigir o aviso de OTA, tornar o YSF resiliente a quedas e medir a lentidão de "ativar perfil" no Pi Zero, sem reescrever RF protegido.
+
+- Branch: `fix/5.15-pizero-ysf-ota`. Base: overlay sobre 5.12.002 (mantém 5.14/5.13.003).
+- Escopo: OTA-515, YSF-515 (drop-in reconexão), PERF-515 (medição). Guia de gravação (Etcher/Rufus) no checklist.
+- Estado: ALPHA para teste físico. SW/CI; HW NÃO VERIFICADO. Usuário autorizou mudança de baseline RF; a 5.15 ficou no caminho seguro, conserto de fundo depende dos logs.
+
 ## Trabalho atual — 5.14.000 (23/11/2026): wizard sem travar + banner responsivo
 
 **Objetivo:** impedir que o assistente de primeiro acesso congele na Orange Pi Zero / NanoPi e deixar o banner responsivo, sem tocar no probe de hardware protegido, RF ou Nextion.

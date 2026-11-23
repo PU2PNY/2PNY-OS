@@ -1,3 +1,7 @@
+## PU2PNY-OS 5.15.000 · Teste físico · 23/11/2026
+
+Overlay sobre a 5.12.002 (mantém 5.14/5.13.003). Escopo: OTA-515 (aviso de atualização corrigido), YSF-515 (reconexão automática via drop-in systemd, sem tocar RF protegido), PERF-515 (medição do tempo de ativar perfil). Guia de gravação (Etcher/Rufus) no checklist. Backend compila e passa em go test; imagem por CI. **HW NÃO VERIFICADO · PROD NÃO APROVADO.** Branch `fix/5.15-pizero-ysf-ota`. Autorização do usuário para mudança de baseline RF registrada; a 5.15 optou pelo caminho seguro (resiliência YSF + medição) — o conserto de fundo da lentidão do perfil e da causa raiz do YSF depende dos logs do teste físico. Checklist: `docs/PU2PNY-OS_5.15_HW_CHECKLIST.md`.
+
 ## PU2PNY-OS 5.14.000 · Teste físico · 23/11/2026
 
 Overlay sobre a 5.12.002 P2 publicada, mantendo todas as mudanças da 5.13.003. Escopo: destravar o primeiro acesso do wizard (WIZ-514) e banner responsivo (UI-514). **Não altera RF, MMDVMHost, gateways, o probe de hardware protegido nem a baseline Nextion.** Backend compila e passa nos testes Go (SW); imagem gerada por CI (overlay + validação de manifesto/baseline/setor de boot). **HW NÃO VERIFICADO · PROD NÃO APROVADO.** Branch `fix/5.14-orange-wizard-banner`. Checklist: `docs/PU2PNY-OS_5.14_HW_CHECKLIST.md`. Bloqueador em aberto: detecção real da MMDVM na Orange Pi (probe protegido) — correção depende do `probe_error` do teste físico.
