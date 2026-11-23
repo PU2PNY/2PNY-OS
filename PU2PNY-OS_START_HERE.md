@@ -1,3 +1,11 @@
+## Trabalho atual — 5.14.000 (23/11/2026): wizard sem travar + banner responsivo
+
+**Objetivo:** impedir que o assistente de primeiro acesso congele na Orange Pi Zero / NanoPi e deixar o banner responsivo, sem tocar no probe de hardware protegido, RF ou Nextion.
+
+- Branch: `fix/5.14-orange-wizard-banner`. Base: overlay sobre 5.12.002 (mantém 5.13.003).
+- Escopo: WIZ-514 (wizard não congela + diagnóstico `probe_error`) e UI-514 (banner responsivo).
+- Estado: ALPHA para teste físico. SW/CI; HW NÃO VERIFICADO. Probe protegido inalterado; correção de fundo da detecção depende do `probe_error` do teste real.
+
 ## PU2PNY-OS 5.13.002 · Teste físico · 19/11/2026
 
 Para a 5.13.002, escolha a imagem da sua placa em [Releases](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.002) e siga o [checklist físico](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.13/docs/PU2PNY-OS_5.13_HW_CHECKLIST.md). O teste de rede reserva começa em Internet, em Adicionar / atualizar rede Wi-Fi de backup. O teste físico do AP Orange/Nano usa o endereço de configuração `http://10.43.0.1/` e, depois, o IPv4 obtido do roteador.

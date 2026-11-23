@@ -1,3 +1,10 @@
+## 5.14.000 · 23/11/2026 — wizard sem travar + banner responsivo (overlay sobre 5.12.002, mantém 5.13.003)
+
+- **WIZ-514:** a etapa "Preparando hardware" não congela mais em 12%. A espera do probe caiu de 60 s para 30 s; se a detecção falhar/demorar, o botão "Ir para configuração básica" é liberado com aviso, e o avanço automático continua só quando a MMDVM é confirmada. Nenhum dado de MMDVM é inventado.
+- **WIZ-514 (diagnóstico):** quando o probe não conclui, grava o modelo real da placa e o motivo (`probe_error`) em `/var/lib/2pny/hardware-probe.json`.
+- **UI-514:** banner/cabeçalho do wizard responsivo, sem quebrar o painel.
+- **Não alterados:** probe de hardware protegido, RF, MMDVMHost, gateways, Nextion. A correção de fundo da detecção na Orange depende da evidência do `probe_error` no teste físico.
+
 ## 5.13.002 · Manutenção de 19/11/2026
 
 - A segunda rede Wi-Fi é gravada como reserva. O salvamento mantém a associação atual, restaura o perfil anterior se a atualização falhar e inclui a segunda rede nas tentativas de recuperação.

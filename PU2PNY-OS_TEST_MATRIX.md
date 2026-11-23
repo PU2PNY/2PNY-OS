@@ -1,3 +1,15 @@
+## 5.14.000 · 23/11/2026
+
+| Cenário | Nível | Estado |
+|---|---|---|
+| WIZ-514: wizard não congela em 12% (libera "continuar" em ≤35 s) | SW | APROVADO (lógica) / HW PENDENTE |
+| WIZ-514: grava modelo da placa + `probe_error` no fallback | SW | APROVADO (compila/testa) / HW PENDENTE |
+| UI-514: banner/cabeçalho responsivo do wizard | SW | APROVADO (CSS) / HW PENDENTE |
+| Backend 5.14 compila + `go test ./...` | SW | APROVADO |
+| Probe de hardware protegido inalterado | SW | APROVADO (gate de baseline) |
+| Detecção real da MMDVM na Orange Pi | HW | PENDENTE / NÃO VERIFICADO |
+| Raspberry sem regressão no wizard | HW | PENDENTE |
+
 ## 5.13.002 · Manutenção de 19/11/2026
 
 | Cenário | Nível | Estado |

@@ -1,3 +1,9 @@
+## 5.14.000 · 23/11/2026 — WIZ-514 / UI-514
+
+- **WIZ-514:** o assistente de primeiro acesso nunca pode congelar. A detecção de hardware tem espera limitada (30 s) e, em falha/estouro, deve liberar o avanço ("Ir para configuração básica") com aviso explícito, sem inventar MMDVM e sem avançar sozinho (avanço automático apenas com MMDVM confirmada). Em falha, registrar modelo da placa e motivo (`probe_error`) em `hardware-probe.json`. Aceite: SW para a lógica; HW para a Orange Pi real.
+- **UI-514:** cabeçalho, marca e logo do wizard devem ser responsivos em qualquer tamanho de tela, sem quebrar o painel. Imagens escalam (`max-width:100%`).
+- **Invariante:** o probe de hardware (`usr/local/sbin/2pny-hardware-probe`) permanece baseline protegido; 5.14 não o altera.
+
 ## 5.13.002 · Manutenção de 19/11/2026
 
 Salvar Wi-Fi 2 mantém o uplink atual e só confirma após o NetworkManager aceitar o perfil. A restauração tenta a segunda rede antes de desistir e só encerra o AP após associação e obtenção de IPv4. O fuso inicial é escolhido pelo navegador local e fica salvo, com precedência da escolha manual. O Nextion usa o perfil persistido e o layout HMI instalado. O OLED permite orientação normal ou invertida. O Acesso RF conserva a confirmação explícita para modo Público e o rollback do INI.

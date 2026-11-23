@@ -1,3 +1,11 @@
+## PU2PNY-OS 5.14.000 · Candidata ALPHA para teste físico · 23/11/2026
+
+Overlay sobre a 5.12.002 P2 (mantém todas as correções da 5.13.003). **Escopo:** destravar o primeiro acesso do wizard na Orange Pi Zero / NanoPi (WIZ-514: a etapa de hardware não congela mais em 12%; libera "continuar" se a detecção falhar; grava modelo da placa e `probe_error` para diagnóstico) e deixar o banner responsivo (UI-514). **Não altera RF, MMDVMHost, gateways, o probe de hardware protegido nem a baseline Nextion.**
+
+Branch `fix/5.14-orange-wizard-banner`. Backend compila e passa nos testes Go (SW); imagens geradas por CI com validação de manifesto/baseline/setor de boot. **HW NÃO VERIFICADO · PROD NÃO APROVADO.** Imagens (`32`, `64`, `opizero`, `nanopineo`) e SHA-256 saem na release `pu2pny-v5.14.000` após o CI. Checklist físico: [docs/PU2PNY-OS_5.14_HW_CHECKLIST.md](docs/PU2PNY-OS_5.14_HW_CHECKLIST.md). Bloqueador em aberto: detecção real da MMDVM na Orange (probe protegido) — correção depende do `probe_error` do teste físico.
+
+---
+
 ## PU2PNY-OS 5.13.003 · Candidata ALPHA para teste físico · 22/11/2026
 
 [Release oficial](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.003) · [GitHub Actions 5/5 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/45008193973) · [Checklist físico](docs/PU2PNY-OS_5.13.003_HW_CHECKLIST.md)

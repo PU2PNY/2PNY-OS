@@ -1,3 +1,7 @@
+## PU2PNY-OS 5.14.000 · Teste físico · 23/11/2026
+
+Overlay sobre a 5.12.002 P2 publicada, mantendo todas as mudanças da 5.13.003. Escopo: destravar o primeiro acesso do wizard (WIZ-514) e banner responsivo (UI-514). **Não altera RF, MMDVMHost, gateways, o probe de hardware protegido nem a baseline Nextion.** Backend compila e passa nos testes Go (SW); imagem gerada por CI (overlay + validação de manifesto/baseline/setor de boot). **HW NÃO VERIFICADO · PROD NÃO APROVADO.** Branch `fix/5.14-orange-wizard-banner`. Checklist: `docs/PU2PNY-OS_5.14_HW_CHECKLIST.md`. Bloqueador em aberto: detecção real da MMDVM na Orange Pi (probe protegido) — correção depende do `probe_error` do teste físico.
+
 ## PU2PNY-OS 5.13.002 · Teste físico · 19/11/2026
 
 A [release candidata](https://github.com/PU2PNY/2PNY-OS/releases/tag/pu2pny-v5.13.002) oferece quatro imagens com SHA-256. Commit fonte `800f715e4973f612a1500373f6a54cd35ea69c14`, branch `release/pu2pny-5.13`, [CI 5/5 PASS](https://github.com/PU2PNY/2PNY-OS/actions/runs/44647034376). Base oficial 5.12.002 P2. Foram validados XZ, SHA-256, ext4, o manifesto das alterações e a preservação dos binários de RF e do driver Nextion. O teste HTTP isolado foi executado com os binários ARMv7 de Orange Pi e NanoPi. Teste físico pendente conforme o [checklist](https://github.com/PU2PNY/2PNY-OS/blob/release/pu2pny-5.13/docs/PU2PNY-OS_5.13_HW_CHECKLIST.md). A implantação na VPS de teste não foi realizada porque a política do host não permitia a escrita de arquivos.
